@@ -1,0 +1,57 @@
+# Chess Engine (untitled)
+
+v 0.0.1
+
+Features
+- Board representation
+    - 9 BitBoards
+        - 1 for all pieces
+        - 2 for each color
+        - 6 for each piece
+    - Mailbox 0x88
+        - array of 64 bytes
+        - 0 = no piece
+        - 1 = White King
+        - 2 = White Queen
+        - 3 = White Rook
+        - 4 = White Bishop
+        - 5 = White Knight
+        - 6 = White Pawn
+        - 9 = Black King
+        - 10 = Black Queen
+        - 11 = Black Rook
+        - 12 = Black Bishop
+        - 13 = Black Knight
+        - 14 = Black Pawn
+    - Move Representation
+	    - 16 bits
+	        - 0-5: source position
+            - 6-12: destination position
+            - 13-14: move type
+	            - none
+                - castle
+                - promotion
+                - en passant
+            - 15-16: promotion piece
+	            - queen
+                - rook
+                - bishop
+                - knight
+- Move Generation
+	- Magic Bitboards for sliding pieces
+	    - Variable shift approach
+        - 41984 byte bishop table
+        - 819200 byte rook table
+    - 4 Bitboards for legality checks
+	    - move mask
+	        - valid destination squares for non-king pieces
+            - either block check or capture checking piece
+            - 0 when in double check
+        - check bitboard
+	        - invalid destination squares for king
+            - contains all squares attacked by opponent
+            - excludes king when calculating rook, bishop, and queen moves
+        - checkers
+	        - all squares which have pieces that are checking the king
+        - pinned
+	        - all squares which contain pieces which are pinned to the king
