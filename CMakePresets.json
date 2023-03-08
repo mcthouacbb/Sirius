@@ -1,0 +1,67 @@
+{
+	"version": 4,
+	"cmakeMinimumRequired": {
+		"major": 3,
+		"minor": 24,
+		"patch": 0
+	},
+	"configurePresets": [
+		{
+			"name": "make-gcc-x86_64-linux-debug",
+			"generator": "Unix Makefiles",
+			"binaryDir": "${sourceDir}/build/debug",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug",
+				"CMAKE_CXX_FLAGS_INIT": "-Wall -Werror",
+				"CMAKE_CXX_FLAGS_DEBUG_INIT": "-fsanitize=address -fsanitize=undefined"
+			}
+		},
+		{
+			"name": "make-gcc-x86_64-linux-release",
+			"generator": "Unix Makefiles",
+			"binaryDir": "${sourceDir}/build/release",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release",
+				"CMAKE_CXX_FLAGS_INIT": "-Wall -Werror",
+				"CMAKE_CXX_FLAGS_RELEASE_INIT": ""
+			}
+		},
+		{
+			"name": "vs2022-msvc-x86_64-windows",
+			"generator": "Visual Studio 17 2022",
+			"binaryDir": "${sourceDir}/build",
+			"cacheVariables": {
+				"CMAKE_CXX_FLAGS_INIT": "/W4 /WX /Gy",
+				"CMAKE_CXX_FLAGS_DEBUG_INIT": "/fsanitize=address",
+				"CMAKE_CXX_FLAGS_RELEASE_INIT": ""
+			},
+			"condition": {
+				"lhs": "${hostSystemName}",
+				"type": "equals",
+				"rhs": "Windows"
+			}
+		}
+	],
+	"buildPresets": [
+		{
+			"name": "vs2022-msvc-x86_64-windows-debug",
+			"configurePreset": "vs2022-msvc-x86_64-windows",
+			"configuration": "Debug",
+			"condition": {
+				"lhs": "${hostSystemName}",
+				"type": "equals",
+				"rhs": "Windows"
+			} 
+		},
+		{
+			"name": "vs2022-msvc-x86_64-windows-release",
+			"configurePreset": "vs2022-msvc-x86_64-windows",
+			"configuration": "Release",
+			"condition": {
+				"lhs": "${hostSystemName}",
+				"type": "equals",
+				"rhs": "Windows"
+			} 
+		}
+	]
+}

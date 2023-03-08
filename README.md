@@ -1,0 +1,142 @@
+# Sirius
+
+v4.0
+
+Minimal UCI Support
+
+Inspired/helped by
+- Stockfish
+- Ethereal
+- Crafty
+- Zurichess
+- [The Chess Programming Wiki](https://www.chessprogramming.org/)
+- [TalkChess/The Computer Chess Club](https://www.talkchess.com/forum3/viewforum.php?f=2)
+- Many others
+
+CLI Usage
+- Type "uci" for the UCI protocol(not recommended for direct use, usually used by a chess GUI)
+	- Protocol is explained [here](https://www.wbec-ridderkerk.nl/html/UCIProtocol.html)
+- Type "cmdline" for the CLI protocol(best suited for direct use)
+	- Protocol is explained below
+
+Command Line Protocol(for debugging/convenience)
+- `"position" {"fen" | "startpos"} [fenString]`
+    - Set the board position to the starting position or the fenString
+- `"print"`
+    - Print the current state of the board
+      	- Piece positions
+        - Number of plies since the start of the game(starts at 0)
+        - Half Move Clock
+            - Used to detect 50 move rule draws
+            - Draw at 100 half moves
+            - Castling Rights
+          - Side to move
+        - Square of en passant, if available
+        - Zobrist hash
+- `"move" <move>`
+    - makes a move
+    - Standard Algebraic Notation(FIDE notation)
+    - Square is a file (a-h) and rank(1-8)
+    - Promotion piece is either, q(queen), r(rook), b(bishop), or n(knight)
+- `"undo"`
+    - Undo the last move that was made
+- `"eval"`
+    - Prints the static evaluation of the position
+- `"qeval"`
+    - Prints the quiescence evaluation of the position
+- `"search" <depth>`
+    - Performs an iterative deepening search up to depth
+    - Prints out the evaluation and PV of each depth
+    - Prints out search statistics
+    - WARNING: Search time increases exponentially with depth
+- `"tests"`
+    - Runs test suite
+    - Currently, only perft tests are run
+- `"perft" <depth>`
+    - Performs are perft up to depth
+    - A perft(performance test) searches all moves up to depth and returns the number of positions reached
+    - WARNING: time usage increases exponentially with depth
+- `"book"`
+    - Returns all the moves in the opening book
+    - Opening book is currently hardcoded to "Sirius/res/gaviota_trim.pgn"
+    - Prints "No moves in book found" if position is not in book
+
+Features
+- Board representation
+    - 9 BitBoards
+        - 1 for all pieces
+        - 2 for each color
+        - 6 for each piece
+    - Mailbox 0x88
+        - array of 64 bytes
+        - 0 = no piece
+        - 1 = White King
+        - 2 = White Queen
+        - 3 = White Rook
+        - 4 = White Bishop
+        - 5 = White Knight
+        - 6 = White Pawn
+        - 9 = Black King
+        - 10 = Black Queen
+        - 11 = Black Rook
+        - 12 = Black Bishop
+        - 13 = Black Knight
+        - 14 = Black Pawn
+    - Zobrist hashing
+    - Move Representation
+        - 16 bits
+            - 0-5: source position
+            - 6-12: destination position
+            - 13-14: move type
+                - none
+                - castle
+                - promotion
+                - en passant
+            - 15-16: promotion piece
+                - queen
+                - rook
+                - bishop
+                - knight
+- Move Generation
+    - Magic Bitboards for sliding pieces
+        - Variable shift approach
+    - 41984 byte bishop table
+    - 819200 byte rook table
+    - 3 Bitboards for legality checks
+        - move mask
+            - valid destination squares for non-king pieces
+            - either block check or capture checking piece
+            - 0 when in double check
+        - checkers
+            - all squares which have pieces that are checking the king
+        - pinned
+            - all squares which contain pieces which are pinned to the king
+- Evaluation
+    - Tapered Evaluation
+    - Material
+        - Middlegame and Endgame
+    - Piece Square Tables
+    - Tuning via Texel's Tuning Method
+- Search
+    - Alpha-Beta Pruning
+    - PV Collection(pv list on stack)
+    - Move Ordering
+        - TT Move Ordering
+        - MVV_LVA
+        - Killer Moves Heuristic
+        - History Heuristic
+    - Quiescence Search
+        - Captures Only
+        - SEE Pruning
+    - Transposition Table
+        - 4 entries per bucket
+        - Always replace least depth
+        - 16 bytes per entry
+        - 64 bytes per bucket
+    - Selectivity
+        - Check Extension
+        - Mate Distance Pruning
+        - Principal Variation Search(PVS)
+        - Null Move Pruning
+        - Futility Pruning
+        - Late Move Reductions
