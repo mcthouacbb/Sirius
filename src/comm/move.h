@@ -7,6 +7,10 @@ struct MoveStrFind
 {
 	Move* move;
 	const char* end;
+
+// invalid = {nullptr, moveStr};
+// not found = {end, moveStr + moveLen};
+// ambiguous = {end + 1, moveStr + moveLen};
 };
 
 MoveStrFind findMoveFromPCN(Move* begin, Move* end, const char* moveStr);

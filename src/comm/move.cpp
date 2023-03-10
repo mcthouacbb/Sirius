@@ -3,6 +3,9 @@
 namespace comm
 {
 
+const char promoChars[4] = {'q', 'r', 'b', 'n'};
+const char pieceChars[5] = {'K', 'Q', 'R', 'B', 'N'};
+
 MoveStrFind findMoveFromPCN(Move* begin, Move* end, const char* moveStr)
 {
 	int src = (moveStr[0] - 'a') + ((moveStr[1] - '1') << 3);
@@ -60,6 +63,9 @@ MoveStrFind findMoveFromSAN(const Board& board, Move* begin, Move* end, const ch
 	bool isCapture = false;
 
 	int moveLen = -1;
+
+	if (moveStr[0] == '\0')
+		return {nullptr, moveStr};
 	
 	switch (moveStr[0])
 	{
@@ -73,10 +79,10 @@ MoveStrFind findMoveFromSAN(const Board& board, Move* begin, Move* end, const ch
 			piece = PieceType::ROOK;
 			goto piece_moves;
 		case 'B':
-			piece = PieceType::KNIGHT;
+			piece = PieceType::BISHOP;
 			goto piece_moves;
 		case 'N':
-			piece = PieceType::BISHOP;
+			piece = PieceType::KNIGHT;
 			goto piece_moves;
 		case 'a':
 		case 'b':
@@ -90,17 +96,21 @@ MoveStrFind findMoveFromSAN(const Board& board, Move* begin, Move* end, const ch
 			if (moveStr[1] == 'x')
 			{
 				isCapture = true;
-				fromFile = moveStr[0];
+				fromFile = moveStr[0] - 'a';
 			}
 			else
 			{
 				toFile = moveStr[0] - 'a';
 			}
 			break;
+		default:
+			return {nullptr, moveStr};
 	}
 
 	if (isCapture)
 	{
+		if (moveStr[2] < 'a' || moveStr[2] > 'h' || moveStr[3] < '1' || moveStr[3] > '8')
+			return {nullptr, moveStr};
 		toFile = moveStr[2] - 'a';
 		toRank = moveStr[3] - '1';
 		int i = 4;
@@ -130,6 +140,8 @@ MoveStrFind findMoveFromSAN(const Board& board, Move* begin, Move* end, const ch
 	}
 	else
 	{
+		if (moveStr[1] < '1' || moveStr[1] > '8')
+			return {nullptr, moveStr};
 		toRank = moveStr[1] - '1';
 		int i = 2;
 		if (moveStr[i] == '=')
@@ -158,9 +170,15 @@ MoveStrFind findMoveFromSAN(const Board& board, Move* begin, Move* end, const ch
 	}
 	goto search_moves;
 piece_moves:
+	if (moveStr[1] == '\0')
+		return {nullptr, moveStr};
+	if (moveStr[2] == '\0')
+		return {nullptr, moveStr};
 	if (moveStr[1] == 'x')
 	{
 		isCapture = true;
+		if (moveStr[2] < 'a' || moveStr[2] > 'h' || moveStr[3] < '1' || moveStr[3] > '8')
+			return {nullptr, moveStr};
 		toFile = moveStr[2] - 'a';
 		toRank = moveStr[3] - '1';
 		moveLen = 4;
@@ -190,13 +208,20 @@ piece_moves:
 			case '8':
 				fromRank = moveStr[1] - '1';
 				break;
+			default:
+				return {nullptr, moveStr};
 		}
+		if (moveStr[3] < 'a' || moveStr[3] > 'h' || moveStr[4] < '1' || moveStr[4] > '8')
+			return {nullptr, moveStr};
 		toFile = moveStr[3] - 'a';
 		toRank = moveStr[4] - '1';
 		moveLen = 5;
 	}
 	else if (moveStr[3] == 'x')
 	{
+		if (moveStr[4] < 'a' || moveStr[4] > 'h' || moveStr[5] < '1' || moveStr[5] > '8')
+			return {nullptr, moveStr};
+			
 		isCapture = true;
 		fromFile = moveStr[1] - 'a';
 		fromRank = moveStr[2] - '1';
@@ -231,6 +256,8 @@ piece_moves:
 			case '8':
 				rank1 = moveStr[1] - '1';
 				break;
+			default:
+				return {nullptr, moveStr};
 		}
 
 		if (file1 != -1)
@@ -257,10 +284,14 @@ piece_moves:
 				case '8':
 					rank1 = moveStr[2] - '1';
 					break;
+				default:
+					return {nullptr, moveStr};
 			}
 
 			if (toFile != -1)
 			{
+				if (moveStr[3] < '1' || moveStr[3] > '8')
+					return {nullptr, moveStr};
 				fromFile = file1;
 				toRank = moveStr[3] - '1';
 				moveLen = 4;
@@ -269,6 +300,8 @@ piece_moves:
 			{
 				if (moveStr[3] >= 'a' && moveStr[3] <= 'h')
 				{
+					if (moveStr[4] < '1' || moveStr[4] > '8')
+						return {nullptr, moveStr};
 					fromFile = file1;
 					fromRank = rank1;
 
@@ -287,6 +320,8 @@ piece_moves:
 		else
 		{
 			fromRank = rank1;
+			if (moveStr[2] < 'a' || moveStr[2] > 'h' || moveStr[3] < '1' || moveStr[3] > '8')
+				return {nullptr, moveStr};
 			toFile = moveStr[2] - 'a';
 			toRank = moveStr[3] - '1';
 			moveLen = 4;
@@ -294,7 +329,8 @@ piece_moves:
 	}
 search_moves:
 	int toSquare = toFile | (toRank << 3);
-	std::cout << "From File: " << fromFile << std::endl;
+	// std::cout << toSquare << std::endl;
+	/*std::cout << "From File: " << fromFile << std::endl;
 	std::cout << "From Rank: " << fromRank << std::endl;
 	std::cout << "To File: " << toFile << std::endl;
 	std::cout << "To Rank: " << toRank << std::endl;
@@ -307,9 +343,203 @@ search_moves:
 
 	std::cout << "Move length: " << moveLen << std::endl;
 	
-	std::cout << std::endl;;
-	
-	return {nullptr, moveStr + moveLen};
+	std::cout << std::endl;*/
+
+	// if (isCapture && !board.getPieceAt(toSquare))
+		// return {end, moveStr + moveLen};
+
+	if (!isCapture && board.getPieceAt(toSquare))
+	{
+		return {end, moveStr + moveLen};
+	}
+
+	int pawnOffset = (board.currPlayer() == Color::WHITE) ? -8 : 8;
+
+	Move* match = nullptr;
+	for (Move* it = begin; it != end; it++)
+	{
+		switch (it->type())
+		{
+			case MoveType::ENPASSANT:
+				if (isCapture && (toRank == 2 || toRank == 5) && !board.getPieceAt(toSquare + pawnOffset))
+					continue;
+				break;
+			default:
+				if (isCapture && !board.getPieceAt(toSquare))
+					continue;
+				break;
+		}
+		if (isPromotion && it->type() != MoveType::PROMOTION)
+			continue;
+		if (!isPromotion && it->type() == MoveType::PROMOTION)
+			continue;
+
+		if (isPromotion && it->promotion() != promotion)
+			continue;
+
+		if (it->dstPos() != toSquare)
+			continue;
+
+		int srcSquare = it->srcPos();
+		Piece srcPiece = board.getPieceAt(srcSquare);
+		if ((srcPiece & PIECE_TYPE_MASK) != static_cast<int>(piece))
+			continue;
+
+		if (fromRank != -1 && fromRank != (srcSquare >> 3))
+			continue;
+		if (fromFile != -1 && fromFile != (srcSquare & 7))
+			continue;
+
+		if (match)
+			return {end + 1, moveStr + moveLen};
+		match = it;
+	}
+
+	if (match)
+		return {match, moveStr + moveLen};
+	else
+		return {end, moveStr + moveLen};
+}
+
+
+std::string convMoveToPCN(Move move)
+{
+	std::string str(4 + (move.type() == MoveType::PROMOTION), ' ');
+	str[0] = (move.srcPos() & 7) + 'a';
+	str[1] = (move.srcPos() >> 3) + '1';
+	str[2] = (move.dstPos() & 7) + 'a';
+	str[3] = (move.dstPos() >> 3) + '1';
+	if (move.type() == MoveType::PROMOTION)
+	{
+		str[4] = promoChars[(static_cast<int>(move.promotion()) >> 14)];
+	}
+	return str;
+}
+
+bool isAmbiguous(const Board& board, Move* begin, Move* end, PieceType piece, int toSquare, int fromFile, int fromRank)
+{
+	Move* match = nullptr;
+	for (Move* it = begin; it != end; it++)
+	{
+		int srcPos = it->srcPos();
+		int dstPos = it->dstPos();
+		PieceType movePiece = static_cast<PieceType>(board.getPieceAt(srcPos) & PIECE_TYPE_MASK);
+		if (movePiece != piece)
+			continue;
+
+		if (dstPos != toSquare)
+			continue;
+
+		if (fromFile != -1 && fromFile != (srcPos & 7))
+			continue;
+
+		if (fromRank != -1 && fromRank != (srcPos >> 3))
+			continue;
+
+		if (match)
+			return true;
+		else
+			match = it;
+	}
+	return false;
+}
+
+std::string convMoveToSAN(const Board& board, Move* begin, Move* end, Move move)
+{
+	PieceType piece = static_cast<PieceType>(board.getPieceAt(move.srcPos()) & PIECE_TYPE_MASK);
+	bool isCapture = static_cast<bool>(board.getPieceAt(move.dstPos()));
+	if (piece == PieceType::PAWN)
+	{
+		int srcPos = move.srcPos();
+		int dstPos = move.dstPos();
+		if ((srcPos & 7) == (dstPos & 7))
+		{
+			std::string str(2 + 2 * (move.type() == MoveType::PROMOTION), ' ');
+			if (move.type() == MoveType::PROMOTION)
+			{
+				str[2] = '=';
+				str[3] = promoChars[static_cast<int>(move.promotion()) >> 14];
+			}
+			str[0] = (dstPos & 7) + 'a';
+			str[1] = (dstPos >> 3) + '1';
+			return str;
+		}
+		else
+		{
+			std::string str(4 + 2 * (move.type() == MoveType::PROMOTION), ' ');
+			if (move.type() == MoveType::PROMOTION)
+			{
+				str[4] = '=';
+				str[5] = promoChars[static_cast<int>(move.promotion()) >> 14];
+			}
+			str[0] = (srcPos & 7) + 'a';
+			str[1] = 'x';
+			str[2] = (dstPos & 7) + 'a';
+			str[3] = (dstPos >> 3) + '1';
+			return str;
+		}
+	}
+	else
+	{
+		char pceChar = pieceChars[static_cast<int>(piece) - 1];
+
+		int srcPos = move.srcPos();
+		int dstPos = move.dstPos();
+
+		if (!isAmbiguous(board, begin, end, piece, dstPos, -1, -1))
+		{
+			std::string str(3 + isCapture, ' ');
+			str[0] = pceChar;
+			if (isCapture)
+			{
+				str[1] = 'x';
+			}
+			str[1 + isCapture] = (dstPos & 7) + 'a';
+			str[2 + isCapture] = (dstPos >> 3) + '1';
+			return str;
+		}
+		
+		if (!isAmbiguous(board, begin, end, piece, dstPos, srcPos & 7, -1))
+		{
+			std::string str(4 + isCapture, ' ');
+			str[0] = pceChar;
+			str[1] = (srcPos & 7) + 'a';
+			if (isCapture)
+			{
+				str[2] = 'x';
+			}
+			str[2 + isCapture] = (dstPos & 7) + 'a';
+			str[3 + isCapture] = (dstPos >> 3) + '1';
+			return str;
+		}
+
+		if (!isAmbiguous(board, begin, end, piece, dstPos, srcPos >> 3, -1))
+		{
+			std::string str(4 + isCapture, ' ');
+			str[0] = pceChar;
+			str[1] = (srcPos >> 3) + '1';
+			if (isCapture)
+			{
+				str[2] = 'x';
+			}
+			str[2 + isCapture] = (dstPos & 7) + 'a';
+			str[3 + isCapture] = (dstPos >> 3) + '1';
+			return str;
+		}
+
+		std::string str(5 + isCapture, ' ');
+		str[0] = pceChar;
+		str[1] = (srcPos & 7) + 'a';
+		str[2] = (srcPos >> 3) + '1';
+		if (isCapture)
+		{
+			str[3] = 'x';
+		}
+		str[3 + isCapture] = (dstPos & 7) + 'a';
+		str[4 + isCapture] = (dstPos >> 3) + '1';
+		return str;
+	}
+	return "";
 }
 
 

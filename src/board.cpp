@@ -123,8 +123,7 @@ done:
 
 	auto [ptr, ec] = std::from_chars(&fen[i], fen.end(), m_HalfMoveClock);
 	std::from_chars(ptr + 1, fen.end(), m_GamePly);
-	m_GamePly = 2 * (m_GamePly - 1) - (m_CurrPlayer == Color::WHITE);
-	return;
+	m_GamePly = 2 * m_GamePly - 1 - (m_CurrPlayer == Color::WHITE);
 }
 
 const char pieceChars[16] = {
@@ -132,10 +131,11 @@ const char pieceChars[16] = {
 	' ', 'k', 'q', 'r', 'b', 'n', 'p', '&'
 };
 
-/*void yesnt()
-{
-	return;
-}*/
+// maybe include these
+/*const char* pieceChars[16] = {
+	" ", "♔", "♕", "♖", "♗", "♘", "♙", "#",
+	" ", "♚", "♛", "♜", "♝", "♞", "♟", "&"
+};*/
 
 void Board::printDbg()
 {

@@ -1,0 +1,6 @@
+#include <variant>
+
+namespace comm
+{
+
+}
