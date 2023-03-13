@@ -78,8 +78,6 @@ bool isValidFen(const char* fen)
 			return false;
 	}
 
-	// TODO: Validate piece placement
-
 	int slashCount = 0;
 	int square = 56;
 	int whiteKingCount = 0;
@@ -89,20 +87,36 @@ bool isValidFen(const char* fen)
 		switch (c)
 		{
 			case '/':
-				if (sq != 64 - slashCount * 8)
+				if (square != 64 - slashCount * 8)
 					return false;
-				sq -= 16;
+				square -= 16;
 				slashCount++;
+				if (slashCount > 7)
+					return false;
 				break;
 			case 'K':
 				whiteKingCount++;
 				if (whiteKingCount > 1)
 					return false;
+				square++;
 				break;
 			case 'k':
 				blackKingCount++;
 				if (blackKingCount > 1)
 					return false;
+				square++;
+				break;
+			case 'P':
+			case 'p':
+			case 'N':
+			case 'n':
+			case 'B':
+			case 'b':
+			case 'R':
+			case 'r':
+			case 'Q':
+			case 'q':
+				square++;
 				break;
 			case '1':
 			case '2':
@@ -111,9 +125,16 @@ bool isValidFen(const char* fen)
 			case '5':
 			case '6':
 			case '7':
-			case '8:
+			case '8':
+				square += c - '0';
+				break;
 		}
 	}
+
+	if (square != 8)
+		return false;
+
+	// TODO: Check position legality
 	
 	return true;
 }

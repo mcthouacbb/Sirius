@@ -4,12 +4,15 @@
 #include <charconv>
 #include <vector>
 #include <cstring>
+#include <chrono>
 
 #include "board.h"
 #include "attacks.h"
 #include "movegen.h"
 #include "comm/move.h"
 #include "comm/fen.h"
+#include "eval/eval.h"
+#include "search.h"
 
 void printBoard(const Board& board)
 {
@@ -30,7 +33,7 @@ uint64_t perft(Board& board, int depth)
 	if (depth == 0)
 		return 1;
 	Move moves[256];
-	Move* end = genMoves<MoveGenType::LEGAL>(board, moves);
+	Move* end = genMoves<MoveGenType::LEGAL>(board, moves, calcCheckInfo(board, board.currPlayer()));
 	if (depth == 1 && !print)
 		return end - moves;
 
@@ -52,7 +55,7 @@ uint64_t perft(Board& board, int depth)
 void testSAN(Board& board, int depth)
 {
 	Move moves[256];
-	Move* end = genMoves<MoveGenType::LEGAL>(board, moves);
+	Move* end = genMoves<MoveGenType::LEGAL>(board, moves, calcCheckInfo(board, board.currPlayer()));
 	
 	for (Move* it = moves; it != end; it++)
 	{
@@ -84,6 +87,35 @@ void testSAN(Board& board, int depth)
 		const auto& move = *it;
 		board.makeMove(move, state);
 		testSAN(board, depth - 1);
+		board.unmakeMove(move, state);
+	}
+}
+
+void testQuiescence(Board& board, int depth)
+{
+	if (depth == 0)
+	{
+		Move captures[256];
+		Move* end = genMoves<MoveGenType::CAPTURES>(board, captures, calcCheckInfo(board, board.currPlayer()));
+
+		for (Move* it = captures; it != end; it++)
+		{
+			if (it->type() != MoveType::ENPASSANT && !(board.getPieceAt(it->dstPos())))
+			{
+				throw std::runtime_error("Not capture");
+			}
+		}
+		return;
+	}
+	Move moves[256];
+	Move* end = genMoves<MoveGenType::LEGAL>(board, moves, calcCheckInfo(board, board.currPlayer()));
+
+	BoardState state;
+	for (Move* it = moves; it != end; it++)
+	{
+		const auto& move = *it;
+		board.makeMove(move, state);
+		testQuiescence(board, depth - 1);
 		board.unmakeMove(move, state);
 	}
 }
@@ -224,7 +256,9 @@ enum class Command
 	SET_POSITION,
 	MAKE_MOVE,
 	UNDO_MOVE,
-	PRINT_BOARD
+	PRINT_BOARD,
+	STATIC_EVAL,
+	SEARCH
 };
 
 const char* parseCommand(const char* str, Command& command)
@@ -265,6 +299,19 @@ const char* parseCommand(const char* str, Command& command)
 				return str + 4;
 			}
 			return nullptr;
+		case 's':
+			if (strncmp(str + 1, "earch ", 6) == 0)
+			{
+				command = Command::SEARCH;
+				return str + 7;
+			}
+		case 'e':
+			if (strncmp(str + 1, "val", 3) == 0)
+			{
+				command = Command::STATIC_EVAL;
+				return str + 4;
+			}
+			return nullptr;
 		default:
 			return nullptr;
 	}
@@ -273,23 +320,24 @@ const char* parseCommand(const char* str, Command& command)
 struct State
 {
 	Board* board;
-	std::vector<BoardState> states;
+	std::vector<BoardState> prevStates;
+	std::vector<Move> prevMoves;
 	Move moves[256];
 	Move* end;
 };
 
-void setPosition(const char* params, State& state)
+void setPosition(State& state, std::string_view params)
 {
-	if (strncmp(params, "fen ", 4) == 0)
+	if (strncmp(params.data(), "fen ", 4) == 0)
 	{
-		if (!comm::isValidFen(params + 4))
+		if (!comm::isValidFen(params.data() + 4))
 		{
 			std::cout << "Invalid fen string" << std::endl;
 			return;
 		}
-		state.board->setToFen(params + 4);
+		state.board->setToFen(params.data() + 4);
 	}
-	else if (strncmp(params, "startpos\0", 9) == 0)
+	else if (strncmp(params.data(), "startpos\0", 9) == 0)
 	{
 		state.board->setToFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 	}
@@ -298,8 +346,88 @@ void setPosition(const char* params, State& state)
 		std::cout << "Invalid position" << std::endl;
 		return;
 	}
-	state.states.clear();
-	state.end = genMoves<MoveGenType::LEGAL>(*state.board, state.moves);
+	state.prevStates.clear();
+	state.prevMoves.clear();
+	state.end = genMoves<MoveGenType::LEGAL>(*state.board, state.moves, calcCheckInfo(*state.board, state.board->currPlayer()));
+}
+
+void makeMove(State& state, std::string_view params)
+{
+	auto [move, strEnd] = comm::findMoveFromSAN(*state.board, state.moves, state.end, params.data());
+
+	if (move == nullptr)
+	{
+		std::cout << "Invalid move" << std::endl;
+		return;
+	}
+
+	if (move == state.end)
+	{
+		std::cout << "No move found" << std::endl;
+		return;
+	}
+
+	if (move == state.end + 1)
+	{
+		std::cout << "Move is ambiguous" << std::endl;
+		return;
+	}
+
+	state.prevStates.emplace_back(BoardState());
+	state.board->makeMove(*move, state.prevStates.back());
+	state.prevMoves.push_back(*move);
+
+	state.end = genMoves<MoveGenType::LEGAL>(*state.board, state.moves, calcCheckInfo(*state.board, state.board->currPlayer()));
+}
+
+void undoMove(State& state, std::string_view params)
+{
+	if (state.prevMoves.empty())
+	{
+		std::cout << "No move to undo" << std::endl;
+		return;
+	}
+
+	state.board->unmakeMove(state.prevMoves.back(), state.prevStates.back());
+	state.prevStates.pop_back();
+	state.prevMoves.pop_back();
+
+	state.end = genMoves<MoveGenType::LEGAL>(*state.board, state.moves, calcCheckInfo(*state.board, state.board->currPlayer()));
+}
+
+void staticEval(const Board& board)
+{
+	std::cout << "Eval: " << eval::evaluate(board) << std::endl;
+	std::cout << "Phase: " << board.evalState().phase << std::endl;
+	std::cout << "Eval midgame:\n";
+	std::cout << "\tMaterial:\n";
+	std::cout << "\t\tWhite: " << board.evalState().materialMG[0] << '\n';
+	std::cout << "\t\tBlack: " << board.evalState().materialMG[1] << '\n';
+	std::cout << "Eval endgame:\n";
+	std::cout << "\tMaterial:\n";
+	std::cout << "\t\tWhite: " << board.evalState().materialEG[0] << '\n';
+	std::cout << "\t\tBlack: " << board.evalState().materialEG[1] << '\n';
+}
+
+void searchCommand(Search& search, std::string_view params)
+{
+	int depth;
+	auto [ptr, ec] = std::from_chars(params.data(), params.data() + params.size(), depth);
+
+	if (depth <= 0)
+	{
+		std::cout << "Depth must be greater than 0" << std::endl;
+		return;
+	}
+
+	auto t1 = std::chrono::steady_clock::now();
+	int eval = search.iterDeep(depth);
+	auto t2 = std::chrono::steady_clock::now();
+
+	auto time = std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1);
+
+	std::cout << "Time: " << time.count() << std::endl;
+	std::cout << "Eval: " << eval << std::endl;
 }
 
 int main(int argc, char** argv)
@@ -308,10 +436,17 @@ int main(int argc, char** argv)
 	std::cout << "Hello World!" << std::endl;
 	Board board;
 
+	// board.setToFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
+
+	// testQuiescence(board, 3);
+	// std::cout << "yay" << std::endl;
+	
 	State state;
 	state.board = &board;
-	state.end = genMoves<MoveGenType::LEGAL>(board, state.moves);
+	state.end = genMoves<MoveGenType::LEGAL>(board, state.moves, calcCheckInfo(*state.board, state.board->currPlayer()));
 
+	Search search(board);
+	
 	std::string str;
 	for (;;)
 	{
@@ -328,17 +463,27 @@ int main(int argc, char** argv)
 		{
 			case Command::SET_POSITION:
 				std::cout << "Set position: " << params << std::endl;
-				setPosition(params, state);
+				setPosition(state, std::string_view(params, str.c_str() + str.size()));
 				break;
 			case Command::MAKE_MOVE:
+				makeMove(state, std::string_view(params, str.c_str() + str.size()));
 				std::cout << "Make move: " << params << std::endl;
 				break;
 			case Command::UNDO_MOVE:
+				undoMove(state, std::string_view(params, str.c_str() + str.size()));
 				std::cout << "Undo move: " << params << std::endl;
 				break;
 			case Command::PRINT_BOARD:
 				std::cout << "Print board: " << params << std::endl;
 				printBoard(board);
+				break;
+			case Command::STATIC_EVAL:
+				std::cout << "Static eval: " << params << std::endl;
+				staticEval(board);
+				break;
+			case Command::SEARCH:
+				std::cout << "Search: " << params << std::endl;
+				searchCommand(search, std::string_view(params, str.c_str() + str.size()));
 				break;
 		}
 	}

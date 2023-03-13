@@ -1,9 +1,9 @@
-#include "move.h"
 #include "board.h"
 
 enum class MoveGenType
 {
-	LEGAL
+	LEGAL,
+	CAPTURES
 };
 
 struct CheckInfo
@@ -14,5 +14,7 @@ struct CheckInfo
 	BitBoard pinned;
 };
 
+CheckInfo calcCheckInfo(const Board& board, Color color);
+
 template<MoveGenType type>
-Move* genMoves(const Board& board, Move* moves);
+Move* genMoves(const Board& board, Move* moves, const CheckInfo& checkInfo);
