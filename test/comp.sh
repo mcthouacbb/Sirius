@@ -1,1 +1,0 @@
-g++ -Wall -g -fsanitize=address -O0 -std=c++20 ./test/play_game.cpp -o ./test/play_game
