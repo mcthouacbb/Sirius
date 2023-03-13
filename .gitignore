@@ -1,5 +1,11 @@
 # taken from https://github.com/github/gitignore/blob/main/C%2B%2B.gitignore
 
+# Executables
+*.exe
+*.out
+*.app
+
+
 # Prerequisites
 *.d
 
@@ -28,7 +34,13 @@
 *.a
 *.lib
 
-# Executables
-*.exe
-*.out
-*.app
+
+
+# for replit
+.ccls-cache
+.replit
+.breakpoints
+replit.nix
+main
+main_debug
+Makefile
