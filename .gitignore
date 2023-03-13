@@ -32,3 +32,14 @@
 *.exe
 *.out
 *.app
+
+
+
+# for replit
+.ccls-cache
+.replit
+.breakpoints
+replit.nix
+main
+main_debug
+Makefile
