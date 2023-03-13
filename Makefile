@@ -1,10 +1,22 @@
+BUILD_CONFIG = release
+
 CXX = g++
-CXX_FLAGS = -Wall -g -fsanitize=address -fsanitize=undefined -O0 -std=c++20 -rdynamic
-#CXX_FLAGS = -Wall -O3 -std=c++20 -march=corei7
+ifeq ($(BUILD_CONFIG), release)
+	CXX_FLAGS = -Wall -O3 -std=c++20 -march=corei7
+else
+	CXX_FLAGS = -Wall -g -fsanitize=address -fsanitize=undefined -O0 -std=c++20 -rdynamic
+endif
+
+
 CXX_INCLUDES = -Ivendor/fmt/include
 
-BIN := main
-BUILD_DIR := $(CURDIR)/build
+ifeq ($(BUILD_CONFIG), release)
+	BIN := main
+	BUILD_DIR := $(CURDIR)/build/release
+else
+	BIN := main_debug
+	BUILD_DIR := $(CURDIR)/build/debug
+endif
 SOURCE_DIR := $(CURDIR)/src
 VENDOR_DIR := $(CURDIR)/vendor
 
