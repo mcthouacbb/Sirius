@@ -12,6 +12,7 @@ Board::Board()
 void Board::setToFen(const std::string_view& fen)
 {
 	memset(m_Squares, 0, 64 + 72);
+	m_EvalState.init();
 	int i = 0;
 	int sq = 56;
 	for (;; i++)
@@ -117,7 +118,7 @@ done:
 	}
 	else
 	{
-		m_Enpassant = 0;
+		m_Enpassant = -1;
 	}
 	i += 2;
 
@@ -137,7 +138,7 @@ const char pieceChars[16] = {
 	" ", "♚", "♛", "♜", "♝", "♞", "♟", "&"
 };*/
 
-void Board::printDbg()
+void Board::printDbg() const
 {
 	const char* between = "+---+---+---+---+---+---+---+---+\n";
 
@@ -290,7 +291,7 @@ void Board::makeMove(const Move move, BoardState& state)
 	m_CastlingRights &= attacks::getCastleMask(move.dstPos());
 
 	if (m_Enpassant == state.epSquare)
-		m_Enpassant = 0;
+		m_Enpassant = -1;
 
 	m_CurrPlayer = flip(m_CurrPlayer);
 
@@ -375,6 +376,8 @@ void Board::addPiece(int pos, Color color, PieceType piece)
 	m_Pieces[static_cast<int>(piece)] |= posBB;
 	m_Colors[static_cast<int>(color)] |= posBB;
 	m_Pieces[static_cast<int>(PieceType::ALL)] |= posBB;
+
+	m_EvalState.addPiece(color, piece, pos);
 }
 
 void Board::addPiece(int pos, Piece piece)
@@ -384,6 +387,8 @@ void Board::addPiece(int pos, Piece piece)
 	m_Pieces[piece & PIECE_TYPE_MASK] |= posBB;
 	m_Colors[piece >> 3] |= posBB;
 	m_Pieces[static_cast<int>(PieceType::ALL)] |= posBB;
+
+	m_EvalState.addPiece(static_cast<Color>(piece >> 3), static_cast<PieceType>(piece & PIECE_TYPE_MASK), pos);
 }
 
 void Board::removePiece(int pos)
@@ -395,6 +400,8 @@ void Board::removePiece(int pos)
 	m_Pieces[piece] ^= posBB;
 	m_Colors[color] ^= posBB;
 	m_Pieces[static_cast<int>(PieceType::ALL)] ^= posBB;
+
+	m_EvalState.removePiece(static_cast<Color>(color), static_cast<PieceType>(piece), pos);
 }
 
 void Board::movePiece(int src, int dst)
@@ -411,4 +418,6 @@ void Board::movePiece(int src, int dst)
 	// if (getPopcnt(m_Colors[color]) > 16)
 		// yesnt();
 	m_Pieces[static_cast<int>(PieceType::ALL)] ^= moveBB;
+
+	m_EvalState.movePiece(static_cast<Color>(color), static_cast<PieceType>(piece), src, dst);
 }

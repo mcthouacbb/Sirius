@@ -103,6 +103,39 @@ MoveStrFind findMoveFromSAN(const Board& board, Move* begin, Move* end, const ch
 				toFile = moveStr[0] - 'a';
 			}
 			break;
+		case 'O':
+			if (moveStr[1] != '-')
+				return {nullptr, moveStr};
+			if (moveStr[2] != 'O')
+				return {nullptr, moveStr};
+			if (moveStr[3] == '\0')
+			{
+				for (Move* it = begin; it != end; it++)
+				{
+					if (it->type() == MoveType::CASTLE && it->dstPos() > it->srcPos())
+					{
+						return {it, moveStr + 3};
+					}
+				}
+				return {end, moveStr + 3};
+			}
+			else
+			{
+				if (moveStr[3] != '-')
+					return {nullptr, moveStr};
+				if (moveStr[4] != 'O')
+					return {nullptr, moveStr};
+				if (moveStr[5] != '\0')
+					return {nullptr, moveStr};
+				for (Move* it = begin; it != end; it++)
+				{
+					if (it->type() == MoveType::CASTLE && it->dstPos() < it->srcPos())
+					{
+						return {it, moveStr + 5};
+					}
+				}
+				return {end, moveStr + 5};
+			}
 		default:
 			return {nullptr, moveStr};
 	}
@@ -446,6 +479,10 @@ bool isAmbiguous(const Board& board, Move* begin, Move* end, PieceType piece, in
 
 std::string convMoveToSAN(const Board& board, Move* begin, Move* end, Move move)
 {
+	if (move.type() == MoveType::CASTLE)
+	{
+		return move.dstPos() > move.srcPos() ? "O-O" : "O-O-O";
+	}
 	PieceType piece = static_cast<PieceType>(board.getPieceAt(move.srcPos()) & PIECE_TYPE_MASK);
 	bool isCapture = static_cast<bool>(board.getPieceAt(move.dstPos()));
 	if (piece == PieceType::PAWN)
