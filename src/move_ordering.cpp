@@ -45,12 +45,47 @@ MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end)
 		{
 			int srcPiece = board.getPieceAt(move.srcPos()) & PIECE_TYPE_MASK;
 			int dstPiece = board.getPieceAt(move.dstPos()) & PIECE_TYPE_MASK;
-			score = MVV_LVA[srcPiece][dstPiece];
+			score = CAPTURE_BONUS + MVV_LVA[srcPiece][dstPiece];
 		}
 
 		if (isPromotion)
 		{
 			score += PROMO_BONUS[static_cast<int>(move.promotion()) >> 14];
+		}
+
+		m_MoveScores[i] = score;
+	}
+}
+
+MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end, Move (&killers)[2], int (&history)[4096])
+	: m_Moves(begin), m_Size(end - begin)
+{
+	for (uint32_t i = 0; i < m_Size; i++)
+	{
+		int score = 0;
+		Move move = begin[i];
+		
+		bool isCapture = static_cast<bool>(board.getPieceAt(move.dstPos()));
+		bool isPromotion = move.type() == MoveType::PROMOTION;
+
+		if (isCapture)
+		{
+			int srcPiece = board.getPieceAt(move.srcPos()) & PIECE_TYPE_MASK;
+			int dstPiece = board.getPieceAt(move.dstPos()) & PIECE_TYPE_MASK;
+			score = CAPTURE_BONUS + MVV_LVA[srcPiece][dstPiece];
+		}
+
+		if (isPromotion)
+		{
+			score += PROMO_BONUS[static_cast<int>(move.promotion()) >> 14];
+		}
+
+		if (!isCapture && !isPromotion)
+		{
+			if (move == killers[0] || move == killers[1])
+				score = KILLER_BONUS;
+			else
+				score = HISTORY_BONUS + history[move.fromTo()];
 		}
 
 		m_MoveScores[i] = score;

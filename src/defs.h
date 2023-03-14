@@ -65,8 +65,12 @@ public:
 	Move(int src, int dst, MoveType type);
 	Move(int src, int dst, MoveType type, Promotion promotion);
 
+	bool operator==(const Move& other) const = default;
+	bool operator!=(const Move& other) const = default;
+
 	int srcPos() const;
 	int dstPos() const;
+	int fromTo() const;
 	MoveType type() const;
 	Promotion promotion() const;
 private:
@@ -100,6 +104,11 @@ inline int Move::srcPos() const
 inline int Move::dstPos() const
 {
 	return (m_Data >> 6) & 63;
+}
+
+inline int Move::fromTo() const
+{
+	return m_Data & 4095;
 }
 
 inline MoveType Move::type() const

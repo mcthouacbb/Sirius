@@ -11,10 +11,31 @@ Search::Search(Board& board)
 	
 }
 
+void Search::storeKiller(int ply, Move killer)
+{
+	if (m_Plies[ply].killers[0] != killer)
+	{
+		m_Plies[ply].killers[1] = m_Plies[ply].killers[0];
+		m_Plies[ply].killers[0] = killer;
+	}
+}
+
+void Search::reset()
+{
+	memset(m_History, 0, sizeof(m_History));
+
+	for (int i = 0; i < MAX_PLY; i++)
+	{
+		m_Plies[i].killers[0] = m_Plies[i].killers[1] = Move();
+		m_Plies[i].pv = nullptr;
+		m_Plies[i].pvLength = 0;
+	}
+}
 
 int Search::iterDeep(int maxDepth)
 {
 	int score;
+	reset();
 	for (int depth = 1; depth <= maxDepth; depth++)
 	{
 		m_Nodes = 0;
@@ -58,7 +79,7 @@ int Search::search(int depth, int alpha, int beta)
 	if (depth <= 0)
 	{
 		m_Plies[m_RootPly].pvLength = 0;
-		return qsearch(alpha, beta, 1);
+		return qsearch(alpha, beta);
 	}
 
 	m_Nodes++;
@@ -74,7 +95,13 @@ int Search::search(int depth, int alpha, int beta)
 		return eval::STALEMATE;
 	}
 	
-	MoveOrdering ordering(m_Board, moves, end);
+	MoveOrdering ordering(
+		m_Board,
+		moves,
+		end,
+		m_Plies[m_RootPly].killers,
+		m_History[static_cast<int>(m_Board.currPlayer())]
+	);
 	
 	BoardState state;
 
@@ -96,6 +123,11 @@ int Search::search(int depth, int alpha, int beta)
 
 		if (moveScore >= beta)
 		{
+			if (move.type() != MoveType::PROMOTION && !state.dstPiece)
+			{
+				storeKiller(m_RootPly, move);
+				m_History[static_cast<int>(m_Board.currPlayer())][move.fromTo()] += depth * depth;
+			}
 			return beta;
 		}
 
@@ -112,7 +144,7 @@ int Search::search(int depth, int alpha, int beta)
 	return alpha;
 }
 
-int Search::qsearch(int alpha, int beta, int depth)
+int Search::qsearch(int alpha, int beta)
 {
 	int score = eval::evaluate(m_Board);
 
@@ -121,9 +153,6 @@ int Search::qsearch(int alpha, int beta, int depth)
 		return beta;
 	if (score > alpha)
 		alpha = score;
-
-	if (depth <= 0)
-		return alpha;
 
 	CheckInfo checkInfo = calcCheckInfo(m_Board, m_Board.currPlayer());
 
@@ -137,7 +166,7 @@ int Search::qsearch(int alpha, int beta, int depth)
 	{
 		Move move = ordering.selectMove(i);
 		m_Board.makeMove(move, state);
-		int moveScore = -qsearch(-beta, -alpha, depth - 1);
+		int moveScore = -qsearch(-beta, -alpha);
 		m_Board.unmakeMove(move, state);
 
 		if (moveScore >= beta)
