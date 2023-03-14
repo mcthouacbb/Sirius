@@ -403,10 +403,16 @@ void staticEval(const Board& board)
 	std::cout << "\tMaterial:\n";
 	std::cout << "\t\tWhite: " << board.evalState().materialMG[0] << '\n';
 	std::cout << "\t\tBlack: " << board.evalState().materialMG[1] << '\n';
+	std::cout << "\tPiece Square Tables:\n";
+	std::cout << "\t\tWhite: " << board.evalState().psqtMG[0] << '\n';
+	std::cout << "\t\tBlack: " << board.evalState().psqtMG[1] << '\n';
 	std::cout << "Eval endgame:\n";
 	std::cout << "\tMaterial:\n";
 	std::cout << "\t\tWhite: " << board.evalState().materialEG[0] << '\n';
 	std::cout << "\t\tBlack: " << board.evalState().materialEG[1] << '\n';
+	std::cout << "\tPiece Square Tables:\n";
+	std::cout << "\t\tWhite: " << board.evalState().psqtEG[0] << '\n';
+	std::cout << "\t\tBlack: " << board.evalState().psqtEG[1] << '\n';
 }
 
 void searchCommand(Search& search, std::string_view params)

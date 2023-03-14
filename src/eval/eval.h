@@ -17,8 +17,6 @@ inline bool isMateScore(int score)
 	return std::abs(CHECKMATE) - std::abs(score) < 256; 
 }
 
-int evalMaterialMG(const Board& board);
-int evalMaterialEG(const Board& board);
 int evaluate(const Board& board);
 
 }
