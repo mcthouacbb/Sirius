@@ -1,6 +1,6 @@
 # Chess Engine (untitled)
 
-v 0.1
+v 0.1.1
 
 Features
 - Board representation
@@ -70,10 +70,15 @@ Features
             - Bishop = 330
             - Knight = 320
             - Pawn = 100
+    - Piece Square Tables
+	    - from https://www.chessprogramming.org/Simplified_Evaluation_Function
 - Search
 	- Mate Distance Pruning
     - Check Extension
+    - Principal Variation Search(PVS)
     - PV Collection(pv list on stack)
     - Move Ordering
 	    - MVV_LVA
+        - Killer Moves Heuristic
+        - History Heuristic
     - Quiescence Search
