@@ -9,6 +9,7 @@ struct SearchPly
 {
 	Move* pv;
 	int pvLength;
+	Move bestMove;
 	Move killers[2];
 };
 
@@ -19,11 +20,11 @@ public:
 
 	int iterDeep(int maxDepth);
 
-	int search(int depth, int alpha, int beta);
+	int search(int depth, SearchPly* searchPly, int alpha, int beta, bool isPV);
 	int qsearch(int alpha, int beta);
 private:
 	void reset();
-	void storeKiller(int ply, Move killer);
+	void storeKiller(SearchPly* ply, Move killer);
 
 	Board& m_Board;
 	int m_RootPly;

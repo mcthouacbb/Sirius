@@ -11,12 +11,12 @@ Search::Search(Board& board)
 	
 }
 
-void Search::storeKiller(int ply, Move killer)
+void Search::storeKiller(SearchPly* ply, Move killer)
 {
-	if (m_Plies[ply].killers[0] != killer)
+	if (ply->killers[0] != killer)
 	{
-		m_Plies[ply].killers[1] = m_Plies[ply].killers[0];
-		m_Plies[ply].killers[0] = killer;
+		ply->killers[1] = ply->killers[0];
+		ply->killers[0] = killer;
 	}
 }
 
@@ -41,7 +41,7 @@ int Search::iterDeep(int maxDepth)
 		m_Nodes = 0;
 		m_QNodes = 0;
 		m_Plies[0].pv = m_PV;
-		int searchScore = search(depth, eval::NEG_INF, eval::POS_INF);
+		int searchScore = search(depth, &m_Plies[0], eval::NEG_INF, eval::POS_INF, true);
 		score = searchScore;
 		std::cout << "Depth: " << depth << std::endl;
 		std::cout << "\tNodes: " << m_Nodes << std::endl;
@@ -62,7 +62,7 @@ int Search::iterDeep(int maxDepth)
 }
 
 
-int Search::search(int depth, int alpha, int beta)
+int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool isPV)
 {
 	alpha = std::max(alpha, eval::CHECKMATE + m_RootPly);
 	beta = std::min(beta, -eval::CHECKMATE - m_RootPly);
@@ -78,7 +78,7 @@ int Search::search(int depth, int alpha, int beta)
 	
 	if (depth <= 0)
 	{
-		m_Plies[m_RootPly].pvLength = 0;
+		searchPly->pvLength = 0;
 		return qsearch(alpha, beta);
 	}
 
@@ -89,7 +89,7 @@ int Search::search(int depth, int alpha, int beta)
 
 	if (moves == end)
 	{
-		m_Plies[m_RootPly].pvLength = 0;
+		searchPly->pvLength = 0;
 		if (checkInfo.checkers)
 			return eval::CHECKMATE + m_RootPly;
 		return eval::STALEMATE;
@@ -99,15 +99,17 @@ int Search::search(int depth, int alpha, int beta)
 		m_Board,
 		moves,
 		end,
-		m_Plies[m_RootPly].killers,
+		searchPly->killers,
 		m_History[static_cast<int>(m_Board.currPlayer())]
 	);
 	
 	BoardState state;
 
 	Move childPV[MAX_PLY];
-	m_Plies[m_RootPly + 1].pv = childPV;
+	searchPly[1].pv = childPV;
 
+	searchPly->bestMove = Move();
+	
 	for (uint32_t i = 0; i < end - moves; i++)
 	{
 		Move move = ordering.selectMove(i);
@@ -117,7 +119,15 @@ int Search::search(int depth, int alpha, int beta)
 		// const auto& move = *it;
 		m_Board.makeMove(move, state);
 		m_RootPly++;
-		int moveScore = -search(depth - 1, -beta, -alpha);
+		int moveScore;
+		if (searchPly->bestMove == Move())
+			moveScore = -search(depth - 1, searchPly + 1, -beta, -alpha, isPV);
+		else
+		{
+			moveScore = -search(depth - 1, searchPly + 1, -(alpha + 1), -alpha, false);
+			if (moveScore > alpha && isPV)
+				moveScore = -search(depth - 1, searchPly + 1, -beta, -alpha, true);
+		}
 		m_RootPly--;
 		m_Board.unmakeMove(move, state);
 
@@ -125,7 +135,7 @@ int Search::search(int depth, int alpha, int beta)
 		{
 			if (move.type() != MoveType::PROMOTION && !state.dstPiece)
 			{
-				storeKiller(m_RootPly, move);
+				storeKiller(searchPly, move);
 				m_History[static_cast<int>(m_Board.currPlayer())][move.fromTo()] += depth * depth;
 			}
 			return beta;
@@ -134,10 +144,10 @@ int Search::search(int depth, int alpha, int beta)
 		if (moveScore > alpha)
 		{
 			alpha = moveScore;
-
-			m_Plies[m_RootPly].pv[0] = move;
-			m_Plies[m_RootPly].pvLength = m_Plies[m_RootPly + 1].pvLength + 1;
-			memcpy(m_Plies[m_RootPly].pv + 1, m_Plies[m_RootPly + 1].pv, m_Plies[m_RootPly + 1].pvLength * sizeof(Move));
+			searchPly->bestMove = move;
+			searchPly->pv[0] = move;
+			searchPly->pvLength = searchPly[1].pvLength + 1;
+			memcpy(searchPly->pv + 1, searchPly[1].pv, searchPly[1].pvLength * sizeof(Move));
 		}
 	}
 
