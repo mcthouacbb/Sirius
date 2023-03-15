@@ -1,6 +1,6 @@
 # Chess Engine (untitled)
 
-v 0.1.1
+v 0.1.2
 
 Features
 - Board representation
@@ -23,6 +23,7 @@ Features
         - 12 = Black Bishop
         - 13 = Black Knight
         - 14 = Black Pawn
+    - Zobrist hashing
     - Move Representation
 	    - 16 bits
 	        - 0-5: source position
@@ -70,7 +71,7 @@ Features
             - Bishop = 330
             - Knight = 320
             - Pawn = 100
-    - Piece Square Tables
+    - Piece Square Tables 
 	    - from https://www.chessprogramming.org/Simplified_Evaluation_Function
 - Search
 	- Mate Distance Pruning

@@ -129,7 +129,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 				moveScore = -search(depth - 1, searchPly + 1, -beta, -alpha, true);
 		}
 		m_RootPly--;
-		m_Board.unmakeMove(move, state);
+		m_Board.unmakeMove(move);
 
 		if (moveScore >= beta)
 		{
@@ -177,7 +177,7 @@ int Search::qsearch(int alpha, int beta)
 		Move move = ordering.selectMove(i);
 		m_Board.makeMove(move, state);
 		int moveScore = -qsearch(-beta, -alpha);
-		m_Board.unmakeMove(move, state);
+		m_Board.unmakeMove(move);
 
 		if (moveScore >= beta)
 			return beta;

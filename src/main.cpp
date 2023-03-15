@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstring>
 #include <chrono>
+#include <deque>
 
 #include "board.h"
 #include "attacks.h"
@@ -25,6 +26,8 @@ void printBoard(const Board& board)
 		std::cout << "Ep square: " << static_cast<char>((board.epSquare() & 7) + 'a') << static_cast<char>((board.epSquare() >> 3) + '1') << std::endl;
 	else
 		std::cout << "Ep square: N/A" << std::endl;
+
+	std::cout << "Zobrist hash: " << board.zkey().value << std::endl;
 }
 
 template<bool print>
@@ -47,7 +50,7 @@ uint64_t perft(Board& board, int depth)
 		if (print)
 			std::cout << comm::convMoveToPCN(move) << ": " << sub << std::endl;
 		count += sub;
-		board.unmakeMove(move, state);
+		board.unmakeMove(move);
 	}
 	return count;
 }
@@ -87,7 +90,7 @@ void testSAN(Board& board, int depth)
 		const auto& move = *it;
 		board.makeMove(move, state);
 		testSAN(board, depth - 1);
-		board.unmakeMove(move, state);
+		board.unmakeMove(move);
 	}
 }
 
@@ -116,7 +119,7 @@ void testQuiescence(Board& board, int depth)
 		const auto& move = *it;
 		board.makeMove(move, state);
 		testQuiescence(board, depth - 1);
-		board.unmakeMove(move, state);
+		board.unmakeMove(move);
 	}
 }
 
@@ -160,25 +163,6 @@ void runTests(Board& board, bool fast)
 		}
 		tests.push_back(test);
 	}
-	/*for (auto& test : tests)
-	{
-		std::cout << "FEN: " << test.fen << std::endl;
-		for (int i = 0; i < 6; i++)
-		{
-			if (test.results[i] != UINT64_MAX)
-			{
-				std::cout << "DEPTH: " << (i + 1) << " P: " << test.results[i] << std::endl;
-			}
-		}
-	}*/
-
-/*
-TEST: 8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1 
-    Passed: depth 4
-    Failed: depth 5, Expected: 674624, got: 674543
-    Failed: depth 6, Expected: 11030083, got: 11027209
-
-*/
 
 	uint32_t failCount = 0;
 	uint64_t totalNodes = 0;
@@ -258,7 +242,8 @@ enum class Command
 	UNDO_MOVE,
 	PRINT_BOARD,
 	STATIC_EVAL,
-	SEARCH
+	SEARCH,
+	RUN_TESTS
 };
 
 const char* parseCommand(const char* str, Command& command)
@@ -312,6 +297,12 @@ const char* parseCommand(const char* str, Command& command)
 				return str + 4;
 			}
 			return nullptr;
+		case 't':
+			if (strncmp(str + 1, "ests", 4) == 0)
+			{
+				command = Command::RUN_TESTS;
+				return str + 5;
+			}
 		default:
 			return nullptr;
 	}
@@ -320,7 +311,8 @@ const char* parseCommand(const char* str, Command& command)
 struct State
 {
 	Board* board;
-	std::vector<BoardState> prevStates;
+	// use deque to avoid invalidation of pointers
+	std::deque<BoardState> prevStates;
 	std::vector<Move> prevMoves;
 	Move moves[256];
 	Move* end;
@@ -388,7 +380,7 @@ void undoMove(State& state, std::string_view params)
 		return;
 	}
 
-	state.board->unmakeMove(state.prevMoves.back(), state.prevStates.back());
+	state.board->unmakeMove(state.prevMoves.back());
 	state.prevStates.pop_back();
 	state.prevMoves.pop_back();
 
@@ -439,6 +431,7 @@ void searchCommand(Search& search, std::string_view params)
 int main(int argc, char** argv)
 {
 	attacks::init();
+	zobrist::init();
 	std::cout << "Hello World!" << std::endl;
 	Board board;
 
@@ -490,6 +483,10 @@ int main(int argc, char** argv)
 			case Command::SEARCH:
 				std::cout << "Search: " << params << std::endl;
 				searchCommand(search, std::string_view(params, str.c_str() + str.size()));
+				break;
+			case Command::RUN_TESTS:
+				std::cout << "Tests: " << params << std::endl;
+				runTests(board, false);
 				break;
 		}
 	}

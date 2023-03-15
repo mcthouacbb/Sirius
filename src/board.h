@@ -3,6 +3,7 @@
 #include "defs.h"
 #include "bitboard.h"
 #include "eval/eval_state.h"
+#include "zobrist.h"
 
 #include <string_view>
 #include <string>
@@ -15,6 +16,10 @@ struct BoardState
 
 	Piece srcPiece;
 	Piece dstPiece;
+
+	ZKey zkey;
+
+	BoardState* prev;
 };
 
 class Board
@@ -32,13 +37,14 @@ public:
 	void printDbg() const;
 
 	void makeMove(Move move, BoardState& state);
-	void unmakeMove(Move move, const BoardState& state);
+	void unmakeMove(Move move);
 
 	Color currPlayer() const;
 	int epSquare() const;
 	int gamePly() const;
 	int halfMoveClock() const;
 	int castlingRights() const;
+	ZKey zkey() const;
 
 	Piece getPieceAt(uint32_t square) const;
 	BitBoard getPieces(PieceType type) const;
@@ -64,6 +70,10 @@ private:
 	int m_Enpassant;
 	int m_HalfMoveClock;
 	int m_CastlingRights;
+
+	ZKey m_ZKey;
+
+	BoardState* m_State;
 };
 
 inline Color Board::currPlayer() const
@@ -89,6 +99,11 @@ inline int Board::halfMoveClock() const
 inline int Board::castlingRights() const
 {
 	return m_CastlingRights;	
+}
+
+inline ZKey Board::zkey() const
+{
+	return m_ZKey;
 }
 
 inline Piece Board::getPieceAt(uint32_t square) const
