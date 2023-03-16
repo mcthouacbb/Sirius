@@ -46,19 +46,19 @@ void ZKey::flipSideToMove()
 void ZKey::addPiece(PieceType piece, Color color, uint32_t square)
 {
 	// std::cout << "ADD PIECE " << zobrist::pieces[(int)piece] << ' ' << (int)color << ' ' << square << std::endl;
-	value ^= zobrist::pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][square];
+	value ^= zobrist::pieceSquares[static_cast<int>(color)][static_cast<int>(piece) - 1][square];
 }
 
 void ZKey::removePiece(PieceType piece, Color color, uint32_t square)
 {
 	// std::cout << "REMOVE PIECE " << zobrist::pieces[(int)piece] << ' ' << (int)color << ' ' << square << std::endl;
-	value ^= zobrist::pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][square];
+	value ^= zobrist::pieceSquares[static_cast<int>(color)][static_cast<int>(piece) - 1][square];
 }
 
 void ZKey::movePiece(PieceType piece, Color color, uint32_t src, uint32_t dst)
 {
 	// std::cout << "MOVE PIECE " << zobrist::pieces[(int)piece] << ' ' << (int)color << ' ' << src << "->" << dst << std::endl;
-	value ^= (zobrist::pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][src] ^ zobrist::pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][dst]);
+	value ^= (zobrist::pieceSquares[static_cast<int>(color)][static_cast<int>(piece) - 1][src] ^ zobrist::pieceSquares[static_cast<int>(color)][static_cast<int>(piece) - 1][dst]);
 }
 
 void ZKey::updateCastlingRights(uint32_t castlingRights)

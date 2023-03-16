@@ -242,6 +242,7 @@ enum class Command
 	UNDO_MOVE,
 	PRINT_BOARD,
 	STATIC_EVAL,
+	QUIESCENCE_EVAL,
 	SEARCH,
 	RUN_TESTS
 };
@@ -290,6 +291,7 @@ const char* parseCommand(const char* str, Command& command)
 				command = Command::SEARCH;
 				return str + 7;
 			}
+			return nullptr;
 		case 'e':
 			if (strncmp(str + 1, "val", 3) == 0)
 			{
@@ -303,6 +305,14 @@ const char* parseCommand(const char* str, Command& command)
 				command = Command::RUN_TESTS;
 				return str + 5;
 			}
+			return nullptr;
+		case 'q':
+			if (strncmp(str + 1, "eval", 4) == 0)
+			{
+				command = Command::QUIESCENCE_EVAL;
+				return str + 5;
+			}
+			return nullptr;
 		default:
 			return nullptr;
 	}
@@ -407,6 +417,12 @@ void staticEval(const Board& board)
 	std::cout << "\t\tBlack: " << board.evalState().psqtEG[1] << '\n';
 }
 
+void quiescenceEval(Search& search, std::string_view params)
+{
+	int eval = search.qsearch(eval::NEG_INF, eval::POS_INF);
+	std::cout << "Quiescence eval: " << eval << std::endl;
+}
+
 void searchCommand(Search& search, std::string_view params)
 {
 	int depth;
@@ -483,6 +499,10 @@ int main(int argc, char** argv)
 			case Command::SEARCH:
 				std::cout << "Search: " << params << std::endl;
 				searchCommand(search, std::string_view(params, str.c_str() + str.size()));
+				break;
+			case Command::QUIESCENCE_EVAL:
+				std::cout << "QEval: " << params << std::endl;
+				quiescenceEval(search, std::string_view(params, str.c_str() + str.size()));
 				break;
 			case Command::RUN_TESTS:
 				std::cout << "Tests: " << params << std::endl;

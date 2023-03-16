@@ -320,7 +320,7 @@ void Board::makeMove(const Move move, BoardState& state)
 			int col = static_cast<int>(flip(m_CurrPlayer)) << 3;
 			state.dstPiece = col | static_cast<int>(PieceType::PAWN);
 			removePiece(move.dstPos() + offset);
-			m_ZKey.removePiece(PieceType::PAWN, static_cast<Color>(col), move.dstPos() + offset);
+			m_ZKey.removePiece(PieceType::PAWN, flip(m_CurrPlayer), move.dstPos() + offset);
 			movePiece(move.srcPos(), move.dstPos());
 			m_ZKey.movePiece(static_cast<PieceType>(state.srcPiece & PIECE_TYPE_MASK), static_cast<Color>(state.srcPiece >> 3), move.srcPos(), move.dstPos());
 			break;
