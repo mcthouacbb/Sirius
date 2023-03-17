@@ -11,6 +11,7 @@
 struct BoardState
 {
 	int halfMoveClock;
+	int reversiblePly;
 	int epSquare;
 	int castlingRights;
 
@@ -46,6 +47,8 @@ public:
 	int castlingRights() const;
 	ZKey zkey() const;
 
+	int repetitions() const;
+
 	Piece getPieceAt(uint32_t square) const;
 	BitBoard getPieces(PieceType type) const;
 	BitBoard getColor(Color color) const;
@@ -69,6 +72,7 @@ private:
 	int m_GamePly;
 	int m_Enpassant;
 	int m_HalfMoveClock;
+	int m_ReversiblePly;
 	int m_CastlingRights;
 
 	ZKey m_ZKey;

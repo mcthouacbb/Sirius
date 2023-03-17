@@ -31,9 +31,9 @@ void init()
 	blackToMove = prng.next64();
 }
 
-const char* pieces[7] = {
+/*const char* pieces[7] = {
 	"NONE", "KING", "QUEEN", "ROOK", "BISHOP", "KNIGHT", "PAWN"
-};
+};*/
 
 }
 

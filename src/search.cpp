@@ -68,6 +68,21 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	beta = std::min(beta, -eval::CHECKMATE - m_RootPly);
 	if (alpha >= beta)
 		return alpha;
+
+	if (eval::isImmediateDraw(m_Board) || m_Board.halfMoveClock() >= 100)
+	{
+		searchPly->pvLength = 0;
+		return eval::DRAW;
+	}
+	if (m_Board.halfMoveClock() >= 4)
+	{
+		int repetitions = m_Board.repetitions();
+		if (repetitions == 2 || (repetitions == 1 && m_RootPly > 2))
+		{
+			searchPly->pvLength = 0;
+			return eval::DRAW;
+		}
+	}
 	
 	CheckInfo checkInfo = calcCheckInfo(m_Board, m_Board.currPlayer());
 
@@ -156,6 +171,9 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 int Search::qsearch(int alpha, int beta)
 {
+	if (eval::isImmediateDraw(m_Board))
+		return eval::DRAW;
+
 	int score = eval::evaluate(m_Board);
 
 	m_QNodes++;

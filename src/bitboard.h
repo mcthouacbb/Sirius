@@ -12,23 +12,26 @@
 using BitBoard = uint64_t;
 
 
-constexpr BitBoard FILE_A = 0x0101010101010101;
-constexpr BitBoard FILE_B = 0x0202020202020202;
-constexpr BitBoard FILE_C = 0x0404040404040404;
-constexpr BitBoard FILE_D = 0x0808080808080808;
-constexpr BitBoard FILE_E = 0x1010101010101010;
-constexpr BitBoard FILE_F = 0x2020202020202020;
-constexpr BitBoard FILE_G = 0x4040404040404040;
-constexpr BitBoard FILE_H = 0x8080808080808080;
+constexpr BitBoard FILE_A = 0x0101010101010101ull;
+constexpr BitBoard FILE_B = 0x0202020202020202ull;
+constexpr BitBoard FILE_C = 0x0404040404040404ull;
+constexpr BitBoard FILE_D = 0x0808080808080808ull;
+constexpr BitBoard FILE_E = 0x1010101010101010ull;
+constexpr BitBoard FILE_F = 0x2020202020202020ull;
+constexpr BitBoard FILE_G = 0x4040404040404040ull;
+constexpr BitBoard FILE_H = 0x8080808080808080ull;
 
-constexpr BitBoard RANK_1 = 0x00000000000000FF;
-constexpr BitBoard RANK_2 = 0x000000000000FF00;
-constexpr BitBoard RANK_3 = 0x0000000000FF0000;
-constexpr BitBoard RANK_4 = 0x00000000FF000000;
-constexpr BitBoard RANK_5 = 0x000000FF00000000;
-constexpr BitBoard RANK_6 = 0x0000FF0000000000;
-constexpr BitBoard RANK_7 = 0x00FF000000000000;
-constexpr BitBoard RANK_8 = 0xFF00000000000000;
+constexpr BitBoard RANK_1 = 0x00000000000000FFull;
+constexpr BitBoard RANK_2 = 0x000000000000FF00ull;
+constexpr BitBoard RANK_3 = 0x0000000000FF0000ull;
+constexpr BitBoard RANK_4 = 0x00000000FF000000ull;
+constexpr BitBoard RANK_5 = 0x000000FF00000000ull;
+constexpr BitBoard RANK_6 = 0x0000FF0000000000ull;
+constexpr BitBoard RANK_7 = 0x00FF000000000000ull;
+constexpr BitBoard RANK_8 = 0xFF00000000000000ull;
+
+constexpr BitBoard LIGHT_SQUARES = 0x55AA55AA55AA55AAull;
+constexpr BitBoard DARK_SQUARES = 0xAA55AA55AA55AA55ull;
 
 template<Color c, int r>
 constexpr BitBoard nthRank()

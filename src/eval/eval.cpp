@@ -30,6 +30,8 @@ int evalPSQTEG(const Board& board, Color color)
 
 int evaluate(const Board& board)
 {
+	if (!eval::canForceMate(board))
+		return eval::DRAW;
 	Color color = board.currPlayer();
 	Color opp = flip(color);
 	int matMG = evalMaterialMG(board, color) - evalMaterialMG(board, opp);

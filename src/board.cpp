@@ -141,6 +141,9 @@ done:
 	auto [ptr, ec] = std::from_chars(&fen[i], fen.end(), m_HalfMoveClock);
 	std::from_chars(ptr + 1, fen.end(), m_GamePly);
 	m_GamePly = 2 * m_GamePly - 1 - (m_CurrPlayer == Color::WHITE);
+
+	m_ReversiblePly = 0;
+	m_State = nullptr;
 }
 
 const char pieceChars[16] = {
@@ -215,17 +218,38 @@ std::string Board::stringRep() const
 	return result;
 }
 
+int Board::repetitions() const
+{
+	if (!m_State)
+		return 0;
+	int count = 0;
+	BoardState* state = m_State->prev;
+	for (int i = m_ReversiblePly - 2; i >= 0; i -= 2)
+	{
+		if (state->zkey == m_ZKey)
+			count++;
+		if (state->prev)
+			state = state->prev->prev;
+	}
+
+	return count;
+}
+
 void Board::makeMove(const Move move, BoardState& state)
 {
-	m_GamePly++;
 
 	state.prev = m_State;
 	m_State = &state;
 	
 	state.halfMoveClock = m_HalfMoveClock;
+	state.reversiblePly = m_ReversiblePly;
 	state.epSquare = m_Enpassant;
 	state.castlingRights = m_CastlingRights;
 	state.zkey = m_ZKey;
+	
+	m_GamePly++;
+	m_HalfMoveClock++;
+	m_ReversiblePly++;
 
 	m_ZKey.flipSideToMove();
 
@@ -257,6 +281,7 @@ void Board::makeMove(const Move move, BoardState& state)
 			if ((state.srcPiece & PIECE_TYPE_MASK) == static_cast<int>(PieceType::PAWN))
 			{
 				m_HalfMoveClock = 0;
+				m_ReversiblePly = 0;
 				if (abs(move.srcPos() - move.dstPos()) == 16)
 				{
 					m_Enpassant = (move.srcPos() + move.dstPos()) / 2;
@@ -267,6 +292,8 @@ void Board::makeMove(const Move move, BoardState& state)
 		case MoveType::PROMOTION:
 		{
 			m_HalfMoveClock = 0;
+			m_ReversiblePly = 0;
+			
 			state.srcPiece = m_Squares[move.srcPos()];
 
 			Piece dstPiece = m_Squares[move.dstPos()];
@@ -292,6 +319,7 @@ void Board::makeMove(const Move move, BoardState& state)
 		}
 		case MoveType::CASTLE:
 		{
+			m_ReversiblePly = 0;
 			if (move.srcPos() > move.dstPos())
 			{
 				// queen side
@@ -313,6 +341,7 @@ void Board::makeMove(const Move move, BoardState& state)
 		case MoveType::ENPASSANT:
 		{	
 			m_HalfMoveClock = 0;
+			m_ReversiblePly = 0;
 
 			state.srcPiece = m_Squares[move.srcPos()];
 			
@@ -359,6 +388,7 @@ void Board::unmakeMove(Move move)
 {
 	m_GamePly--;
 	m_HalfMoveClock = m_State->halfMoveClock;
+	m_ReversiblePly = m_State->reversiblePly;
 	m_Enpassant = m_State->epSquare;
 	m_CastlingRights = m_State->castlingRights;
 	m_ZKey = m_State->zkey;
