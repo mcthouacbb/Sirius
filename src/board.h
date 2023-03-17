@@ -44,6 +44,7 @@ public:
 	int epSquare() const;
 	int gamePly() const;
 	int halfMoveClock() const;
+	int reversiblePly() const;
 	int castlingRights() const;
 	ZKey zkey() const;
 
@@ -97,7 +98,12 @@ inline int Board::gamePly() const
 
 inline int Board::halfMoveClock() const
 {
-	return m_HalfMoveClock;;	
+	return m_HalfMoveClock;	
+}
+
+inline int Board::reversiblePly() const
+{
+	return m_ReversiblePly;
 }
 
 inline int Board::castlingRights() const

@@ -74,7 +74,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		searchPly->pvLength = 0;
 		return eval::DRAW;
 	}
-	if (m_Board.halfMoveClock() >= 4)
+	if (m_Board.reversiblePly() >= 4)
 	{
 		int repetitions = m_Board.repetitions();
 		if (repetitions == 2 || (repetitions == 1 && m_RootPly > 2))
