@@ -57,13 +57,20 @@ MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end)
 	}
 }
 
-MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end, Move (&killers)[2], int (&history)[4096])
+MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end, Move hashMove, Move (&killers)[2], int (&history)[4096])
 	: m_Moves(begin), m_Size(end - begin)
 {
 	for (uint32_t i = 0; i < m_Size; i++)
 	{
 		int score = 0;
 		Move move = begin[i];
+
+		if (move == hashMove)
+		{
+			score = 1000000;
+			m_MoveScores[i] = score;
+			continue;
+		}
 		
 		bool isCapture = static_cast<bool>(board.getPieceAt(move.dstPos()));
 		bool isPromotion = move.type() == MoveType::PROMOTION;

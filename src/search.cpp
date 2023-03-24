@@ -4,9 +4,10 @@
 #include "move_ordering.h"
 #include "comm/move.h"
 #include <cstring>
+#include <climits>
 
 Search::Search(Board& board)
-	: m_Board(board), m_RootPly(0)
+	: m_Board(board), m_RootPly(0), m_TT(1024 * 1024)
 {
 	
 }
@@ -30,6 +31,8 @@ void Search::reset()
 		m_Plies[i].pv = nullptr;
 		m_Plies[i].pvLength = 0;
 	}
+
+	m_TT.incAge();
 }
 
 int Search::iterDeep(int maxDepth)
@@ -40,12 +43,16 @@ int Search::iterDeep(int maxDepth)
 	{
 		m_Nodes = 0;
 		m_QNodes = 0;
+		m_TTEvals = 0;
+		m_TTMoves = 0;
 		m_Plies[0].pv = m_PV;
 		int searchScore = search(depth, &m_Plies[0], eval::NEG_INF, eval::POS_INF, true);
 		score = searchScore;
 		std::cout << "Depth: " << depth << std::endl;
 		std::cout << "\tNodes: " << m_Nodes << std::endl;
 		std::cout << "\tQNodes: " << m_QNodes << std::endl;
+		std::cout << "\tTT Evals: " << m_TTEvals << std::endl;
+		std::cout << "\tTT Moves: " << m_TTMoves << std::endl;
 		std::cout << "\tPV Length: " << m_Plies[0].pvLength << std::endl;
 		std::cout << "\tEval: " << searchScore << std::endl;
 		std::cout << "\tPV: ";
@@ -83,22 +90,27 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 			return eval::DRAW;
 		}
 	}
-	
-	CheckInfo checkInfo = calcCheckInfo(m_Board, m_Board.currPlayer());
 
-	if (checkInfo.checkers)
-	{
-		depth = std::max(depth + 1, 1);
-	}
-	
 	if (depth <= 0)
 	{
 		searchPly->pvLength = 0;
 		return qsearch(alpha, beta);
 	}
+	
+	int hashScore = INT_MIN;
+	Move hashMove = Move();
+	TTBucket* bucket = m_TT.probe(m_Board.zkey(), depth, m_RootPly, alpha, beta, hashScore, hashMove);
+
+	if (hashScore != INT_MIN)
+	{
+		searchPly->pvLength = 0;
+		m_TTEvals++;
+		return hashScore;
+	}
 
 	m_Nodes++;
 
+	CheckInfo checkInfo = calcCheckInfo(m_Board, m_Board.currPlayer());
 	Move moves[256];
 	Move* end = genMoves<MoveGenType::LEGAL>(m_Board, moves, checkInfo);
 
@@ -109,11 +121,13 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 			return eval::CHECKMATE + m_RootPly;
 		return eval::STALEMATE;
 	}
-	
+	if (hashMove != Move())
+		m_TTMoves++;
 	MoveOrdering ordering(
 		m_Board,
 		moves,
 		end,
+		hashMove,
 		searchPly->killers,
 		m_History[static_cast<int>(m_Board.currPlayer())]
 	);
@@ -124,24 +138,35 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	searchPly[1].pv = childPV;
 
 	searchPly->bestMove = Move();
+
+	TTEntry::Type type = TTEntry::Type::UPPER_BOUND;
 	
 	for (uint32_t i = 0; i < end - moves; i++)
 	{
 		Move move = ordering.selectMove(i);
-		// for (int i = 0; i < 2 - depth; i++)
-			// std::cout << '\t';
-		// std::cout << "Depth: " << depth << ", " << it - moves << std::endl;
-		// const auto& move = *it;
+		// if (i == 0 && hashMove != Move() && move != hashMove)
+		// {
+			// m_Board.printDbg();
+			// std::cout << hashMove.srcPos() << ' ' << hashMove.dstPos() << std::endl;
+			// std::cout << move.srcPos() << ' ' << move.dstPos() << std::endl;
+			// std::cout << m_Board.zkey().value % (1024 * 1024) << std::endl;
+			// m_TTMoves++;
+		// 	throw std::runtime_error("bruh what?");
+		// }
 		m_Board.makeMove(move, state);
 		m_RootPly++;
+		// int extension = 0;
+		CheckInfo newCheckInfo = calcCheckInfo(m_Board, m_Board.currPlayer());
+		int extension = newCheckInfo.checkers != 0;
+		int newDepth = depth + extension - 1;
 		int moveScore;
 		if (searchPly->bestMove == Move())
-			moveScore = -search(depth - 1, searchPly + 1, -beta, -alpha, isPV);
+			moveScore = -search(newDepth, searchPly + 1, -beta, -alpha, isPV);
 		else
 		{
-			moveScore = -search(depth - 1, searchPly + 1, -(alpha + 1), -alpha, false);
+			moveScore = -search(newDepth, searchPly + 1, -(alpha + 1), -alpha, false);
 			if (moveScore > alpha && isPV)
-				moveScore = -search(depth - 1, searchPly + 1, -beta, -alpha, true);
+				moveScore = -search(newDepth, searchPly + 1, -beta, -alpha, true);
 		}
 		m_RootPly--;
 		m_Board.unmakeMove(move);
@@ -153,11 +178,13 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 				storeKiller(searchPly, move);
 				m_History[static_cast<int>(m_Board.currPlayer())][move.fromTo()] += depth * depth;
 			}
+			m_TT.store(bucket, m_Board.zkey(), depth, m_RootPly, beta, move, TTEntry::Type::LOWER_BOUND);
 			return beta;
 		}
 
 		if (moveScore > alpha)
 		{
+			type = TTEntry::Type::EXACT;
 			alpha = moveScore;
 			searchPly->bestMove = move;
 			searchPly->pv[0] = move;
@@ -165,6 +192,8 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 			memcpy(searchPly->pv + 1, searchPly[1].pv, searchPly[1].pvLength * sizeof(Move));
 		}
 	}
+
+	m_TT.store(bucket, m_Board.zkey(), depth, m_RootPly, alpha, searchPly->bestMove, type);
 
 	return alpha;
 }

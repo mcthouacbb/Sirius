@@ -6,7 +6,7 @@ class MoveOrdering
 {
 public:
 	MoveOrdering(const Board& board, Move* begin, Move* end);
-	MoveOrdering(const Board& board, Move* begin, Move* end, Move (&killers)[2], int (&history)[4096]);
+	MoveOrdering(const Board& board, Move* begin, Move* end, Move hashMove, Move (&killers)[2], int (&history)[4096]);
 
 	Move selectMove(uint32_t index);
 private:

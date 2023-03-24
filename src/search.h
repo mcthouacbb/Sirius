@@ -2,6 +2,7 @@
 
 #include "board.h"
 #include "defs.h"
+#include "tt.h"
 
 constexpr int MAX_PLY = 128;
 
@@ -27,9 +28,12 @@ private:
 	void storeKiller(SearchPly* ply, Move killer);
 
 	Board& m_Board;
+	TT m_TT;
 	int m_RootPly;
 	uint64_t m_Nodes;
 	uint64_t m_QNodes;
+	uint64_t m_TTMoves;
+	uint64_t m_TTEvals;
 	Move m_PV[MAX_PLY];
 	int m_History[2][4096];
 	SearchPly m_Plies[MAX_PLY];
