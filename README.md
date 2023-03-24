@@ -83,3 +83,8 @@ Features
         - Killer Moves Heuristic
         - History Heuristic
     - Quiescence Search
+    - Transposition Table
+	    - 4 entries per bucket
+        - Always replace least depth
+        - 16 bytes per entry
+        - 64 bytes per bucket
