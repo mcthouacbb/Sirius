@@ -21,7 +21,7 @@ void printBoard(const Board& board)
 	std::cout << "GamePly: " << board.gamePly() << std::endl;
 	std::cout << "HalfMoveClock: " << board.halfMoveClock() << std::endl;
 	std::cout << "CastlingRights: " << board.castlingRights() << std::endl;
-	std::cout << "Side to move: " << (board.currPlayer() == Color::WHITE ? "WHITE" : "BLACK") << std::endl;
+	std::cout << "Side to move: " << (board.sideToMove() == Color::WHITE ? "WHITE" : "BLACK") << std::endl;
 	if (board.epSquare() != 0)
 		std::cout << "Ep square: " << static_cast<char>((board.epSquare() & 7) + 'a') << static_cast<char>((board.epSquare() >> 3) + '1') << std::endl;
 	else
@@ -36,7 +36,7 @@ uint64_t perft(Board& board, int depth)
 	if (depth == 0)
 		return 1;
 	Move moves[256];
-	Move* end = genMoves<MoveGenType::LEGAL>(board, moves, calcCheckInfo(board, board.currPlayer()));
+	Move* end = genMoves<MoveGenType::LEGAL>(board, moves);
 	if (depth == 1 && !print)
 		return end - moves;
 
@@ -58,7 +58,7 @@ uint64_t perft(Board& board, int depth)
 void testSAN(Board& board, int depth)
 {
 	Move moves[256];
-	Move* end = genMoves<MoveGenType::LEGAL>(board, moves, calcCheckInfo(board, board.currPlayer()));
+	Move* end = genMoves<MoveGenType::LEGAL>(board, moves);
 	
 	for (Move* it = moves; it != end; it++)
 	{
@@ -99,7 +99,7 @@ void testQuiescence(Board& board, int depth)
 	if (depth == 0)
 	{
 		Move captures[256];
-		Move* end = genMoves<MoveGenType::CAPTURES>(board, captures, calcCheckInfo(board, board.currPlayer()));
+		Move* end = genMoves<MoveGenType::CAPTURES>(board, captures);
 
 		for (Move* it = captures; it != end; it++)
 		{
@@ -111,7 +111,7 @@ void testQuiescence(Board& board, int depth)
 		return;
 	}
 	Move moves[256];
-	Move* end = genMoves<MoveGenType::LEGAL>(board, moves, calcCheckInfo(board, board.currPlayer()));
+	Move* end = genMoves<MoveGenType::LEGAL>(board, moves);
 
 	BoardState state;
 	for (Move* it = moves; it != end; it++)
@@ -244,7 +244,8 @@ enum class Command
 	STATIC_EVAL,
 	QUIESCENCE_EVAL,
 	SEARCH,
-	RUN_TESTS
+	RUN_TESTS,
+	PERFT
 };
 
 const char* parseCommand(const char* str, Command& command)
@@ -266,6 +267,13 @@ const char* parseCommand(const char* str, Command& command)
 					{
 						command = Command::PRINT_BOARD;
 						return str + 5;
+					}
+					return nullptr;
+				case 'e':
+					if (strncmp(str + 2, "rft ", 4) == 0)
+					{
+						command = Command::PERFT;
+						return str + 6;
 					}
 					return nullptr;
 				default:
@@ -350,7 +358,7 @@ void setPosition(State& state, std::string_view params)
 	}
 	state.prevStates.clear();
 	state.prevMoves.clear();
-	state.end = genMoves<MoveGenType::LEGAL>(*state.board, state.moves, calcCheckInfo(*state.board, state.board->currPlayer()));
+	state.end = genMoves<MoveGenType::LEGAL>(*state.board, state.moves);
 }
 
 void makeMove(State& state, std::string_view params)
@@ -379,7 +387,7 @@ void makeMove(State& state, std::string_view params)
 	state.board->makeMove(*move, state.prevStates.back());
 	state.prevMoves.push_back(*move);
 
-	state.end = genMoves<MoveGenType::LEGAL>(*state.board, state.moves, calcCheckInfo(*state.board, state.board->currPlayer()));
+	state.end = genMoves<MoveGenType::LEGAL>(*state.board, state.moves);
 }
 
 void undoMove(State& state, std::string_view params)
@@ -394,7 +402,7 @@ void undoMove(State& state, std::string_view params)
 	state.prevStates.pop_back();
 	state.prevMoves.pop_back();
 
-	state.end = genMoves<MoveGenType::LEGAL>(*state.board, state.moves, calcCheckInfo(*state.board, state.board->currPlayer()));
+	state.end = genMoves<MoveGenType::LEGAL>(*state.board, state.moves);
 }
 
 void staticEval(const Board& board)
@@ -458,7 +466,7 @@ int main(int argc, char** argv)
 	
 	State state;
 	state.board = &board;
-	state.end = genMoves<MoveGenType::LEGAL>(board, state.moves, calcCheckInfo(*state.board, state.board->currPlayer()));
+	state.end = genMoves<MoveGenType::LEGAL>(board, state.moves);
 
 	Search search(board);
 	
@@ -508,6 +516,20 @@ int main(int argc, char** argv)
 				std::cout << "Tests: " << params << std::endl;
 				runTests(board, false);
 				break;
+			case Command::PERFT:
+			{
+				std::cout << "Perft: " << params << std::endl;
+				int depth;
+				auto [ptr, ec] = std::from_chars(params, str.c_str() + str.size(), depth);
+				if (ec != std::errc())
+				{
+					std::cout << "Invalid depth" << std::endl;
+					break;
+				}
+				uint64_t nodes = perft<true>(board, depth);
+				std::cout << "Nodes: " << nodes << std::endl;
+				break;
+			}
 		}
 	}
 	return 0;

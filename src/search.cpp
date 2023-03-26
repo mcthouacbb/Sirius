@@ -110,14 +110,14 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 	m_Nodes++;
 
-	CheckInfo checkInfo = calcCheckInfo(m_Board, m_Board.currPlayer());
+	// CheckInfo checkInfo = calcCheckInfo(m_Board, m_Board.sideToMove());
 	Move moves[256];
-	Move* end = genMoves<MoveGenType::LEGAL>(m_Board, moves, checkInfo);
+	Move* end = genMoves<MoveGenType::LEGAL>(m_Board, moves);
 
 	if (moves == end)
 	{
 		searchPly->pvLength = 0;
-		if (checkInfo.checkers)
+		if (m_Board.checkers())
 			return eval::CHECKMATE + m_RootPly;
 		return eval::STALEMATE;
 	}
@@ -129,7 +129,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		end,
 		hashMove,
 		searchPly->killers,
-		m_History[static_cast<int>(m_Board.currPlayer())]
+		m_History[static_cast<int>(m_Board.sideToMove())]
 	);
 	
 	BoardState state;
@@ -155,9 +155,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		// }
 		m_Board.makeMove(move, state);
 		m_RootPly++;
-		// int extension = 0;
-		CheckInfo newCheckInfo = calcCheckInfo(m_Board, m_Board.currPlayer());
-		int extension = newCheckInfo.checkers != 0;
+		int extension = m_Board.checkers() != 0;
 		int newDepth = depth + extension - 1;
 		int moveScore;
 		if (searchPly->bestMove == Move())
@@ -173,10 +171,10 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 		if (moveScore >= beta)
 		{
-			if (move.type() != MoveType::PROMOTION && !state.dstPiece)
+			if (move.type() != MoveType::PROMOTION && !state.capturedPiece)
 			{
 				storeKiller(searchPly, move);
-				m_History[static_cast<int>(m_Board.currPlayer())][move.fromTo()] += depth * depth;
+				m_History[static_cast<int>(m_Board.sideToMove())][move.fromTo()] += depth * depth;
 			}
 			m_TT.store(bucket, m_Board.zkey(), depth, m_RootPly, beta, move, TTEntry::Type::LOWER_BOUND);
 			return beta;
@@ -211,10 +209,10 @@ int Search::qsearch(int alpha, int beta)
 	if (score > alpha)
 		alpha = score;
 
-	CheckInfo checkInfo = calcCheckInfo(m_Board, m_Board.currPlayer());
+	// CheckInfo checkInfo = calcCheckInfo(m_Board, m_Board.sideToMove());
 
 	Move captures[256];
-	Move* end = genMoves<MoveGenType::CAPTURES>(m_Board, captures, checkInfo);
+	Move* end = genMoves<MoveGenType::CAPTURES>(m_Board, captures);
 
 	MoveOrdering ordering(m_Board, captures, end);
 	

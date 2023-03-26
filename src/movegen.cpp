@@ -1,108 +1,6 @@
 #include "movegen.h"
 #include "attacks.h"
 
-CheckInfo calcCheckInfo(const Board& board, Color color)
-{
-	BitBoard usBB = board.getColor(color);
-	BitBoard oppBB = board.getColor(flip(color));
-	BitBoard kingBB = board.getPieces(PieceType::KING);
-	
-	if ((kingBB & usBB) == 0)
-	{
-		throw std::runtime_error("King bb is zero");
-	}
-
-	if ((kingBB & oppBB) == 0)
-	{
-		throw std::runtime_error("Opp bb is zero");
-	}
-	
-	uint32_t oppKingIdx = getLSB(kingBB & oppBB);
-
-	// calculating illegal king squares
-	BitBoard checkBB = attacks::getKingAttacks(oppKingIdx);
-
-	BitBoard oppPawns = board.getPieces(PieceType::PAWN) & oppBB;
-	if (color == Color::WHITE)
-		checkBB |= attacks::getPawnBBAttacks<Color::BLACK>(oppPawns);
-	else
-		checkBB |= attacks::getPawnBBAttacks<Color::WHITE>(oppPawns);
-
-	
-	BitBoard oppKnights = board.getPieces(PieceType::KNIGHT) & oppBB;
-	
-	
-	uint32_t kingIdx = getLSB(kingBB & usBB);
-	
-	BitBoard checkers = 0;
-	checkers |= attacks::getPawnAttacks(color, kingIdx) & oppPawns;
-	checkers |= attacks::getKnightAttacks(kingIdx) & oppKnights;
-	
-	while (oppKnights)
-	{
-		uint32_t knightIdx = popLSB(oppKnights);
-		checkBB |= attacks::getKnightAttacks(knightIdx);
-	}
-
-	BitBoard checkBlockers = board.getAllPieces() ^ (usBB & kingBB);
-
-	BitBoard oppBishops = board.getPieces(PieceType::BISHOP) & oppBB;
-	BitBoard oppRooks = board.getPieces(PieceType::ROOK) & oppBB;
-	BitBoard oppQueens = board.getPieces(PieceType::QUEEN) & oppBB;
-
-	BitBoard diagPieces = oppQueens | oppBishops;
-	BitBoard straightPieces = oppQueens | oppRooks;
-	while (oppBishops)
-	{
-		uint32_t bishopIdx = popLSB(oppBishops);
-		checkBB |= attacks::getBishopAttacks(bishopIdx, checkBlockers);
-	}
-
-	while (oppRooks)
-	{
-		uint32_t rookIdx = popLSB(oppRooks);
-		checkBB |= attacks::getRookAttacks(rookIdx, checkBlockers);
-	}
-
-	while (oppQueens)
-	{
-		uint32_t queenIdx = popLSB(oppQueens);
-		checkBB |= attacks::getQueenAttacks(queenIdx, checkBlockers);
-	}
-
-	
-	// calculating checking pieces, pinned pieces, and valid move locations
-
-	BitBoard moveMask = checkers == 0 ? 0xFFFFFFFFFFFFFFFFull : checkers;
-	
-	diagPieces &= attacks::getBishopAttacks(kingIdx, diagPieces);
-	straightPieces &= attacks::getRookAttacks(kingIdx, straightPieces);
-
-	BitBoard sliders = diagPieces | straightPieces;
-	BitBoard pinned = 0;
-	while (sliders)
-	{
-		uint32_t slider = popLSB(sliders);
-		BitBoard betweenBB = attacks::inBetweenBB(kingIdx, slider);
-		BitBoard between = board.getAllPieces() & betweenBB;
-		if (between == 0)
-		{
-			checkers |= (1ull << slider);
-			moveMask &= (betweenBB | (1ull << slider));
-		}
-		else if ((between & (between - 1)) == 0)
-		{
-			pinned |= between & -between;
-		}
-	}
-
-	/*printBB(checkBB);
-	printBB(moveMask);
-	printBB(checkers);
-	printBB(pinned);*/
-	
-	return {checkBB, moveMask, checkers, pinned};
-}
 
 bool canTakeEP(BitBoard eastRay, BitBoard westRay, BitBoard kingBB, BitBoard enemyAttackers, BitBoard allPieces)
 {
@@ -136,23 +34,23 @@ bool canTakeEP(BitBoard eastRay, BitBoard westRay, BitBoard kingBB, BitBoard ene
 }
 
 template<MoveGenType type, Color color>
-Move* genMoves(const Board& board, Move* moves, const CheckInfo& checkInfo);
+Move* genMoves(const Board& board, Move* moves);
 
 template<MoveGenType type>
-Move* genMoves(const Board& board, Move* moves, const CheckInfo& checkInfo)
+Move* genMoves(const Board& board, Move* moves)
 {
-	if (board.currPlayer() == Color::WHITE)
+	if (board.sideToMove() == Color::WHITE)
 	{
-		return genMoves<type, Color::WHITE>(board, moves, checkInfo);
+		return genMoves<type, Color::WHITE>(board, moves);
 	}
 	else
 	{
-		return genMoves<type, Color::BLACK>(board, moves, checkInfo);
+		return genMoves<type, Color::BLACK>(board, moves);
 	}
 }
 
-template Move* genMoves<MoveGenType::LEGAL>(const Board& board, Move* moves, const CheckInfo& checkInfo);
-template Move* genMoves<MoveGenType::CAPTURES>(const Board& board, Move* moves, const CheckInfo& checkInfo);
+template Move* genMoves<MoveGenType::LEGAL>(const Board& board, Move* moves);
+template Move* genMoves<MoveGenType::CAPTURES>(const Board& board, Move* moves);
 
 template<MoveGenType type, Color color>
 void genKingMoves(const Board& board, Move*& moves, BitBoard checkBB);
@@ -175,38 +73,45 @@ void genPawnMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard mo
 
 
 template<MoveGenType type, Color color>
-Move* genMoves(const Board& board, Move* moves, const CheckInfo& checkInfo)
+Move* genMoves(const Board& board, Move* moves)
 {
-	if ((checkInfo.checkers & (checkInfo.checkers - 1)) == 0)
+	BitBoard checkers = board.checkers();
+	if ((checkers & (checkers - 1)) == 0)
 	{
-		genPawnMoves<type, color>(board, moves, checkInfo.pinned, checkInfo.moveMask);
-		genKnightMoves<type, color>(board, moves, checkInfo.pinned, checkInfo.moveMask);
-		genBishopMoves<type, color>(board, moves, checkInfo.pinned, checkInfo.moveMask);
-		genRookMoves<type, color>(board, moves, checkInfo.pinned, checkInfo.moveMask);
-		genQueenMoves<type, color>(board, moves, checkInfo.pinned, checkInfo.moveMask);
+		uint32_t kingIdx = getLSB(board.getPieces(color, PieceType::KING));
+		BitBoard moveMask = checkers ? attacks::moveMaskBB(kingIdx, getLSB(checkers)) : ~0ull;
+		// printBB(moveMask);
+		if constexpr (type == MoveGenType::CAPTURES)
+			moveMask &= board.getColor(flip(color));
+		BitBoard pinned = board.checkBlockers(color);
+		genPawnMoves<type, color>(board, moves, pinned, moveMask);
+		genKnightMoves<type, color>(board, moves, pinned, moveMask);
+		genBishopMoves<type, color>(board, moves, pinned, moveMask);
+		genRookMoves<type, color>(board, moves, pinned, moveMask);
+		genQueenMoves<type, color>(board, moves, pinned, moveMask);
 	}
-	genKingMoves<type, color>(board, moves, checkInfo.checkBB);
+	genKingMoves<type, color>(board, moves);
 	return moves;
 }
 
 template<MoveGenType type, Color color>
-void genKingMoves(const Board& board, Move*& moves, BitBoard checkBB)
+void genKingMoves(const Board& board, Move*& moves)
 {
 	BitBoard usBB = board.getColor(color);
 	BitBoard oppBB = board.getColor(flip(color));
-	BitBoard kingBB = board.getPieces(PieceType::KING);
-	kingBB &= usBB;
+	BitBoard kingBB = board.getPieces(color, PieceType::KING);
+	BitBoard checkBlockers = board.getAllPieces() ^ kingBB;
 	uint32_t kingIdx = getLSB(kingBB);
 
 	BitBoard kingAttacks = attacks::getKingAttacks(kingIdx);
 	kingAttacks &= ~usBB;
-	kingAttacks &= ~checkBB;
 	if constexpr (type == MoveGenType::CAPTURES)
 		kingAttacks &= oppBB;
 	while (kingAttacks)
 	{
 		uint32_t dst = popLSB(kingAttacks);
-		*moves++ = Move(kingIdx, dst, MoveType::NONE);
+		if (!board.squareAttacked(flip(color), dst, checkBlockers))
+			*moves++ = Move(kingIdx, dst, MoveType::NONE);
 	}
 
 	BitBoard occupied = board.getAllPieces();
@@ -215,12 +120,36 @@ void genKingMoves(const Board& board, Move*& moves, BitBoard checkBB)
 	uint32_t qscBit = 2 << (2 * static_cast<int>(color));
 	if constexpr (type == MoveGenType::LEGAL)
 	{
-		if (!(attacks::kscCheckSquares<color>() & checkBB) && !(attacks::kscBlockSquares<color>() & occupied) && (board.castlingRights() & kscBit))
+		bool ksChecked = false;
+		BitBoard checkSquares = attacks::kscCheckSquares<color>();
+		while (checkSquares)
+		{
+			uint32_t square = popLSB(checkSquares);
+			if (board.squareAttacked(flip(color), square))
+			{
+				ksChecked = true;
+				break;
+			}
+		}
+		
+		if (!ksChecked && !(attacks::kscBlockSquares<color>() & occupied) && (board.castlingRights() & kscBit))
 		{
 			*moves++ = Move(kingIdx, kingIdx + 2, MoveType::CASTLE);
 		}
+
+		bool qsChecked = false;
+		checkSquares = attacks::qscCheckSquares<color>();
+		while (checkSquares)
+		{
+			uint32_t square = popLSB(checkSquares);
+			if (board.squareAttacked(flip(color), square))
+			{
+				qsChecked = true;
+				break;
+			}
+		}
 		
-		if (!(attacks::qscCheckSquares<color>() & checkBB) && !(attacks::qscBlockSquares<color>() & occupied) && (board.castlingRights() & qscBit))
+		if (!(qsChecked) && !(attacks::qscBlockSquares<color>() & occupied) && (board.castlingRights() & qscBit))
 		{
 			*moves++ = Move(kingIdx, kingIdx - 2, MoveType::CASTLE);
 		}
@@ -231,12 +160,10 @@ template<MoveGenType type, Color color>
 void genQueenMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard moveMask)
 {
 	BitBoard usBB = board.getColor(color);
-	BitBoard oppBB = board.getColor(flip(color));
-	BitBoard queenBB = board.getPieces(PieceType::QUEEN);
+	BitBoard queenBB = board.getPieces(color, PieceType::QUEEN);
 	BitBoard allPieces = board.getAllPieces();
-	queenBB &= usBB;
 	
-	uint32_t kingIdx = getLSB(board.getPieces(PieceType::KING) & usBB);
+	uint32_t kingIdx = getLSB(board.getPieces(color, PieceType::KING));
 	
 	while (queenBB)
 	{
@@ -248,8 +175,6 @@ void genQueenMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard m
 		{
 			queenAttacks &= attacks::alignedBB(kingIdx, queenIdx);
 		}
-		if constexpr (type == MoveGenType::CAPTURES)
-			queenAttacks &= oppBB;
 		while (queenAttacks)
 		{
 			uint32_t dst = popLSB(queenAttacks);
@@ -262,12 +187,10 @@ template<MoveGenType type, Color color>
 void genRookMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard moveMask)
 {
 	BitBoard usBB = board.getColor(color);
-	BitBoard oppBB = board.getColor(flip(color));
-	BitBoard rookBB = board.getPieces(PieceType::ROOK);
+	BitBoard rookBB = board.getPieces(color, PieceType::ROOK);
 	BitBoard allPieces = board.getAllPieces();
-	rookBB &= usBB;
 	
-	uint32_t kingIdx = getLSB(board.getPieces(PieceType::KING) & usBB);
+	uint32_t kingIdx = getLSB(board.getPieces(color, PieceType::KING));
 	
 	while (rookBB)
 	{
@@ -279,8 +202,6 @@ void genRookMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard mo
 		{
 			rookAttacks &= attacks::alignedBB(kingIdx, rookIdx);
 		}
-		if constexpr (type == MoveGenType::CAPTURES)
-			rookAttacks &= oppBB;
 		while (rookAttacks)
 		{
 			uint32_t dst = popLSB(rookAttacks);
@@ -293,12 +214,10 @@ template<MoveGenType type, Color color>
 void genBishopMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard moveMask)
 {
 	BitBoard usBB = board.getColor(color);
-	BitBoard oppBB = board.getColor(color);
-	BitBoard bishopBB = board.getPieces(PieceType::BISHOP);
+	BitBoard bishopBB = board.getPieces(color, PieceType::BISHOP);
 	BitBoard allPieces = board.getAllPieces();
-	bishopBB &= usBB;
 	
-	uint32_t kingIdx = getLSB(board.getPieces(PieceType::KING) & usBB);
+	uint32_t kingIdx = getLSB(board.getPieces(color, PieceType::KING));
 	
 	while (bishopBB)
 	{
@@ -310,8 +229,6 @@ void genBishopMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard 
 		{
 			bishopAttacks &= attacks::alignedBB(kingIdx, bishopIdx);
 		}
-		if constexpr (type == MoveGenType::CAPTURES)
-			bishopAttacks &= oppBB;
 		while (bishopAttacks)
 		{
 			uint32_t dst = popLSB(bishopAttacks);
@@ -324,9 +241,7 @@ template<MoveGenType type, Color color>
 void genKnightMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard moveMask)
 {
 	BitBoard usBB = board.getColor(color);
-	BitBoard oppBB = board.getColor(flip(color));
-	BitBoard knightBB = board.getPieces(PieceType::KNIGHT);
-	knightBB &= usBB;
+	BitBoard knightBB = board.getPieces(color, PieceType::KNIGHT);
 	knightBB &= ~pinned;
 	
 	while (knightBB)
@@ -335,8 +250,6 @@ void genKnightMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard 
 		BitBoard knightAttacks = attacks::getKnightAttacks(knightIdx);
 		knightAttacks &= moveMask;
 		knightAttacks &= ~usBB;
-		if constexpr (type == MoveGenType::CAPTURES)
-			knightAttacks &= oppBB;
 		while (knightAttacks)
 		{
 			uint32_t dst = popLSB(knightAttacks);
@@ -348,12 +261,12 @@ void genKnightMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard 
 template<MoveGenType type, Color color>
 void genPawnMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard moveMask)
 {
-	BitBoard usBB = board.getColor(color);
+	// BitBoard usBB = board.getColor(color);
 	BitBoard oppBB = board.getColor(flip(color));
-	BitBoard pawns = board.getPieces(PieceType::PAWN) & usBB;
+	BitBoard pawns = board.getPieces(color, PieceType::PAWN);
 	BitBoard allPieces = board.getAllPieces();
 	
-	uint32_t kingIdx = getLSB(board.getPieces(PieceType::KING) & usBB);
+	uint32_t kingIdx = getLSB(board.getPieces(color, PieceType::KING));
 
 	BitBoard pinnedPawns = pinned & pawns;
 	

@@ -159,8 +159,13 @@ const uint32_t bishopIndexBits[64] = {
 	6, 5, 5, 5, 5, 5, 5, 6
 };
 
+
+
 BitBoard inBetweenSquares[64][64];
 BitBoard alignedSquares[64][64];
+BitBoard moveMasks[64][64];
+
+
 
 BitBoard rookAttacks[102400];
 BitBoard bishopAttacks[5248];
@@ -458,6 +463,7 @@ void initBetweenBBs()
 			if (src == dst)
 				continue;
 			BitBoard dstBB = 1ull << dst;
+			moveMasks[src][dst] = dstBB;
 			for (Direction dir : allDirs)
 			{
 				BitBoard srcRay = getRay(src, dir);
@@ -466,6 +472,8 @@ void initBetweenBBs()
 					BitBoard dstRay = getRay(dst, oppDir(dir));
 					inBetweenSquares[src][dst] = srcRay & dstRay;
 					alignedSquares[src][dst] = srcRay | dstRay;
+					moveMasks[src][dst] |= (srcRay & dstRay);
+					// printBB(moveMasks[src][dst]);
 				}
 			}
 		}

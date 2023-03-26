@@ -20,6 +20,7 @@ namespace attacks
 
 extern BitBoard inBetweenSquares[64][64];
 extern BitBoard alignedSquares[64][64];
+extern BitBoard moveMasks[64][64];
 
 extern int castleMasks[64];
 
@@ -158,6 +159,11 @@ inline BitBoard inBetweenBB(uint32_t src, uint32_t dst)
 inline BitBoard alignedBB(uint32_t src, uint32_t dst)
 {
 	return alignedSquares[src][dst];
+}
+
+inline BitBoard moveMaskBB(uint32_t king, uint32_t checker)
+{
+	return moveMasks[king][checker];
 }
 
 inline int getCastleMask(uint32_t pos)

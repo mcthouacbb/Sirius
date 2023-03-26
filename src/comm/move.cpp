@@ -386,7 +386,7 @@ search_moves:
 		return {end, moveStr + moveLen};
 	}
 
-	int pawnOffset = (board.currPlayer() == Color::WHITE) ? -8 : 8;
+	int pawnOffset = (board.sideToMove() == Color::WHITE) ? -8 : 8;
 
 	Move* match = nullptr;
 	for (Move* it = begin; it != end; it++)

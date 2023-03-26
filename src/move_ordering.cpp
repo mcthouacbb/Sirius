@@ -102,7 +102,7 @@ MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end, Move hash
 Move MoveOrdering::selectMove(uint32_t index)
 {
 	int bestScore = INT_MIN;
-	uint32_t bestIndex;
+	uint32_t bestIndex = index;
 	for (uint32_t i = index; i < m_Size; i++)
 	{
 		if (m_MoveScores[i] > bestScore)
