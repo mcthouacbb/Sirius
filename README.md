@@ -1,6 +1,6 @@
 # Chess Engine (untitled)
 
-v 0.1.2
+v 0.1.3
 
 Features
 - Board representation
@@ -74,17 +74,21 @@ Features
     - Piece Square Tables 
 	    - from https://www.chessprogramming.org/Simplified_Evaluation_Function
 - Search
-	- Mate Distance Pruning
-    - Check Extension
-    - Principal Variation Search(PVS)
+  	- Alpha-Beta Pruning
     - PV Collection(pv list on stack)
     - Move Ordering
+	    - TT Move Ordering
 	    - MVV_LVA
         - Killer Moves Heuristic
         - History Heuristic
     - Quiescence Search
+	    - Captures Only
     - Transposition Table
 	    - 4 entries per bucket
         - Always replace least depth
         - 16 bytes per entry
         - 64 bytes per bucket
+    - Selectivity
+	    - Check Extension
+		- Mate Distance Pruning
+	    - Principal Variation Search(PVS)

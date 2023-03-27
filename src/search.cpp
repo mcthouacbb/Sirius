@@ -84,7 +84,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	if (m_Board.reversiblePly() >= 4)
 	{
 		int repetitions = m_Board.repetitions();
-		if (repetitions == 2 || (repetitions == 1 && m_RootPly > 2))
+		if (repetitions == 2 || (repetitions == 1 && m_RootPly >= 2))
 		{
 			searchPly->pvLength = 0;
 			return eval::DRAW;
