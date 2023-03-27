@@ -31,12 +31,14 @@ Command Line
 	- Performs an iterative deepening search up to depth
 	- Prints out the evaluation and PV of each depth
 	- Prints out search statistics
+    - WARNING: Search time increases exponentially with depth
 - "tests"
 	- Runs test suite.
     - Currently, only perft tests are run
 - "perft" <depth>
 	- Performs are perft up to depth
     - A perft(performance test) searches all moves up to depth and returns the number of positions reached
+    - WARNING: time usage increases exponentially with depth
 
 
 Features
