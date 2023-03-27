@@ -1,6 +1,43 @@
 # Chess Engine (untitled)
 
-v 0.1.3
+v0.1.3
+
+Command Line
+- "position" {"fen" | "startpos"} [fenString]
+	- Set the board position to the starting position or the fenString
+- "print"
+	- Print the current state of the board
+		- Piece positions
+	    - Number of plies since the start of the game(starts at 0)
+        - Half Move Clock
+	    	- Used to detect 50 move rule draws
+	        - Draw at 100 half moves
+		- Castling Rights(as a number)
+      	- Side to move
+    	- Square of en passant, if available
+	    - Zobrist hash
+- "move" <move>
+	- makes a move
+    - Move format <start square><end square>[promotion piece]
+	- Square is a file (a-h) and rank(1-8)
+	- Promotion piece is either, q(queen), r(rook), b(bishop), or n(knight)
+- "undo"
+	- Undo the last move that was made
+- "eval"
+	- Prints the static evaluation of the position
+- "qeval"
+	- Prints the quiescence evaluation of the position
+- "search" <depth>
+	- Performs an iterative deepening search up to depth
+	- Prints out the evaluation and PV of each depth
+	- Prints out search statistics
+- "tests"
+	- Runs test suite.
+    - Currently, only perft tests are run
+- "perft" <depth>
+	- Performs are perft up to depth
+    - A perft(performance test) searches all moves up to depth and returns the number of positions reached
+
 
 Features
 - Board representation

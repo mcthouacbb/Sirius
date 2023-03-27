@@ -363,7 +363,7 @@ void setPosition(State& state, std::string_view params)
 
 void makeMove(State& state, std::string_view params)
 {
-	auto [move, strEnd] = comm::findMoveFromSAN(*state.board, state.moves, state.end, params.data());
+	auto [move, strEnd] = comm::findMoveFromPCN(state.moves, state.end, params.data());
 
 	if (move == nullptr)
 	{
@@ -436,6 +436,12 @@ void searchCommand(Search& search, std::string_view params)
 	int depth;
 	auto [ptr, ec] = std::from_chars(params.data(), params.data() + params.size(), depth);
 
+	if (ec != std::errc())
+	{
+		std::cout << "Invalid depth" << std::endl;
+		return;
+	}
+	
 	if (depth <= 0)
 	{
 		std::cout << "Depth must be greater than 0" << std::endl;
