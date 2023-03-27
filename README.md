@@ -3,9 +3,9 @@
 v0.1.3
 
 Command Line
-- "position" {"fen" | "startpos"} [fenString]
+- `"position" {"fen" | "startpos"} [fenString]`
 	- Set the board position to the starting position or the fenString
-- "print"
+- `"print"`
 	- Print the current state of the board
 		- Piece positions
 	    - Number of plies since the start of the game(starts at 0)
@@ -16,26 +16,26 @@ Command Line
       	- Side to move
     	- Square of en passant, if available
 	    - Zobrist hash
-- "move" <move>
+- `"move" <move>`
 	- makes a move
-    - Move format <start square><end square>[promotion piece]
+    - Move format `<start square><end square>[promotion piece]`
 	- Square is a file (a-h) and rank(1-8)
 	- Promotion piece is either, q(queen), r(rook), b(bishop), or n(knight)
-- "undo"
+- `"undo"`
 	- Undo the last move that was made
-- "eval"
+- `"eval"`
 	- Prints the static evaluation of the position
-- "qeval"
+- `"qeval"`
 	- Prints the quiescence evaluation of the position
-- "search" <depth>
+- `"search" <depth>`
 	- Performs an iterative deepening search up to depth
 	- Prints out the evaluation and PV of each depth
 	- Prints out search statistics
     - WARNING: Search time increases exponentially with depth
-- "tests"
+- `"tests"`
 	- Runs test suite.
     - Currently, only perft tests are run
-- "perft" <depth>
+- `"perft" <depth>`
 	- Performs are perft up to depth
     - A perft(performance test) searches all moves up to depth and returns the number of positions reached
     - WARNING: time usage increases exponentially with depth
