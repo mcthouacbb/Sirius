@@ -101,7 +101,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	Move hashMove = Move();
 	TTBucket* bucket = m_TT.probe(m_Board.zkey(), depth, m_RootPly, alpha, beta, hashScore, hashMove);
 
-	if (hashScore != INT_MIN)
+	if (hashScore != INT_MIN && m_RootPly > 0)
 	{
 		searchPly->pvLength = 0;
 		m_TTEvals++;
