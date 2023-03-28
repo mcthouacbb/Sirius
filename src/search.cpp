@@ -144,18 +144,9 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	for (uint32_t i = 0; i < end - moves; i++)
 	{
 		Move move = ordering.selectMove(i);
-		// if (i == 0 && hashMove != Move() && move != hashMove)
-		// {
-			// m_Board.printDbg();
-			// std::cout << hashMove.srcPos() << ' ' << hashMove.dstPos() << std::endl;
-			// std::cout << move.srcPos() << ' ' << move.dstPos() << std::endl;
-			// std::cout << m_Board.zkey().value % (1024 * 1024) << std::endl;
-			// m_TTMoves++;
-		// 	throw std::runtime_error("bruh what?");
-		// }
+		int extension = m_Board.givesCheck(move);
 		m_Board.makeMove(move, state);
 		m_RootPly++;
-		int extension = m_Board.checkers() != 0;
 		int newDepth = depth + extension - 1;
 		int moveScore;
 		if (searchPly->bestMove == Move())

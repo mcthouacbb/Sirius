@@ -162,6 +162,7 @@ const uint32_t bishopIndexBits[64] = {
 
 
 BitBoard inBetweenSquares[64][64];
+BitBoard pinRays[64][64];
 BitBoard alignedSquares[64][64];
 BitBoard moveMasks[64][64];
 
@@ -471,8 +472,9 @@ void initBetweenBBs()
 				{
 					BitBoard dstRay = getRay(dst, oppDir(dir));
 					inBetweenSquares[src][dst] = srcRay & dstRay;
-					alignedSquares[src][dst] = srcRay | dstRay;
+					pinRays[src][dst] = srcRay;
 					moveMasks[src][dst] |= (srcRay & dstRay);
+					alignedSquares[src][dst] = srcRay | dstRay;
 					// printBB(moveMasks[src][dst]);
 				}
 			}

@@ -173,7 +173,7 @@ void genQueenMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard m
 		queenAttacks &= moveMask;
 		if (pinned & (1ull << queenIdx))
 		{
-			queenAttacks &= attacks::alignedBB(kingIdx, queenIdx);
+			queenAttacks &= attacks::pinRayBB(kingIdx, queenIdx);
 		}
 		while (queenAttacks)
 		{
@@ -200,7 +200,7 @@ void genRookMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard mo
 		rookAttacks &= moveMask;
 		if (pinned & (1ull << rookIdx))
 		{
-			rookAttacks &= attacks::alignedBB(kingIdx, rookIdx);
+			rookAttacks &= attacks::pinRayBB(kingIdx, rookIdx);
 		}
 		while (rookAttacks)
 		{
@@ -227,7 +227,7 @@ void genBishopMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard 
 		bishopAttacks &= moveMask;
 		if (pinned & (1ull << bishopIdx))
 		{
-			bishopAttacks &= attacks::alignedBB(kingIdx, bishopIdx);
+			bishopAttacks &= attacks::pinRayBB(kingIdx, bishopIdx);
 		}
 		while (bishopAttacks)
 		{

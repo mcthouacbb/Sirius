@@ -19,8 +19,9 @@ namespace attacks
 {
 
 extern BitBoard inBetweenSquares[64][64];
-extern BitBoard alignedSquares[64][64];
+extern BitBoard pinRays[64][64];
 extern BitBoard moveMasks[64][64];
+extern BitBoard alignedSquares[64][64];
 
 extern int castleMasks[64];
 
@@ -151,14 +152,19 @@ inline constexpr BitBoard qscBlockSquares()
 	}
 }
 
+inline bool aligned(uint32_t a, uint32_t b, uint32_t c)
+{
+	return alignedSquares[a][b] & (1ull << c);
+}
+
 inline BitBoard inBetweenBB(uint32_t src, uint32_t dst)
 {
 	return inBetweenSquares[src][dst];
 }
 
-inline BitBoard alignedBB(uint32_t src, uint32_t dst)
+inline BitBoard pinRayBB(uint32_t king, uint32_t pinned)
 {
-	return alignedSquares[src][dst];
+	return pinRays[king][pinned];
 }
 
 inline BitBoard moveMaskBB(uint32_t king, uint32_t checker)

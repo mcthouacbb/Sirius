@@ -55,6 +55,40 @@ uint64_t perft(Board& board, int depth)
 	return count;
 }
 
+template<bool print>
+uint64_t testGivesCheck(Board& board, int depth)
+{
+	if (depth == 0)
+		return 1;
+	Move moves[256];
+	Move* end = genMoves<MoveGenType::LEGAL>(board, moves);
+	if (depth == 1 && !print)
+		return end - moves;
+
+	uint64_t count = 0;
+	BoardState state;
+	for (Move* it = moves; it != end; it++)
+	{
+		const auto& move = *it;
+		bool givesCheck = board.givesCheck(move);
+		board.makeMove(move, state);
+		bool inCheck = board.checkers() != 0;
+		if (givesCheck != inCheck)
+		{
+			std::cout << comm::convMoveToPCN(move) << std::endl;
+			board.unmakeMove(move);
+			printBoard(board);
+			throw std::runtime_error("WHAT?");
+		}
+		uint64_t sub = perft<false>(board, depth - 1);
+		if (print)
+			std::cout << comm::convMoveToPCN(move) << ": " << sub << std::endl;
+		count += sub;
+		board.unmakeMove(move);
+	}
+	return count;
+}
+
 void testSAN(Board& board, int depth)
 {
 	Move moves[256];
@@ -182,6 +216,7 @@ void runTests(Board& board, bool fast)
 				std::cout << "\tSkipped: depth " << i + 1 << std::endl;
 				continue;
 			}
+			// uint64_t nodes = testGivesCheck<false>(board, i + 1);
 			uint64_t nodes = perft<false>(board, i + 1);
 			totalNodes += nodes;
 			if (nodes == test.results[i])
@@ -464,7 +499,6 @@ int main(int argc, char** argv)
 	zobrist::init();
 	std::cout << "Hello World!" << std::endl;
 	Board board;
-
 	// board.setToFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
 
 	// testQuiescence(board, 3);
@@ -532,7 +566,10 @@ int main(int argc, char** argv)
 					std::cout << "Invalid depth" << std::endl;
 					break;
 				}
+				auto t1 = std::chrono::steady_clock::now();
 				uint64_t nodes = perft<true>(board, depth);
+				auto t2 = std::chrono::steady_clock::now();
+				std::cout << (t2 - t1).count() << std::endl;
 				std::cout << "Nodes: " << nodes << std::endl;
 				break;
 			}
