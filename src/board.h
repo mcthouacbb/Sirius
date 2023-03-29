@@ -20,6 +20,7 @@ struct BoardState
 {
 	int halfMoveClock;
 	int reversiblePly;
+	int pliesFromNull;
 	int epSquare;
 	int castlingRights;
 	ZKey zkey;
@@ -46,6 +47,8 @@ public:
 
 	void makeMove(Move move, BoardState& state);
 	void unmakeMove(Move move);
+	void makeNullMove(BoardState& state);
+	void unmakeNullMove();
 
 	Color sideToMove() const;
 	int epSquare() const;
@@ -53,6 +56,7 @@ public:
 	int halfMoveClock() const;
 	int reversiblePly() const;
 	int castlingRights() const;
+	int pliesFromNull() const;
 	ZKey zkey() const;
 
 	int repetitions() const;
@@ -95,6 +99,7 @@ private:
 	int m_GamePly;
 	int m_HalfMoveClock;
 	int m_ReversiblePly;
+	int m_PliesFromNull;
 	int m_EpSquare;
 	int m_CastlingRights;
 
@@ -128,6 +133,11 @@ inline int Board::halfMoveClock() const
 inline int Board::reversiblePly() const
 {
 	return m_ReversiblePly;
+}
+
+inline int Board::pliesFromNull() const
+{
+	return m_PliesFromNull;
 }
 
 inline int Board::castlingRights() const

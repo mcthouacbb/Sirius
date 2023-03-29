@@ -109,7 +109,23 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	}
 
 	m_Nodes++;
+	
+	BoardState state;
 
+	if (m_Board.pliesFromNull() > 0 && !m_Board.checkers())
+	{
+		int R = 2;
+		BitBoard nonPawns = m_Board.getColor(m_Board.sideToMove()) ^ m_Board.getPieces(m_Board.sideToMove(), PieceType::PAWN);
+		if (nonPawns && depth >= R)
+		{
+			m_Board.makeNullMove(state);
+			int nullScore = -search(depth - R - 1, searchPly + 1, -beta, -beta + 1, false);
+			m_Board.unmakeNullMove();
+			if (nullScore >= beta)
+				return beta;
+		}
+	}
+	
 	// CheckInfo checkInfo = calcCheckInfo(m_Board, m_Board.sideToMove());
 	Move moves[256];
 	Move* end = genMoves<MoveGenType::LEGAL>(m_Board, moves);
@@ -131,8 +147,6 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		searchPly->killers,
 		m_History[static_cast<int>(m_Board.sideToMove())]
 	);
-	
-	BoardState state;
 
 	Move childPV[MAX_PLY];
 	searchPly[1].pv = childPV;

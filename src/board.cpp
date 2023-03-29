@@ -143,6 +143,7 @@ done:
 	m_GamePly = 2 * m_GamePly - 1 - (m_SideToMove == Color::WHITE);
 
 	m_ReversiblePly = 0;
+	m_PliesFromNull = 0;
 	m_State = nullptr;
 	updateCheckInfo();
 }
@@ -243,14 +244,17 @@ void Board::makeMove(Move move, BoardState& state)
 	
 	state.halfMoveClock = m_HalfMoveClock;
 	state.reversiblePly = m_ReversiblePly;
+	state.pliesFromNull = m_PliesFromNull;
 	state.epSquare = m_EpSquare;
 	state.castlingRights = m_CastlingRights;
 	state.zkey = m_ZKey;
 	state.checkInfo = m_CheckInfo;
+	state.capturedPiece = 0;
 	
 	m_GamePly++;
 	m_HalfMoveClock++;
 	m_ReversiblePly++;
+	m_PliesFromNull++;
 
 	m_ZKey.flipSideToMove();
 
@@ -387,6 +391,7 @@ void Board::unmakeMove(Move move)
 	m_GamePly--;
 	m_HalfMoveClock = m_State->halfMoveClock;
 	m_ReversiblePly = m_State->reversiblePly;
+	m_PliesFromNull = m_State->pliesFromNull;
 	m_EpSquare = m_State->epSquare;
 	m_CastlingRights = m_State->castlingRights;
 	m_ZKey = m_State->zkey;
@@ -444,6 +449,55 @@ void Board::unmakeMove(Move move)
 		std::cout << "HELLO?" << std::endl;
 		yesnt();
 	}*/
+}
+
+void Board::makeNullMove(BoardState& state)
+{
+	state.prev = m_State;
+	m_State = &state;
+	
+	state.halfMoveClock = m_HalfMoveClock;
+	state.reversiblePly = m_ReversiblePly;
+	state.pliesFromNull = m_PliesFromNull;
+	state.epSquare = m_EpSquare;
+	state.castlingRights = m_CastlingRights;
+	state.zkey = m_ZKey;
+	state.checkInfo = m_CheckInfo;
+	state.capturedPiece = 0;
+
+	m_GamePly++;
+	m_HalfMoveClock++;
+	m_ReversiblePly++;
+	
+	m_PliesFromNull = 0;
+	
+	if (m_EpSquare != -1)
+	{
+		m_ZKey.updateEP(m_EpSquare & 7);
+		m_EpSquare = -1;
+	}
+
+	m_ZKey.flipSideToMove();
+	m_SideToMove = flip(m_SideToMove);
+
+	updateCheckInfo();
+}
+
+void Board::unmakeNullMove()
+{
+	m_GamePly--;
+	m_HalfMoveClock = m_State->halfMoveClock;
+	m_ReversiblePly = m_State->reversiblePly;
+	m_PliesFromNull = m_State->pliesFromNull;
+	m_EpSquare = m_State->epSquare;
+	m_CastlingRights = m_State->castlingRights;
+	m_ZKey = m_State->zkey;
+
+	m_CheckInfo = m_State->checkInfo;
+
+	m_SideToMove = flip(m_SideToMove);
+
+	m_State = m_State->prev;
 }
 
 bool Board::squareAttacked(Color color, uint32_t square, BitBoard blockers) const
