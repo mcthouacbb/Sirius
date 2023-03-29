@@ -3,6 +3,7 @@
 #include "board.h"
 #include "defs.h"
 #include "tt.h"
+#include "time_man.h"
 
 constexpr int MAX_PLY = 128;
 
@@ -17,6 +18,8 @@ struct SearchPly
 class Search
 {
 public:
+	static constexpr uint32_t TIME_CHECK_INTERVAL = 2048;
+
 	Search(Board& board);
 
 	int iterDeep(int maxDepth);
@@ -28,6 +31,9 @@ private:
 	void storeKiller(SearchPly* ply, Move killer);
 
 	Board& m_Board;
+	TimeManager m_TimeMan;
+	bool m_ShouldStop;
+	uint32_t m_TimeCheckCounter; 
 	TT m_TT;
 	int m_RootPly;
 	uint64_t m_Nodes;

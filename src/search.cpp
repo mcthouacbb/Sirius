@@ -39,6 +39,11 @@ int Search::iterDeep(int maxDepth)
 {
 	int score;
 	reset();
+	m_ShouldStop = false;
+	m_TimeCheckCounter = TIME_CHECK_INTERVAL;
+	// 3 | 1
+	m_TimeMan.setTimeLeft(Duration(180000000), Duration(1000000));
+	m_TimeMan.startSearch();
 	for (int depth = 1; depth <= maxDepth; depth++)
 	{
 		m_Nodes = 0;
@@ -47,6 +52,13 @@ int Search::iterDeep(int maxDepth)
 		m_TTMoves = 0;
 		m_Plies[0].pv = m_PV;
 		int searchScore = search(depth, &m_Plies[0], eval::NEG_INF, eval::POS_INF, true);
+		if (m_ShouldStop)
+		{
+			std::cout << "Depth: " << depth << std::endl;
+			std::cout << "Time Ran Out" << std::endl;
+			std::cout << std::endl;
+			break;
+		}
 		score = searchScore;
 		std::cout << "Depth: " << depth << std::endl;
 		std::cout << "\tNodes: " << m_Nodes << std::endl;
@@ -68,9 +80,20 @@ int Search::iterDeep(int maxDepth)
 	return score;
 }
 
+void printBoard(const Board& board);
 
 int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool isPV)
 {
+	if (--m_TimeCheckCounter == 0)
+	{
+		m_TimeCheckCounter = TIME_CHECK_INTERVAL;
+		if (m_TimeMan.shouldStop())
+		{
+			m_ShouldStop = true;
+			return alpha;
+		}
+	}
+
 	alpha = std::max(alpha, eval::CHECKMATE + m_RootPly);
 	beta = std::min(beta, -eval::CHECKMATE - m_RootPly);
 	if (alpha >= beta)
@@ -122,7 +145,10 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 			int nullScore = -search(depth - R - 1, searchPly + 1, -beta, -beta + 1, false);
 			m_Board.unmakeNullMove();
 			if (nullScore >= beta)
+			{
+				searchPly->pvLength = 0;
 				return beta;
+			}
 		}
 	}
 	
@@ -158,9 +184,10 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	for (uint32_t i = 0; i < end - moves; i++)
 	{
 		Move move = ordering.selectMove(i);
-		int extension = m_Board.givesCheck(move);
+		// int extension = m_Board.givesCheck(move);
 		m_Board.makeMove(move, state);
 		m_RootPly++;
+		int extension = m_Board.checkers() != 0;
 		int newDepth = depth + extension - 1;
 		int moveScore;
 		if (searchPly->bestMove == Move())
@@ -173,6 +200,9 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		}
 		m_RootPly--;
 		m_Board.unmakeMove(move);
+
+		if (m_ShouldStop)
+			return alpha;
 
 		if (moveScore >= beta)
 		{

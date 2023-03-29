@@ -1,0 +1,20 @@
+#include <chrono>
+
+using TimePoint = std::chrono::steady_clock::time_point;
+using Duration = std::chrono::microseconds;
+
+class TimeManager
+{
+public:
+	TimeManager() = default;
+
+	void setTimeLeft(Duration time, Duration increment);
+
+	void startSearch();
+	bool shouldStop();
+private:
+	TimePoint m_StartTime;
+	Duration m_AllocatedTime;
+	Duration m_Clock;
+	Duration m_Increment;
+};
