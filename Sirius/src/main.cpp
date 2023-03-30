@@ -5,6 +5,8 @@
 #include <vector>
 #include <cstring>
 #include <chrono>
+#include <deque>
+#include <tuple>
 
 #include "board.h"
 #include "attacks.h"
@@ -258,7 +260,11 @@ enum class Command
 	UNDO_MOVE,
 	PRINT_BOARD,
 	STATIC_EVAL,
-	SEARCH
+	QUIESCENCE_EVAL,
+	SEARCH,
+	RUN_TESTS,
+	PERFT,
+	SET_CLOCK
 };
 
 const char* parseCommand(const char* str, Command& command)
@@ -310,6 +316,27 @@ const char* parseCommand(const char* str, Command& command)
 			{
 				command = Command::STATIC_EVAL;
 				return str + 4;
+			}
+			return nullptr;
+		case 't':
+			if (strncmp(str + 1, "ests", 4) == 0)
+			{
+				command = Command::RUN_TESTS;
+				return str + 5;
+			}
+			return nullptr;
+		case 'q':
+			if (strncmp(str + 1, "eval", 4) == 0)
+			{
+				command = Command::QUIESCENCE_EVAL;
+				return str + 5;
+			}
+			return nullptr;
+		case 'c':
+			if (strncmp(str + 1, "lock ", 5) == 0)
+			{
+				command = Command::SET_CLOCK;
+				return str + 6;
 			}
 			return nullptr;
 		default:
@@ -410,6 +437,12 @@ void staticEval(const Board& board)
 	std::cout << "\t\tBlack: " << board.evalState().materialEG[1] << '\n';
 }
 
+void quiescenceEval(Search& search, std::string_view)
+{
+	int eval = search.qsearch(eval::NEG_INF, eval::POS_INF);
+	std::cout << "Quiescence eval: " << eval << std::endl;
+}
+
 void searchCommand(Search& search, std::string_view params)
 {
 	int depth;
@@ -437,6 +470,29 @@ void searchCommand(Search& search, std::string_view params)
 	std::cout << "Eval: " << eval << std::endl;
 }
 
+void setClock(Search& search, std::string_view params)
+{
+	uint32_t clock;
+	auto [ptr, ec] = std::from_chars(params.data(), params.data() + params.size(), clock);
+
+	if (ec != std::errc())
+	{
+		std::cout << "Invalid number of milliseconds for clock" << std::endl;
+		return;
+	}
+	
+	uint32_t increment;
+	auto result = std::from_chars(ptr + 1, params.data() + params.size(), increment);
+	
+	if (result.ec != std::errc())
+	{
+		std::cout << "Invalid number of milliseconds for increment" << std::endl;
+		return;
+	}
+	
+	search.setTime(Duration(clock), Duration(increment));
+}
+
 int main()
 {
 	attacks::init();
@@ -453,6 +509,8 @@ int main()
 	state.end = genMoves<MoveGenType::LEGAL>(board, state.moves, calcCheckInfo(*state.board, state.board->currPlayer()));
 
 	Search search(board);
+	// default to 3m|1s blitz
+	search.setTime(Duration(180000), Duration(1000));
 	
 	std::string str;
 	for (;;)
@@ -491,6 +549,35 @@ int main()
 			case Command::SEARCH:
 				std::cout << "Search: " << params << std::endl;
 				searchCommand(search, std::string_view(params, str.c_str() + str.size()));
+				break;
+			case Command::QUIESCENCE_EVAL:
+				std::cout << "QEval: " << params << std::endl;
+				quiescenceEval(search, std::string_view(params, str.c_str() + str.size()));
+				break;
+			case Command::RUN_TESTS:
+				std::cout << "Tests: " << params << std::endl;
+				runTests(board, false);
+				break;
+			case Command::PERFT:
+			{
+				std::cout << "Perft: " << params << std::endl;
+				int depth;
+				auto [ptr, ec] = std::from_chars(params, str.c_str() + str.size(), depth);
+				if (ec != std::errc())
+				{
+					std::cout << "Invalid depth" << std::endl;
+					break;
+				}
+				auto t1 = std::chrono::steady_clock::now();
+				uint64_t nodes = perft<true>(board, depth);
+				auto t2 = std::chrono::steady_clock::now();
+				std::cout << (t2 - t1).count() << std::endl;
+				std::cout << "Nodes: " << nodes << std::endl;
+				break;
+			}
+			case Command::SET_CLOCK:
+				std::cout << "Set clock: " << params << std::endl;
+				setClock(search, params);
 				break;
 		}
 	}

@@ -11,15 +11,11 @@ Search::Search(Board& board)
 	
 }
 
-
 int Search::iterDeep(int maxDepth)
 {
 	int score = 0;
-	reset();
 	m_ShouldStop = false;
 	m_TimeCheckCounter = TIME_CHECK_INTERVAL;
-	// 3 | 1
-	m_TimeMan.setTimeLeft(Duration(180000000), Duration(1000000));
 	m_TimeMan.startSearch();
 	for (int depth = 1; depth <= maxDepth; depth++)
 	{
@@ -66,6 +62,8 @@ int Search::search(int depth, int alpha, int beta)
 			return alpha;
 		}
 	}
+	
+	m_Nodes++;
 
 	alpha = std::max(alpha, eval::CHECKMATE + m_RootPly);
 	beta = std::min(beta, -eval::CHECKMATE - m_RootPly);
@@ -82,7 +80,7 @@ int Search::search(int depth, int alpha, int beta)
 	if (depth <= 0)
 	{
 		m_Plies[m_RootPly].pvLength = 0;
-		return qsearch(alpha, beta, 1);
+		return qsearch(alpha, beta);
 	}
 
 	m_Nodes++;
@@ -140,7 +138,7 @@ int Search::search(int depth, int alpha, int beta)
 	return alpha;
 }
 
-int Search::qsearch(int alpha, int beta, int depth)
+int Search::qsearch(int alpha, int beta)
 {
 	int score = eval::evaluate(m_Board);
 
@@ -149,9 +147,6 @@ int Search::qsearch(int alpha, int beta, int depth)
 		return beta;
 	if (score > alpha)
 		alpha = score;
-
-	if (depth <= 0)
-		return alpha;
 
 	CheckInfo checkInfo = calcCheckInfo(m_Board, m_Board.currPlayer());
 
@@ -165,7 +160,7 @@ int Search::qsearch(int alpha, int beta, int depth)
 	{
 		Move move = ordering.selectMove(i);
 		m_Board.makeMove(move, state);
-		int moveScore = -qsearch(-beta, -alpha, depth - 1);
+		int moveScore = -qsearch(-beta, -alpha);
 		m_Board.unmakeMove(move, state);
 
 		if (moveScore >= beta)
