@@ -1,7 +1,7 @@
 #include <chrono>
 
 using TimePoint = std::chrono::steady_clock::time_point;
-using Duration = std::chrono::microseconds;
+using Duration = std::chrono::milliseconds;
 
 class TimeManager
 {

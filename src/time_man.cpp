@@ -10,12 +10,11 @@ void TimeManager::setTimeLeft(Duration time, Duration increment)
 
 	if (m_AllocatedTime >= m_Clock)
 	{
-		m_AllocatedTime = m_Clock - Duration(500000);
+		m_AllocatedTime = m_Clock - Duration(500);
 	}
 
 	if (m_AllocatedTime < Duration(0))
-		// 100 ms
-		m_AllocatedTime = Duration(100000);
+		m_AllocatedTime = Duration(100);
 }
 
 void TimeManager::startSearch()

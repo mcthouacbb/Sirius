@@ -6,6 +6,7 @@
 #include <cstring>
 #include <chrono>
 #include <deque>
+#include <tuple>
 
 #include "board.h"
 #include "attacks.h"
@@ -280,7 +281,8 @@ enum class Command
 	QUIESCENCE_EVAL,
 	SEARCH,
 	RUN_TESTS,
-	PERFT
+	PERFT,
+	SET_CLOCK
 };
 
 const char* parseCommand(const char* str, Command& command)
@@ -354,6 +356,13 @@ const char* parseCommand(const char* str, Command& command)
 			{
 				command = Command::QUIESCENCE_EVAL;
 				return str + 5;
+			}
+			return nullptr;
+		case 'c':
+			if (strncmp(str + 1, "lock ", 5) == 0)
+			{
+				command = Command::SET_CLOCK;
+				return str + 6;
 			}
 			return nullptr;
 		default:
@@ -493,6 +502,29 @@ void searchCommand(Search& search, std::string_view params)
 	std::cout << "Eval: " << eval << std::endl;
 }
 
+void setClock(Search& search, std::string_view params)
+{
+	uint32_t clock;
+	auto [ptr, ec] = std::from_chars(params.data(), params.data() + params.size(), clock);
+
+	if (ec != std::errc())
+	{
+		std::cout << "Invalid number of milliseconds for clock" << std::endl;
+		return;
+	}
+	
+	uint32_t increment;
+	auto result = std::from_chars(ptr + 1, params.data() + params.size(), increment);
+	
+	if (result.ec != std::errc())
+	{
+		std::cout << "Invalid number of milliseconds for increment" << std::endl;
+		return;
+	}
+	
+	search.setTime(Duration(clock), Duration(increment));
+}
+
 int main(int argc, char** argv)
 {
 	attacks::init();
@@ -509,6 +541,8 @@ int main(int argc, char** argv)
 	state.end = genMoves<MoveGenType::LEGAL>(board, state.moves);
 
 	Search search(board);
+	// default to 3m|1s blitz
+	search.setTime(Duration(180000), Duration(1000));
 	
 	std::string str;
 	for (;;)
@@ -573,6 +607,10 @@ int main(int argc, char** argv)
 				std::cout << "Nodes: " << nodes << std::endl;
 				break;
 			}
+			case Command::SET_CLOCK:
+				std::cout << "Set clock: " << params << std::endl;
+				setClock(search, params);
+				break;
 		}
 	}
 	return 0;

@@ -41,8 +41,6 @@ int Search::iterDeep(int maxDepth)
 	reset();
 	m_ShouldStop = false;
 	m_TimeCheckCounter = TIME_CHECK_INTERVAL;
-	// 3 | 1
-	m_TimeMan.setTimeLeft(Duration(180000000), Duration(1000000));
 	m_TimeMan.startSearch();
 	for (int depth = 1; depth <= maxDepth; depth++)
 	{
@@ -93,6 +91,8 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 			return alpha;
 		}
 	}
+	
+	m_Nodes++;
 
 	alpha = std::max(alpha, eval::CHECKMATE + m_RootPly);
 	beta = std::min(beta, -eval::CHECKMATE - m_RootPly);
@@ -124,14 +124,12 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	Move hashMove = Move();
 	TTBucket* bucket = m_TT.probe(m_Board.zkey(), depth, m_RootPly, alpha, beta, hashScore, hashMove);
 
-	if (hashScore != INT_MIN && m_RootPly > 0)
+	if (hashScore != INT_MIN && !isPV)
 	{
 		searchPly->pvLength = 0;
 		m_TTEvals++;
 		return hashScore;
 	}
-
-	m_Nodes++;
 	
 	BoardState state;
 
@@ -139,7 +137,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	{
 		int R = 2;
 		BitBoard nonPawns = m_Board.getColor(m_Board.sideToMove()) ^ m_Board.getPieces(m_Board.sideToMove(), PieceType::PAWN);
-		if (nonPawns && depth >= R)
+		if ((nonPawns & (nonPawns - 1)) && depth >= R)
 		{
 			m_Board.makeNullMove(state);
 			int nullScore = -search(depth - R - 1, searchPly + 1, -beta, -beta + 1, false);
@@ -184,10 +182,10 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	for (uint32_t i = 0; i < end - moves; i++)
 	{
 		Move move = ordering.selectMove(i);
-		// int extension = m_Board.givesCheck(move);
+		int extension = m_Board.givesCheck(move);
 		m_Board.makeMove(move, state);
 		m_RootPly++;
-		int extension = m_Board.checkers() != 0;
+		// int extension = m_Board.checkers() != 0;
 		int newDepth = depth + extension - 1;
 		int moveScore;
 		if (searchPly->bestMove == Move())

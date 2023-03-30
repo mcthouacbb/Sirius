@@ -26,6 +26,8 @@ public:
 
 	int search(int depth, SearchPly* searchPly, int alpha, int beta, bool isPV);
 	int qsearch(int alpha, int beta);
+
+	void setTime(Duration clock, Duration inc);
 private:
 	void reset();
 	void storeKiller(SearchPly* ply, Move killer);
@@ -33,7 +35,7 @@ private:
 	Board& m_Board;
 	TimeManager m_TimeMan;
 	bool m_ShouldStop;
-	uint32_t m_TimeCheckCounter; 
+	uint32_t m_TimeCheckCounter;
 	TT m_TT;
 	int m_RootPly;
 	uint64_t m_Nodes;
@@ -45,3 +47,7 @@ private:
 	SearchPly m_Plies[MAX_PLY];
 };
 
+inline void Search::setTime(Duration clock, Duration inc)
+{
+	m_TimeMan.setTimeLeft(clock, inc);
+}
