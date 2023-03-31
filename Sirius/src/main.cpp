@@ -27,6 +27,8 @@ void printBoard(const Board& board)
 		std::cout << "Ep square: " << static_cast<char>((board.epSquare() & 7) + 'a') << static_cast<char>((board.epSquare() >> 3) + '1') << std::endl;
 	else
 		std::cout << "Ep square: N/A" << std::endl;
+
+	std::cout << "Fen: " <<  board.fenStr() << std::endl;
 }
 
 template<bool print>
@@ -58,7 +60,7 @@ void testSAN(Board& board, int depth)
 {
 	Move moves[256];
 	Move* end = genMoves<MoveGenType::LEGAL>(board, moves, calcCheckInfo(board, board.currPlayer()));
-	
+
 	for (Move* it = moves; it != end; it++)
 	{
 		std::string str = comm::convMoveToSAN(board, moves, end, *it);
@@ -151,7 +153,7 @@ void runTests(Board& board, bool fast)
 		test.fen = line.substr(0, i);
 
 		std::from_chars(line.data() + i + 4, line.data() + line.size(), test.results[line[i + 2] - '1']);
-		
+
 		while (true)
 		{
 			size_t idx = line.find(';', i + 1);
@@ -175,7 +177,7 @@ void runTests(Board& board, bool fast)
 	}*/
 
 /*
-TEST: 8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1 
+TEST: 8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1
     Passed: depth 4
     Failed: depth 5, Expected: 674624, got: 674543
     Failed: depth 6, Expected: 11030083, got: 11027209
@@ -447,7 +449,7 @@ void searchCommand(Search& search, std::string_view params)
 {
 	int depth;
 	auto [ptr, ec] = std::from_chars(params.data(), params.data() + params.size(), depth);
-	
+
 	if (ec != std::errc())
 	{
 		std::cout << "Depth must be a valid integer" << std::endl;
@@ -480,16 +482,16 @@ void setClock(Search& search, std::string_view params)
 		std::cout << "Invalid number of milliseconds for clock" << std::endl;
 		return;
 	}
-	
+
 	uint32_t increment;
 	auto result = std::from_chars(ptr + 1, params.data() + params.size(), increment);
-	
+
 	if (result.ec != std::errc())
 	{
 		std::cout << "Invalid number of milliseconds for increment" << std::endl;
 		return;
 	}
-	
+
 	search.setTime(Duration(clock), Duration(increment));
 }
 
@@ -503,7 +505,7 @@ int main()
 
 	// testQuiescence(board, 3);
 	// std::cout << "yay" << std::endl;
-	
+
 	State state;
 	state.board = &board;
 	state.end = genMoves<MoveGenType::LEGAL>(board, state.moves, calcCheckInfo(*state.board, state.board->currPlayer()));
@@ -511,7 +513,7 @@ int main()
 	Search search(board);
 	// default to 3m|1s blitz
 	search.setTime(Duration(180000), Duration(1000));
-	
+
 	std::string str;
 	for (;;)
 	{

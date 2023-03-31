@@ -28,6 +28,7 @@ public:
 	void setToFen(const std::string_view& fen);
 
 	std::string stringRep() const;
+	std::string fenStr() const;
 
 	void printDbg() const;
 

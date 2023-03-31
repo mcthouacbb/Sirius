@@ -7,6 +7,8 @@
 Board::Board()
 {
 	setToFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+
+	std::cout << fenStr() << std::endl;
 }
 
 void Board::setToFen(const std::string_view& fen)
@@ -200,29 +202,91 @@ std::string Board::stringRep() const
 	return result;
 }
 
-void Board::makeMove(const Move move, BoardState& state)
+std::string Board::fenStr() const
+{
+	std::string fen = "";
+	int lastFile;
+	for (int j = 56; j >= 0; j -= 8)
+	{
+		lastFile = -1;
+		for (int i = j; i < j + 8; i++)
+		{
+			Piece piece = m_Squares[i];
+			if (piece)
+			{
+				int diff = i - j - lastFile;
+				if (diff > 1)
+					fen += static_cast<char>((diff - 1) + '0');
+				fen += pieceChars[piece];
+				lastFile = i - j;
+			}
+		}
+		int diff = 8 - lastFile;
+		if (diff > 1)
+			fen += static_cast<char>((diff - 1) + '0');
+		if (j != 0)
+			fen += '/';
+	}
+
+	fen += ' ';
+
+	fen += m_CurrPlayer == Color::WHITE ? "w " : "b ";
+
+	if (m_CastlingRights == 0)
+		fen += '-';
+	else
+	{
+		if (m_CastlingRights & 1)
+			fen += 'K';
+		if (m_CastlingRights & 2)
+			fen += 'Q';
+		if (m_CastlingRights & 4)
+			fen += 'k';
+		if (m_CastlingRights & 8)
+			fen += 'q';
+	}
+
+	fen += ' ';
+
+	if (m_Enpassant == -1)
+		fen += '-';
+	else
+	{
+		fen += static_cast<char>((m_Enpassant & 7) + 'a');
+		fen += static_cast<char>((m_Enpassant >> 3) + 'a');
+	}
+
+	fen += ' ';
+	fen += std::to_string(m_HalfMoveClock);
+	fen += ' ';
+	fen += std::to_string(m_GamePly / 2 + 1 + (m_CurrPlayer == Color::BLACK));
+
+	return fen;
+}
+
+void Board::makeMove(const Move move, BoardState & state)
 {
 	m_GamePly++;
 	state.halfMoveClock = m_HalfMoveClock;
 	state.epSquare = m_Enpassant;
 	state.castlingRights = m_CastlingRights;
-	
+
 
 	switch (move.type())
 	{
 		case MoveType::NONE:
 		{
 			state.srcPiece = m_Squares[move.srcPos()];
-			
+
 			Piece dstPiece = m_Squares[move.dstPos()];
 			state.dstPiece = dstPiece;
-		
+
 			if (dstPiece)
 			{
 				m_HalfMoveClock = 0;
 				removePiece(move.dstPos());
 			}
-			
+
 			movePiece(move.srcPos(), move.dstPos());
 			if ((state.srcPiece & PIECE_TYPE_MASK) == static_cast<int>(PieceType::PAWN))
 			{
@@ -241,12 +305,12 @@ void Board::makeMove(const Move move, BoardState& state)
 
 			Piece dstPiece = m_Squares[move.dstPos()];
 			state.dstPiece = dstPiece;
-		
+
 			if (dstPiece)
 			{
 				removePiece(move.dstPos());
 			}
-			
+
 			const PieceType promoPieces[4] = {
 				PieceType::QUEEN,
 				PieceType::ROOK,
@@ -274,11 +338,11 @@ void Board::makeMove(const Move move, BoardState& state)
 			break;
 		}
 		case MoveType::ENPASSANT:
-		{	
+		{
 			m_HalfMoveClock = 0;
 
 			state.srcPiece = m_Squares[move.srcPos()];
-			
+
 			int offset = m_CurrPlayer == Color::WHITE ? -8 : 8;
 			int col = static_cast<int>(flip(m_CurrPlayer)) << 3;
 			state.dstPiece = static_cast<Piece>(col | static_cast<int>(PieceType::PAWN));
@@ -287,7 +351,7 @@ void Board::makeMove(const Move move, BoardState& state)
 			break;
 		}
 	}
-	
+
 	m_CastlingRights &= attacks::getCastleMask(move.srcPos());
 	m_CastlingRights &= attacks::getCastleMask(move.dstPos());
 
@@ -359,7 +423,7 @@ void Board::unmakeMove(Move move, const BoardState& state)
 		printBB(m_Pieces[0] ^ (m_Colors[0] | m_Colors[1]));
 		throw std::runtime_error("Impossible");
 	}
-	
+
 	/*if (m_Colors[static_cast<int>(Color::WHITE)] & (1ull << 49))
 	{
 		std::cout << "HELLO?" << std::endl;
@@ -372,7 +436,7 @@ void Board::addPiece(int pos, Color color, PieceType piece)
 	int col = static_cast<int>(color) << 3;
 	// int col = (color == Color::BLACK ? PIECE_COL_MASK : 0);
 	m_Squares[pos] = static_cast<Piece>(col | static_cast<int>(piece));
-	
+
 	BitBoard posBB = 1ull << pos;
 	m_Pieces[static_cast<int>(piece)] |= posBB;
 	m_Colors[static_cast<int>(color)] |= posBB;
