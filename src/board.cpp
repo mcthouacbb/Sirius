@@ -7,6 +7,8 @@
 Board::Board()
 {
 	setToFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+
+	std::cout << fenStr() << std::endl;
 }
 
 void Board::setToFen(const std::string_view& fen)
@@ -218,6 +220,68 @@ std::string Board::stringRep() const
 	}
 	result += between;
 	return result;
+}
+
+std::string Board::fenStr() const
+{
+	std::string fen = "";
+	int lastFile;
+	for (int j = 56; j >= 0; j -= 8)
+	{
+		lastFile = -1;
+		for (int i = j; i < j + 8; i++)
+		{
+			Piece piece = m_Squares[i];
+			if (piece)
+			{
+				int diff = i - j - lastFile;
+				if (diff > 1)
+					fen += (diff - 1) + '0';
+				fen += pieceChars[piece];
+				lastFile = i - j;
+			}
+		}
+		int diff = 8 - lastFile;
+		if (diff > 1)
+			fen += (diff - 1) + '0';
+		if (j != 0)
+			fen += '/';
+	}
+
+	fen += ' ';
+
+	fen += m_SideToMove == Color::WHITE ? "w " : "b ";
+
+	if (m_CastlingRights == 0)
+		fen += '-';
+	else
+	{
+		if (m_CastlingRights & 1)
+			fen += 'K';
+		if (m_CastlingRights & 2)
+			fen += 'Q';
+		if (m_CastlingRights & 4)
+			fen += 'k';
+		if (m_CastlingRights & 8)
+			fen += 'q';
+	}
+
+	fen += ' ';
+
+	if (m_EpSquare == -1)
+		fen += '-';
+	else
+	{
+		fen += (m_EpSquare & 7) + 'a';
+		fen += (m_EpSquare >> 3) + 'a';
+	}
+
+	fen += ' ';
+	fen += std::to_string(m_HalfMoveClock);
+	fen += ' ';
+	fen += std::to_string(m_GamePly / 2 + 1 + (m_SideToMove == Color::BLACK));
+	
+	return fen;
 }
 
 int Board::repetitions() const

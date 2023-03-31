@@ -27,6 +27,7 @@ void printBoard(const Board& board)
 		std::cout << "Ep square: " << static_cast<char>((board.epSquare() & 7) + 'a') << static_cast<char>((board.epSquare() >> 3) + '1') << std::endl;
 	else
 		std::cout << "Ep square: N/A" << std::endl;
+	std::cout << "Fen: " <<  board.fenStr() << std::endl;
 
 	std::cout << "Zobrist hash: " << board.zkey().value << std::endl;
 }
