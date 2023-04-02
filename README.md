@@ -39,7 +39,12 @@ Command Line
 	- Performs are perft up to depth
     - A perft(performance test) searches all moves up to depth and returns the number of positions reached
     - WARNING: time usage increases exponentially with depth
-
+- `"clock" <time-ms> <increment-ms>`
+	- Sets the time left on the clock
+- `"book" ["rand"]`
+	- Returns all the moves in the opening book
+	- If rand is sent, chooses a random book move
+    - Prints "No moves in book found" if position is not in book
 
 Features
 - Board representation
@@ -131,3 +136,4 @@ Features
 	    - Check Extension
 		- Mate Distance Pruning
 	    - Principal Variation Search(PVS)
+        - Null Move Pruning
