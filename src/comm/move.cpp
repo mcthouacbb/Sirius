@@ -108,7 +108,7 @@ MoveStrFind findMoveFromSAN(const Board& board, Move* begin, Move* end, const ch
 				return {nullptr, moveStr};
 			if (moveStr[2] != 'O')
 				return {nullptr, moveStr};
-			if (moveStr[3] == '\0')
+			if (moveStr[3] != '-')
 			{
 				for (Move* it = begin; it != end; it++)
 				{
@@ -121,11 +121,7 @@ MoveStrFind findMoveFromSAN(const Board& board, Move* begin, Move* end, const ch
 			}
 			else
 			{
-				if (moveStr[3] != '-')
-					return {nullptr, moveStr};
 				if (moveStr[4] != 'O')
-					return {nullptr, moveStr};
-				if (moveStr[5] != '\0')
 					return {nullptr, moveStr};
 				for (Move* it = begin; it != end; it++)
 				{

@@ -7,6 +7,7 @@
 #include <chrono>
 #include <deque>
 #include <tuple>
+#include <random>
 
 #include "board.h"
 #include "attacks.h"
@@ -15,6 +16,7 @@
 #include "comm/fen.h"
 #include "eval/eval.h"
 #include "search.h"
+#include "book.h"
 
 void printBoard(const Board& board)
 {
@@ -283,7 +285,8 @@ enum class Command
 	SEARCH,
 	RUN_TESTS,
 	PERFT,
-	SET_CLOCK
+	SET_CLOCK,
+	BOOK
 };
 
 const char* parseCommand(const char* str, Command& command)
@@ -364,6 +367,13 @@ const char* parseCommand(const char* str, Command& command)
 			{
 				command = Command::SET_CLOCK;
 				return str + 6;
+			}
+			return nullptr;
+		case 'b':
+			if (strncmp(str + 1, "ook", 3) == 0)
+			{
+				command = Command::BOOK;
+				return str + 4;
 			}
 			return nullptr;
 		default:
@@ -544,6 +554,16 @@ int main(int argc, char** argv)
 	Search search(board);
 	// default to 3m|1s blitz
 	search.setTime(Duration(180000), Duration(1000));
+
+	std::ifstream openings("res/openings.pgn");
+	std::ostringstream sstr;
+	sstr << openings.rdbuf();
+	std::string pgnData = sstr.str();
+	
+	Book book;
+	book.loadFromPGN(pgnData.c_str());
+	std::random_device device;
+	std::mt19937 rng(device());
 	
 	std::string str;
 	for (;;)
@@ -611,6 +631,34 @@ int main(int argc, char** argv)
 			case Command::SET_CLOCK:
 				std::cout << "Set clock: " << params << std::endl;
 				setClock(search, params);
+				break;
+			case Command::BOOK:
+				std::cout << "Book: " << params << std::endl;
+				const std::vector<BookEntry>* entries = book.lookup(board.zkey());
+				if (strncmp(params, " rand", 5) == 0)
+				{
+					if (!entries)
+						std::cout << "No moves in book found" << std::endl;
+					else
+					{
+						auto dist = std::uniform_int_distribution<int>(0, entries->size() - 1);
+						int index = dist(rng);
+						std::cout << comm::convMoveToPCN((*entries)[index].move) << std::endl;
+					}
+				}
+				else
+				{
+					if (!entries)
+						std::cout << "No moves in book found" << std::endl;
+					else
+					{
+						for (const auto& entry : *entries)
+						{
+							std::cout << comm::convMoveToPCN(entry.move) << ' ';
+						}
+						std::cout << std::endl;
+					}
+				}
 				break;
 		}
 	}
