@@ -1,6 +1,0 @@
-#include <variant>
-
-namespace comm
-{
-
-}

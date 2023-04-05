@@ -1,7 +1,5 @@
 #include "../board.h"
 
-#include <sstream>
-
 namespace comm
 {
 

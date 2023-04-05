@@ -7,6 +7,7 @@
 #include <chrono>
 #include <deque>
 #include <tuple>
+#include <sstream>
 #include <random>
 
 #include "board.h"
@@ -540,7 +541,6 @@ int main(int argc, char** argv)
 {
 	attacks::init();
 	zobrist::init();
-	std::cout << "Hello World!" << std::endl;
 	Board board;
 	// board.setToFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
 
@@ -573,7 +573,7 @@ int main(int argc, char** argv)
 		const char* params = parseCommand(str.c_str(), command);
 		if (params == nullptr)
 		{
-			std::cout << "Invalid command" << std::endl;
+			std::cout << "Invalid command: " << str << std::endl;
 			continue;
 		}
 
