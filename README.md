@@ -1,6 +1,6 @@
 # Chess Engine (untitled)
 
-v0.1.3
+v0.2
 
 Command Line
 - `"position" {"fen" | "startpos"} [fenString]`
