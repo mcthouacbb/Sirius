@@ -35,45 +35,39 @@ void Search::reset()
 	m_TT.incAge();
 }
 
-int Search::iterDeep(int maxDepth)
+int Search::iterDeep(int maxDepth, int& depthSearched)
 {
 	int score;
 	reset();
 	m_ShouldStop = false;
 	m_TimeCheckCounter = TIME_CHECK_INTERVAL;
 	m_TimeMan.startSearch();
+	int alpha = eval::NEG_INF;
+	int beta = eval::POS_INF;
+	depthSearched = 0;
 	for (int depth = 1; depth <= maxDepth; depth++)
 	{
-		m_Nodes = 0;
-		m_QNodes = 0;
-		m_TTEvals = 0;
-		m_TTMoves = 0;
+		int searchScore;
 		m_Plies[0].pv = m_PV;
-		int searchScore = search(depth, &m_Plies[0], eval::NEG_INF, eval::POS_INF, true);
-		if (m_ShouldStop)
-		{
-			std::cout << "Depth: " << depth << std::endl;
-			std::cout << "Time Ran Out" << std::endl;
-			std::cout << std::endl;
-			break;
-		}
-		score = searchScore;
-		std::cout << "Depth: " << depth << std::endl;
-		std::cout << "\tNodes: " << m_Nodes << std::endl;
-		std::cout << "\tQNodes: " << m_QNodes << std::endl;
-		std::cout << "\tTT Evals: " << m_TTEvals << std::endl;
-		std::cout << "\tTT Moves: " << m_TTMoves << std::endl;
-		std::cout << "\tPV Length: " << m_Plies[0].pvLength << std::endl;
-		std::cout << "\tEval: " << searchScore << std::endl;
-		std::cout << "\tPV: ";
-		for (int i = 0; i < m_Plies[0].pvLength; i++)
-		{
-			std::cout << comm::convMoveToPCN(m_PV[i]) << ' ';
-		}
-		std::cout << std::endl;
+		while (true) {
+			searchScore = search(depth, &m_Plies[0], alpha, beta, true);
+			m_PVLength = m_Plies[0].pvLength;
+			if (m_ShouldStop)
+				break;
 
-		if (eval::isMateScore(searchScore))
-			return score;
+			if (searchScore <= alpha)
+				alpha -= 25;
+			else if (searchScore >= beta)
+				beta += 25;
+			else
+				break;
+		}
+		if (m_ShouldStop)
+			break;
+		score = searchScore;
+		alpha = std::max(score - 50, eval::NEG_INF);
+		beta = std::min(score + 50, eval::POS_INF);
+		depthSearched = depth;
 	}
 	return score;
 }

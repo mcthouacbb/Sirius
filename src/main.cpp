@@ -505,13 +505,21 @@ void searchCommand(Search& search, std::string_view params)
 	}
 
 	auto t1 = std::chrono::steady_clock::now();
-	int eval = search.iterDeep(depth);
+	int depthSearched;
+	int eval = search.iterDeep(depth, depthSearched);
 	auto t2 = std::chrono::steady_clock::now();
 
 	auto time = std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1);
 
 	std::cout << "Time: " << time.count() << std::endl;
+	std::cout << "Depth: " << depthSearched << std::endl;
 	std::cout << "Eval: " << eval << std::endl;
+	std::cout << "PV: ";
+	for (const Move* move = search.pvBegin(); move != search.pvEnd(); move++)
+	{
+		std::cout << comm::convMoveToPCN(*move) << ' ';
+	}
+	std::cout << std::endl;
 }
 
 void setClock(Search& search, std::string_view params)
