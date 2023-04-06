@@ -44,3 +44,11 @@ replit.nix
 Sirius/main
 Sirius/main_debug
 Makefile
+
+.vs
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+x64
+Sirius/x64

@@ -138,8 +138,8 @@ done:
 	}
 	i += 2;
 
-	auto [ptr, ec] = std::from_chars(&fen[i], fen.end(), m_HalfMoveClock);
-	std::from_chars(ptr + 1, fen.end(), m_GamePly);
+	auto [ptr, ec] = std::from_chars(&fen[i], fen.data() + fen.size(), m_HalfMoveClock);
+	std::from_chars(ptr + 1, fen.data() + fen.size(), m_GamePly);
 	m_GamePly = 2 * m_GamePly - 1 - (m_SideToMove == Color::WHITE);
 
 	m_ReversiblePly = 0;
@@ -278,7 +278,7 @@ std::string Board::fenStr() const
 	fen += std::to_string(m_HalfMoveClock);
 	fen += ' ';
 	fen += std::to_string(m_GamePly / 2 + 1 + (m_SideToMove == Color::BLACK));
-	
+
 	return fen;
 }
 
@@ -303,7 +303,7 @@ void Board::makeMove(Move move, BoardState& state)
 {
 	state.prev = m_State;
 	m_State = &state;
-	
+
 	state.halfMoveClock = m_HalfMoveClock;
 	state.reversiblePly = m_ReversiblePly;
 	state.pliesFromNull = m_PliesFromNull;
@@ -312,7 +312,7 @@ void Board::makeMove(Move move, BoardState& state)
 	state.zkey = m_ZKey;
 	state.checkInfo = m_CheckInfo;
 	state.capturedPiece = 0;
-	
+
 	m_GamePly++;
 	m_HalfMoveClock++;
 	m_ReversiblePly++;
@@ -330,20 +330,20 @@ void Board::makeMove(Move move, BoardState& state)
 		case MoveType::NONE:
 		{
 			Piece srcPiece = m_Squares[move.srcPos()];
-			
+
 			Piece dstPiece = m_Squares[move.dstPos()];
 			state.capturedPiece = dstPiece;
-		
+
 			if (dstPiece)
 			{
 				m_HalfMoveClock = 0;
 				removePiece(move.dstPos());
 				m_ZKey.removePiece(static_cast<PieceType>(dstPiece & PIECE_TYPE_MASK), static_cast<Color>(dstPiece >> 3), move.dstPos());
 			}
-			
+
 			movePiece(move.srcPos(), move.dstPos());
 			m_ZKey.movePiece(static_cast<PieceType>(srcPiece & PIECE_TYPE_MASK), static_cast<Color>(srcPiece >> 3), move.srcPos(), move.dstPos());
-			
+
 			if ((srcPiece & PIECE_TYPE_MASK) == static_cast<int>(PieceType::PAWN))
 			{
 				m_HalfMoveClock = 0;
@@ -362,13 +362,13 @@ void Board::makeMove(Move move, BoardState& state)
 
 			Piece dstPiece = m_Squares[move.dstPos()];
 			state.capturedPiece = dstPiece;
-		
+
 			if (dstPiece)
 			{
 				removePiece(move.dstPos());
 				m_ZKey.removePiece(static_cast<PieceType>(dstPiece & PIECE_TYPE_MASK), static_cast<Color>(dstPiece >> 3), move.dstPos());
 			}
-			
+
 			const PieceType promoPieces[4] = {
 				PieceType::QUEEN,
 				PieceType::ROOK,
@@ -403,7 +403,7 @@ void Board::makeMove(Move move, BoardState& state)
 			break;
 		}
 		case MoveType::ENPASSANT:
-		{	
+		{
 			m_HalfMoveClock = 0;
 			m_ReversiblePly = 0;
 
@@ -419,14 +419,14 @@ void Board::makeMove(Move move, BoardState& state)
 	}
 
 	m_ZKey.updateCastlingRights(m_CastlingRights);
-	
+
 	m_CastlingRights &= attacks::getCastleMask(move.srcPos());
 	m_CastlingRights &= attacks::getCastleMask(move.dstPos());
 
 	m_ZKey.updateCastlingRights(m_CastlingRights);
 
-	
-	
+
+
 	if (m_EpSquare == state.epSquare)
 	{
 		m_EpSquare = -1;
@@ -438,9 +438,9 @@ void Board::makeMove(Move move, BoardState& state)
 	}
 
 	m_SideToMove = flip(m_SideToMove);
-	
+
 	updateCheckInfo();
-	
+
 	/*if (m_Colors[static_cast<int>(Color::WHITE)] & (1ull << 49))
 	{
 		std::cout << "HELLO?" << std::endl;
@@ -505,7 +505,7 @@ void Board::unmakeMove(Move move)
 	}
 
 	m_State = m_State->prev;
-	
+
 	/*if (m_Colors[static_cast<int>(Color::WHITE)] & (1ull << 49))
 	{
 		std::cout << "HELLO?" << std::endl;
@@ -517,7 +517,7 @@ void Board::makeNullMove(BoardState& state)
 {
 	state.prev = m_State;
 	m_State = &state;
-	
+
 	state.halfMoveClock = m_HalfMoveClock;
 	state.reversiblePly = m_ReversiblePly;
 	state.pliesFromNull = m_PliesFromNull;
@@ -530,9 +530,9 @@ void Board::makeNullMove(BoardState& state)
 	m_GamePly++;
 	m_HalfMoveClock++;
 	m_ReversiblePly++;
-	
+
 	m_PliesFromNull = 0;
-	
+
 	if (m_EpSquare != -1)
 	{
 		m_ZKey.updateEP(m_EpSquare & 7);
@@ -594,16 +594,20 @@ BitBoard Board::pinnersBlockers(uint32_t square, BitBoard attackers, BitBoard& p
 	BitBoard blockers = 0;
 
 	BitBoard blockMask = getAllPieces() ^ attackers;
-	
+
+	BitBoard sameColor = getColor(static_cast<Color>(m_Squares[square] >> 3));
+
 	while (attackers)
 	{
 		uint32_t attacker = popLSB(attackers);
 
 		BitBoard between = attacks::inBetweenBB(square, attacker) & blockMask;
-		
+
 		if (between && (between & (between - 1)) == 0)
 		{
 			blockers |= between;
+			if (between & sameColor)
+				pinners |= 1ull << attacker;
 		}
 	}
 	return blockers;
@@ -657,7 +661,7 @@ bool Board::givesCheck(Move move) const
 			BitBoard checkSqrs = checkSquares(static_cast<PieceType>(piece));
 			if (checkSqrs & (1ull << dstPos))
 				return true;
-			
+
 			if ((checkBlockers(flip(m_SideToMove)) & (1ull << move.srcPos())) &&
 				!attacks::aligned(move.srcPos(), move.dstPos(), oppKingIdx))
 				return true;
@@ -688,7 +692,7 @@ void Board::updateCheckInfo()
 		pinnersBlockers(blackKingIdx, getColor(Color::WHITE), m_CheckInfo.pinners[static_cast<int>(Color::BLACK)]);
 
 	uint32_t oppKingIdx = m_SideToMove == Color::WHITE ? blackKingIdx : whiteKingIdx;
-	
+
 	m_CheckInfo.checkSquares[static_cast<int>(PieceType::ROOK) - static_cast<int>(PieceType::QUEEN)] =
 		attacks::getRookAttacks(oppKingIdx, getAllPieces());
 	m_CheckInfo.checkSquares[static_cast<int>(PieceType::BISHOP) - static_cast<int>(PieceType::QUEEN)] =
@@ -707,7 +711,7 @@ void Board::addPiece(int pos, Color color, PieceType piece)
 	int col = static_cast<int>(color) << 3;
 	// int col = (color == Color::BLACK ? PIECE_COL_MASK : 0);
 	m_Squares[pos] = col | static_cast<int>(piece);
-	
+
 	BitBoard posBB = 1ull << pos;
 	m_Pieces[static_cast<int>(piece)] |= posBB;
 	m_Colors[static_cast<int>(color)] |= posBB;
@@ -748,7 +752,7 @@ void Board::movePiece(int src, int dst)
 	int piece = m_Squares[src] & PIECE_TYPE_MASK;
 	int color = static_cast<bool>(m_Squares[src] & PIECE_COL_MASK);
 
-	
+
 	m_Squares[dst] = m_Squares[src];
 	m_Squares[src] = PIECE_NONE;
 	m_Pieces[piece] ^= moveBB;
