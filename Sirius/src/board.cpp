@@ -6,7 +6,7 @@
 
 Board::Board()
 {
-	setToFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+	setToFen(defaultFen);
 }
 
 void Board::setToFen(const std::string_view& fen)

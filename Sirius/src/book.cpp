@@ -20,7 +20,7 @@ void Book::loadFromPGN(const char* pgn)
 		while (*currChar != '*')
 		{
 			end = genMoves<MoveGenType::LEGAL>(board, moves);
-	
+
 			comm::MoveStrFind find = comm::findMoveFromSAN(board, moves, end, currChar);
 			// std::cout.write(currChar, std::min(static_cast<int>(strlen(currChar)), 10)) << std::endl << std::endl;
 			if (!find.move)
@@ -29,9 +29,9 @@ void Book::loadFromPGN(const char* pgn)
 				throw std::runtime_error("Not found");
 			if (find.move == end + 1)
 				throw std::runtime_error("Ambiguous");
-	
+
 			auto it = m_Entries.find(board.zkey().value);
-	
+
 			if (it != m_Entries.end())
 			{
 				if (std::find(it->second.begin(), it->second.end(), BookEntry{*find.move}) == it->second.end())
@@ -41,12 +41,12 @@ void Book::loadFromPGN(const char* pgn)
 			{
 				m_Entries.insert({board.zkey().value, {{*find.move}}});
 			}
-	
+
 			prevStates.push_back({});
 			board.makeMove(*find.move, prevStates.back());
-	
+
 			currChar = find.end;
-			
+
 			while (isdigit(*currChar) || isspace(*currChar) || *currChar == '.' || *currChar == '+')
 				currChar++;
 		}
@@ -54,11 +54,11 @@ void Book::loadFromPGN(const char* pgn)
 		if (*currChar == '\0')
 			break;
 		currChar++;
-		
+
 		while (isdigit(*currChar) || isspace(*currChar) || *currChar == '.')
 			currChar++;
-	
-		board.setToFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+
+		board.setToFen(Board::defaultFen);
 	}
 }
 

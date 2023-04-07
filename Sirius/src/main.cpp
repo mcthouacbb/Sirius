@@ -98,7 +98,7 @@ void testSAN(Board& board, int depth)
 {
 	Move moves[256];
 	Move* end = genMoves<MoveGenType::LEGAL>(board, moves);
-	
+
 	for (Move* it = moves; it != end; it++)
 	{
 		std::string str = comm::convMoveToSAN(board, moves, end, *it);
@@ -191,7 +191,7 @@ void runTests(Board& board, bool fast)
 		test.fen = line.substr(0, i);
 
 		std::from_chars(line.data() + i + 4, line.data() + line.size(), test.results[line[i + 2] - '1']);
-		
+
 		while (true)
 		{
 			size_t idx = line.find(';', i + 1);
@@ -274,21 +274,6 @@ void testSANFind(const Board& board, Move* begin, Move* end, int len)
 	}
 	delete[] buf;
 }
-
-enum class Command
-{
-	SET_POSITION,
-	MAKE_MOVE,
-	UNDO_MOVE,
-	PRINT_BOARD,
-	STATIC_EVAL,
-	QUIESCENCE_EVAL,
-	SEARCH,
-	RUN_TESTS,
-	PERFT,
-	SET_CLOCK,
-	BOOK
-};
 
 const char* parseCommand(const char* str, Command& command)
 {
@@ -405,7 +390,7 @@ void setPosition(State& state, std::string_view params)
 	}
 	else if (strncmp(params.data(), "startpos\0", 9) == 0)
 	{
-		state.board->setToFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+		state.board->setToFen(Board::defaultFen);
 	}
 	else
 	{
@@ -497,7 +482,7 @@ void searchCommand(Search& search, std::string_view params)
 		std::cout << "Invalid depth" << std::endl;
 		return;
 	}
-	
+
 	if (depth <= 0)
 	{
 		std::cout << "Depth must be greater than 0" << std::endl;
@@ -532,16 +517,16 @@ void setClock(Search& search, std::string_view params)
 		std::cout << "Invalid number of milliseconds for clock" << std::endl;
 		return;
 	}
-	
+
 	uint32_t increment;
 	auto result = std::from_chars(ptr + 1, params.data() + params.size(), increment);
-	
+
 	if (result.ec != std::errc())
 	{
 		std::cout << "Invalid number of milliseconds for increment" << std::endl;
 		return;
 	}
-	
+
 	search.setTime(Duration(clock), Duration(increment));
 }
 
@@ -554,7 +539,7 @@ int main(int argc, char** argv)
 
 	// testQuiescence(board, 3);
 	// std::cout << "yay" << std::endl;
-	
+
 	State state;
 	state.board = &board;
 	state.end = genMoves<MoveGenType::LEGAL>(board, state.moves);
@@ -567,12 +552,12 @@ int main(int argc, char** argv)
 	std::ostringstream sstr;
 	sstr << openings.rdbuf();
 	std::string pgnData = sstr.str();
-	
+
 	Book book;
 	book.loadFromPGN(pgnData.c_str());
 	std::random_device device;
 	std::mt19937 rng(device());
-	
+
 	std::string str;
 	for (;;)
 	{

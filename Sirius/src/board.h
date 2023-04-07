@@ -34,6 +34,8 @@ struct BoardState
 class Board
 {
 public:
+	static constexpr const char* defaultFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
 	Board();
 
 	Board(const Board&) = delete;
@@ -123,12 +125,12 @@ inline int Board::epSquare() const
 
 inline int Board::gamePly() const
 {
-	return m_GamePly;	
+	return m_GamePly;
 }
 
 inline int Board::halfMoveClock() const
 {
-	return m_HalfMoveClock;	
+	return m_HalfMoveClock;
 }
 
 inline int Board::reversiblePly() const
@@ -143,7 +145,7 @@ inline int Board::pliesFromNull() const
 
 inline int Board::castlingRights() const
 {
-	return m_CastlingRights;	
+	return m_CastlingRights;
 }
 
 inline ZKey Board::zkey() const
