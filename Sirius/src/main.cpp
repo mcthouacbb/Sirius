@@ -61,6 +61,7 @@ void testSAN(Board& board, int depth)
 	Move moves[256];
 	Move* end = genMoves<MoveGenType::LEGAL>(board, moves, calcCheckInfo(board, board.currPlayer()));
 
+
 	for (Move* it = moves; it != end; it++)
 	{
 		std::string str = comm::convMoveToSAN(board, moves, end, *it);
@@ -513,6 +514,7 @@ int main()
 	Search search(board);
 	// default to 3m|1s blitz
 	search.setTime(Duration(180000), Duration(1000));
+
 
 	std::string str;
 	for (;;)

@@ -79,17 +79,17 @@ inline int Board::epSquare() const
 
 inline int Board::gamePly() const
 {
-	return m_GamePly;	
+	return m_GamePly;
 }
 
 inline int Board::halfMoveClock() const
 {
-	return m_HalfMoveClock;;	
+	return m_HalfMoveClock;
 }
 
 inline int Board::castlingRights() const
 {
-	return m_CastlingRights;	
+	return m_CastlingRights;
 }
 
 inline Piece Board::getPieceAt(uint32_t square) const

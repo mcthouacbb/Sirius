@@ -1,3 +1,5 @@
+#pragma once
+
 #include <chrono>
 
 using TimePoint = std::chrono::steady_clock::time_point;
