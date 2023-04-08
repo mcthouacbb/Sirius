@@ -12,7 +12,7 @@ inline int retrieveScore(int score, int ply)
 {
 	if (eval::isMateScore(score))
 	{
-		score += score < 0 ? -ply : ply;
+		score -= score < 0 ? -ply : ply;
 	}
 	return score;
 }
@@ -21,7 +21,7 @@ inline int storeScore(int score, int ply)
 {
 	if (eval::isMateScore(score))
 	{
-		score -= score < 0 ? -ply : ply;
+		score += score < 0 ? -ply : ply;
 	}
 	return score;
 }
