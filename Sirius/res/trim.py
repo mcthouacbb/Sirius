@@ -1,4 +1,6 @@
-file = open("gaviota.pgn")
+import sys
+
+file = open(sys.argv[1], "r")
 
 lines = file.readlines()
 
@@ -15,5 +17,5 @@ for line in lines:
 			line = "".join(line)
 		modified_lines.append(line)
 
-file2 = open("openings.pgn", "w")
+file2 = open(sys.argv[2], "w")
 file2.write("".join(modified_lines))

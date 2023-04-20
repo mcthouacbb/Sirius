@@ -4,7 +4,13 @@
 namespace comm
 {
 
-void IComm::setFen(const char* fen)
+IComm::IComm()
+	: m_Search(m_Board)
+{
+	calcLegalMoves();
+}
+
+void IComm::setToFen(const char* fen)
 {
 	m_PrevStates.clear();
 	m_PrevMoves.clear();
@@ -22,7 +28,7 @@ void IComm::makeMove(Move move)
 	calcLegalMoves();
 }
 
-void IComm::unmakeMove(Move move)
+void IComm::unmakeMove()
 {
 	m_Board.unmakeMove(m_PrevMoves.back());
 

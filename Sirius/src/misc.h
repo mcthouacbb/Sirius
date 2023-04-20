@@ -1,0 +1,15 @@
+#include "board.h"
+
+template<bool print>
+uint64_t perft(Board& board, int depth);
+
+template<bool print>
+uint64_t testGivesCheck(Board& board, int depth);
+
+void testSAN(Board& board, int depth);
+
+void testQuiescence(Board& board, int depth);
+
+void runTests(Board& board, bool fast);
+
+void testSANFind(const Board& board, Move* begin, Move* end, int len);
