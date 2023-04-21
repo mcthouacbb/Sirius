@@ -685,9 +685,11 @@ void Board::calcRepetitions()
 		{
 			m_State->repetitions = state->repetitions + 1;
 			m_State->lastRepetition = i;
-			break;
+			return;
 		}
 	}
+	m_State->repetitions = 0;
+	m_State->lastRepetition = 0;
 }
 
 void Board::addPiece(int pos, Color color, PieceType piece)
