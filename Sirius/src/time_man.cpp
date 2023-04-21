@@ -17,6 +17,11 @@ void TimeManager::setTimeLeft(Duration time, Duration increment)
 		m_AllocatedTime = Duration(100);
 }
 
+Duration TimeManager::elapsed()
+{
+	return std::chrono::duration_cast<Duration>(std::chrono::steady_clock::now() - m_StartTime);
+}
+
 void TimeManager::startSearch()
 {
 	m_StartTime = std::chrono::steady_clock::now();
@@ -26,5 +31,5 @@ bool TimeManager::shouldStop()
 {
 	// std::cout << (m_StartTime - std::chrono::steady_clock::now()).count() << std::endl;
 	// std::cout << m_AllocatedTime.count() << std::endl;
-	return std::chrono::steady_clock::now() - m_StartTime > m_AllocatedTime;
+	return elapsed() > m_AllocatedTime;
 }

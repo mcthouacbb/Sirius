@@ -7,7 +7,7 @@ namespace comm
 
 struct MoveStrFind
 {
-	Move* move;
+	const Move* move;
 	const char* end;
 
 // invalid = {nullptr, moveStr};
@@ -15,10 +15,10 @@ struct MoveStrFind
 // ambiguous = {end + 1, moveStr + moveLen};
 };
 
-MoveStrFind findMoveFromPCN(Move* begin, Move* end, const char* moveStr);
-MoveStrFind findMoveFromSAN(const Board& board, Move* begin, Move* end, const char* moveStr);
+MoveStrFind findMoveFromPCN(const Move* begin, const Move* end, const char* moveStr);
+MoveStrFind findMoveFromSAN(const Board& board, const Move* begin, const Move* end, const char* moveStr);
 
 std::string convMoveToPCN(Move move);
-std::string convMoveToSAN(const Board& board, Move* begin, Move* end, Move move);
+std::string convMoveToSAN(const Board& board, const Move* begin, const Move* end, Move move);
 
 }

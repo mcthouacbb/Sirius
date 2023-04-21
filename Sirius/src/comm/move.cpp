@@ -6,7 +6,7 @@ namespace comm
 const char promoChars[4] = {'q', 'r', 'b', 'n'};
 const char pieceChars[5] = {'K', 'Q', 'R', 'B', 'N'};
 
-MoveStrFind findMoveFromPCN(Move* begin, Move* end, const char* moveStr)
+MoveStrFind findMoveFromPCN(const Move* begin, const Move* end, const char* moveStr)
 {
 	int src = (moveStr[0] - 'a') + ((moveStr[1] - '1') << 3);
 	int dst = (moveStr[2] - 'a') + ((moveStr[3] - '1') << 3);
@@ -33,7 +33,7 @@ MoveStrFind findMoveFromPCN(Move* begin, Move* end, const char* moveStr)
 			break;
 	}
 
-	for (Move* it = begin; it != end; it++)
+	for (const Move* it = begin; it != end; it++)
 	{
 		if (it->srcPos() == src && it->dstPos() == dst)
 		{
@@ -51,7 +51,7 @@ MoveStrFind findMoveFromPCN(Move* begin, Move* end, const char* moveStr)
 	return {nullptr, moveStr + 4 + isPromotion};
 }
 
-MoveStrFind findMoveFromSAN(const Board& board, Move* begin, Move* end, const char* moveStr)
+MoveStrFind findMoveFromSAN(const Board& board, const Move* begin, const Move* end, const char* moveStr)
 {
 	int fromFile = -1;
 	int fromRank = -1;
@@ -110,7 +110,7 @@ MoveStrFind findMoveFromSAN(const Board& board, Move* begin, Move* end, const ch
 				return {nullptr, moveStr};
 			if (moveStr[3] != '-')
 			{
-				for (Move* it = begin; it != end; it++)
+				for (const Move* it = begin; it != end; it++)
 				{
 					if (it->type() == MoveType::CASTLE && it->dstPos() > it->srcPos())
 					{
@@ -123,7 +123,7 @@ MoveStrFind findMoveFromSAN(const Board& board, Move* begin, Move* end, const ch
 			{
 				if (moveStr[4] != 'O')
 					return {nullptr, moveStr};
-				for (Move* it = begin; it != end; it++)
+				for (const Move* it = begin; it != end; it++)
 				{
 					if (it->type() == MoveType::CASTLE && it->dstPos() < it->srcPos())
 					{
@@ -384,8 +384,8 @@ search_moves:
 
 	int pawnOffset = (board.sideToMove() == Color::WHITE) ? -8 : 8;
 
-	Move* match = nullptr;
-	for (Move* it = begin; it != end; it++)
+	const Move* match = nullptr;
+	for (const Move* it = begin; it != end; it++)
 	{
 		switch (it->type())
 		{
@@ -445,10 +445,10 @@ std::string convMoveToPCN(Move move)
 	return str;
 }
 
-bool isAmbiguous(const Board& board, Move* begin, Move* end, PieceType piece, int toSquare, int fromFile, int fromRank)
+bool isAmbiguous(const Board& board, const Move* begin, const Move* end, PieceType piece, int toSquare, int fromFile, int fromRank)
 {
-	Move* match = nullptr;
-	for (Move* it = begin; it != end; it++)
+	const Move* match = nullptr;
+	for (const Move* it = begin; it != end; it++)
 	{
 		int srcPos = it->srcPos();
 		int dstPos = it->dstPos();
@@ -473,7 +473,7 @@ bool isAmbiguous(const Board& board, Move* begin, Move* end, PieceType piece, in
 	return false;
 }
 
-std::string convMoveToSAN(const Board& board, Move* begin, Move* end, Move move)
+std::string convMoveToSAN(const Board& board, const Move* begin, const Move* end, Move move)
 {
 	if (move.type() == MoveType::CASTLE)
 	{

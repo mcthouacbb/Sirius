@@ -3,7 +3,13 @@
 
 #include "attacks.h"
 #include "zobrist.h"
+#include "comm/icomm.h"
 #include "comm/cmdline.h"
+
+namespace comm
+{
+	IComm* currComm;
+}
 
 int main(int argc, char** argv)
 {
@@ -15,6 +21,7 @@ int main(int argc, char** argv)
 	if (mode == "cmdline")
 	{
 		comm::CmdLine cmdLine;
+		comm::currComm = &cmdLine;
 		for (;;)
 		{
 			std::string cmd;

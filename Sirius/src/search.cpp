@@ -3,6 +3,7 @@
 #include "movegen.h"
 #include "move_ordering.h"
 #include "comm/move.h"
+#include "comm/icomm.h"
 #include <cstring>
 #include <climits>
 
@@ -65,6 +66,14 @@ int Search::iterDeep(int maxDepth, int& depthSearched)
 		if (m_ShouldStop)
 			break;
 		score = searchScore;
+		comm::SearchInfo searchInfo;
+		searchInfo.depth = depth;
+		searchInfo.time = m_TimeMan.elapsed();
+		searchInfo.pvBegin = m_PV;
+		searchInfo.pvEnd = m_PV + m_Plies[0].pvLength;
+		searchInfo.score = searchScore;
+		comm::currComm->reportSearchInfo(searchInfo);
+
 		alpha = std::max(score - 50, eval::NEG_INF);
 		beta = std::min(score + 50, eval::POS_INF);
 		depthSearched = depth;
