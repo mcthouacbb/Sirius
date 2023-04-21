@@ -1,4 +1,4 @@
-# Chess Engine (untitled)
+# Sirius
 
 v0.2
 
@@ -18,7 +18,7 @@ Command Line
 	    - Zobrist hash
 - `"move" <move>`
 	- makes a move
-    - Move format `<start square><end square>[promotion piece]`
+    - Standard Algebraic Notation
 	- Square is a file (a-h) and rank(1-8)
 	- Promotion piece is either, q(queen), r(rook), b(bishop), or n(knight)
 - `"undo"`
@@ -33,17 +33,14 @@ Command Line
 	- Prints out search statistics
     - WARNING: Search time increases exponentially with depth
 - `"tests"`
-	- Runs test suite.
+	- Runs test suite
     - Currently, only perft tests are run
 - `"perft" <depth>`
 	- Performs are perft up to depth
     - A perft(performance test) searches all moves up to depth and returns the number of positions reached
     - WARNING: time usage increases exponentially with depth
-- `"clock" <time-ms> <increment-ms>`
-	- Sets the time left on the clock
-- `"book" ["rand"]`
+- `"book"`
 	- Returns all the moves in the opening book
-	- If rand is sent, chooses a random book move
     - Prints "No moves in book found" if position is not in book
 
 Features
