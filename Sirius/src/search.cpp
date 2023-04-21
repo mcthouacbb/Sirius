@@ -93,19 +93,10 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	if (alpha >= beta)
 		return alpha;
 
-	if (eval::isImmediateDraw(m_Board) || m_Board.halfMoveClock() >= 100)
+	if (eval::isImmediateDraw(m_Board) || m_Board.isDraw(m_RootPly))
 	{
 		searchPly->pvLength = 0;
 		return eval::DRAW;
-	}
-	if (m_Board.reversiblePly() >= 4)
-	{
-		int repetitions = m_Board.repetitions();
-		if (repetitions == 2 || (repetitions == 1 && m_RootPly >= 2))
-		{
-			searchPly->pvLength = 0;
-			return eval::DRAW;
-		}
 	}
 
 	if (depth <= 0)
