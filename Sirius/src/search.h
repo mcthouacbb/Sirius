@@ -15,6 +15,15 @@ struct SearchPly
 	Move killers[2];
 };
 
+struct SearchInfo
+{
+	int depth;
+	uint64_t nodes;
+	Duration time;
+	const Move* pvBegin, * pvEnd;
+	int score;
+};
+
 class Search
 {
 public:
@@ -27,8 +36,7 @@ public:
 	int search(int depth, SearchPly* searchPly, int alpha, int beta, bool isPV);
 	int qsearch(int alpha, int beta);
 
-	const Move* pvBegin() const;
-	const Move* pvEnd() const;
+	const SearchInfo& info() const;
 
 	void setTime(Duration clock, Duration inc);
 private:
@@ -39,29 +47,20 @@ private:
 	TimeManager m_TimeMan;
 	bool m_ShouldStop;
 	uint32_t m_TimeCheckCounter;
+	SearchInfo m_SearchInfo;
 	TT m_TT;
 	int m_RootPly;
-	uint64_t m_Nodes;
-	uint64_t m_QNodes;
-	uint64_t m_TTMoves;
-	uint64_t m_TTEvals;
-	uint32_t m_PVLength;
 	Move m_PV[MAX_PLY];
 	int m_History[2][4096];
 	SearchPly m_Plies[MAX_PLY];
 };
 
+inline const SearchInfo& Search::info() const
+{
+	return m_SearchInfo;
+}
+
 inline void Search::setTime(Duration clock, Duration inc)
 {
 	m_TimeMan.setTimeLeft(clock, inc);
-}
-
-inline const Move* Search::pvBegin() const
-{
-	return m_PV;
-}
-
-inline const Move* Search::pvEnd() const
-{
-	return m_PV + m_PVLength;
 }

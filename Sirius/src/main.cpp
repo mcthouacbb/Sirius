@@ -31,6 +31,12 @@ int main(int argc, char** argv)
 			cmdLine.execCommand(cmd);
 		}
 	}
+	else if (mode == "uci")
+	{
+		std::cout << "id name Sirius v0.2\n";
+		std::cout << "id author AspectOfTheNoob\n";
+		std::cout << "uciok\n";
+	}
 	else
 	{
 		std::cout << "Unrecognized mode" << std::endl;

@@ -15,11 +15,11 @@ CmdLine::CmdLine()
 {
 	m_Search.setTime(Duration(180000), Duration(1000));
 	std::ifstream openings("res/gaviota_trim.pgn");
-	
+
 	std::ostringstream sstr;
 	sstr << openings.rdbuf();
 	std::string pgnData = sstr.str();
-	
+
 	m_Book.loadFromPGN(pgnData.c_str());
 }
 
@@ -27,6 +27,7 @@ void CmdLine::reportSearchInfo(const SearchInfo& info) const
 {
 	float time = std::chrono::duration_cast<std::chrono::duration<float>>(info.time).count();
 	std::cout << "Depth: " << info.depth << '\n';
+	std::cout << "\tNodes: " << info.nodes << '\n';
 	std::cout << "\tTime Searched: " << time << '\n';
 	std::cout << "\tScore: ";
 	if (eval::isMateScore(info.score))
@@ -49,7 +50,7 @@ void CmdLine::reportSearchInfo(const SearchInfo& info) const
 	Move moves[256], *end;
 
 	std::deque<BoardState> states;
-	
+
 	for (const Move* move = info.pvBegin; move != info.pvEnd; move++)
 	{
 		end = genMoves<MoveGenType::LEGAL>(board, moves);
@@ -57,7 +58,7 @@ void CmdLine::reportSearchInfo(const SearchInfo& info) const
 		states.push_back({});
 		board.makeMove(*move, states.back());
 	}
-	
+
 	std::cout << std::endl;
 }
 
@@ -249,20 +250,20 @@ void CmdLine::searchCommand(std::istringstream& stream)
 	int depthSearched;
 	int eval = m_Search.iterDeep(depth, depthSearched);
 	auto t2 = std::chrono::steady_clock::now();
-	
+
 	auto time = std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1);
 
 	std::cout << "Time: " << time.count() << std::endl;
 	std::cout << "Depth: " << depthSearched << std::endl;
 	std::cout << "Eval: " << eval << std::endl;
 	std::cout << "PV: ";
-	for (const Move* move = m_Search.pvBegin(); move != m_Search.pvEnd(); move++)
+	for (const Move* move = m_Search.info().pvBegin; move != m_Search.info().pvEnd; move++)
 	{
 		std::cout << comm::convMoveToSAN(m_Board, m_LegalMoves, m_LegalMoves + m_MoveCount, *move) << ' ';
 		makeMove(*move);
 	}
 
-	for (int i = 0; i < m_Search.pvEnd() - m_Search.pvBegin(); i++)
+	for (int i = 0; i < m_Search.info().pvEnd - m_Search.info().pvBegin; i++)
 		unmakeMove();
 	std::cout << std::endl;
 }
@@ -287,7 +288,7 @@ void CmdLine::runPerftCommand(std::istringstream& stream)
 void CmdLine::probeBookCommand(std::istringstream& stream)
 {
 	const std::vector<BookEntry>* entries = m_Book.lookup(m_Board.zkey());
-	
+
 	if (!entries)
 		std::cout << "No moves in book found" << std::endl;
 	else
