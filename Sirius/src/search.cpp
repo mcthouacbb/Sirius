@@ -37,21 +37,25 @@ void Search::reset()
 	m_TT.incAge();
 }
 
-int Search::iterDeep(int maxDepth, int& depthSearched)
+int Search::iterDeep(const SearchLimits& limits)
 {
+	int maxDepth = std::min(limits.maxDepth, MAX_PLY - 1);
+	Move pv[MAX_PLY];
 	int score = 0;
+	
 	reset();
 	m_ShouldStop = false;
-	m_TimeCheckCounter = TIME_CHECK_INTERVAL;
+	m_CheckCounter = CHECK_INTERVAL;
+	m_TimeMan.setLimits(limits);
 	m_TimeMan.startSearch();
+	
 	int alpha = eval::NEG_INF;
 	int beta = eval::POS_INF;
-	depthSearched = 0;
-
+	
 	for (int depth = 1; depth <= maxDepth; depth++)
 	{
 		int searchScore;
-		m_Plies[0].pv = m_PV;
+		m_Plies[0].pv = pv;
 		while (true) {
 			searchScore = search(depth, &m_Plies[0], alpha, beta, true);
 			if (m_ShouldStop)
@@ -66,6 +70,7 @@ int Search::iterDeep(int maxDepth, int& depthSearched)
 		}
 		if (m_ShouldStop)
 			break;
+		memcpy(m_PV, m_Plies[0].pv, m_Plies[0].pvLength * sizeof(Move));
 		score = searchScore;
 		m_SearchInfo.depth = depth;
 		m_SearchInfo.time = m_TimeMan.elapsed();
@@ -76,17 +81,22 @@ int Search::iterDeep(int maxDepth, int& depthSearched)
 
 		alpha = std::max(score - 50, eval::NEG_INF);
 		beta = std::min(score + 50, eval::POS_INF);
-		depthSearched = depth;
 	}
 	return score;
 }
 
 int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool isPV)
 {
-	if (--m_TimeCheckCounter == 0)
+	if (--m_CheckCounter == 0)
 	{
-		m_TimeCheckCounter = TIME_CHECK_INTERVAL;
-		if (m_TimeMan.shouldStop())
+		m_CheckCounter = CHECK_INTERVAL;
+		if (m_TimeMan.shouldStop(m_SearchInfo))
+		{
+			m_ShouldStop = true;
+			return alpha;
+		}
+
+		if (comm::currComm->checkInput())
 		{
 			m_ShouldStop = true;
 			return alpha;
@@ -100,7 +110,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	if (alpha >= beta)
 		return alpha;
 
-	if (eval::isImmediateDraw(m_Board) || m_Board.isDraw(m_RootPly))
+	if (eval::isImmediateDraw(m_Board) || m_Board.isDraw(m_RootPly) || m_RootPly >= MAX_PLY)
 	{
 		searchPly->pvLength = 0;
 		return eval::DRAW;
@@ -181,6 +191,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		else
 		{
 			moveScore = -search(newDepth, searchPly + 1, -(alpha + 1), -alpha, false);
+
 			if (moveScore > alpha && isPV)
 				moveScore = -search(newDepth, searchPly + 1, -beta, -alpha, true);
 		}
@@ -219,7 +230,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 int Search::qsearch(int alpha, int beta)
 {
-	if (eval::isImmediateDraw(m_Board))
+	if (eval::isImmediateDraw(m_Board) || m_RootPly >= MAX_PLY)
 		return eval::DRAW;
 
 	int score = eval::evaluate(m_Board);
@@ -243,8 +254,10 @@ int Search::qsearch(int alpha, int beta)
 	{
 		Move move = ordering.selectMove(i);
 		m_Board.makeMove(move, state);
+		m_RootPly++;
 		int moveScore = -qsearch(-beta, -alpha);
 		m_Board.unmakeMove(move);
+		m_RootPly--;
 
 		if (moveScore >= beta)
 			return beta;

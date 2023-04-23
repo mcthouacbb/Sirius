@@ -1,20 +1,29 @@
 #include "time_man.h"
+#include "search.h"
 #include <iostream>
 
-void TimeManager::setTimeLeft(Duration time, Duration increment)
+void TimeManager::setLimits(const SearchLimits& limits)
 {
-	m_Clock = time;
-	m_Increment = increment;
+	m_Limits = &limits;
 
-	m_AllocatedTime = m_Clock / 40 + m_Increment / 2;
-
-	if (m_AllocatedTime >= m_Clock)
+	switch (limits.policy)
 	{
-		m_AllocatedTime = m_Clock - Duration(500);
+		case SearchPolicy::FIXED_TIME:
+			m_AllocatedTime = limits.time;
+			std::cout << m_AllocatedTime.count() << std::endl;
+			break;
+		case SearchPolicy::DYN_CLOCK:
+			m_AllocatedTime = limits.clock.timeLeft[0] / 40 + limits.clock.increments[0] / 2;
+		
+			if (m_AllocatedTime >= limits.clock.timeLeft[0])
+			{
+				m_AllocatedTime = limits.clock.timeLeft[0] - Duration(500);
+			}
+		
+			if (m_AllocatedTime < Duration(0))
+				m_AllocatedTime = Duration(100);
+			break;
 	}
-
-	if (m_AllocatedTime < Duration(0))
-		m_AllocatedTime = Duration(100);
 }
 
 Duration TimeManager::elapsed()
@@ -27,9 +36,15 @@ void TimeManager::startSearch()
 	m_StartTime = std::chrono::steady_clock::now();
 }
 
-bool TimeManager::shouldStop()
+bool TimeManager::shouldStop(const SearchInfo& searchInfo)
 {
-	// std::cout << (m_StartTime - std::chrono::steady_clock::now()).count() << std::endl;
-	// std::cout << m_AllocatedTime.count() << std::endl;
-	return elapsed() > m_AllocatedTime;
+	switch (m_Limits->policy)
+	{
+		case SearchPolicy::INFINITE:
+		case SearchPolicy::FIXED_DEPTH:
+			return false;
+		case SearchPolicy::FIXED_TIME:
+		case SearchPolicy::DYN_CLOCK:
+			return elapsed() > m_AllocatedTime;
+	}
 }

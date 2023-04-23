@@ -24,43 +24,60 @@ struct SearchInfo
 	int score;
 };
 
+enum class SearchPolicy
+{
+	INFINITE,
+	FIXED_DEPTH,
+	FIXED_TIME,
+	DYN_CLOCK
+};
+
+struct SearchLimits
+{
+	SearchPolicy policy;
+	int maxDepth;
+	union
+	{
+		Duration time;
+		struct
+		{
+			Duration timeLeft[2];
+			Duration increments[2];
+		} clock;
+	};
+};
+
 class Search
 {
 public:
-	static constexpr uint32_t TIME_CHECK_INTERVAL = 2048;
+	static constexpr uint32_t CHECK_INTERVAL = 2048;
 
 	Search(Board& board);
 
-	int iterDeep(int maxDepth, int& depthSearched);
+	int iterDeep(const SearchLimits& limits);
 
 	int search(int depth, SearchPly* searchPly, int alpha, int beta, bool isPV);
 	int qsearch(int alpha, int beta);
 
 	const SearchInfo& info() const;
-
-	void setTime(Duration clock, Duration inc);
 private:
 	void reset();
 	void storeKiller(SearchPly* ply, Move killer);
+	void checkTime();
 
 	Board& m_Board;
 	TimeManager m_TimeMan;
 	bool m_ShouldStop;
-	uint32_t m_TimeCheckCounter;
+	uint32_t m_CheckCounter;
 	SearchInfo m_SearchInfo;
 	TT m_TT;
 	int m_RootPly;
 	Move m_PV[MAX_PLY];
 	int m_History[2][4096];
-	SearchPly m_Plies[MAX_PLY];
+	SearchPly m_Plies[MAX_PLY + 1];
 };
 
 inline const SearchInfo& Search::info() const
 {
 	return m_SearchInfo;
-}
-
-inline void Search::setTime(Duration clock, Duration inc)
-{
-	m_TimeMan.setTimeLeft(clock, inc);
 }

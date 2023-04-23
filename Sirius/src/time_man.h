@@ -5,19 +5,21 @@
 using TimePoint = std::chrono::steady_clock::time_point;
 using Duration = std::chrono::milliseconds;
 
+struct SearchLimits;
+struct SearchInfo;
+
 class TimeManager
 {
 public:
 	TimeManager() = default;
 
-	void setTimeLeft(Duration time, Duration increment);
+	void setLimits(const SearchLimits& searchLimits);
 	Duration elapsed();
 
 	void startSearch();
-	bool shouldStop();
+	bool shouldStop(const SearchInfo& searchInfo);
 private:
 	TimePoint m_StartTime;
 	Duration m_AllocatedTime;
-	Duration m_Clock;
-	Duration m_Increment;
+	const SearchLimits* m_Limits;
 };

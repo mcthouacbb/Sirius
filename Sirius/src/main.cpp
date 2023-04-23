@@ -18,18 +18,15 @@ int main(int argc, char** argv)
 
 	std::string mode;
 	std::getline(std::cin, mode);
+
+	std::cin.sync_with_stdio(false);
+	std::cout.sync_with_stdio(false);
+	
 	if (mode == "cmdline")
 	{
 		comm::CmdLine cmdLine;
 		comm::currComm = &cmdLine;
-		for (;;)
-		{
-			std::string cmd;
-			std::getline(std::cin, cmd);
-			if (cmd == "quit")
-				break;
-			cmdLine.execCommand(cmd);
-		}
+		cmdLine.run();
 	}
 	else if (mode == "uci")
 	{

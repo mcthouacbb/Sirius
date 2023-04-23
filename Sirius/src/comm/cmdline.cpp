@@ -13,7 +13,6 @@ namespace comm
 
 CmdLine::CmdLine()
 {
-	m_Search.setTime(Duration(180000), Duration(1000));
 	std::ifstream openings("res/gaviota_trim.pgn");
 
 	std::ostringstream sstr;
@@ -21,6 +20,18 @@ CmdLine::CmdLine()
 	std::string pgnData = sstr.str();
 
 	m_Book.loadFromPGN(pgnData.c_str());
+}
+
+void CmdLine::run()
+{
+	for (;;)
+	{
+		std::string cmd;
+		std::getline(std::cin, cmd);
+		if (cmd == "quit")
+			break;
+		execCommand(cmd);
+	}
 }
 
 void CmdLine::reportSearchInfo(const SearchInfo& info) const
@@ -78,36 +89,107 @@ void CmdLine::execCommand(const std::string& command)
 			std::cout << "Invalid Command: " << command << std::endl;
 			break;
 		case Command::SET_POSITION:
+			if (m_State != CommState::IDLE)
+			{
+				std::cout << "Error: Cannot set position while thinking" << std::endl;
+				break;
+			}
 			setPositionCommand(stream);
 			break;
 		case Command::MAKE_MOVE:
+			if (m_State != CommState::IDLE)
+			{
+				std::cout << "Error: Cannot make move while thinking" << std::endl;
+				break;
+			}
 			makeMoveCommand(stream);
 			break;
 		case Command::UNDO_MOVE:
+			if (m_State != CommState::IDLE)
+			{
+				std::cout << "Error: Cannot undo move while thinking" << std::endl;
+				break;
+			}
 			undoMoveCommand();
 			break;
 		case Command::PRINT_BOARD:
+			if (m_State != CommState::IDLE)
+			{
+				std::cout << "Error: Cannot print board while thinking" << std::endl;
+				break;
+			}
 			printBoardCommand();
 			break;
 		case Command::STATIC_EVAL:
+			if (m_State != CommState::IDLE)
+			{
+				std::cout << "Error: Cannot print static eval while thinking" << std::endl;
+				break;
+			}
 			staticEvalCommand();
 			break;
 		case Command::QUIESCENCE_EVAL:
+			if (m_State != CommState::IDLE)
+			{
+				std::cout << "Error: Cannot print quiescence eval while thinking" << std::endl;
+				break;
+			}
 			quiescenceEvalCommand();
 			break;
 		case Command::SEARCH:
+			if (m_State != CommState::IDLE)
+			{
+				std::cout << "Error: Cannot start search while already searching\n";
+				std::cout << "Abort the search or wait for it to finish to start a new one" << std::endl;
+				break;
+			}
 			searchCommand(stream);
 			break;
 		case Command::RUN_TESTS:
+			if (m_State != CommState::IDLE)
+			{
+				std::cout << "Cannot run tests while thinking" << std::endl;
+				break;
+			}
 			runTestsCommand();
 			break;
 		case Command::PERFT:
+			if (m_State != CommState::IDLE)
+			{
+				std::cout << "Cannot run perft while thinking" << std::endl;
+				break;
+			}
 			runPerftCommand(stream);
 			break;
 		case Command::BOOK:
+			if (m_State != CommState::IDLE)
+			{
+				std::cout << "Cannot probe book while thinking" << std::endl;
+				break;
+			}
 			probeBookCommand(stream);
 			break;
+		case Command::STOP:
+			if (m_State != CommState::SEARCHING)
+			{
+				std::cout << "No search to stop" << std::endl;
+				break;
+			}
+			m_State = CommState::ABORTING;
+			std::cout << "Aborting search" << std::endl;
+			break;
 	}
+}
+
+bool CmdLine::checkInput()
+{
+	while (std::cin.rdbuf()->in_avail())
+	{
+		std::string input;
+		std::getline(std::cin, input);
+		execCommand(input);
+	}
+	return m_State == CommState::ABORTING;
 }
 
 CmdLine::Command CmdLine::getCommand(const std::string& command) const
@@ -132,6 +214,8 @@ CmdLine::Command CmdLine::getCommand(const std::string& command) const
 		return Command::PERFT;
 	else if (command == "book")
 		return Command::BOOK;
+	else if (command == "stop")
+		return Command::STOP;
 	return Command::INVALID;
 }
 
@@ -243,29 +327,45 @@ void CmdLine::quiescenceEvalCommand()
 
 void CmdLine::searchCommand(std::istringstream& stream)
 {
-	uint32_t depth;
-	stream >> depth;
+	SearchLimits limits;
+	limits.maxDepth = 1000;
+	
+	std::string tok;
+	stream >> tok;
+	if (tok == "infinite")
+	{
+		limits.policy = SearchPolicy::INFINITE;
+	}
+	else if (tok == "depth")
+	{
+		uint32_t depth;
+		stream >> depth;
+		limits.policy = SearchPolicy::FIXED_DEPTH;
+		limits.maxDepth = depth;
+	}
+	else if (tok == "time")
+	{
+		uint32_t millis;
+		stream >> millis;
+		limits.policy = SearchPolicy::FIXED_TIME;
+		limits.time = Duration(millis);
+	}
+	else
+	{
+		std::cout << "No search policy specified, defaulting to infinite" << std::endl;
+		limits.policy = SearchPolicy::INFINITE;
+	}
 
+
+	m_State = CommState::SEARCHING;
 	auto t1 = std::chrono::steady_clock::now();
-	int depthSearched;
-	int eval = m_Search.iterDeep(depth, depthSearched);
+	int eval = m_Search.iterDeep(limits);
 	auto t2 = std::chrono::steady_clock::now();
+	m_State = CommState::IDLE;
 
 	auto time = std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1);
 
-	std::cout << "Time: " << time.count() << std::endl;
-	std::cout << "Depth: " << depthSearched << std::endl;
 	std::cout << "Eval: " << eval << std::endl;
-	std::cout << "PV: ";
-	for (const Move* move = m_Search.info().pvBegin; move != m_Search.info().pvEnd; move++)
-	{
-		std::cout << comm::convMoveToSAN(m_Board, m_LegalMoves, m_LegalMoves + m_MoveCount, *move) << ' ';
-		makeMove(*move);
-	}
-
-	for (int i = 0; i < m_Search.info().pvEnd - m_Search.info().pvBegin; i++)
-		unmakeMove();
-	std::cout << std::endl;
 }
 
 void CmdLine::runTestsCommand()

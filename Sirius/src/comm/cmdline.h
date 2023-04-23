@@ -10,6 +10,7 @@ class CmdLine : public IComm
 {
 public:
 	CmdLine();
+	virtual ~CmdLine() override = default;
 
 	enum class Command
 	{
@@ -23,12 +24,15 @@ public:
 		SEARCH,
 		RUN_TESTS,
 		PERFT,
-		BOOK
+		BOOK,
+		STOP
 	};
 
+	virtual void run() override;
 	virtual void reportSearchInfo(const SearchInfo& info) const override;
-	virtual void execCommand(const std::string& command) override;
+	virtual bool checkInput() override;
 private:
+	void execCommand(const std::string& command);
 	Command getCommand(const std::string& command) const;
 
 	void setPositionCommand(std::istringstream& stream);
