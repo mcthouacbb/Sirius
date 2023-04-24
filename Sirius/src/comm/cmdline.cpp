@@ -28,9 +28,9 @@ void CmdLine::run()
 	{
 		std::string cmd;
 		std::getline(std::cin, cmd);
-		if (cmd == "quit")
-			break;
 		execCommand(cmd);
+		if (m_State == CommState::QUITTING)
+			return;
 	}
 }
 
@@ -178,6 +178,10 @@ void CmdLine::execCommand(const std::string& command)
 			m_State = CommState::ABORTING;
 			std::cout << "Aborting search" << std::endl;
 			break;
+		case Command::QUIT:
+			m_State = CommState::QUITTING;
+			std::cout << "Quitting" << std::endl;
+			break;;
 	}
 }
 
@@ -189,7 +193,7 @@ bool CmdLine::checkInput()
 		std::getline(std::cin, input);
 		execCommand(input);
 	}
-	return m_State == CommState::ABORTING;
+	return m_State == CommState::ABORTING || m_State == CommState::QUITTING;
 }
 
 CmdLine::Command CmdLine::getCommand(const std::string& command) const
@@ -216,6 +220,9 @@ CmdLine::Command CmdLine::getCommand(const std::string& command) const
 		return Command::BOOK;
 	else if (command == "stop")
 		return Command::STOP;
+	else if (command == "quit")
+		return Command::QUIT;
+	
 	return Command::INVALID;
 }
 
@@ -361,6 +368,8 @@ void CmdLine::searchCommand(std::istringstream& stream)
 	auto t1 = std::chrono::steady_clock::now();
 	int eval = m_Search.iterDeep(limits);
 	auto t2 = std::chrono::steady_clock::now();
+	if (m_State == CommState::QUITTING)
+		return;
 	m_State = CommState::IDLE;
 
 	auto time = std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1);

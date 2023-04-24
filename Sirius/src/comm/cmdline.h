@@ -25,7 +25,8 @@ public:
 		RUN_TESTS,
 		PERFT,
 		BOOK,
-		STOP
+		STOP,
+		QUIT
 	};
 
 	virtual void run() override;

@@ -14,7 +14,8 @@ enum class CommState
 {
 	IDLE,
 	SEARCHING,
-	ABORTING
+	ABORTING,
+	QUITTING
 };
 
 class IComm
