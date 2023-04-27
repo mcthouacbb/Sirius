@@ -1,5 +1,7 @@
 #include "board.h"
 
+void printBoard(const Board& board);
+
 template<bool print>
 uint64_t perft(Board& board, int depth);
 

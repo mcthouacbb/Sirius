@@ -41,7 +41,6 @@ bool TimeManager::shouldStop(const SearchInfo& searchInfo)
 	switch (m_Limits->policy)
 	{
 		case SearchPolicy::INFINITE:
-		case SearchPolicy::FIXED_DEPTH:
 			return false;
 		case SearchPolicy::FIXED_TIME:
 		case SearchPolicy::DYN_CLOCK:

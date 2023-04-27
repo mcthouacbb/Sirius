@@ -27,7 +27,6 @@ struct SearchInfo
 enum class SearchPolicy
 {
 	INFINITE,
-	FIXED_DEPTH,
 	FIXED_TIME,
 	DYN_CLOCK
 };

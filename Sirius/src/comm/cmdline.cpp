@@ -292,18 +292,7 @@ void CmdLine::undoMoveCommand()
 
 void CmdLine::printBoardCommand()
 {
-	std::cout << m_Board.stringRep() << std::endl;
-	std::cout << "GamePly: " << m_Board.gamePly() << std::endl;
-	std::cout << "HalfMoveClock: " << m_Board.halfMoveClock() << std::endl;
-	std::cout << "CastlingRights: " << m_Board.castlingRights() << std::endl;
-	std::cout << "Side to move: " << (m_Board.sideToMove() == Color::WHITE ? "WHITE" : "BLACK") << std::endl;
-	if (m_Board.epSquare() != 0)
-		std::cout << "Ep square: " << static_cast<char>((m_Board.epSquare() & 7) + 'a') << static_cast<char>((m_Board.epSquare() >> 3) + '1') << std::endl;
-	else
-		std::cout << "Ep square: N/A" << std::endl;
-	std::cout << "Fen: " <<  m_Board.fenStr() << std::endl;
-
-	std::cout << "Zobrist hash: " << m_Board.zkey().value << std::endl;
+	printBoard(m_Board);
 }
 
 void CmdLine::staticEvalCommand()
@@ -347,7 +336,7 @@ void CmdLine::searchCommand(std::istringstream& stream)
 	{
 		uint32_t depth;
 		stream >> depth;
-		limits.policy = SearchPolicy::FIXED_DEPTH;
+		limits.policy = SearchPolicy::INFINITE;
 		limits.maxDepth = depth;
 	}
 	else if (tok == "time")

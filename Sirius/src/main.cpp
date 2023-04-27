@@ -5,6 +5,7 @@
 #include "zobrist.h"
 #include "comm/icomm.h"
 #include "comm/cmdline.h"
+#include "comm/uci.h"
 
 namespace comm
 {
@@ -30,6 +31,9 @@ int main(int argc, char** argv)
 	}
 	else if (mode == "uci")
 	{
+		comm::UCI uci;
+		comm::currComm = &uci;
+		uci.run();
 	}
 	else
 	{

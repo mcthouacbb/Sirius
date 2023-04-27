@@ -6,6 +6,38 @@
 #include <vector>
 #include <fstream>
 
+void printBoard(const Board& board)
+{
+	std::cout << board.stringRep() << std::endl;
+	std::cout << "GamePly: " << board.gamePly() << std::endl;
+	std::cout << "HalfMoveClock: " << board.halfMoveClock() << std::endl;
+	std::cout << "CastlingRights: ";
+	if (board.castlingRights())
+	{
+		if (board.castlingRights() & 1)
+			std::cout << 'K';
+		if (board.castlingRights() & 2)
+			std::cout << 'Q';
+		if (board.castlingRights() & 4)
+			std::cout << 'k';
+		if (board.castlingRights() & 8)
+			std::cout << 'q';
+	}
+	else
+	{
+		std::cout << '-';
+	}
+	std::cout << std::endl;
+	std::cout << "Side to move: " << (board.sideToMove() == Color::WHITE ? "WHITE" : "BLACK") << std::endl;
+	if (board.epSquare() != -1)
+		std::cout << "Ep square: " << static_cast<char>((board.epSquare() & 7) + 'a') << static_cast<char>((board.epSquare() >> 3) + '1') << std::endl;
+	else
+		std::cout << "Ep square: N/A" << std::endl;
+	std::cout << "Fen: " <<  board.fenStr() << std::endl;
+
+	std::cout << "Zobrist hash: " << board.zkey().value << std::endl;
+}
+
 template<bool print>
 uint64_t perft(Board& board, int depth)
 {
