@@ -50,6 +50,7 @@ class Search
 {
 public:
 	static constexpr uint32_t CHECK_INTERVAL = 2048;
+	static constexpr int FUTILITY_MARGIN = 250;
 
 	Search(Board& board);
 

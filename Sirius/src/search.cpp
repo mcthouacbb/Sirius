@@ -110,10 +110,16 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	if (alpha >= beta)
 		return alpha;
 
-	if (eval::isImmediateDraw(m_Board) || m_Board.isDraw(m_RootPly) || m_RootPly >= MAX_PLY)
+	if (eval::isImmediateDraw(m_Board) || m_Board.isDraw(m_RootPly))
 	{
 		searchPly->pvLength = 0;
 		return eval::DRAW;
+	}
+
+	if (m_RootPly >= MAX_PLY)
+	{
+		int eval = eval::evaluate(m_Board);
+		return std::max(std::min(eval, beta), alpha);
 	}
 
 	if (depth <= 0)
@@ -177,14 +183,35 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 	TTEntry::Type type = TTEntry::Type::UPPER_BOUND;
 
+	int staticEval = eval::evaluate(m_Board);
+	bool inCheck = m_Board.checkers() != 0;
+
+	bool fprune =
+		depth == 1 &&
+		staticEval + FUTILITY_MARGIN < alpha &&
+		!eval::isMateScore(alpha) &&
+		!eval::isMateScore(beta) &&
+		!inCheck;
+
 	for (uint32_t i = 0; i < end - moves; i++)
 	{
 		Move move = ordering.selectMove(i);
-		int extension = m_Board.givesCheck(move);
+		bool givesCheck = m_Board.givesCheck(move);
+		bool isCapture = m_Board.getPieceAt(move.dstPos()) != 0;
+		bool isPromotion = move.type() == MoveType::PROMOTION;
+
+		if (fprune &&
+			!givesCheck &&
+			!isCapture &&
+			!isPromotion &&
+			i > 3)
+		{
+			continue;
+		}
 		m_Board.makeMove(move, state);
 		m_RootPly++;
 
-		int newDepth = depth + extension - 1;
+		int newDepth = depth + givesCheck - 1;
 		int moveScore;
 		if (searchPly->bestMove == Move())
 			moveScore = -search(newDepth, searchPly + 1, -beta, -alpha, isPV);
@@ -230,7 +257,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 int Search::qsearch(int alpha, int beta)
 {
-	if (eval::isImmediateDraw(m_Board) || m_RootPly >= MAX_PLY)
+	if (eval::isImmediateDraw(m_Board))
 		return eval::DRAW;
 
 	int score = eval::evaluate(m_Board);
@@ -241,6 +268,9 @@ int Search::qsearch(int alpha, int beta)
 		return beta;
 	if (score > alpha)
 		alpha = score;
+
+	if (m_RootPly > MAX_PLY)
+		return alpha;
 
 	// CheckInfo checkInfo = calcCheckInfo(m_Board, m_Board.sideToMove());
 
