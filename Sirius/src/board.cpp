@@ -274,7 +274,7 @@ std::string Board::fenStr() const
 	else
 	{
 		fen += (m_State->epSquare & 7) + 'a';
-		fen += (m_State->epSquare >> 3) + 'a';
+		fen += (m_State->epSquare >> 3) + '1';
 	}
 
 	fen += ' ';
