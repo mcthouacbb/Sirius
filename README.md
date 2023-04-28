@@ -2,6 +2,8 @@
 
 v0.2
 
+Minimal UCI Support
+
 Command Line
 - `"position" {"fen" | "startpos"} [fenString]`
 	- Set the board position to the starting position or the fenString
@@ -12,7 +14,7 @@ Command Line
         - Half Move Clock
 	    	- Used to detect 50 move rule draws
 	        - Draw at 100 half moves
-		- Castling Rights(as a number)
+		- Castling Rights
       	- Side to move
     	- Square of en passant, if available
 	    - Zobrist hash
@@ -134,3 +136,4 @@ Features
 		- Mate Distance Pruning
 	    - Principal Variation Search(PVS)
         - Null Move Pruning
+        - Futility Pruning
