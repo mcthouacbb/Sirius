@@ -20,9 +20,6 @@ int main(int argc, char** argv)
 	std::string mode;
 	std::getline(std::cin, mode);
 
-	std::cin.sync_with_stdio(false);
-	std::cout.sync_with_stdio(false);
-	
 	if (mode == "cmdline")
 	{
 		comm::CmdLine cmdLine;

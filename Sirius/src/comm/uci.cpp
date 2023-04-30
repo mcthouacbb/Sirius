@@ -9,23 +9,37 @@
 namespace comm
 {
 
-UCI::UCI()
-	: IComm()
+bool UCI::shouldQuit(const std::string& str)
 {
-	
+	return str == "quit";
+}
+
+UCI::UCI()
+	: m_InputQueue(shouldQuit)
+{
+
 }
 
 void UCI::run()
 {
 	uciCommand();
-	
+
 	for (;;)
 	{
-		std::string cmd;
-		std::getline(std::cin, cmd);
-		execCommand(cmd);
-		if (m_State == CommState::QUITTING)
-			return;
+		m_InputQueue.lock();
+		while (m_InputQueue.hasInput())
+		{
+			std::string command = m_InputQueue.pop();
+			m_InputQueue.unlock();
+			execCommand(command);
+			m_InputQueue.lock();
+			if (m_State == CommState::QUITTING)
+			{
+				m_InputQueue.unlock();
+				return;
+			}
+		}
+		m_InputQueue.unlock();
 	}
 }
 
@@ -63,12 +77,12 @@ void UCI::reportSearchInfo(const SearchInfo& info) const
 
 bool UCI::checkInput()
 {
-	while (std::cin.rdbuf()->in_avail())
+	m_InputQueue.lock();
+	while (m_InputQueue.hasInput())
 	{
-		std::string input;
-		std::getline(std::cin, input);
-		execCommand(input);
+		execCommand(m_InputQueue.pop());
 	}
+	m_InputQueue.unlock();
 	return m_State == CommState::ABORTING || m_State == CommState::QUITTING;
 }
 
@@ -162,15 +176,12 @@ void UCI::positionCommand(std::istringstream& stream)
 		setToFen(Board::defaultFen);
 		if (stream)
 		{
-			std::cout << "bruh\n";
 			stream >> tok;
 			if (tok == "moves")
 			{
-				std::cout << "y?\n";
 				while (stream.tellg() != -1)
 				{
 					stream >> tok;
-					std::cout << "TOK: " << tok << std::endl;
 					MoveStrFind find = comm::findMoveFromPCN(m_LegalMoves, m_LegalMoves + m_MoveCount, tok.c_str());
 					Move move = *find.move;
 					makeMove(move);
@@ -188,10 +199,8 @@ void UCI::positionCommand(std::istringstream& stream)
 			if (tok == "moves")
 				break;
 			fen += ' ' + tok;
-			std::cout << fen << std::endl;
 		}
 
-		std::cout << "FEN: " << fen << std::endl;
 		if (!comm::isValidFen(fen.c_str()))
 			return;
 		setToFen(fen.c_str());
@@ -201,7 +210,6 @@ void UCI::positionCommand(std::istringstream& stream)
 			while (stream.tellg() != -1)
 			{
 				stream >> tok;
-				std::cout << "TOK: " << tok << std::endl;
 				MoveStrFind find = comm::findMoveFromPCN(m_LegalMoves, m_LegalMoves + m_MoveCount, tok.c_str());
 				Move move = *find.move;
 				makeMove(move);

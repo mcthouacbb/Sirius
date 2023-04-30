@@ -42,16 +42,16 @@ int Search::iterDeep(const SearchLimits& limits)
 	int maxDepth = std::min(limits.maxDepth, MAX_PLY - 1);
 	Move pv[MAX_PLY];
 	int score = 0;
-	
+
 	reset();
 	m_ShouldStop = false;
 	m_CheckCounter = CHECK_INTERVAL;
 	m_TimeMan.setLimits(limits);
 	m_TimeMan.startSearch();
-	
+
 	int alpha = eval::NEG_INF;
 	int beta = eval::POS_INF;
-	
+
 	for (int depth = 1; depth <= maxDepth; depth++)
 	{
 		int searchScore;

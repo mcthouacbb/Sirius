@@ -1,6 +1,7 @@
 #pragma once
 
 #include "icomm.h"
+#include "input_queue.h"
 
 #include <sstream>
 
@@ -27,11 +28,13 @@ public:
 		DBG_PRINT
 	};
 
-	
+
 	virtual void run() override;
 	virtual void reportSearchInfo(const SearchInfo& info) const override;
 	virtual bool checkInput() override;
 private:
+	static bool shouldQuit(const std::string& str);
+
 	void execCommand(const std::string& command);
 	Command getCommand(const std::string& command) const;
 
@@ -39,6 +42,8 @@ private:
 	void newGameCommand();
 	void positionCommand(std::istringstream& stream);
 	void goCommand(std::istringstream& stream);
+
+	InputQueue m_InputQueue;
 };
 
 

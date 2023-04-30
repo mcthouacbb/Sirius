@@ -11,7 +11,13 @@
 namespace comm
 {
 
+bool CmdLine::shouldQuit(const std::string& str)
+{
+	return str == "quit";
+}
+
 CmdLine::CmdLine()
+	: m_InputQueue(shouldQuit)
 {
 	std::ifstream openings("res/gaviota_trim.pgn");
 
@@ -26,11 +32,20 @@ void CmdLine::run()
 {
 	for (;;)
 	{
-		std::string cmd;
-		std::getline(std::cin, cmd);
-		execCommand(cmd);
-		if (m_State == CommState::QUITTING)
-			return;
+		m_InputQueue.lock();
+		while (m_InputQueue.hasInput())
+		{
+			std::string command = m_InputQueue.pop();
+			m_InputQueue.unlock();
+			execCommand(command);
+			m_InputQueue.lock();
+			if (m_State == CommState::QUITTING)
+			{
+				m_InputQueue.unlock();
+				return;
+			}
+		}
+		m_InputQueue.unlock();
 	}
 }
 
@@ -187,12 +202,12 @@ void CmdLine::execCommand(const std::string& command)
 
 bool CmdLine::checkInput()
 {
-	while (std::cin.rdbuf()->in_avail())
+	m_InputQueue.lock();
+	while (m_InputQueue.hasInput())
 	{
-		std::string input;
-		std::getline(std::cin, input);
-		execCommand(input);
+		execCommand(m_InputQueue.pop());
 	}
+	m_InputQueue.unlock();
 	return m_State == CommState::ABORTING || m_State == CommState::QUITTING;
 }
 
@@ -222,7 +237,7 @@ CmdLine::Command CmdLine::getCommand(const std::string& command) const
 		return Command::STOP;
 	else if (command == "quit")
 		return Command::QUIT;
-	
+
 	return Command::INVALID;
 }
 
@@ -325,7 +340,7 @@ void CmdLine::searchCommand(std::istringstream& stream)
 {
 	SearchLimits limits;
 	limits.maxDepth = 1000;
-	
+
 	std::string tok;
 	stream >> tok;
 	if (tok == "infinite")

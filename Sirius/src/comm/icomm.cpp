@@ -1,6 +1,13 @@
 #include "icomm.h"
 #include "../movegen.h"
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#elif
+#include <unistd.h>
+#endif
+
 namespace comm
 {
 
@@ -42,5 +49,6 @@ void IComm::calcLegalMoves()
 	Move* end = genMoves<MoveGenType::LEGAL>(m_Board, m_LegalMoves);
 	m_MoveCount = end - m_LegalMoves;
 }
+
 
 }
