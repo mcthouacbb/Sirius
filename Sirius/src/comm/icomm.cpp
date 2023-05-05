@@ -1,13 +1,6 @@
 #include "icomm.h"
 #include "../movegen.h"
 
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#elif
-#include <unistd.h>
-#endif
-
 namespace comm
 {
 
