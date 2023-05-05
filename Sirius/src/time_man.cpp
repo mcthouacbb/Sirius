@@ -14,14 +14,14 @@ void TimeManager::setLimits(const SearchLimits& limits)
 			break;
 		case SearchPolicy::DYN_CLOCK:
 			m_AllocatedTime = limits.clock.timeLeft[0] / 40 + limits.clock.increments[0] / 2;
-		
+
 			if (m_AllocatedTime >= limits.clock.timeLeft[0])
 			{
 				m_AllocatedTime = limits.clock.timeLeft[0] - Duration(500);
 			}
-		
+
 			if (m_AllocatedTime < Duration(0))
-				m_AllocatedTime = Duration(100);
+				m_AllocatedTime = limits.clock.timeLeft[0] / 4;
 			break;
 	}
 }
