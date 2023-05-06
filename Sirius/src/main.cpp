@@ -6,6 +6,7 @@
 #include "comm/icomm.h"
 #include "comm/cmdline.h"
 #include "comm/uci.h"
+#include "eval/eval.h"
 
 namespace comm
 {
@@ -16,6 +17,7 @@ int main(int argc, char** argv)
 {
 	attacks::init();
 	zobrist::init();
+	eval::init();
 
 	std::string mode;
 	std::getline(std::cin, mode);

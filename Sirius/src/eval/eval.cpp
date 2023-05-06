@@ -3,6 +3,11 @@
 namespace eval
 {
 
+void init()
+{
+	initPSQT();
+}
+
 namespace
 {
 
@@ -39,7 +44,7 @@ int evaluate(const Board& board)
 
 	int psqtMG = evalPSQTMG(board, color) - evalPSQTMG(board, opp);
 	int psqtEG = evalPSQTEG(board, color) - evalPSQTEG(board, opp);
-	
+
 	return eval::getFullEval(matMG + psqtMG, matEG + psqtEG, board.evalState().phase);
 }
 

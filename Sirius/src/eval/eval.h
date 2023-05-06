@@ -14,9 +14,11 @@ constexpr int CHECKMATE = -32700;
 constexpr int STALEMATE = 0;
 constexpr int DRAW = 0;
 
+void init();
+
 inline bool isMateScore(int score)
 {
-	return std::abs(CHECKMATE) - std::abs(score) < 256; 
+	return std::abs(CHECKMATE) - std::abs(score) < 256;
 }
 
 int evaluate(const Board& board);
