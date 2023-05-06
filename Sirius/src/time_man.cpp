@@ -2,7 +2,7 @@
 #include "search.h"
 #include <iostream>
 
-void TimeManager::setLimits(const SearchLimits& limits)
+void TimeManager::setLimits(const SearchLimits& limits, Color us)
 {
 	m_Limits = &limits;
 
@@ -13,15 +13,15 @@ void TimeManager::setLimits(const SearchLimits& limits)
 			std::cout << m_AllocatedTime.count() << std::endl;
 			break;
 		case SearchPolicy::DYN_CLOCK:
-			m_AllocatedTime = limits.clock.timeLeft[0] / 40 + limits.clock.increments[0] / 2;
+			m_AllocatedTime = limits.clock.timeLeft[static_cast<int>(us)] / 40 + limits.clock.increments[static_cast<int>(us)] / 2;
 
-			if (m_AllocatedTime >= limits.clock.timeLeft[0])
+			if (m_AllocatedTime >= limits.clock.timeLeft[static_cast<int>(us)])
 			{
-				m_AllocatedTime = limits.clock.timeLeft[0] - Duration(500);
+				m_AllocatedTime = limits.clock.timeLeft[static_cast<int>(us)] - Duration(500);
 			}
 
 			if (m_AllocatedTime < Duration(0))
-				m_AllocatedTime = limits.clock.timeLeft[0] / 4;
+				m_AllocatedTime = limits.clock.timeLeft[static_cast<int>(us)] / 4;
 			break;
 	}
 }

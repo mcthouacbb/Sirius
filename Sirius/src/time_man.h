@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include "defs.h"
 
 using TimePoint = std::chrono::steady_clock::time_point;
 using Duration = std::chrono::milliseconds;
@@ -13,7 +14,7 @@ class TimeManager
 public:
 	TimeManager() = default;
 
-	void setLimits(const SearchLimits& searchLimits);
+	void setLimits(const SearchLimits& searchLimits, Color us);
 	Duration elapsed();
 
 	void startSearch();

@@ -46,7 +46,7 @@ int Search::iterDeep(const SearchLimits& limits)
 	reset();
 	m_ShouldStop = false;
 	m_CheckCounter = CHECK_INTERVAL;
-	m_TimeMan.setLimits(limits);
+	m_TimeMan.setLimits(limits, m_Board.sideToMove());
 	m_TimeMan.startSearch();
 
 	int alpha = eval::NEG_INF;
