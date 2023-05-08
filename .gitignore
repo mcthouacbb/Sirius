@@ -41,8 +41,8 @@
 .replit
 .breakpoints
 replit.nix
-Sirius/main
-Sirius/main_debug
+Sirius/sirius
+Sirius/sirius_debug
 Makefile
 
 .vs
