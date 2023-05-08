@@ -52,3 +52,4 @@ Makefile
 *.vcxproj.user
 x64
 Sirius/x64
+Tune/x64
