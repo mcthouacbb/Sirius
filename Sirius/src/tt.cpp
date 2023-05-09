@@ -8,6 +8,11 @@ TT::TT(size_t size)
 	m_Buckets = new TTBucket[size]();
 }
 
+TT::~TT()
+{
+	delete[] m_Buckets;
+}
+
 inline int retrieveScore(int score, int ply)
 {
 	if (eval::isMateScore(score))

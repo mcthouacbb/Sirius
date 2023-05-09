@@ -4,6 +4,7 @@
 #include <string>
 #include <thread>
 #include <mutex>
+#include <condition_variable>
 
 class InputQueue
 {
@@ -21,19 +22,20 @@ public:
 		m_QueuedInputs.pop();
 		return elem;
 	}
-	void lock()
+	std::mutex& mutex()
 	{
-		m_QueueLock.lock();
+		return m_QueueLock;
 	}
-	void unlock()
+	std::condition_variable& cond()
 	{
-		m_QueueLock.unlock();
+		return m_Cond;
 	}
 private:
 	void pollInput();
 
-	std::thread m_InputThread;
 	std::mutex m_QueueLock;
+	std::condition_variable m_Cond;
 	bool (*m_ShouldQuit)(const std::string& str);
 	std::queue<std::string> m_QueuedInputs;
+	std::thread m_InputThread;
 };

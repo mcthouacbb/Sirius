@@ -23,23 +23,26 @@ UCI::UCI()
 void UCI::run()
 {
 	uciCommand();
-
+	
 	for (;;)
 	{
-		m_InputQueue.lock();
+		std::unique_lock<std::mutex> lock(m_InputQueue.mutex());
+		m_InputQueue.cond().wait(
+			lock,
+			[this]{return m_InputQueue.hasInput();}
+		);
+
 		while (m_InputQueue.hasInput())
 		{
-			std::string command = m_InputQueue.pop();
-			m_InputQueue.unlock();
-			execCommand(command);
-			m_InputQueue.lock();
+			std::string input = m_InputQueue.pop();
+			lock.unlock();
+			execCommand(input);
 			if (m_State == CommState::QUITTING)
-			{
-				m_InputQueue.unlock();
 				return;
-			}
+			lock.lock();
 		}
-		m_InputQueue.unlock();
+
+		lock.unlock();
 	}
 }
 
@@ -77,12 +80,12 @@ void UCI::reportSearchInfo(const SearchInfo& info) const
 
 bool UCI::checkInput()
 {
-	m_InputQueue.lock();
+	m_InputQueue.mutex().lock();
 	while (m_InputQueue.hasInput())
 	{
 		execCommand(m_InputQueue.pop());
 	}
-	m_InputQueue.unlock();
+	m_InputQueue.mutex().unlock();
 	return m_State == CommState::ABORTING || m_State == CommState::QUITTING;
 }
 

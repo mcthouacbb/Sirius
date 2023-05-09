@@ -18,9 +18,10 @@ void InputQueue::pollInput()
 	do
 	{
 		std::getline(std::cin, input);
-		lock();
+		mutex().lock();
 		m_QueuedInputs.push(input);
-		unlock();
+		cond().notify_one();
+		mutex().unlock();
 	}
 	while (!m_ShouldQuit(input));
 }

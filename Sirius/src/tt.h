@@ -35,6 +35,7 @@ class TT
 {
 public:
 	TT(size_t size);
+	~TT();
 
 	TT(const TT&) = delete;
 	TT& operator=(const TT&) = delete;
