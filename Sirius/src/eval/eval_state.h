@@ -70,7 +70,7 @@ inline void EvalState::movePiece(Color color, PieceType piece, int src, int dst)
 	}
 	psqtMG[static_cast<int>(color)] -= getPSQTMG(piece, src);
 	psqtEG[static_cast<int>(color)] -= getPSQTEG(piece, src);
-		
+
 	psqtMG[static_cast<int>(color)] += getPSQTMG(piece, dst);
 	psqtEG[static_cast<int>(color)] += getPSQTEG(piece, dst);
 	// material doesn't change

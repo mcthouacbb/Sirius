@@ -22,5 +22,6 @@ inline bool isMateScore(int score)
 }
 
 int evaluate(const Board& board);
+int rawEval(const Board& board);
 
 }

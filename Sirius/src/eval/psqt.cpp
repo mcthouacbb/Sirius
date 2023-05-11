@@ -154,6 +154,9 @@ void initPSQT()
 			{
 				psqtMG[i][y * 8 + x] = psqtHalfMG[i][y * 4 + x];
 				psqtMG[i][y * 8 + x + 4] = psqtHalfMG[i][y * 4 + 3 - x];
+				
+				psqtEG[i][y * 8 + x] = psqtHalfEG[i][y * 4 + x];
+				psqtEG[i][y * 8 + x + 4] = psqtHalfEG[i][y * 4 + 3 - x];
 			}
 		}
 	}

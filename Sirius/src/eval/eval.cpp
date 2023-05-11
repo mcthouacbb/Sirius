@@ -37,6 +37,11 @@ int evaluate(const Board& board)
 {
 	if (!eval::canForceMate(board))
 		return eval::DRAW;
+	return rawEval(board);
+}
+
+int rawEval(const Board& board)
+{
 	Color color = board.sideToMove();
 	Color opp = flip(color);
 	int matMG = evalMaterialMG(board, color) - evalMaterialMG(board, opp);
