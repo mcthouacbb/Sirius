@@ -43,6 +43,8 @@
 replit.nix
 Sirius/sirius
 Sirius/sirius_debug
+Tune/tune
+Tune/tune_debug
 Makefile
 
 .vs
