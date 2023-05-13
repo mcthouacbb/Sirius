@@ -208,6 +208,17 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		{
 			continue;
 		}
+
+		int reduction = 0;
+		if (i >= (isPV ? 15 : 4) &&
+			depth >= 3 &&
+			!givesCheck &&
+			!isCapture &&
+			!isPromotion &&
+			!inCheck)
+		{
+			reduction = 1;
+		}
 		m_Board.makeMove(move, state);
 		m_RootPly++;
 
@@ -217,7 +228,10 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 			moveScore = -search(newDepth, searchPly + 1, -beta, -alpha, isPV);
 		else
 		{
-			moveScore = -search(newDepth, searchPly + 1, -(alpha + 1), -alpha, false);
+			moveScore = -search(newDepth - reduction, searchPly + 1, -(alpha + 1), -alpha, false);
+			
+			if (moveScore > alpha && reduction)
+				moveScore = -search(newDepth, searchPly + 1, -(alpha + 1), -alpha, false);
 
 			if (moveScore > alpha && isPV)
 				moveScore = -search(newDepth, searchPly + 1, -beta, -alpha, true);
