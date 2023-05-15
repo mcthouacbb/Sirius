@@ -4,7 +4,7 @@ import sys
 import os
 
 pgn_file = open(sys.argv[1], "r")
-epd_file = open(os.path.splitext(sys.argv[1])[0] + ".epd", "w")
+epd_file = open(sys.argv[2], "a")
 
 curr_game = chess.pgn.read_game(pgn_file)
 

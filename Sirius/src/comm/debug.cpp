@@ -47,12 +47,12 @@ void Debug::run()
 
 void Debug::reportSearchInfo(const SearchInfo& info) const
 {
-	
+
 }
 
 bool Debug::checkInput()
 {
-	
+	return false;
 }
 
 void Debug::execCommand(const std::string& command)
@@ -90,7 +90,7 @@ Debug::Command Debug::getCommand(const std::string& command) const
 void Debug::genEpdEvals(std::istringstream& stream) const
 {
 	std::string filename;
-	
+
 	std::string tok;
 	stream >> tok;
 	if (tok[0] == '"')

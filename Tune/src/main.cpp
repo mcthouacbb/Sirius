@@ -58,24 +58,24 @@ int evaluate(const char* epd, const EvalParams& params)
 		data.phaseWeights[PIECE_BISHOP] * 4 +
 		data.phaseWeights[PIECE_KNIGHT] * 4 +
 		data.phaseWeights[PIECE_PAWN] * 16;
-	
+
 	int sq = 56;
 	int i = 0;
-	
+
 	int phase = totalPhase;
-	
+
 	int whiteMatMG = 0;
 	int blackMatMG = 0;
-	
+
 	int whiteMatEG = 0;
 	int blackMatEG = 0;
-	
+
 	int whitePsqtMG = 0;
 	int blackPsqtMG = 0;
-	
+
 	int whitePsqtEG = 0;
 	int blackPsqtEG = 0;
-	
+
 	while (epd[i] != ' ')
 	{
 		switch (epd[i++])
@@ -247,7 +247,7 @@ double error(const std::vector<Pos>& positions, const EvalParams& params, double
 std::vector<Pos> parseEpdFile(const std::string& str)
 {
 	std::vector<Pos> positions;
-	
+
 	int lineStart = 0;
 	int lineEnd = str.find('\n', 0);
 
@@ -305,7 +305,7 @@ void printParams(const EvalParams& params, std::ostream& os)
 {
 	const EvalData& data = params.data;
 	os << "{\n";
-	
+
 	os << "\t{ " << data.phaseWeights[0];
 	for (int i = 1; i < 6; i++)
 	{
@@ -347,7 +347,7 @@ void printParams(const EvalParams& params, std::ostream& os)
 		os << "\t\t},\n";
 	}
 	os << "\t},\n";
-	
+
 	os << "\t{\n";
 	for (int i = 0; i < 6; i++)
 	{
@@ -394,7 +394,7 @@ EvalParams localOptimize(const EvalParams& initial, const std::vector<Pos>& posi
 				improved = true;
 				continue;
 			}
-			
+
 			newParams.params[i] -= 4;
 			newError = error(positions, newParams, K_VAL);
 			std::cout << "Delta: 1, New: " << newError << " best: " << bestError << '\n';
@@ -438,7 +438,7 @@ EvalParams localOptimize(const EvalParams& initial, const std::vector<Pos>& posi
 	return bestParams;
 }
 
-/*EvalParams defaultParams = {
+EvalParams defaultParams = {
 	{
 		// phase weights
 		{0, 4, 2, 1, 1, 0},
@@ -585,138 +585,6 @@ EvalParams localOptimize(const EvalParams& initial, const std::vector<Pos>& posi
 			}
 		}
 	}
-};*/
-
-EvalParams defaultParams =  {
-	{
-		{ 0, 27, 7, 1, 2, 0 },
-		{ 0, 960, 405, 245, 225, 59 },
-		{ 0, 921, 552, 321, 282, 149 },
-		{
-			{
-				  51,   55, -135,   45, 
-				-125, -115,  -23, -113, 
-				 -99,    3,   55,  -66, 
-				-125,  -26,  -94,  -34, 
-				   0, -105,   55, -103, 
-				 -74,   -2,   17,  -34, 
-				  60,   51,    4,  -65, 
-				  33,   53,  -14,   16, 
-			},
-			{
-				  75,   85,   17,  -48, 
-				  51,   18,   12,   75, 
-				   4,   57,   74,    6, 
-				 -24,  -26,  -10,   28, 
-				  29,   14,   -8,   12, 
-				  75,    6,    7,    3, 
-				 -73,  -23,   16,   -9, 
-				-115, -100,  -62,   -8, 
-			},
-			{
-				   8,   90,   -1,    0, 
-				  -3,   -8,   38,    9, 
-				 -52,   95,   84,   95, 
-				 -52,   -3,  -16,   41, 
-				  -7,  -26,    1,  -45, 
-				   6,  -27,   38,  -27, 
-				-100,  -69,  -54,  -80, 
-				 -47,  -24,  -18,  -36, 
-			},
-			{
-				  75,  -87, -105,  -45, 
-				 -93,  -31,  -65,  -60, 
-				  51,    5,  -90,   15, 
-				 -59,  -28,   19,  -22, 
-				 -47,  -53,  -22,   -8, 
-				 -41,   -4,   -7,  -16, 
-				 -87,   -9,    3,  -41, 
-				-115,   85,  -43,  -84, 
-			},
-			{
-				-145,   31,   65,  -75, 
-				  41,  -83,  -59,  -89, 
-				  14,  -95,  -85,  -13, 
-				  49,  -36,   34,  -18, 
-				   1,    7,   11,  -28, 
-				-115,   37,  -28,   20, 
-				  55,   15,  -95,  -21, 
-				 -68,  -52,   61,  -84, 
-			},
-			{
-				   0,    0,    0,    0, 
-				 140,   81,  145,   95, 
-				 -43,  -38,   32,   26, 
-				  27,   21,  -16,    9, 
-				 -24,   -1,   -7,   17, 
-				  -7,   11,   -4,   -7, 
-				 -21,   30,   -2,  -16, 
-				   0,    0,    0,    0, 
-			},
-		},
-		{
-			{
-				 -81,    6,  -43,   23, 
-				 -59,   29,   66,    0, 
-				  18,   36,   24,    1, 
-				 -14,   -4,    5,   17, 
-				  10,    2,    4,   29, 
-				 -39,  -22,   -3,    5, 
-				 -22,  -27,   -2,  -13, 
-				 -61,  -51,  -28,  -37, 
-			},
-			{
-				  29,   61,   70,   60, 
-				 -37,   34,   95,   17, 
-				 -39,   67,   55,   95, 
-				  90,   95,   81,  100, 
-				 -77,    4,  100,   14, 
-				 -73,  -40,   13,   27, 
-				  38,   20,  -47,   95, 
-				 -88, -105,  -44, -100, 
-			},
-			{
-				  45,    9,   66,   61, 
-				  27,   21,   43,   27, 
-				  33,    2,   20,    2, 
-				  28,    0,   39,    3, 
-				 -20,   15,  -12,   21, 
-				  11,   29,  -28,   26, 
-				   1,  -26,  -44,   -4, 
-				 -39,  -31,  -10,  -11, 
-			},
-			{
-				 -18,   -3,   46,   13, 
-				  70,  -20,  -15,   20, 
-				   9,   -3,   22,   66, 
-				 -20,  -29,   16,   31, 
-				 -31,   59,   15,   48, 
-				 -28,   20,   10,   17, 
-				 -22,  -55,    6,   19, 
-				  34,  -95,  -50,    1, 
-			},
-			{
-				-139,   31,   30,  -38, 
-				-115,   12,  -30,   36, 
-				  -3,  -61,   81,   15, 
-				 -36,   17,   -4,    3, 
-				  18,   23,   -6,   43, 
-				-110,   -2,  -23,  -16, 
-				-114, -115,  -80,   -2, 
-				 -15,  -42,  -46,  -52, 
-			},
-			{
-				   0,    0,    0,    0, 
-				 135,  114,  139,  145, 
-				  32,   61,   69,   67, 
-				  -7,  -13,   15,    3, 
-				  -9,    5,  -10,   12, 
-				  -4,   -2,  -28,   26, 
-				  -5,   -8,  -14,  -23, 
-				   0,    0,    0,    0, 
-			},
-		},
-	}
 };
 
 int main(int argc, char** argv)
@@ -726,14 +594,14 @@ int main(int argc, char** argv)
 		std::cout << "Please arguments thx" << std::endl;
 		return 0;
 	}
-	
+
 	if (strcmp(argv[1], "evalpos") == 0)
 	{
 		const char* epd = argv[2];
 		std::cout << evaluate(epd, defaultParams) << std::endl;
 		return 0;
 	}
-	
+
 	if (argc < 4)
 	{
 		std::cout << "Please arguments thx" << std::endl;
@@ -743,7 +611,7 @@ int main(int argc, char** argv)
 	if (strcmp(argv[1], "optimize") == 0)
 	{
 		std::ifstream epdFile(argv[2]);
-		
+
 		std::string epdFileData(std::istreambuf_iterator<char>{epdFile}, std::istreambuf_iterator<char>());
 
 		std::vector<Pos> positions = parseEpdFile(epdFileData);
@@ -759,10 +627,9 @@ int main(int argc, char** argv)
 		}
 
 		EvalParams params = localOptimize(defaultParams, positions, outFile, start);
-		std::cout << std::endl;
 		return 0;
 	}
-	
+
 	if (strcmp(argv[1], "error") == 0)
 	{
 		std::ifstream epdFile(argv[2]);
@@ -774,7 +641,7 @@ int main(int argc, char** argv)
 		std::cout << error(positions, defaultParams, k) << std::endl;
 		return 0;
 	}
-	
+
 	if (strcmp(argv[1], "checkevals") == 0)
 	{
 		std::string epd = argv[2];
@@ -786,7 +653,7 @@ int main(int argc, char** argv)
 		std::string epdFileData(std::istreambuf_iterator<char>{epdFile}, std::istreambuf_iterator<char>());
 
 		// std::cout << epdFileData << std::endl;
-		
+
 		std::vector<Pos> positions = parseEpdFile(epdFileData);
 
 		int siriusEval;
