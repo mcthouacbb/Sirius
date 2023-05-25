@@ -183,7 +183,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 	TTEntry::Type type = TTEntry::Type::UPPER_BOUND;
 
-	int staticEval = eval::evaluate(m_Board);
+	int staticEval = depth == 1 ? eval::evaluate(m_Board) : 0;
 	bool inCheck = m_Board.checkers() != 0;
 
 	bool fprune =

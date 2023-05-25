@@ -18,6 +18,7 @@ public:
 	{
 		INVALID,
 		EPD_EVALS,
+		PGN_TO_EPD,
 		QUIT
 	};
 
@@ -31,6 +32,7 @@ private:
 	Command getCommand(const std::string& command) const;
 
 	void genEpdEvals(std::istringstream& stream) const;
+	void pgnToEpd(std::istringstream& stream) const;
 
 	InputQueue m_InputQueue;
 };

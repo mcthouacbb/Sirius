@@ -46,6 +46,7 @@ public:
 
 	std::string stringRep() const;
 	std::string fenStr() const;
+	std::string epdStr() const;
 
 	void printDbg() const;
 

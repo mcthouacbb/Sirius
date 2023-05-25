@@ -285,6 +285,63 @@ std::string Board::fenStr() const
 	return fen;
 }
 
+std::string Board::epdStr() const
+{
+	std::string epd = "";
+	int lastFile;
+	for (int j = 56; j >= 0; j -= 8)
+	{
+		lastFile = -1;
+		for (int i = j; i < j + 8; i++)
+		{
+			Piece piece = m_Squares[i];
+			if (piece)
+			{
+				int diff = i - j - lastFile;
+				if (diff > 1)
+					epd += (diff - 1) + '0';
+				epd += pieceChars[piece];
+				lastFile = i - j;
+			}
+		}
+		int diff = 8 - lastFile;
+		if (diff > 1)
+			epd += (diff - 1) + '0';
+		if (j != 0)
+			epd += '/';
+	}
+
+	epd += ' ';
+
+	epd += m_SideToMove == Color::WHITE ? "w " : "b ";
+
+	if (m_State->castlingRights == 0)
+		epd += '-';
+	else
+	{
+		if (m_State->castlingRights & 1)
+			epd += 'K';
+		if (m_State->castlingRights & 2)
+			epd += 'Q';
+		if (m_State->castlingRights & 4)
+			epd += 'k';
+		if (m_State->castlingRights & 8)
+			epd += 'q';
+	}
+
+	epd += ' ';
+
+	if (m_State->epSquare == -1)
+		epd += '-';
+	else
+	{
+		epd += (m_State->epSquare & 7) + 'a';
+		epd += (m_State->epSquare >> 3) + '1';
+	}
+	
+	return epd;
+}
+
 void Board::makeMove(Move move, BoardState& state)
 {
 	state.prev = m_State;

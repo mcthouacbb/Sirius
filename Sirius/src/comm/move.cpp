@@ -3,7 +3,7 @@
 namespace comm
 {
 
-const char promoChars[4] = {'q', 'r', 'b', 'n'};
+const char promoChars[4] = {'Q', 'R', 'B', 'N'};
 const char pieceChars[5] = {'K', 'Q', 'R', 'B', 'N'};
 
 MoveStrFind findMoveFromPCN(const Move* begin, const Move* end, const char* moveStr)
@@ -114,7 +114,7 @@ MoveStrFind findMoveFromSAN(const Board& board, const Move* begin, const Move* e
 				{
 					if (it->type() == MoveType::CASTLE && it->dstPos() > it->srcPos())
 					{
-						return {it, moveStr + 3};
+						return {it, moveStr + 3 + (moveStr[3] == '+' || moveStr[3] == '#')};
 					}
 				}
 				return {end, moveStr + 3};
@@ -127,7 +127,7 @@ MoveStrFind findMoveFromSAN(const Board& board, const Move* begin, const Move* e
 				{
 					if (it->type() == MoveType::CASTLE && it->dstPos() < it->srcPos())
 					{
-						return {it, moveStr + 5};
+						return {it, moveStr + 5 + (moveStr[5] == '+' || moveStr[5] == '#')};
 					}
 				}
 				return {end, moveStr + 5};
@@ -147,19 +147,19 @@ MoveStrFind findMoveFromSAN(const Board& board, const Move* begin, const Move* e
 			i = 5;
 		switch (moveStr[i])
 		{
-			case 'q':
+			case 'Q':
 				promotion = Promotion::QUEEN;
 				isPromotion = true;
 				break;
-			case 'r':
+			case 'R':
 				promotion = Promotion::ROOK;
 				isPromotion = true;
 				break;
-			case 'b':
+			case 'B':
 				promotion = Promotion::BISHOP;
 				isPromotion = true;
 				break;
-			case 'n':
+			case 'N':
 				promotion = Promotion::KNIGHT;
 				isPromotion = true;
 				break;
@@ -178,19 +178,19 @@ MoveStrFind findMoveFromSAN(const Board& board, const Move* begin, const Move* e
 		
 		switch (moveStr[i])
 		{
-			case 'q':
+			case 'Q':
 				promotion = Promotion::QUEEN;
 				isPromotion = true;
 				break;
-			case 'r':
+			case 'R':
 				promotion = Promotion::ROOK;
 				isPromotion = true;
 				break;
-			case 'b':
+			case 'B':
 				promotion = Promotion::BISHOP;
 				isPromotion = true;
 				break;
-			case 'n':
+			case 'N':
 				promotion = Promotion::KNIGHT;
 				isPromotion = true;
 				break;
@@ -357,6 +357,10 @@ piece_moves:
 		}
 	}
 search_moves:
+	if (moveStr[moveLen] == '+')
+		moveLen++;
+	else if (moveStr[moveLen] == '#')
+		moveLen++;
 	int toSquare = toFile | (toRank << 3);
 	// std::cout << toSquare << std::endl;
 	/*std::cout << "From File: " << fromFile << std::endl;

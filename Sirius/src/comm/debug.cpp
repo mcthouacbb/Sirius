@@ -6,6 +6,7 @@
 #include "move.h"
 #include "../eval/eval.h"
 #include "../misc.h"
+#include "pgn.h"
 
 namespace comm
 {
@@ -71,6 +72,9 @@ void Debug::execCommand(const std::string& command)
 		case Command::EPD_EVALS:
 			genEpdEvals(stream);
 			break;
+		case Command::PGN_TO_EPD:
+			pgnToEpd(stream);
+			break;
 		case Command::QUIT:
 			m_State = CommState::QUITTING;
 			break;
@@ -83,6 +87,8 @@ Debug::Command Debug::getCommand(const std::string& command) const
 		return Command::QUIT;
 	else if (command == "genepdevals")
 		return Command::EPD_EVALS;
+	else if (command == "pgntoepd")
+		return Command::PGN_TO_EPD;
 
 	return Command::INVALID;
 }
@@ -148,6 +154,67 @@ void Debug::genEpdEvals(std::istringstream& stream) const
 		board.setToFen(tok);
 		int eval = eval::rawEval(board) * (board.sideToMove() == Color::WHITE ? 1 : -1);
 		outFile << eval << '\n';
+	}
+}
+
+void Debug::pgnToEpd(std::istringstream& stream) const
+{
+	std::string pgnFilename;
+	stream >> pgnFilename;
+
+	PGNFile pgnFile(pgnFilename.c_str());
+
+	std::string epdFilename;
+	stream >> epdFilename;
+	std::ofstream epdFile(epdFilename, std::ios::app);
+	
+	while (pgnFile.hasGame())
+	{
+		PGNGame game = pgnFile.parseGame();
+	
+		for (const auto& pair : game.header.tags)
+		{
+			std::cout << "[" << pair.first << ',' << pair.second << "], ";
+		}
+		std::cout << std::endl;
+		if (game.header.tags["Result"] == "*")
+		{
+			std::cout << "No Result" << std::endl;
+			continue;
+		}
+		Board board;
+		// printBoard(board);
+		std::deque<BoardState> states;
+		for (const auto& entry : game.entries)
+		{
+			if (entry.comment == "book")
+			{
+				std::cout << "Skipping book position" << std::endl;
+				continue;
+			}
+			int sign = 1;
+			const char* p = entry.comment.c_str();
+			if (p[0] == '+')
+				p++;
+			if (p[0] == '-')
+			{
+				sign = -1;
+				p++;
+			}
+
+			if (p[0] == 'M')
+			{
+				std::cout << "Skipping mate position" << std::endl;
+				continue;
+			}
+			std::cout << "{" << entry.comment << "}\n";
+			
+			states.push_back({});
+			board.makeMove(entry.move, states.back());
+			// printBoard(board);
+			epdFile << board.epdStr() << ' ' << game.header.tags["Result"] << '\n';
+		}
+		std::cout << std::endl;
 	}
 }
 
