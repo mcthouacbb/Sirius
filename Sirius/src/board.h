@@ -43,6 +43,7 @@ public:
 	Board& operator=(const Board&) = delete;
 
 	void setToFen(const std::string_view& fen);
+	void setToEpd(const std::string_view& epd);
 
 	std::string stringRep() const;
 	std::string fenStr() const;

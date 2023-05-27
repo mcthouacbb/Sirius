@@ -131,7 +131,7 @@ void genKingMoves(const Board& board, Move*& moves)
 				break;
 			}
 		}
-		
+
 		if (!ksChecked && !(attacks::kscBlockSquares<color>() & occupied) && (board.castlingRights() & kscBit))
 		{
 			*moves++ = Move(kingIdx, kingIdx + 2, MoveType::CASTLE);
@@ -148,7 +148,7 @@ void genKingMoves(const Board& board, Move*& moves)
 				break;
 			}
 		}
-		
+
 		if (!(qsChecked) && !(attacks::qscBlockSquares<color>() & occupied) && (board.castlingRights() & qscBit))
 		{
 			*moves++ = Move(kingIdx, kingIdx - 2, MoveType::CASTLE);
@@ -162,9 +162,9 @@ void genQueenMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard m
 	BitBoard usBB = board.getColor(color);
 	BitBoard queenBB = board.getPieces(color, PieceType::QUEEN);
 	BitBoard allPieces = board.getAllPieces();
-	
+
 	uint32_t kingIdx = getLSB(board.getPieces(color, PieceType::KING));
-	
+
 	while (queenBB)
 	{
 		uint32_t queenIdx = popLSB(queenBB);
@@ -189,9 +189,9 @@ void genRookMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard mo
 	BitBoard usBB = board.getColor(color);
 	BitBoard rookBB = board.getPieces(color, PieceType::ROOK);
 	BitBoard allPieces = board.getAllPieces();
-	
+
 	uint32_t kingIdx = getLSB(board.getPieces(color, PieceType::KING));
-	
+
 	while (rookBB)
 	{
 		uint32_t rookIdx = popLSB(rookBB);
@@ -216,9 +216,9 @@ void genBishopMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard 
 	BitBoard usBB = board.getColor(color);
 	BitBoard bishopBB = board.getPieces(color, PieceType::BISHOP);
 	BitBoard allPieces = board.getAllPieces();
-	
+
 	uint32_t kingIdx = getLSB(board.getPieces(color, PieceType::KING));
-	
+
 	while (bishopBB)
 	{
 		uint32_t bishopIdx = popLSB(bishopBB);
@@ -243,7 +243,7 @@ void genKnightMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard 
 	BitBoard usBB = board.getColor(color);
 	BitBoard knightBB = board.getPieces(color, PieceType::KNIGHT);
 	knightBB &= ~pinned;
-	
+
 	while (knightBB)
 	{
 		uint32_t knightIdx = popLSB(knightBB);
@@ -265,41 +265,58 @@ void genPawnMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard mo
 	BitBoard oppBB = board.getColor(flip(color));
 	BitBoard pawns = board.getPieces(color, PieceType::PAWN);
 	BitBoard allPieces = board.getAllPieces();
-	
+
 	uint32_t kingIdx = getLSB(board.getPieces(color, PieceType::KING));
 
 	BitBoard pinnedPawns = pinned & pawns;
-	
+
 	pawns ^= pinnedPawns;
-	
+
 
 	if constexpr (type == MoveGenType::LEGAL)
 	{
 		BitBoard pawnPushes = attacks::getPawnBBPushes<color>(pawns | (pinnedPawns & (FILE_A << (kingIdx & 7))));
 		pawnPushes &= ~allPieces;
-		
+
 		BitBoard doublePushes = attacks::getPawnBBPushes<color>(pawnPushes & nthRank<color, 2>());
 		doublePushes &= ~allPieces;
 		doublePushes &= moveMask;
-		
+
 		pawnPushes &= moveMask;
-	
+
 		BitBoard promotions = pawnPushes & nthRank<color, 7>();
-		
+
 		pawnPushes ^= promotions;
-		
+
 		while (pawnPushes)
 		{
 			uint32_t push = popLSB(pawnPushes);
 			*moves++ = Move(push - attacks::pawnPushOffset<color>(), push, MoveType::NONE);
 		}
-	
+
 		while (doublePushes)
 		{
 			uint32_t dPush = popLSB(doublePushes);
 			*moves++ = Move(dPush - 2 * attacks::pawnPushOffset<color>(), dPush, MoveType::NONE);
 		}
-	
+
+		while (promotions)
+		{
+			uint32_t promotion = popLSB(promotions);
+			*moves++ = Move(promotion - attacks::pawnPushOffset<color>(), promotion, MoveType::PROMOTION, Promotion::QUEEN);
+			*moves++ = Move(promotion - attacks::pawnPushOffset<color>(), promotion, MoveType::PROMOTION, Promotion::ROOK);
+			*moves++ = Move(promotion - attacks::pawnPushOffset<color>(), promotion, MoveType::PROMOTION, Promotion::BISHOP);
+			*moves++ = Move(promotion - attacks::pawnPushOffset<color>(), promotion, MoveType::PROMOTION, Promotion::KNIGHT);
+		}
+	}
+	else if constexpr (type == MoveGenType::CAPTURES)
+	{
+		BitBoard pawnPushes = attacks::getPawnBBPushes<color>(pawns | (pinnedPawns & (FILE_A << (kingIdx & 7))));
+		pawnPushes &= ~allPieces;
+		pawnPushes &= moveMask;
+
+		BitBoard promotions = pawnPushes & nthRank<color, 7>();
+
 		while (promotions)
 		{
 			uint32_t promotion = popLSB(promotions);
@@ -332,7 +349,7 @@ void genPawnMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard mo
 	eastCaptures &= moveMask;
 
 	eastCaptures &= oppBB;
-	
+
 	BitBoard promotions = eastCaptures & nthRank<color, 7>();
 	eastCaptures ^= promotions;
 
@@ -350,7 +367,7 @@ void genPawnMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard mo
 		*moves++ = Move(promotion - attacks::pawnPushOffset<color>() - 1, promotion, MoveType::PROMOTION, Promotion::BISHOP);
 		*moves++ = Move(promotion - attacks::pawnPushOffset<color>() - 1, promotion, MoveType::PROMOTION, Promotion::KNIGHT);
 	}
-	
+
 
 	BitBoard westCaptures = attacks::getPawnBBWestAttacks<color>(pawns | (pinnedPawns & attacks::getRay(kingIdx, attacks::pawnWestCaptureDir<color>())));
 	if (board.epSquare() != -1)
@@ -372,7 +389,7 @@ void genPawnMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard mo
 	westCaptures &= moveMask;
 
 	westCaptures &= oppBB;
-	
+
 	promotions = westCaptures & nthRank<color, 7>();
 	westCaptures ^= promotions;
 

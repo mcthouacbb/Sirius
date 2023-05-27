@@ -16,7 +16,7 @@ void Board::setToFen(const std::string_view& fen)
 	m_State->repetitions = 0;
 	m_State->lastRepetition = 0;
 
-	
+
 	memset(m_Squares, 0, 64 + 72);
 	m_EvalState.init();
 	m_State->zkey.value = 0;
@@ -147,6 +147,147 @@ done:
 	auto [ptr, ec] = std::from_chars(&fen[i], fen.data() + fen.size(), m_State->halfMoveClock);
 	std::from_chars(ptr + 1, fen.data() + fen.size(), m_GamePly);
 	m_GamePly = 2 * m_GamePly - 1 - (m_SideToMove == Color::WHITE);
+
+	updateCheckInfo();
+}
+
+void Board::setToEpd(const std::string_view& epd)
+{
+	m_State = &m_RootState;
+	m_State->pliesFromNull = 0;
+	m_State->repetitions = 0;
+	m_State->lastRepetition = 0;
+
+
+	memset(m_Squares, 0, 64 + 72);
+	m_EvalState.init();
+	m_State->zkey.value = 0;
+	int i = 0;
+	int sq = 56;
+	for (;; i++)
+	{
+		switch (epd[i])
+		{
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+				sq += epd[i] - '0';
+				break;
+			case 'k':
+				m_State->zkey.addPiece(PieceType::KING, Color::BLACK, sq);
+				addPiece(sq++, Color::BLACK, PieceType::KING);
+				break;
+			case 'q':
+				m_State->zkey.addPiece(PieceType::QUEEN, Color::BLACK, sq);
+				addPiece(sq++, Color::BLACK, PieceType::QUEEN);
+				break;
+			case 'r':
+				m_State->zkey.addPiece(PieceType::ROOK, Color::BLACK, sq);
+				addPiece(sq++, Color::BLACK, PieceType::ROOK);
+				break;
+			case 'b':
+				m_State->zkey.addPiece(PieceType::BISHOP, Color::BLACK, sq);
+				addPiece(sq++, Color::BLACK, PieceType::BISHOP);
+				break;
+			case 'n':
+				m_State->zkey.addPiece(PieceType::KNIGHT, Color::BLACK, sq);
+				addPiece(sq++, Color::BLACK, PieceType::KNIGHT);
+				break;
+			case 'p':
+				m_State->zkey.addPiece(PieceType::PAWN, Color::BLACK, sq);
+				addPiece(sq++, Color::BLACK, PieceType::PAWN);
+				break;
+			case 'K':
+				m_State->zkey.addPiece(PieceType::KING, Color::WHITE, sq);
+				addPiece(sq++, Color::WHITE, PieceType::KING);
+				break;
+			case 'Q':
+				m_State->zkey.addPiece(PieceType::QUEEN, Color::WHITE, sq);
+				addPiece(sq++, Color::WHITE, PieceType::QUEEN);
+				break;
+			case 'R':
+				m_State->zkey.addPiece(PieceType::ROOK, Color::WHITE, sq);
+				addPiece(sq++, Color::WHITE, PieceType::ROOK);
+				break;
+			case 'B':
+				m_State->zkey.addPiece(PieceType::BISHOP, Color::WHITE, sq);
+				addPiece(sq++, Color::WHITE, PieceType::BISHOP);
+				break;
+			case 'N':
+				m_State->zkey.addPiece(PieceType::KNIGHT, Color::WHITE, sq);
+				addPiece(sq++, Color::WHITE, PieceType::KNIGHT);
+				break;
+			case 'P':
+				m_State->zkey.addPiece(PieceType::PAWN, Color::WHITE, sq);
+				addPiece(sq++, Color::WHITE, PieceType::PAWN);
+				break;
+			case '/':
+				sq -= 16;
+				break;
+			default:
+				goto done;
+		}
+	}
+done:
+	i++;
+	m_SideToMove = epd[i] == 'w' ? Color::WHITE : Color::BLACK;
+
+	i += 2;
+	m_State->castlingRights = 0;
+	if (epd[i] == '-')
+	{
+		i++;
+	}
+	else
+	{
+		if (epd[i] == 'K')
+		{
+			i++;
+			m_State->castlingRights |= 1;
+		}
+
+		if (epd[i] == 'Q')
+		{
+			i++;
+			m_State->castlingRights |= 2;
+		}
+
+		if (epd[i] == 'k')
+		{
+			i++;
+			m_State->castlingRights |= 4;
+		}
+
+		if (epd[i] == 'q')
+		{
+			i++;
+			m_State->castlingRights |= 8;
+		}
+	}
+
+	m_State->zkey.updateCastlingRights(m_State->castlingRights);
+
+	i++;
+
+	if (epd[i] != '-')
+	{
+		m_State->epSquare = epd[i] - 'a';
+		m_State->epSquare |= (epd[++i] - '1') << 3;
+		m_State->zkey.updateEP(m_State->epSquare & 7);
+	}
+	else
+	{
+		m_State->epSquare = -1;
+	}
+	i += 2;
+
+	m_State->halfMoveClock = 0;
+	m_GamePly = 0;
 
 	updateCheckInfo();
 }
@@ -338,7 +479,7 @@ std::string Board::epdStr() const
 		epd += (m_State->epSquare & 7) + 'a';
 		epd += (m_State->epSquare >> 3) + '1';
 	}
-	
+
 	return epd;
 }
 
@@ -563,7 +704,7 @@ void Board::makeNullMove(BoardState& state)
 	m_State->zkey = prev->zkey;
 	m_State->repetitions = 0;
 	m_State->lastRepetition = 0;
-	
+
 	m_State->capturedPiece = 0;
 
 	m_GamePly++;
@@ -584,7 +725,7 @@ void Board::unmakeNullMove()
 	m_GamePly--;
 
 	m_State = m_State->prev;
-	
+
 	m_SideToMove = flip(m_SideToMove);
 }
 
