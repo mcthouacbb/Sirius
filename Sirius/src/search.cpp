@@ -297,6 +297,8 @@ int Search::qsearch(int alpha, int beta)
 	for (uint32_t i = 0; i < end - captures; i++)
 	{
 		Move move = ordering.selectMove(i);
+		if (!m_Board.see_margin(move, 0))
+			continue;
 		m_Board.makeMove(move, state);
 		m_RootPly++;
 		int moveScore = -qsearch(-beta, -alpha);
