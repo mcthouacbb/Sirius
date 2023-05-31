@@ -78,6 +78,9 @@ public:
 	bool squareAttacked(Color color, uint32_t square, BitBoard blockers) const;
 	BitBoard attackersTo(Color color, uint32_t square) const;
 	BitBoard attackersTo(Color color, uint32_t square, BitBoard blockers) const;
+	BitBoard attackersTo(uint32_t square) const;
+	BitBoard attackersTo(uint32_t square, BitBoard blockers) const;
+
 	BitBoard pinnersBlockers(uint32_t square, BitBoard attackers, BitBoard& pinners) const;
 
 	BitBoard checkers() const;
@@ -85,6 +88,7 @@ public:
 	BitBoard checkBlockers(Color color) const;
 	BitBoard checkSquares(PieceType piece) const;
 
+	bool see_margin(Move move, int margin) const;
 	bool givesCheck(Move move) const;
 
 	const eval::EvalState& evalState() const;
@@ -95,6 +99,12 @@ private:
 	void addPiece(int pos, Piece piece);
 	void removePiece(int pos);
 	void movePiece(int src, int dst);
+
+	int seePieceValue(PieceType type) const;
+
+	static constexpr int SEE_PIECE_VALUES[6] = {
+		0, 900, 500, 330, 320, 100
+	};
 
 	Piece m_Squares[64];
 	BitBoard m_Pieces[7];
@@ -195,6 +205,11 @@ inline BitBoard Board::attackersTo(Color color, uint32_t square) const
 	return attackersTo(color, square, getAllPieces());
 }
 
+inline BitBoard Board::attackersTo(uint32_t square) const
+{
+	return attackersTo(square, getAllPieces());
+}
+
 inline const eval::EvalState& Board::evalState() const
 {
 	return m_EvalState;
@@ -219,4 +234,9 @@ inline BitBoard Board::checkSquares(PieceType piece) const
 {
 	const BitBoard* b = m_State->checkInfo.checkSquares - static_cast<int>(PieceType::QUEEN);
 	return b[static_cast<int>(piece)];
+}
+
+inline int Board::seePieceValue(PieceType type) const
+{
+	return SEE_PIECE_VALUES[static_cast<int>(type) - 1];
 }

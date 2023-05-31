@@ -37,14 +37,14 @@ MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end)
 	{
 		int score = 0;
 		Move move = begin[i];
-		
+
 		bool isCapture = static_cast<bool>(board.getPieceAt(move.dstPos()));
 		bool isPromotion = move.type() == MoveType::PROMOTION;
 
 		if (isCapture)
 		{
-			int srcPiece = board.getPieceAt(move.srcPos()) & PIECE_TYPE_MASK;
-			int dstPiece = board.getPieceAt(move.dstPos()) & PIECE_TYPE_MASK;
+			int srcPiece = static_cast<int>(getPieceType(board.getPieceAt(move.srcPos())));
+			int dstPiece = static_cast<int>(getPieceType(board.getPieceAt(move.dstPos())));
 			score = CAPTURE_BONUS + MVV_LVA[srcPiece][dstPiece];
 		}
 
@@ -71,14 +71,14 @@ MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end, Move hash
 			m_MoveScores[i] = score;
 			continue;
 		}
-		
+
 		bool isCapture = static_cast<bool>(board.getPieceAt(move.dstPos()));
 		bool isPromotion = move.type() == MoveType::PROMOTION;
 
 		if (isCapture)
 		{
-			int srcPiece = board.getPieceAt(move.srcPos()) & PIECE_TYPE_MASK;
-			int dstPiece = board.getPieceAt(move.dstPos()) & PIECE_TYPE_MASK;
+			int srcPiece = static_cast<int>(getPieceType(board.getPieceAt(move.srcPos())));
+			int dstPiece = static_cast<int>(getPieceType(board.getPieceAt(move.dstPos())));
 			score = CAPTURE_BONUS + MVV_LVA[srcPiece][dstPiece];
 		}
 

@@ -66,7 +66,7 @@ MoveStrFind findMoveFromSAN(const Board& board, const Move* begin, const Move* e
 
 	if (moveStr[0] == '\0')
 		return {nullptr, moveStr};
-	
+
 	switch (moveStr[0])
 	{
 		case 'K':
@@ -175,7 +175,7 @@ MoveStrFind findMoveFromSAN(const Board& board, const Move* begin, const Move* e
 		int i = 2;
 		if (moveStr[i] == '=')
 			i = 3;
-		
+
 		switch (moveStr[i])
 		{
 			case 'Q':
@@ -250,7 +250,7 @@ piece_moves:
 	{
 		if (moveStr[4] < 'a' || moveStr[4] > 'h' || moveStr[5] < '1' || moveStr[5] > '8')
 			return {nullptr, moveStr};
-			
+
 		isCapture = true;
 		fromFile = moveStr[1] - 'a';
 		fromRank = moveStr[2] - '1';
@@ -375,13 +375,13 @@ search_moves:
 	std::cout << "Is capture: " << isCapture << std::endl;
 
 	std::cout << "Move length: " << moveLen << std::endl;
-	
+
 	std::cout << std::endl;*/
 
 	// if (isCapture && !board.getPieceAt(toSquare))
 		// return {end, moveStr + moveLen};
 
-	if (!isCapture && board.getPieceAt(toSquare))
+	if (!isCapture && board.getPieceAt(toSquare) != PIECE_NONE)
 	{
 		return {end, moveStr + moveLen};
 	}
@@ -394,11 +394,11 @@ search_moves:
 		switch (it->type())
 		{
 			case MoveType::ENPASSANT:
-				if (isCapture && (toRank == 2 || toRank == 5) && !board.getPieceAt(toSquare + pawnOffset))
+				if (isCapture && (toRank == 2 || toRank == 5) && board.getPieceAt(toSquare + pawnOffset) == PIECE_NONE)
 					continue;
 				break;
 			default:
-				if (isCapture && !board.getPieceAt(toSquare))
+				if (isCapture && board.getPieceAt(toSquare) == PIECE_NONE)
 					continue;
 				break;
 		}
@@ -415,7 +415,7 @@ search_moves:
 
 		int srcSquare = it->srcPos();
 		Piece srcPiece = board.getPieceAt(srcSquare);
-		if ((srcPiece & PIECE_TYPE_MASK) != static_cast<int>(piece))
+		if (getPieceType(srcPiece) != piece)
 			continue;
 
 		if (fromRank != -1 && fromRank != (srcSquare >> 3))
@@ -456,7 +456,7 @@ bool isAmbiguous(const Board& board, const Move* begin, const Move* end, PieceTy
 	{
 		int srcPos = it->srcPos();
 		int dstPos = it->dstPos();
-		PieceType movePiece = static_cast<PieceType>(board.getPieceAt(srcPos) & PIECE_TYPE_MASK);
+		PieceType movePiece = getPieceType(board.getPieceAt(srcPos));
 		if (movePiece != piece)
 			continue;
 
@@ -483,7 +483,7 @@ std::string convMoveToSAN(const Board& board, const Move* begin, const Move* end
 	{
 		return move.dstPos() > move.srcPos() ? "O-O" : "O-O-O";
 	}
-	PieceType piece = static_cast<PieceType>(board.getPieceAt(move.srcPos()) & PIECE_TYPE_MASK);
+	PieceType piece = getPieceType(board.getPieceAt(move.srcPos()));
 	bool isCapture = static_cast<bool>(board.getPieceAt(move.dstPos()));
 	if (piece == PieceType::PAWN)
 	{
@@ -535,7 +535,7 @@ std::string convMoveToSAN(const Board& board, const Move* begin, const Move* end
 			str[2 + isCapture] = (dstPos >> 3) + '1';
 			return str;
 		}
-		
+
 		if (!isAmbiguous(board, begin, end, piece, dstPos, srcPos & 7, -1))
 		{
 			std::string str(4 + isCapture, ' ');
