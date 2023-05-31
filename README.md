@@ -4,45 +4,51 @@ v0.3.1
 
 Minimal UCI Support
 
-Command Line
+Inspired/helped by
+- Stockfish
+- Ethereal
+- Crafty
+- Many others
+
+Command Line Protocol(for debugging/convenience)
 - `"position" {"fen" | "startpos"} [fenString]`
-	- Set the board position to the starting position or the fenString
+    - Set the board position to the starting position or the fenString
 - `"print"`
-	- Print the current state of the board
-		- Piece positions
-	    - Number of plies since the start of the game(starts at 0)
+    - Print the current state of the board
+            - Piece positions
+        - Number of plies since the start of the game(starts at 0)
         - Half Move Clock
-	    	- Used to detect 50 move rule draws
-	        - Draw at 100 half moves
-		- Castling Rights
-      	- Side to move
-    	- Square of en passant, if available
-	    - Zobrist hash
+            - Used to detect 50 move rule draws
+            - Draw at 100 half moves
+            - Castling Rights
+          - Side to move
+        - Square of en passant, if available
+        - Zobrist hash
 - `"move" <move>`
-	- makes a move
+    - makes a move
     - Standard Algebraic Notation
-	- Square is a file (a-h) and rank(1-8)
-	- Promotion piece is either, q(queen), r(rook), b(bishop), or n(knight)
+    - Square is a file (a-h) and rank(1-8)
+    - Promotion piece is either, q(queen), r(rook), b(bishop), or n(knight)
 - `"undo"`
-	- Undo the last move that was made
+    - Undo the last move that was made
 - `"eval"`
-	- Prints the static evaluation of the position
+    - Prints the static evaluation of the position
 - `"qeval"`
-	- Prints the quiescence evaluation of the position
+    - Prints the quiescence evaluation of the position
 - `"search" <depth>`
-	- Performs an iterative deepening search up to depth
-	- Prints out the evaluation and PV of each depth
-	- Prints out search statistics
+    - Performs an iterative deepening search up to depth
+    - Prints out the evaluation and PV of each depth
+    - Prints out search statistics
     - WARNING: Search time increases exponentially with depth
 - `"tests"`
-	- Runs test suite
+    - Runs test suite
     - Currently, only perft tests are run
 - `"perft" <depth>`
-	- Performs are perft up to depth
+    - Performs are perft up to depth
     - A perft(performance test) searches all moves up to depth and returns the number of positions reached
     - WARNING: time usage increases exponentially with depth
 - `"book"`
-	- Returns all the moves in the opening book
+    - Returns all the moves in the opening book
     - Prints "No moves in book found" if position is not in book
 
 Features
@@ -68,72 +74,70 @@ Features
         - 14 = Black Pawn
     - Zobrist hashing
     - Move Representation
-	    - 16 bits
-	        - 0-5: source position
+        - 16 bits
+            - 0-5: source position
             - 6-12: destination position
             - 13-14: move type
-	            - none
+                - none
                 - castle
                 - promotion
                 - en passant
             - 15-16: promotion piece
-	            - queen
+                - queen
                 - rook
                 - bishop
                 - knight
 - Move Generation
-	- Magic Bitboards for sliding pieces
-	    - Variable shift approach
-        - 41984 byte bishop table
-        - 819200 byte rook table
-    - 4 Bitboards for legality checks
-	    - move mask
-	        - valid destination squares for non-king pieces
+    - Magic Bitboards for sliding pieces
+        - Variable shift approach
+    - 41984 byte bishop table
+    - 819200 byte rook table
+    - 3 Bitboards for legality checks
+        - move mask
+            - valid destination squares for non-king pieces
             - either block check or capture checking piece
             - 0 when in double check
-        - check bitboard
-	        - invalid destination squares for king
-            - contains all squares attacked by opponent
-            - excludes king when calculating rook, bishop, and queen moves
         - checkers
-	        - all squares which have pieces that are checking the king
+            - all squares which have pieces that are checking the king
         - pinned
-	        - all squares which contain pieces which are pinned to the king
+            - all squares which contain pieces which are pinned to the king
 - Evaluation
-	- Tapered Evaluation
+    - Tapered Evaluation
     - Material
-	    - Middlegame
-	        - Queen = 900
-	        - Rook = 500
-	        - Bishop = 330
-	        - Knight = 320
-	        - Pawn = 100
-	    - Endgame
-	        - Queen = 900
+        - Middlegame
+            - Queen = 900
             - Rook = 500
             - Bishop = 330
             - Knight = 320
             - Pawn = 100
-    - Piece Square Tables 
-	    - from https://www.chessprogramming.org/Simplified_Evaluation_Function
+        - Endgame
+            - Queen = 900
+            - Rook = 500
+            - Bishop = 330
+            - Knight = 320
+            - Pawn = 100
+    - Piece Square Tables
+        - from https://www.chessprogramming.org/Simplified_Evaluation_Function
 - Search
-  	- Alpha-Beta Pruning
+    - Alpha-Beta Pruning
     - PV Collection(pv list on stack)
     - Move Ordering
-	    - TT Move Ordering
-	    - MVV_LVA
+        - TT Move Ordering
+        - MVV_LVA
         - Killer Moves Heuristic
         - History Heuristic
     - Quiescence Search
-	    - Captures Only
+        - Captures Only
+        - SEE Pruning
     - Transposition Table
-	    - 4 entries per bucket
+        - 4 entries per bucket
         - Always replace least depth
         - 16 bytes per entry
         - 64 bytes per bucket
     - Selectivity
-	    - Check Extension
-		- Mate Distance Pruning
-	    - Principal Variation Search(PVS)
+        - Check Extension
+        - Mate Distance Pruning
+        - Principal Variation Search(PVS)
         - Null Move Pruning
         - Futility Pruning
+        - Late Move Reductions
