@@ -314,7 +314,7 @@ void Board::printDbg() const
 		{
 			std::cout << "| ";
 			Piece piece = m_Squares[i];
-			std::cout << pieceChars[piece];
+			std::cout << pieceChars[static_cast<int>(piece)];
 			std::cout << " ";
 		}
 		std::cout << "|\n";
@@ -355,7 +355,7 @@ std::string Board::stringRep() const
 		{
 			result += "| ";
 			Piece piece = m_Squares[i];
-			result += pieceChars[piece];
+			result += pieceChars[static_cast<int>(piece)];
 			result += " ";
 		}
 		result += "|\n";
@@ -374,12 +374,12 @@ std::string Board::fenStr() const
 		for (int i = j; i < j + 8; i++)
 		{
 			Piece piece = m_Squares[i];
-			if (piece)
+			if (piece != PIECE_NONE)
 			{
 				int diff = i - j - lastFile;
 				if (diff > 1)
 					fen += (diff - 1) + '0';
-				fen += pieceChars[piece];
+				fen += pieceChars[static_cast<int>(piece)];
 				lastFile = i - j;
 			}
 		}
@@ -436,12 +436,12 @@ std::string Board::epdStr() const
 		for (int i = j; i < j + 8; i++)
 		{
 			Piece piece = m_Squares[i];
-			if (piece)
+			if (piece != PIECE_NONE)
 			{
 				int diff = i - j - lastFile;
 				if (diff > 1)
 					epd += (diff - 1) + '0';
-				epd += pieceChars[piece];
+				epd += pieceChars[static_cast<int>(piece)];
 				lastFile = i - j;
 			}
 		}
@@ -503,7 +503,7 @@ void Board::makeMove(Move move, BoardState& state)
 	m_State->epSquare = prev->epSquare;
 	m_State->castlingRights = prev->castlingRights;
 	m_State->zkey = prev->zkey;
-	m_State->capturedPiece = 0;
+	m_State->capturedPiece = PIECE_NONE;
 
 	m_GamePly++;
 
@@ -523,17 +523,17 @@ void Board::makeMove(Move move, BoardState& state)
 			Piece dstPiece = m_Squares[move.dstPos()];
 			m_State->capturedPiece = dstPiece;
 
-			if (dstPiece)
+			if (dstPiece != PIECE_NONE)
 			{
 				m_State->halfMoveClock = 0;
 				removePiece(move.dstPos());
-				m_State->zkey.removePiece(static_cast<PieceType>(dstPiece & PIECE_TYPE_MASK), static_cast<Color>(dstPiece >> 3), move.dstPos());
+				m_State->zkey.removePiece(getPieceType(dstPiece), getPieceColor(dstPiece), move.dstPos());
 			}
 
 			movePiece(move.srcPos(), move.dstPos());
-			m_State->zkey.movePiece(static_cast<PieceType>(srcPiece & PIECE_TYPE_MASK), static_cast<Color>(srcPiece >> 3), move.srcPos(), move.dstPos());
+			m_State->zkey.movePiece(getPieceType(srcPiece), getPieceColor(srcPiece), move.srcPos(), move.dstPos());
 
-			if ((srcPiece & PIECE_TYPE_MASK) == static_cast<int>(PieceType::PAWN))
+			if (getPieceType(srcPiece) == PieceType::PAWN)
 			{
 				m_State->halfMoveClock = 0;
 				if (abs(move.srcPos() - move.dstPos()) == 16)
@@ -550,22 +550,15 @@ void Board::makeMove(Move move, BoardState& state)
 			Piece dstPiece = m_Squares[move.dstPos()];
 			m_State->capturedPiece = dstPiece;
 
-			if (dstPiece)
+			if (dstPiece != PIECE_NONE)
 			{
 				removePiece(move.dstPos());
-				m_State->zkey.removePiece(static_cast<PieceType>(dstPiece & PIECE_TYPE_MASK), static_cast<Color>(dstPiece >> 3), move.dstPos());
+				m_State->zkey.removePiece(getPieceType(dstPiece), getPieceColor(dstPiece), move.dstPos());
 			}
-
-			const PieceType promoPieces[4] = {
-				PieceType::QUEEN,
-				PieceType::ROOK,
-				PieceType::BISHOP,
-				PieceType::KNIGHT
-			};
 			removePiece(move.srcPos());
 			m_State->zkey.removePiece(PieceType::PAWN, m_SideToMove, move.srcPos());
-			addPiece(move.dstPos(), m_SideToMove, promoPieces[static_cast<int>(move.promotion()) >> 14]);
-			m_State->zkey.addPiece(promoPieces[static_cast<int>(move.promotion()) >> 14], m_SideToMove, move.dstPos());
+			addPiece(move.dstPos(), m_SideToMove, promoPiece(move.promotion()));
+			m_State->zkey.addPiece(promoPiece(move.promotion()), m_SideToMove, move.dstPos());
 			break;
 		}
 		case MoveType::CASTLE:
@@ -593,8 +586,7 @@ void Board::makeMove(Move move, BoardState& state)
 			m_State->halfMoveClock = 0;
 
 			int offset = m_SideToMove == Color::WHITE ? -8 : 8;
-			int col = static_cast<int>(flip(m_SideToMove)) << 3;
-			m_State->capturedPiece = col | static_cast<int>(PieceType::PAWN);
+			m_State->capturedPiece = makePiece(PieceType::PAWN, flip(m_SideToMove));
 			removePiece(move.dstPos() + offset);
 			m_State->zkey.removePiece(PieceType::PAWN, flip(m_SideToMove), move.dstPos() + offset);
 			movePiece(move.srcPos(), move.dstPos());
@@ -645,14 +637,14 @@ void Board::unmakeMove(Move move)
 		case MoveType::NONE:
 		{
 			movePiece(move.dstPos(), move.srcPos());
-			if (m_State->capturedPiece)
+			if (m_State->capturedPiece != PIECE_NONE)
 				addPiece(move.dstPos(), m_State->capturedPiece);
 			break;
 		}
 		case MoveType::PROMOTION:
 		{
 			removePiece(move.dstPos());
-			if (m_State->capturedPiece)
+			if (m_State->capturedPiece != PIECE_NONE)
 				addPiece(move.dstPos(), m_State->capturedPiece);
 			addPiece(move.srcPos(), m_SideToMove, PieceType::PAWN);
 			break;
@@ -705,7 +697,7 @@ void Board::makeNullMove(BoardState& state)
 	m_State->repetitions = 0;
 	m_State->lastRepetition = 0;
 
-	m_State->capturedPiece = 0;
+	m_State->capturedPiece = PIECE_NONE;
 
 	m_GamePly++;
 
@@ -731,24 +723,34 @@ void Board::unmakeNullMove()
 
 bool Board::squareAttacked(Color color, uint32_t square, BitBoard blockers) const
 {
-	BitBoard queens = getPieces(color, PieceType::QUEEN);
-	return
-		(getPieces(color, PieceType::KNIGHT) & attacks::getKnightAttacks(square)) ||
-		(getPieces(color, PieceType::PAWN) & attacks::getPawnAttacks(flip(color), square)) ||
-		(getPieces(color, PieceType::KING) & attacks::getKingAttacks(square)) ||
-		((getPieces(color, PieceType::BISHOP) | queens) & attacks::getBishopAttacks(square, blockers)) ||
-		((getPieces(color, PieceType::ROOK) | queens) & attacks::getRookAttacks(square, blockers));
+	return attackersTo(color, square, blockers) != 0;
 }
 
 BitBoard Board::attackersTo(Color color, uint32_t square, BitBoard blockers) const
 {
-	BitBoard queens = getPieces(color, PieceType::QUEEN);
-	return
-		(getPieces(color, PieceType::KNIGHT) & attacks::getKnightAttacks(square)) |
-		(getPieces(color, PieceType::PAWN) & attacks::getPawnAttacks(flip(color), square)) |
-		(getPieces(color, PieceType::KING) & attacks::getKingAttacks(square)) |
-		((getPieces(color, PieceType::BISHOP) | queens) & attacks::getBishopAttacks(square, blockers)) |
-		((getPieces(color, PieceType::ROOK) | queens) & attacks::getRookAttacks(square, blockers));
+	BitBoard queens = getPieces(PieceType::QUEEN);
+	BitBoard pawns = (getPieces(color, PieceType::PAWN) & attacks::getPawnAttacks(flip(color), square));
+	BitBoard nonPawns =
+		(getPieces(PieceType::KNIGHT) & attacks::getKnightAttacks(square)) |
+		(getPieces(PieceType::KING) & attacks::getKingAttacks(square)) |
+		((getPieces(PieceType::BISHOP) | queens) & attacks::getBishopAttacks(square, blockers)) |
+		((getPieces(PieceType::ROOK) | queens) & attacks::getRookAttacks(square, blockers));
+	return pawns | (nonPawns & getColor(color));
+}
+
+BitBoard Board::attackersTo(uint32_t square, BitBoard blockers) const
+{
+	BitBoard queens = getPieces(PieceType::QUEEN);
+	BitBoard pawns =
+		(getPieces(Color::WHITE, PieceType::PAWN) & attacks::getPawnAttacks(Color::BLACK, square)) |
+		(getPieces(Color::BLACK, PieceType::PAWN) & attacks::getPawnAttacks(Color::WHITE, square));
+
+	BitBoard nonPawns =
+		(getPieces(PieceType::KNIGHT) & attacks::getKnightAttacks(square)) |
+		(getPieces(PieceType::KING) & attacks::getKingAttacks(square)) |
+		((getPieces(PieceType::BISHOP) | queens) & attacks::getBishopAttacks(square, blockers)) |
+		((getPieces(PieceType::ROOK) | queens) & attacks::getRookAttacks(square, blockers));
+	return pawns | nonPawns;
 }
 
 BitBoard Board::pinnersBlockers(uint32_t square, BitBoard attackers, BitBoard& pinners) const
@@ -762,7 +764,7 @@ BitBoard Board::pinnersBlockers(uint32_t square, BitBoard attackers, BitBoard& p
 
 	BitBoard blockMask = getAllPieces() ^ attackers;
 
-	BitBoard sameColor = getColor(static_cast<Color>(m_Squares[square] >> 3));
+	BitBoard sameColor = getColor(getPieceColor(m_Squares[square]));
 
 	while (attackers)
 	{
@@ -780,6 +782,146 @@ BitBoard Board::pinnersBlockers(uint32_t square, BitBoard attackers, BitBoard& p
 	return blockers;
 }
 
+bool Board::see_margin(Move move, int margin) const
+{
+	int src = move.srcPos();
+	int dst = move.dstPos();
+
+	BitBoard allPieces = getAllPieces() ^ (1ull << src);
+	BitBoard attackers = attackersTo(dst, allPieces) ^ (1ull << src);
+
+	int value;
+	switch (move.type())
+	{
+		case MoveType::CASTLE:
+			// rook and king cannot be attacked after castle
+			return 0 >= margin;
+		case MoveType::NONE:
+		{
+			PieceType type = getPieceType(getPieceAt(dst));
+			if (type == PieceType::NONE)
+				value = -margin;
+			else
+				value = seePieceValue(type) - margin;
+			if (value < 0)
+				return false;
+			value = seePieceValue(getPieceType(getPieceAt(src))) - value;
+			break;
+		}
+		case MoveType::PROMOTION:
+		{
+			PieceType promo = promoPiece(move.promotion());
+			PieceType type = getPieceType(getPieceAt(dst));
+			value = seePieceValue(promo) - seePieceValue(PieceType::PAWN);
+			if (type == PieceType::NONE)
+				value -= margin;
+			else
+				value += seePieceValue(type) - margin;
+			if (value < 0)
+				return false;
+
+			value = seePieceValue(promo) - value;
+			break;
+		}
+		case MoveType::ENPASSANT:
+			value = seePieceValue(PieceType::PAWN) - margin;
+			if (value < 0)
+				return false;
+			value = seePieceValue(PieceType::PAWN) - value;
+			break;
+	}
+
+	if (value <= 0)
+		return true;
+
+	Color sideToMove = m_SideToMove;
+
+	BitBoard diagPieces = getPieces(PieceType::BISHOP) | getPieces(PieceType::QUEEN);
+	BitBoard straightPieces = getPieces(PieceType::ROOK) | getPieces(PieceType::QUEEN);
+
+	bool us = false;
+
+	while (true)
+	{
+		sideToMove = flip(sideToMove);
+		BitBoard stmAttackers = attackers & getColor(sideToMove);
+		if (!stmAttackers)
+			return !us;
+
+		if (BitBoard pawns = (stmAttackers & getPieces(PieceType::PAWN)))
+		{
+			BitBoard pawn = pawns & -pawns;
+			allPieces ^= pawn;
+			attackers ^= pawn;
+			attackers |= (attacks::getBishopAttacks(dst, allPieces) & allPieces & diagPieces);
+
+			value = seePieceValue(PieceType::PAWN) - value;
+			if (value < us)
+				return us;
+		}
+		else if (BitBoard knights = (stmAttackers & getPieces(PieceType::KNIGHT)))
+		{
+			BitBoard knight = knights & -knights;
+			allPieces ^= knight;
+			attackers ^= knight;
+
+			value = seePieceValue(PieceType::KNIGHT) - value;
+			if (value < us)
+				return us;
+		}
+		else if (BitBoard bishops = (stmAttackers & getPieces(PieceType::BISHOP)))
+		{
+			BitBoard bishop = bishops & -bishops;
+			allPieces ^= bishop;
+			attackers ^= bishop;
+			attackers |= (attacks::getBishopAttacks(dst, allPieces) & allPieces & diagPieces);
+
+			value = seePieceValue(PieceType::BISHOP) - value;
+			if (value < us)
+				return us;
+		}
+		else if (BitBoard rooks = (stmAttackers & getPieces(PieceType::ROOK)))
+		{
+			BitBoard rook = rooks & -rooks;
+			allPieces ^= rook;
+			attackers ^= rook;
+			attackers |= (attacks::getRookAttacks(dst, allPieces) & allPieces & straightPieces);
+
+			value = seePieceValue(PieceType::ROOK) - value;
+			if (value < us)
+				return us;
+		}
+		else if (BitBoard queens = (stmAttackers & getPieces(PieceType::QUEEN)))
+		{
+			BitBoard queen = queens & -queens;
+			allPieces ^= queen;
+			attackers ^= queen;
+			attackers |=
+				(attacks::getBishopAttacks(dst, allPieces) & allPieces & diagPieces) |
+				(attacks::getRookAttacks(dst, allPieces) & allPieces & straightPieces);
+
+			value = seePieceValue(PieceType::QUEEN) - value;
+			if (value < us)
+				return us;
+		}
+		else if (BitBoard king = (stmAttackers & getPieces(PieceType::KING)))
+		{
+			if (attackers & getColor(flip(sideToMove)))
+			{
+				return !us;
+			}
+			else
+			{
+				return us;
+			}
+		}
+
+		us = !us;
+	}
+
+	return us;
+}
+
 bool Board::givesCheck(Move move) const
 {
 	uint32_t oppKingIdx = getLSB(getPieces(flip(m_SideToMove), PieceType::KING));
@@ -787,9 +929,9 @@ bool Board::givesCheck(Move move) const
 	{
 		case MoveType::NONE:
 		{
-			int piece = m_Squares[move.srcPos()] & PIECE_TYPE_MASK;
+			PieceType piece = getPieceType(getPieceAt(move.srcPos()));
 			int dstPos = move.dstPos();
-			BitBoard checkSqrs = checkSquares(static_cast<PieceType>(piece));
+			BitBoard checkSqrs = checkSquares(piece);
 			if (checkSqrs & (1ull << dstPos))
 				return true;
 
@@ -892,9 +1034,7 @@ void Board::calcRepetitions()
 
 void Board::addPiece(int pos, Color color, PieceType piece)
 {
-	int col = static_cast<int>(color) << 3;
-	// int col = (color == Color::BLACK ? PIECE_COL_MASK : 0);
-	m_Squares[pos] = col | static_cast<int>(piece);
+	m_Squares[pos] = makePiece(piece, color);
 
 	BitBoard posBB = 1ull << pos;
 	m_Pieces[static_cast<int>(piece)] |= posBB;
@@ -908,24 +1048,24 @@ void Board::addPiece(int pos, Piece piece)
 {
 	m_Squares[pos] = piece;
 	BitBoard posBB = 1ull << pos;
-	m_Pieces[piece & PIECE_TYPE_MASK] |= posBB;
-	m_Colors[piece >> 3] |= posBB;
+	m_Pieces[static_cast<int>(getPieceType(piece))] |= posBB;
+	m_Colors[static_cast<int>(getPieceColor(piece))] |= posBB;
 	m_Pieces[static_cast<int>(PieceType::ALL)] |= posBB;
 
-	m_EvalState.addPiece(static_cast<Color>(piece >> 3), static_cast<PieceType>(piece & PIECE_TYPE_MASK), pos);
+	m_EvalState.addPiece(getPieceColor(piece), getPieceType(piece), pos);
 }
 
 void Board::removePiece(int pos)
 {
 	BitBoard posBB = 1ull << pos;
-	int piece = m_Squares[pos] & PIECE_TYPE_MASK;
-	int color = static_cast<bool>(m_Squares[pos] & PIECE_COL_MASK);
+	PieceType pieceType = getPieceType(m_Squares[pos]);
+	Color color = getPieceColor(m_Squares[pos]);
 	m_Squares[pos] = PIECE_NONE;
-	m_Pieces[piece] ^= posBB;
-	m_Colors[color] ^= posBB;
+	m_Pieces[static_cast<int>(pieceType)] ^= posBB;
+	m_Colors[static_cast<int>(color)] ^= posBB;
 	m_Pieces[static_cast<int>(PieceType::ALL)] ^= posBB;
 
-	m_EvalState.removePiece(static_cast<Color>(color), static_cast<PieceType>(piece), pos);
+	m_EvalState.removePiece(color, pieceType, pos);
 }
 
 void Board::movePiece(int src, int dst)
@@ -933,15 +1073,15 @@ void Board::movePiece(int src, int dst)
 	BitBoard srcBB = 1ull << src;
 	BitBoard dstBB = 1ull << dst;
 	BitBoard moveBB = srcBB | dstBB;
-	int piece = m_Squares[src] & PIECE_TYPE_MASK;
-	int color = static_cast<bool>(m_Squares[src] & PIECE_COL_MASK);
+	PieceType pieceType = getPieceType(m_Squares[src]);
+	Color color = getPieceColor(m_Squares[src]);
 
 
 	m_Squares[dst] = m_Squares[src];
 	m_Squares[src] = PIECE_NONE;
-	m_Pieces[piece] ^= moveBB;
-	m_Colors[color] ^= moveBB;
+	m_Pieces[static_cast<int>(pieceType)] ^= moveBB;
+	m_Colors[static_cast<int>(color)] ^= moveBB;
 	m_Pieces[static_cast<int>(PieceType::ALL)] ^= moveBB;
 
-	m_EvalState.movePiece(static_cast<Color>(color), static_cast<PieceType>(piece), src, dst);
+	m_EvalState.movePiece(color, pieceType, src, dst);
 }

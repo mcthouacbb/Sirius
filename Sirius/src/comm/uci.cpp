@@ -23,7 +23,7 @@ UCI::UCI()
 void UCI::run()
 {
 	uciCommand();
-	
+
 	for (;;)
 	{
 		std::unique_lock<std::mutex> lock(m_InputQueue.mutex());
@@ -159,7 +159,7 @@ UCI::Command UCI::getCommand(const std::string& command) const
 
 void UCI::uciCommand() const
 {
-	std::cout << "id name Sirius v0.2\n";
+	std::cout << "id name Sirius v0.3.1\n";
 	std::cout << "id author AspectOfTheNoob\n";
 	std::cout << "uciok" << std::endl;
 }

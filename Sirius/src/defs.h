@@ -5,6 +5,7 @@
 #include <bitset>
 #include <bit>
 #include <cassert>
+#include <source_location>
 
 enum class PieceType
 {
@@ -17,12 +18,6 @@ enum class PieceType
 	KNIGHT,
 	PAWN
 };
-
-using Piece = uint8_t;
-
-constexpr int PIECE_NONE = 0;
-constexpr int PIECE_TYPE_MASK = 0b111;
-constexpr int PIECE_COL_MASK = 0b1000;
 
 enum class Color
 {
@@ -41,6 +36,25 @@ inline constexpr Color flip()
 	return static_cast<Color>(static_cast<int>(c) ^ 1);
 }
 
+enum class Piece : uint8_t {};
+
+constexpr Piece PIECE_NONE = Piece(0);
+
+inline Piece makePiece(PieceType type, Color color)
+{
+	return Piece((static_cast<int>(color) << 3) | static_cast<int>(type));
+}
+
+inline PieceType getPieceType(Piece piece)
+{
+	return static_cast<PieceType>(static_cast<int>(piece) & 0b111);
+}
+
+inline Color getPieceColor(Piece piece)
+{
+	return static_cast<Color>(static_cast<int>(piece) >> 3);
+}
+
 
 enum class MoveType
 {
@@ -57,6 +71,18 @@ enum class Promotion
 	BISHOP = 2 << 14,
 	KNIGHT = 3 << 14
 };
+
+inline PieceType promoPiece(Promotion promo)
+{
+	static const PieceType promoPieces[4] = {
+		PieceType::QUEEN,
+		PieceType::ROOK,
+		PieceType::BISHOP,
+		PieceType::KNIGHT
+	};
+
+	return promoPieces[static_cast<int>(promo) >> 14];
+}
 
 struct Move
 {

@@ -197,7 +197,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	{
 		Move move = ordering.selectMove(i);
 		bool givesCheck = m_Board.givesCheck(move);
-		bool isCapture = m_Board.getPieceAt(move.dstPos()) != 0;
+		bool isCapture = m_Board.getPieceAt(move.dstPos()) != PIECE_NONE;
 		bool isPromotion = move.type() == MoveType::PROMOTION;
 
 		if (fprune &&
@@ -229,7 +229,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		else
 		{
 			moveScore = -search(newDepth - reduction, searchPly + 1, -(alpha + 1), -alpha, false);
-			
+
 			if (moveScore > alpha && reduction)
 				moveScore = -search(newDepth, searchPly + 1, -(alpha + 1), -alpha, false);
 
@@ -244,7 +244,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 		if (moveScore >= beta)
 		{
-			if (move.type() != MoveType::PROMOTION && !state.capturedPiece)
+			if (move.type() != MoveType::PROMOTION && state.capturedPiece == PIECE_NONE)
 			{
 				storeKiller(searchPly, move);
 				m_History[static_cast<int>(m_Board.sideToMove())][move.fromTo()] += depth * depth;
@@ -297,6 +297,8 @@ int Search::qsearch(int alpha, int beta)
 	for (uint32_t i = 0; i < end - captures; i++)
 	{
 		Move move = ordering.selectMove(i);
+		if (!m_Board.see_margin(move, 0))
+			continue;
 		m_Board.makeMove(move, state);
 		m_RootPly++;
 		int moveScore = -qsearch(-beta, -alpha);

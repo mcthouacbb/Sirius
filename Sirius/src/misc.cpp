@@ -151,7 +151,7 @@ void testQuiescence(Board& board, int depth)
 
 		for (Move* it = captures; it != end; it++)
 		{
-			if (it->type() != MoveType::ENPASSANT && !(board.getPieceAt(it->dstPos())))
+			if (it->type() != MoveType::ENPASSANT && board.getPieceAt(it->dstPos()) == PIECE_NONE)
 			{
 				throw std::runtime_error("Not capture");
 			}
@@ -169,6 +169,67 @@ void testQuiescence(Board& board, int depth)
 		testQuiescence(board, depth - 1);
 		board.unmakeMove(move);
 	}
+}
+
+void testSEE()
+{
+	std::ifstream file("res/see_tests.epd");
+
+	std::string line;
+	Board board;
+	Move moves[256];
+	Move* end;
+	int failCount = 0;
+	int passCount = 0;
+	while (std::getline(file, line))
+	{
+		int sep1 = line.find(';', 0);
+		board.setToEpd(std::string_view(line).substr(0, sep1));
+
+		int moveStart = sep1 + 2;
+		end = genMoves<MoveGenType::LEGAL>(board, moves);
+
+		comm::MoveStrFind find = comm::findMoveFromSAN(board, moves, end, line.c_str() + moveStart);
+		if (find.move == nullptr)
+		{
+			throw std::runtime_error("Invalid move");
+		}
+		if (find.move == end)
+		{
+			throw std::runtime_error("Move not found");
+		}
+		if (find.move == end + 1)
+		{
+			throw std::runtime_error("Ambiguous move");
+		}
+
+		Move move = *find.move;
+
+		const char* end = find.end;
+
+		end += 2;
+
+		int value;
+		auto res = std::from_chars(end, line.c_str() + line.size(), value);
+
+		bool fail = board.see_margin(move, value + 1);
+		bool pass = board.see_margin(move, value);
+		bool failed = false;
+		if (fail)
+		{
+			std::cout << line << " Returned true on value + 1" << std::endl;
+			failed = true;
+		}
+		if (!pass)
+		{
+			std::cout << line << " Returned false on value" << std::endl;
+			failed = true;
+		}
+		failCount += failed;
+		passCount += !failed;
+	}
+	std::cout << "Failed: " << failCount << std::endl;
+	std::cout << "Passed: " << passCount << "/" << (failCount + passCount) << std::endl;
 }
 
 struct PerftTest

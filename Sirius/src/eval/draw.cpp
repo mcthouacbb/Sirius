@@ -12,7 +12,7 @@ bool isImmediateDraw(const Board& board)
 
 	if (nonMinorPcs != 0)
 		return false;
-	
+
 	switch (getPopcnt(board.getAllPieces()))
 	{
 		case 2:
@@ -22,7 +22,7 @@ bool isImmediateDraw(const Board& board)
 		case 4:
 		{
 			BitBoard bishops = board.getPieces(PieceType::BISHOP);
-			if (getPopcnt(bishops) == 2 && ((bishops & LIGHT_SQUARES) == 2 || (bishops & LIGHT_SQUARES) == 0))
+			if (getPopcnt(bishops) == 2 && (getPopcnt(bishops & LIGHT_SQUARES) == 2 || (bishops & LIGHT_SQUARES) == 0))
 				return true;
 			return false;
 		}
