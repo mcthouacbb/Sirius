@@ -37,6 +37,11 @@ void Search::reset()
 	m_TT.incAge();
 }
 
+int Search::qsearch(int alpha, int beta)
+{
+	return qsearch(m_Plies, alpha, beta);
+}
+
 int Search::iterDeep(const SearchLimits& limits)
 {
 	int maxDepth = std::min(limits.maxDepth, MAX_PLY - 1);
@@ -119,13 +124,13 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	if (m_RootPly >= MAX_PLY)
 	{
 		int eval = eval::evaluate(m_Board);
+		searchPly->pvLength = 0;
 		return std::max(std::min(eval, beta), alpha);
 	}
 
 	if (depth <= 0)
 	{
-		searchPly->pvLength = 0;
-		return qsearch(alpha, beta);
+		return qsearch(searchPly, alpha, beta);
 	}
 
 	int hashScore = INT_MIN;
@@ -269,8 +274,9 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	return alpha;
 }
 
-int Search::qsearch(int alpha, int beta)
+int Search::qsearch(SearchPly* searchPly, int alpha, int beta)
 {
+	searchPly->pvLength = 0;
 	if (eval::isImmediateDraw(m_Board))
 		return eval::DRAW;
 
@@ -288,6 +294,9 @@ int Search::qsearch(int alpha, int beta)
 
 	// CheckInfo checkInfo = calcCheckInfo(m_Board, m_Board.sideToMove());
 
+	Move childPV[MAX_PLY];
+	searchPly[1].pv = childPV;
+
 	Move captures[256];
 	Move* end = genMoves<MoveGenType::CAPTURES>(m_Board, captures);
 
@@ -301,7 +310,7 @@ int Search::qsearch(int alpha, int beta)
 			continue;
 		m_Board.makeMove(move, state);
 		m_RootPly++;
-		int moveScore = -qsearch(-beta, -alpha);
+		int moveScore = -qsearch(searchPly + 1, -beta, -alpha);
 		m_Board.unmakeMove(move);
 		m_RootPly--;
 
@@ -309,7 +318,14 @@ int Search::qsearch(int alpha, int beta)
 			return beta;
 
 		if (moveScore > alpha)
+		{
+			searchPly->pvLength = searchPly[1].pvLength + 1;
+			searchPly->pv[0] = move;
+
+			memcpy(searchPly->pv + 1, searchPly[1].pv, searchPly[1].pvLength * sizeof(Move));
+
 			alpha = moveScore;
+		}
 	}
 
 	return alpha;
