@@ -39,7 +39,10 @@ void Search::reset()
 
 int Search::search(int depth)
 {
+	Move pv[256];
+	m_Plies[0].pv = pv;
 	int searchScore = search(depth, m_Plies, eval::NEG_INF, eval::POS_INF, true);
+	memcpy(m_PV, pv, m_Plies[0].pvLength);
 	m_SearchInfo.depth = depth;
 	m_SearchInfo.time = Duration(0);
 	m_SearchInfo.pvBegin = m_PV;
