@@ -56,13 +56,14 @@ public:
 
 	int iterDeep(const SearchLimits& limits);
 
-	int search(int depth, SearchPly* searchPly, int alpha, int beta, bool isPV);
-	int qsearch(int alpha, int beta);
+	int search(int depth);
+	int qsearch();
 
 	const SearchInfo& info() const;
 private:
 	void reset();
 	void storeKiller(SearchPly* ply, Move killer);
+	int search(int depth, SearchPly* searchPly, int alpha, int beta, bool isPV);
 	int qsearch(SearchPly* searchPly, int alpha, int beta);
 
 	Board& m_Board;
