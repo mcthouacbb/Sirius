@@ -63,6 +63,7 @@ public:
 private:
 	void reset();
 	void storeKiller(SearchPly* ply, Move killer);
+	int qsearch(SearchPly* searchPly, int alpha, int beta);
 
 	Board& m_Board;
 	TimeManager m_TimeMan;
