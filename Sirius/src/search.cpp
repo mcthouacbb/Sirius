@@ -37,9 +37,20 @@ void Search::reset()
 	m_TT.incAge();
 }
 
-int Search::qsearch(int alpha, int beta)
+int Search::search(int depth)
 {
-	return qsearch(m_Plies, alpha, beta);
+	int searchScore = search(depth, m_Plies, eval::NEG_INF, eval::POS_INF, true);
+	m_SearchInfo.depth = depth;
+	m_SearchInfo.time = Duration(0);
+	m_SearchInfo.pvBegin = m_PV;
+	m_SearchInfo.pvEnd = m_PV + m_Plies[0].pvLength;
+	m_SearchInfo.score = searchScore;
+	return searchScore;
+}
+
+int Search::qsearch()
+{
+	return qsearch(m_Plies, eval::NEG_INF, eval::POS_INF);
 }
 
 int Search::iterDeep(const SearchLimits& limits)
