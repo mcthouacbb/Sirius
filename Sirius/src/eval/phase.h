@@ -6,10 +6,10 @@ namespace eval
 {
 
 constexpr int PAWN_PHASE = 0;
-constexpr int KNIGHT_PHASE = 1;
-constexpr int BISHOP_PHASE = 1;
-constexpr int ROOK_PHASE = 2;
-constexpr int QUEEN_PHASE = 4;
+constexpr int KNIGHT_PHASE = 5;
+constexpr int BISHOP_PHASE = 16;
+constexpr int ROOK_PHASE = 18;
+constexpr int QUEEN_PHASE = 41;
 
 constexpr int TOTAL_PHASE =
 	PAWN_PHASE * 16 +
