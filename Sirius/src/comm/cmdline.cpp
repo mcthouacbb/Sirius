@@ -335,7 +335,7 @@ void CmdLine::staticEvalCommand()
 
 void CmdLine::quiescenceEvalCommand()
 {
-	int eval = m_Search.qsearch(eval::NEG_INF, eval::POS_INF);
+	int eval = m_Search.qsearch();
 	std::cout << "Quiescence eval: " << eval << std::endl;
 }
 
