@@ -1,5 +1,4 @@
 #include "error.h"
-#include "quiescence.h"
 
 #include <chrono>
 
@@ -21,7 +20,7 @@ double error(const std::vector<Pos>& positions, const EvalParams& params, double
 	{
 		board.setToEpd(std::string_view(pos.epd, pos.epdLen));
 		int nodes = 0;
-		int eval = evaluate(board, params, cache);//qsearch(board, params, cache, nodes, -200000, 200000);
+		int eval = evaluate(board, params, cache);
 		totalNodes += nodes;
 		if (nodes > maxNodes)
 		{

@@ -83,5 +83,70 @@ inline EvalParams localOptimize(const EvalParams& initial, const std::vector<Pos
 	return bestParams;
 }
 
+inline void normalize(const EvalParams& params)
+{
+	EvalParams paramsCopy = params;
+	EvalData& data = paramsCopy.data;
+
+	for (int i = 1; i < 6; i++)
+	{
+		int mgPsqtSum = 0;
+		int egPsqtSum = 0;
+		for (int j = 0; j < 32; j++)
+		{
+			mgPsqtSum += data.psqtMG[i][j];
+			egPsqtSum += data.psqtEG[i][j];
+		}
+		std::cout << "Piece: " << i << " OLD: " << std::endl;
+		std::cout << data.materialMG[i] << ' ' << mgPsqtSum << std::endl;
+		std::cout << data.materialEG[i] << ' ' << egPsqtSum << std::endl;
+
+		while (mgPsqtSum > 16)
+		{
+			mgPsqtSum -= 32;
+			for (int j = 0; j < 32; j++)
+			{
+				data.psqtMG[i][j] -= 1;
+			}
+			data.materialMG[i] += 1;
+		}
+		while (mgPsqtSum < -16)
+		{
+			mgPsqtSum += 32;
+			for (int j = 0; j < 32; j++)
+			{
+				data.psqtMG[i][j] += 1;
+			}
+			data.materialMG[i] -= 1;
+		}
+
+		while (egPsqtSum > 31)
+		{
+			egPsqtSum -= 32;
+			for (int j = 0; j < 32; j++)
+			{
+				data.psqtEG[i][j] -= 1;
+			}
+			data.materialEG[i] += 1;
+		}
+		while (egPsqtSum < 0)
+		{
+			egPsqtSum += 32;
+			for (int j = 0; j < 32; j++)
+			{
+				data.psqtEG[i][j] += 1;
+			}
+			data.materialEG[i] -= 1;
+		}
+
+		std::cout << "Piece: " << i << " NEW: " << std::endl;
+		std::cout << data.materialMG[i] << ' ' << mgPsqtSum << std::endl;
+		std::cout << data.materialEG[i] << ' ' << egPsqtSum << std::endl;
+		std::cout << std::endl;
+	}
+
+	printParams(paramsCopy, std::cout);
+}
+
 
 }
