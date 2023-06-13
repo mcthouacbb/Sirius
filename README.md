@@ -1,6 +1,6 @@
 # Sirius
 
-v0.3.1
+v0.3.3
 
 Minimal UCI Support
 

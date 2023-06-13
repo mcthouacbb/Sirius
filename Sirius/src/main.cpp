@@ -6,7 +6,6 @@
 #include "comm/icomm.h"
 #include "comm/cmdline.h"
 #include "comm/uci.h"
-#include "comm/debug.h"
 #include "eval/eval.h"
 
 namespace comm
@@ -34,12 +33,6 @@ int main(int argc, char** argv)
 		comm::UCI uci;
 		comm::currComm = &uci;
 		uci.run();
-	}
-	else if (mode == "debug")
-	{
-		comm::Debug debug;
-		comm::currComm = &debug;
-		debug.run();
 	}
 	else
 	{
