@@ -6,7 +6,7 @@
 namespace tune
 {
 
-EvalParams localOptimize(const EvalParams& initial, const std::vector<Pos>& positions, std::ofstream& outFile, int start)
+inline EvalParams localOptimize(const EvalParams& initial, const std::vector<Pos>& positions, std::ofstream& outFile, int start)
 {
 	double bestError = error(positions, initial, K_VAL);
 	EvalParams bestParams = initial;
@@ -17,50 +17,61 @@ EvalParams localOptimize(const EvalParams& initial, const std::vector<Pos>& posi
 		improved = false;
 		for (int i = 0; i < NUM_PARAMS; i++)
 		{
-			EvalParams newParams = bestParams;
-			newParams.params[i] += 5;
-			double newError = error(positions, newParams, K_VAL);
-			std::cout << "Delta: 5, New: " << newError << " best: " << bestError << '\n';
-			if (newError < bestError)
+			bool improvedParam = false;
+			do
 			{
-				bestError = newError;
-				bestParams = newParams;
-				improved = true;
-				continue;
-			}
+				improvedParam = false;
+				EvalParams newParams = bestParams;
+				newParams.params[i] += 5;
+				double newError = error(positions, newParams, K_VAL);
+				std::cout << "Param: " << i << " Delta: 5, New: " << newError << " best: " << bestError << '\n';
+				if (newError < bestError)
+				{
+					bestError = newError;
+					bestParams = newParams;
+					improved = true;
+					improvedParam = true;
+					continue;
+				}
 
-			newParams.params[i] -= 4;
-			newError = error(positions, newParams, K_VAL);
-			std::cout << "Delta: 1, New: " << newError << " best: " << bestError << '\n';
-			if (newError < bestError)
-			{
-				bestError = newError;
-				bestParams = newParams;
-				improved = true;
-				continue;
-			}
+				newParams.params[i] -= 10;
+				newError = error(positions, newParams, K_VAL);
+				std::cout << "Param: " << i << " Delta: -5, New: " << newError << " best: " << bestError << '\n';
+				if (newError < bestError)
+				{
+					bestError = newError;
+					bestParams = newParams;
+					improved = true;
+					improvedParam = true;
+					continue;
+				}
 
-			newParams.params[i] -= 6;
-			newError = error(positions, newParams, K_VAL);
-			std::cout << "Delta: -5, New: " << newError << " best: " << bestError << '\n';
-			if (newError < bestError)
-			{
-				bestError = newError;
-				bestParams = newParams;
-				improved = true;
-				continue;
-			}
+				newParams.params[i] += 4;
+				newError = error(positions, newParams, K_VAL);
+				std::cout << "Param: " << i << " Delta: -1, New: " << newError << " best: " << bestError << '\n';
+				if (newError < bestError)
+				{
+					bestError = newError;
+					bestParams = newParams;
+					improved = true;
+					improvedParam = true;
+					continue;
+				}
 
-			newParams.params[i] += 4;
-			newError = error(positions, newParams, K_VAL);
-			std::cout << "Delta: -1, New: " << newError << " best: " << bestError << '\n';
-			if (newError < bestError)
-			{
-				bestError = newError;
-				bestParams = newParams;
-				improved = true;
-				continue;
-			}
+				newParams.params[i] += 2;
+				newError = error(positions, newParams, K_VAL);
+				std::cout << "Param: " << i << " Delta: 1, New: " << newError << " best: " << bestError << '\n';
+				if (newError < bestError)
+				{
+					bestError = newError;
+					bestParams = newParams;
+					improved = true;
+					improvedParam = true;
+					continue;
+				}
+
+				newParams.params[i] -= 1;
+			} while (improvedParam);
 		}
 		std::cout << "Iteration: " << it << std::endl;
 		outFile << "Iteration: " << it++ << std::endl;
