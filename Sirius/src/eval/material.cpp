@@ -9,15 +9,15 @@ const int PIECE_VALUES_MG[] = {
 	// king
 	0,
 	// queen
-	900,
+	QUEEN_VALUE_MG,
 	// rook
-	500,
+	ROOK_VALUE_MG,
 	// bishop
-	330,
+	BISHOP_VALUE_MG,
 	// knight
-	320,
+	KNIGHT_VALUE_MG,
 	// pawn
-	100
+	PAWN_VALUE_MG
 };
 
 const int PIECE_VALUES_EG[] = {
@@ -26,15 +26,15 @@ const int PIECE_VALUES_EG[] = {
 	// king
 	0,
 	// queen
-	900,
+	QUEEN_VALUE_EG,
 	// rook
-	500,
+	ROOK_VALUE_EG,
 	// bishop
-	330,
+	BISHOP_VALUE_EG,
 	// knight
-	320,
+	KNIGHT_VALUE_EG,
 	// pawn
-	100
+	PAWN_VALUE_EG
 };
 
 int getPieceValueMG(PieceType piece)
