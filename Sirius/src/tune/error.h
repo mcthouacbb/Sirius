@@ -12,7 +12,7 @@ inline double sigmoid(double s, double k)
 	return 1.0 / (1 + std::pow(10, -k * s / static_cast<double>(NUM_PARAMS)));
 }
 
-__declspec(noinline) double error(const std::vector<Pos>& positions, const EvalParams& params, double kValue);
+double error(const std::vector<Pos>& positions, const EvalParams& params, double kValue);
 
 
 }

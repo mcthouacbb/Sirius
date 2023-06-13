@@ -14,7 +14,6 @@ double error(const std::vector<Pos>& positions, const EvalParams& params, double
 	Board board;
 	EvalCache cache = genCache(params);
 
-	int i = 0;
 	int maxNodes = 0;
 	int totalNodes = 0;
 	std::string_view maxEpd;
@@ -22,7 +21,7 @@ double error(const std::vector<Pos>& positions, const EvalParams& params, double
 	{
 		board.setToEpd(std::string_view(pos.epd, pos.epdLen));
 		int nodes = 0;
-		int eval = qsearch(board, params, cache, nodes, -200000, 200000);
+		int eval = evaluate(board, params, cache);//qsearch(board, params, cache, nodes, -200000, 200000);
 		totalNodes += nodes;
 		if (nodes > maxNodes)
 		{
@@ -31,16 +30,14 @@ double error(const std::vector<Pos>& positions, const EvalParams& params, double
 		}
 		double term = pos.result - sigmoid(eval, kValue);
 		// std::cout << term << std::endl;
-		i++;
-		if (i % 1000 == 0)
-			std::cout << i << std::endl;
+
 		result += term * term;
 	}
-	std::cout << maxNodes << std::endl;
-	std::cout << maxEpd << std::endl;
-	std::cout << totalNodes << std::endl;
-	std::cout << result << std::endl;
-	std::cout << positions.size() << std::endl;
+	//std::cout << maxNodes << std::endl;
+	//std::cout << maxEpd << std::endl;
+	//std::cout << totalNodes << std::endl;
+	//std::cout << result << std::endl;
+	//std::cout << positions.size() << std::endl;
 	result /= static_cast<double>(positions.size());
 	return result;
 }
