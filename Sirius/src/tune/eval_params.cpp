@@ -136,10 +136,10 @@ int evaluate(const Board& board, const EvalParams& params, const EvalCache& cach
 	for (int sq = 0; sq < 64; sq++)
 	{
 		Piece piece = board.getPieceAt(sq);
-		if (piece)
+		if (piece != PIECE_NONE)
 		{
-			int type = piece & PIECE_TYPE_MASK;
-			int color = piece >> 3;
+			int type = static_cast<int>(getPieceType(piece));
+			int color = static_cast<int>(getPieceColor(piece));
 			bool isWhite = static_cast<Color>(color) == Color::WHITE;
 
 			if (type != static_cast<int>(PieceType::KING))
