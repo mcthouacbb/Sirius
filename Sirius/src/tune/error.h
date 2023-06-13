@@ -1,6 +1,6 @@
 #pragma once
 
-#include "quiescence.h"
+#include "eval_params.h"
 #include "pos.h"
 #include <vector>
 
