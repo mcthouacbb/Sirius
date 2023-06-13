@@ -7,6 +7,9 @@
 #include "../eval/eval.h"
 #include "../misc.h"
 #include "pgn.h"
+#include "../tune/error.h"
+#include "../tune/optimize.h"
+#include "../tune/pos.h"
 
 namespace comm
 {
@@ -75,6 +78,15 @@ void Debug::execCommand(const std::string& command)
 		case Command::PGN_TO_EPD:
 			pgnToEpd(stream);
 			break;
+		case Command::TUNE_ERROR:
+			tuneError(stream);
+			break;
+		case Command::TUNE_OPTIMIZE:
+			tuneOptimize(stream);
+			break;
+		case Command::TUNE_NORMALIZE:
+			tuneNormalize();
+			break;
 		case Command::QUIT:
 			m_State = CommState::QUITTING;
 			break;
@@ -89,6 +101,12 @@ Debug::Command Debug::getCommand(const std::string& command) const
 		return Command::EPD_EVALS;
 	else if (command == "pgntoepd")
 		return Command::PGN_TO_EPD;
+	else if (command == "error")
+		return Command::TUNE_ERROR;
+	else if (command == "optimize")
+		return Command::TUNE_OPTIMIZE;
+	else if (command == "normalize")
+		return Command::TUNE_NORMALIZE;
 
 	return Command::INVALID;
 }
@@ -167,11 +185,11 @@ void Debug::pgnToEpd(std::istringstream& stream) const
 	std::string epdFilename;
 	stream >> epdFilename;
 	std::ofstream epdFile(epdFilename, std::ios::app);
-	
+
 	while (pgnFile.hasGame())
 	{
 		PGNGame game = pgnFile.parseGame();
-	
+
 		for (const auto& pair : game.header.tags)
 		{
 			std::cout << "[" << pair.first << ',' << pair.second << "], ";
@@ -208,7 +226,7 @@ void Debug::pgnToEpd(std::istringstream& stream) const
 				continue;
 			}
 			std::cout << "{" << entry.comment << "}\n";
-			
+
 			states.push_back({});
 			board.makeMove(entry.move, states.back());
 			// printBoard(board);
@@ -216,6 +234,56 @@ void Debug::pgnToEpd(std::istringstream& stream) const
 		}
 		std::cout << std::endl;
 	}
+}
+
+void Debug::tuneNormalize() const
+{
+	tune::normalize(tune::defaultParams);
+}
+
+void Debug::tuneError(std::istringstream& stream) const
+{
+	std::string fileName;
+	double kValue;
+	stream >> fileName >> kValue;
+
+	std::ifstream epdFile(fileName);
+
+	if (!epdFile)
+	{
+		std::cerr << "Couldn't Open File" << std::endl;
+		return;
+	}
+
+	std::string epdData(std::istreambuf_iterator<char>{epdFile}, std::istreambuf_iterator<char>());
+
+	std::vector<tune::Pos> positions = tune::parseEpdFile(epdData);
+
+	double error = tune::error(positions, tune::defaultParams, kValue);
+	std::cout << "Error: " << error << std::endl;
+}
+
+void Debug::tuneOptimize(std::istringstream& stream) const
+{
+	std::string epdFilename;
+	std::string outFilename;
+	int it;
+	stream >> epdFilename >> outFilename >> it;
+
+	std::ifstream epdFile(epdFilename);
+	std::ofstream outFile(outFilename, std::ios::app);
+
+	if (!epdFile || !outFile)
+	{
+		std::cerr << "Couldn't Open File" << std::endl;
+		return;
+	}
+
+	std::string epdData(std::istreambuf_iterator<char>{epdFile}, std::istreambuf_iterator<char>());
+
+	std::vector<tune::Pos> positions = tune::parseEpdFile(epdData);
+
+	tune::localOptimize(tune::defaultParams, positions, outFile, it);
 }
 
 

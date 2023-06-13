@@ -19,6 +19,9 @@ public:
 		INVALID,
 		EPD_EVALS,
 		PGN_TO_EPD,
+		TUNE_ERROR,
+		TUNE_OPTIMIZE,
+		TUNE_NORMALIZE,
 		QUIT
 	};
 
@@ -33,6 +36,10 @@ private:
 
 	void genEpdEvals(std::istringstream& stream) const;
 	void pgnToEpd(std::istringstream& stream) const;
+	void selectPositions(std::istringstream& stream) const;
+	void tuneError(std::istringstream& stream) const;
+	void tuneOptimize(std::istringstream& stream) const;
+	void tuneNormalize() const;
 
 	InputQueue m_InputQueue;
 };
