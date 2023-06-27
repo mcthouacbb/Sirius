@@ -8,14 +8,23 @@ Inspired/helped by
 - Stockfish
 - Ethereal
 - Crafty
+- Zurichess
+- [The Chess Programming Wiki](https://www.chessprogramming.org/)
+- [TalkChess/The Computer Chess Club](https://www.talkchess.com/forum3/viewforum.php?f=2)
 - Many others
+
+CLI Usage
+- Type "uci" for the UCI protocol(not recommended for direct use, usually used by a chess GUI)
+	- Protocol is explained [here](https://www.wbec-ridderkerk.nl/html/UCIProtocol.html)
+- Type "cmdline" for the CLI protocol(best suited for direct use)
+	- Protocol is explained below
 
 Command Line Protocol(for debugging/convenience)
 - `"position" {"fen" | "startpos"} [fenString]`
     - Set the board position to the starting position or the fenString
 - `"print"`
     - Print the current state of the board
-            - Piece positions
+      	- Piece positions
         - Number of plies since the start of the game(starts at 0)
         - Half Move Clock
             - Used to detect 50 move rule draws
@@ -26,7 +35,7 @@ Command Line Protocol(for debugging/convenience)
         - Zobrist hash
 - `"move" <move>`
     - makes a move
-    - Standard Algebraic Notation
+    - Standard Algebraic Notation(FIDE notation)
     - Square is a file (a-h) and rank(1-8)
     - Promotion piece is either, q(queen), r(rook), b(bishop), or n(knight)
 - `"undo"`
@@ -49,6 +58,7 @@ Command Line Protocol(for debugging/convenience)
     - WARNING: time usage increases exponentially with depth
 - `"book"`
     - Returns all the moves in the opening book
+    - Opening book is currently hardcoded to "Sirius/res/gaviota_trim.pgn"
     - Prints "No moves in book found" if position is not in book
 
 Features
@@ -104,20 +114,9 @@ Features
 - Evaluation
     - Tapered Evaluation
     - Material
-        - Middlegame
-            - Queen = 900
-            - Rook = 500
-            - Bishop = 330
-            - Knight = 320
-            - Pawn = 100
-        - Endgame
-            - Queen = 900
-            - Rook = 500
-            - Bishop = 330
-            - Knight = 320
-            - Pawn = 100
+        - Middlegame and Endgame
     - Piece Square Tables
-        - from https://www.chessprogramming.org/Simplified_Evaluation_Function
+    - Tuning via Texel's Tuning Method
 - Search
     - Alpha-Beta Pruning
     - PV Collection(pv list on stack)
