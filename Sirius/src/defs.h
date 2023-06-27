@@ -5,7 +5,6 @@
 #include <bitset>
 #include <bit>
 #include <cassert>
-#include <source_location>
 
 enum class PieceType
 {
