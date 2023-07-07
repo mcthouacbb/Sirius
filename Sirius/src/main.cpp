@@ -13,7 +13,7 @@ namespace comm
 	IComm* currComm;
 }
 
-int main(int argc, char** argv)
+int main()
 {
 	attacks::init();
 	zobrist::init();

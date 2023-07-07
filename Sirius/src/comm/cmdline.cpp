@@ -185,7 +185,7 @@ void CmdLine::execCommand(const std::string& command)
 				std::cout << "Cannot probe book while thinking" << std::endl;
 				break;
 			}
-			probeBookCommand(stream);
+			probeBookCommand();
 			break;
 		case Command::STOP:
 			if (m_State != CommState::SEARCHING)
@@ -401,7 +401,7 @@ void CmdLine::runPerftCommand(std::istringstream& stream)
 	std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1).count() << std::endl;
 }
 
-void CmdLine::probeBookCommand(std::istringstream& stream)
+void CmdLine::probeBookCommand()
 {
 	const std::vector<BookEntry>* entries = m_Book.lookup(m_Board.zkey());
 

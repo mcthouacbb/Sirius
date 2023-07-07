@@ -45,5 +45,8 @@ bool TimeManager::shouldStop(const SearchInfo& searchInfo)
 		case SearchPolicy::FIXED_TIME:
 		case SearchPolicy::DYN_CLOCK:
 			return elapsed() > m_AllocatedTime;
+		default:
+			assert(false && "Invalid SearchPolicy");
+			return searchInfo.nodes > 0;
 	}
 }

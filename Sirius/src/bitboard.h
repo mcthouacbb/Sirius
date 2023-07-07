@@ -36,7 +36,7 @@ constexpr BitBoard DARK_SQUARES = 0xAA55AA55AA55AA55ull;
 template<Color c, int r>
 constexpr BitBoard nthRank()
 {
-	if (c == Color::WHITE)
+	if constexpr (c == Color::WHITE)
 	{
 		return RANK_1 << (8 * r);
 	}
@@ -125,6 +125,11 @@ inline uint32_t getMSB(BitBoard bb)
 	_BitScanReverse64(&idx, bb);
 	return idx;
 #endif
+}
+
+inline BitBoard extractLSB(BitBoard bb)
+{
+	return bb & (0 - bb);
 }
 
 inline uint32_t popLSB(BitBoard& bb)

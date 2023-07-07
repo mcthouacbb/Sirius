@@ -229,7 +229,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		}
 
 		int reduction = 0;
-		if (i >= (isPV ? 15 : 4) &&
+		if (i >= (isPV ? 15u : 4u) &&
 			depth >= 3 &&
 			!givesCheck &&
 			!isCapture &&

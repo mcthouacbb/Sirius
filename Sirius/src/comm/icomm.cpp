@@ -40,7 +40,7 @@ void IComm::unmakeMove()
 void IComm::calcLegalMoves()
 {
 	Move* end = genMoves<MoveGenType::LEGAL>(m_Board, m_LegalMoves);
-	m_MoveCount = end - m_LegalMoves;
+	m_MoveCount = static_cast<uint32_t>(end - m_LegalMoves);
 }
 
 

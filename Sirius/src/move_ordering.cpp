@@ -31,7 +31,7 @@ static const int PROMO_BONUS[4] = {
 };
 
 MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end)
-	: m_Moves(begin), m_Size(end - begin)
+	: m_Moves(begin), m_Size(static_cast<uint32_t>(end - begin))
 {
 	for (uint32_t i = 0; i < m_Size; i++)
 	{
@@ -58,7 +58,7 @@ MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end)
 }
 
 MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end, Move hashMove, Move (&killers)[2], int (&history)[4096])
-	: m_Moves(begin), m_Size(end - begin)
+	: m_Moves(begin), m_Size(static_cast<uint32_t>(end - begin))
 {
 	for (uint32_t i = 0; i < m_Size; i++)
 	{
