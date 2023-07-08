@@ -8,7 +8,7 @@
 #include <climits>
 
 Search::Search(Board& board)
-	: m_Board(board), m_RootPly(0), m_TT(1024 * 1024)
+	: m_Board(board), m_TT(1024 * 1024), m_RootPly(0)
 {
 
 }

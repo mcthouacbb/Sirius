@@ -23,6 +23,9 @@ void TimeManager::setLimits(const SearchLimits& limits, Color us)
 			if (m_AllocatedTime < Duration(0))
 				m_AllocatedTime = limits.clock.timeLeft[static_cast<int>(us)] / 4;
 			break;
+		case SearchPolicy::INFINITE:
+			m_AllocatedTime = Duration(0);
+			break;
 	}
 }
 

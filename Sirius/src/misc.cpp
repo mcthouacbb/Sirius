@@ -210,8 +210,13 @@ void testSEE()
 		strEnd += 2;
 
 		int value;
-		auto res = std::from_chars(strEnd, line.c_str() + line.size(), value);
-
+		auto [ptr, ec] = std::from_chars(strEnd, line.c_str() + line.size(), value);
+		if (ec != std::errc())
+		{
+			std::cout << "invalid number parsing value" << std::endl;
+			return;
+		}
+		
 		bool fail = board.see_margin(move, value + 1);
 		bool pass = board.see_margin(move, value);
 		bool failed = false;
@@ -277,7 +282,7 @@ void runTests(Board& board, bool fast)
 	uint64_t totalNodes = 0;
 
 	auto t1 = std::chrono::steady_clock::now();
-	for (int i = 0; i < tests.size(); i++)
+	for (size_t i = 0; i < tests.size(); i++)
 	{
 		const auto& test = tests[i];
 		board.setToFen(test.fen);
@@ -325,7 +330,7 @@ void testSANFind(const Board& board, Move* begin, Move* end, int len)
 
 	uint64_t maxIdx = 1;
 
-	for (uint64_t i = 0; i < len; i++)
+	for (int i = 0; i < len; i++)
 	{
 		maxIdx *= charCount;
 	}

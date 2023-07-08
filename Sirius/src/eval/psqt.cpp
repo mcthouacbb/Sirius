@@ -3,8 +3,8 @@
 namespace eval
 {
 
-int psqtMG[6][64];
-int psqtEG[6][64];
+int psqtMG[7][64];
+int psqtEG[7][64];
 
 const int psqtHalfMG[6][32] = {
 	// king
@@ -152,11 +152,11 @@ void initPSQT()
 		{
 			for (int x = 0; x < 4; x++)
 			{
-				psqtMG[i][y * 8 + x] = psqtHalfMG[i][y * 4 + x];
-				psqtMG[i][y * 8 + x + 4] = psqtHalfMG[i][y * 4 + 3 - x];
+				psqtMG[i + 1][y * 8 + x] = psqtHalfMG[i][y * 4 + x];
+				psqtMG[i + 1][y * 8 + x + 4] = psqtHalfMG[i][y * 4 + 3 - x];
 
-				psqtEG[i][y * 8 + x] = psqtHalfEG[i][y * 4 + x];
-				psqtEG[i][y * 8 + x + 4] = psqtHalfEG[i][y * 4 + 3 - x];
+				psqtEG[i + 1][y * 8 + x] = psqtHalfEG[i][y * 4 + x];
+				psqtEG[i + 1][y * 8 + x + 4] = psqtHalfEG[i][y * 4 + 3 - x];
 			}
 		}
 	}
@@ -164,16 +164,16 @@ void initPSQT()
 
 int getPSQTMG(PieceType piece, int square)
 {
-	const int* psqt = psqtMG[0];
-	psqt -= 64;
-	return psqt[64 * static_cast<int>(piece) + square];
+	// static constexpr int* psqt = psqtMG[0];
+	return psqtMG[static_cast<int>(piece)][square];
+	// return psqt[64 * static_cast<int>(piece) + square];
 }
 
 int getPSQTEG(PieceType piece, int square)
 {
-	const int* psqt = psqtEG[0];
-	psqt -= 64;
-	return psqt[64 * static_cast<int>(piece) + square];
+	// static constexpr int* psqt = psqtEG[0];
+	return psqtEG[static_cast<int>(piece)][square];
+	// return psqt[64 * static_cast<int>(piece) + square];
 }
 
 }

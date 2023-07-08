@@ -55,6 +55,8 @@ TTBucket* TT::probe(ZKey key, int depth, int ply, int alpha, int beta, int& scor
 	{
 		switch (entry->type)
 		{
+			case TTEntry::Type::NONE:
+				break;
 			case TTEntry::Type::EXACT:
 				score = retrieveScore(entry->score, ply);
 				entry->age = static_cast<uint8_t>(m_CurrAge);

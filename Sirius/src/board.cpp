@@ -904,7 +904,7 @@ bool Board::see_margin(Move move, int margin) const
 			if (value < static_cast<int>(us))
 				return us;
 		}
-		else if (BitBoard king = (stmAttackers & getPieces(PieceType::KING)))
+		else if (stmAttackers & getPieces(PieceType::KING))
 		{
 			if (attackers & getColor(flip(sideToMove)))
 			{

@@ -2,7 +2,7 @@
 #include <iostream>
 
 InputQueue::InputQueue(bool (*shouldQuit)(const std::string& str))
-	: m_InputThread(&InputQueue::pollInput, this), m_ShouldQuit(shouldQuit)
+	: m_ShouldQuit(shouldQuit), m_InputThread(&InputQueue::pollInput, this)
 {
 
 }

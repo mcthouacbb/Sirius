@@ -24,7 +24,7 @@ struct TTEntry
 static_assert(sizeof(TTEntry) == 16, "TTEntry must be 16 bytes");
 
 
-constexpr size_t ENTRY_COUNT = 4;
+constexpr int ENTRY_COUNT = 4;
 
 struct alignas(64) TTBucket
 {

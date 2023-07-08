@@ -5,7 +5,7 @@ namespace comm
 {
 
 IComm::IComm()
-	: m_Search(m_Board), m_State(CommState::IDLE)
+	: m_State(CommState::IDLE), m_Search(m_Board)
 {
 	calcLegalMoves();
 }
