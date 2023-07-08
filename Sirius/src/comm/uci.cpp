@@ -1,5 +1,6 @@
 #include <string>
 
+#include "../sirius.h"
 #include "uci.h"
 #include "fen.h"
 #include "move.h"
@@ -159,7 +160,7 @@ UCI::Command UCI::getCommand(const std::string& command) const
 
 void UCI::uciCommand() const
 {
-	std::cout << "id name Sirius v0.3.1\n";
+	std::cout << "id name Sirius v" << SIRIUS_VERSION_STRING << std::endl;
 	std::cout << "id author AspectOfTheNoob\n";
 	std::cout << "uciok" << std::endl;
 }

@@ -1,3 +1,4 @@
+#include "../sirius.h"
 #include "cmdline.h"
 #include "fen.h"
 #include "move.h"
@@ -24,6 +25,8 @@ CmdLine::CmdLine()
 	std::ostringstream sstr;
 	sstr << openings.rdbuf();
 	std::string pgnData = sstr.str();
+
+	std::cout << "Sirius v" << SIRIUS_VERSION_STRING << std::endl;
 
 	m_Book.loadFromPGN(pgnData.c_str());
 }
