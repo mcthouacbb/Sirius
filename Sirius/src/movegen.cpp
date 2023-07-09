@@ -12,7 +12,7 @@ bool canTakeEP(BitBoard eastRay, BitBoard westRay, BitBoard kingBB, BitBoard ene
 	if (westBlockers == 0)
 		return true;
 
-	BitBoard closestEastBlocker = eastBlockers & -eastBlockers;
+	BitBoard closestEastBlocker = extractLSB(eastBlockers);
 	BitBoard other;
 	if (closestEastBlocker & kingBB)
 	{

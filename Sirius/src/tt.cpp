@@ -45,7 +45,7 @@ TTBucket* TT::probe(ZKey key, int depth, int ply, int alpha, int beta, int& scor
 			break;
 		}
 	}
-	
+
 	if (!entry)
 	{
 		return &bucket;
@@ -55,16 +55,18 @@ TTBucket* TT::probe(ZKey key, int depth, int ply, int alpha, int beta, int& scor
 	{
 		switch (entry->type)
 		{
+			case TTEntry::Type::NONE:
+				break;
 			case TTEntry::Type::EXACT:
 				score = retrieveScore(entry->score, ply);
-				entry->age = m_CurrAge;
+				entry->age = static_cast<uint8_t>(m_CurrAge);
 				break;
 			case TTEntry::Type::LOWER_BOUND:
 				if (beta <= entry->score)
 				{
 					score = retrieveScore(entry->score, ply);
 
-					entry->age = m_CurrAge;
+					entry->age = static_cast<uint8_t>(m_CurrAge);
 				}
 				break;
 			case TTEntry::Type::UPPER_BOUND:
@@ -72,7 +74,7 @@ TTBucket* TT::probe(ZKey key, int depth, int ply, int alpha, int beta, int& scor
 				{
 					score = retrieveScore(entry->score, ply);
 
-					entry->age = m_CurrAge;
+					entry->age = static_cast<uint8_t>(m_CurrAge);
 				}
 				break;
 		}
@@ -89,11 +91,11 @@ void TT::store(TTBucket* bucket, ZKey key, int depth, int ply, int score, Move m
 	{
 		if (bucket->entries[i].key == key)
 		{
-			bucket->entries[i].depth = depth;
-			bucket->entries[i].score = storeScore(score, ply);
+			bucket->entries[i].depth = static_cast<uint8_t>(depth);
+			bucket->entries[i].score = static_cast<int16_t>(storeScore(score, ply));
 			bucket->entries[i].bestMove = move;
 			bucket->entries[i].type = type;
-			bucket->entries[i].age = m_CurrAge;
+			bucket->entries[i].age = static_cast<uint8_t>(m_CurrAge);
 			return;
 		}
 	}
@@ -122,9 +124,9 @@ void TT::store(TTBucket* bucket, ZKey key, int depth, int ply, int score, Move m
 	}
 
 	replace->key = key;
-	replace->depth = depth;
-	replace->score = storeScore(score, ply);
+	replace->depth = static_cast<uint8_t>(depth);
+	replace->score = static_cast<uint16_t>(storeScore(score, ply));
 	replace->bestMove = move;
 	replace->type = type;
-	replace->age = m_CurrAge;
+	replace->age = static_cast<uint8_t>(m_CurrAge);
 }

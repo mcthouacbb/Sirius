@@ -378,14 +378,14 @@ std::string Board::fenStr() const
 			{
 				int diff = i - j - lastFile;
 				if (diff > 1)
-					fen += (diff - 1) + '0';
+					fen += static_cast<char>((diff - 1) + '0');
 				fen += pieceChars[static_cast<int>(piece)];
 				lastFile = i - j;
 			}
 		}
 		int diff = 8 - lastFile;
 		if (diff > 1)
-			fen += (diff - 1) + '0';
+			fen += static_cast<char>((diff - 1) + '0');
 		if (j != 0)
 			fen += '/';
 	}
@@ -414,8 +414,8 @@ std::string Board::fenStr() const
 		fen += '-';
 	else
 	{
-		fen += (m_State->epSquare & 7) + 'a';
-		fen += (m_State->epSquare >> 3) + '1';
+		fen += static_cast<char>((m_State->epSquare & 7) + 'a');
+		fen += static_cast<char>((m_State->epSquare >> 3) + '1');
 	}
 
 	fen += ' ';
@@ -440,14 +440,14 @@ std::string Board::epdStr() const
 			{
 				int diff = i - j - lastFile;
 				if (diff > 1)
-					epd += (diff - 1) + '0';
+					epd += static_cast<char>((diff - 1) + '0');
 				epd += pieceChars[static_cast<int>(piece)];
 				lastFile = i - j;
 			}
 		}
 		int diff = 8 - lastFile;
 		if (diff > 1)
-			epd += (diff - 1) + '0';
+			epd += static_cast<char>((diff - 1) + '0');
 		if (j != 0)
 			epd += '/';
 	}
@@ -476,8 +476,8 @@ std::string Board::epdStr() const
 		epd += '-';
 	else
 	{
-		epd += (m_State->epSquare & 7) + 'a';
-		epd += (m_State->epSquare >> 3) + '1';
+		epd += static_cast<char>((m_State->epSquare & 7) + 'a');
+		epd += static_cast<char>((m_State->epSquare >> 3) + '1');
 	}
 
 	return epd;
@@ -790,7 +790,7 @@ bool Board::see_margin(Move move, int margin) const
 	BitBoard allPieces = getAllPieces() ^ (1ull << src);
 	BitBoard attackers = attackersTo(dst, allPieces) ^ (1ull << src);
 
-	int value;
+	int value = 0;
 	switch (move.type())
 	{
 		case MoveType::CASTLE:
@@ -850,50 +850,50 @@ bool Board::see_margin(Move move, int margin) const
 
 		if (BitBoard pawns = (stmAttackers & getPieces(PieceType::PAWN)))
 		{
-			BitBoard pawn = pawns & -pawns;
+			BitBoard pawn = extractLSB(pawns);
 			allPieces ^= pawn;
 			attackers ^= pawn;
 			attackers |= (attacks::getBishopAttacks(dst, allPieces) & allPieces & diagPieces);
 
 			value = seePieceValue(PieceType::PAWN) - value;
-			if (value < us)
+			if (value < static_cast<int>(us))
 				return us;
 		}
 		else if (BitBoard knights = (stmAttackers & getPieces(PieceType::KNIGHT)))
 		{
-			BitBoard knight = knights & -knights;
+			BitBoard knight = extractLSB(knights);
 			allPieces ^= knight;
 			attackers ^= knight;
 
 			value = seePieceValue(PieceType::KNIGHT) - value;
-			if (value < us)
+			if (value < static_cast<int>(us))
 				return us;
 		}
 		else if (BitBoard bishops = (stmAttackers & getPieces(PieceType::BISHOP)))
 		{
-			BitBoard bishop = bishops & -bishops;
+			BitBoard bishop = extractLSB(bishops);
 			allPieces ^= bishop;
 			attackers ^= bishop;
 			attackers |= (attacks::getBishopAttacks(dst, allPieces) & allPieces & diagPieces);
 
 			value = seePieceValue(PieceType::BISHOP) - value;
-			if (value < us)
+			if (value < static_cast<int>(us))
 				return us;
 		}
 		else if (BitBoard rooks = (stmAttackers & getPieces(PieceType::ROOK)))
 		{
-			BitBoard rook = rooks & -rooks;
+			BitBoard rook = extractLSB(rooks);
 			allPieces ^= rook;
 			attackers ^= rook;
 			attackers |= (attacks::getRookAttacks(dst, allPieces) & allPieces & straightPieces);
 
 			value = seePieceValue(PieceType::ROOK) - value;
-			if (value < us)
+			if (value < static_cast<int>(us))
 				return us;
 		}
 		else if (BitBoard queens = (stmAttackers & getPieces(PieceType::QUEEN)))
 		{
-			BitBoard queen = queens & -queens;
+			BitBoard queen = extractLSB(queens);
 			allPieces ^= queen;
 			attackers ^= queen;
 			attackers |=
@@ -901,10 +901,10 @@ bool Board::see_margin(Move move, int margin) const
 				(attacks::getRookAttacks(dst, allPieces) & allPieces & straightPieces);
 
 			value = seePieceValue(PieceType::QUEEN) - value;
-			if (value < us)
+			if (value < static_cast<int>(us))
 				return us;
 		}
-		else if (BitBoard king = (stmAttackers & getPieces(PieceType::KING)))
+		else if (stmAttackers & getPieces(PieceType::KING))
 		{
 			if (attackers & getColor(flip(sideToMove)))
 			{
@@ -987,6 +987,8 @@ bool Board::givesCheck(Move move) const
 				(move.promotion() == Promotion::BISHOP || move.promotion() == Promotion::QUEEN);
 		}
 	}
+	assert(false && "Invalid move type in Board::givesCheck");
+	return false;
 }
 
 void Board::updateCheckInfo()

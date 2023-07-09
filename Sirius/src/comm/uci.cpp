@@ -1,5 +1,6 @@
 #include <string>
 
+#include "../sirius.h"
 #include "uci.h"
 #include "fen.h"
 #include "move.h"
@@ -51,7 +52,7 @@ void UCI::reportSearchInfo(const SearchInfo& info) const
 	std::cout << "info depth " << info.depth;
 	std::cout << " time " << info.time.count();
 	std::cout << " nodes " << info.nodes;
-	int nps = info.nodes * 1000 / (info.time.count() < 1 ? 1 : info.time.count());
+	uint64_t nps = info.nodes * 1000ULL / (info.time.count() < 1 ? 1 : info.time.count());
 	std::cout << " nps " << nps;
 	std::cout << " score ";
 	if (eval::isMateScore(info.score))
@@ -159,7 +160,7 @@ UCI::Command UCI::getCommand(const std::string& command) const
 
 void UCI::uciCommand() const
 {
-	std::cout << "id name Sirius v0.3.1\n";
+	std::cout << "id name Sirius v" << SIRIUS_VERSION_STRING << std::endl;
 	std::cout << "id author AspectOfTheNoob\n";
 	std::cout << "uciok" << std::endl;
 }

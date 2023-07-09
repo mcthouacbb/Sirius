@@ -41,17 +41,6 @@
 .replit
 .breakpoints
 replit.nix
-Sirius/sirius
-Sirius/sirius_debug
-Tune/tune
-Tune/tune_debug
-Makefile
+build
 
-.vs
-*.sln
-*.vcxproj
-*.vcxproj.filters
-*.vcxproj.user
-x64
-Sirius/x64
-Tune/x64
+build

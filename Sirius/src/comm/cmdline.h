@@ -48,7 +48,7 @@ private:
 	void searchCommand(std::istringstream& stream);
 	void runTestsCommand();
 	void runPerftCommand(std::istringstream& stream);
-	void probeBookCommand(std::istringstream& stream);
+	void probeBookCommand();
 
 	InputQueue m_InputQueue;
 	Book m_Book;

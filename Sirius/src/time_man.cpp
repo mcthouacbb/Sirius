@@ -23,6 +23,9 @@ void TimeManager::setLimits(const SearchLimits& limits, Color us)
 			if (m_AllocatedTime < Duration(0))
 				m_AllocatedTime = limits.clock.timeLeft[static_cast<int>(us)] / 4;
 			break;
+		case SearchPolicy::INFINITE:
+			m_AllocatedTime = Duration(0);
+			break;
 	}
 }
 
@@ -45,5 +48,8 @@ bool TimeManager::shouldStop(const SearchInfo& searchInfo)
 		case SearchPolicy::FIXED_TIME:
 		case SearchPolicy::DYN_CLOCK:
 			return elapsed() > m_AllocatedTime;
+		default:
+			assert(false && "Invalid SearchPolicy");
+			return searchInfo.nodes > 0;
 	}
 }

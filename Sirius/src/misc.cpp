@@ -183,7 +183,7 @@ void testSEE()
 	int passCount = 0;
 	while (std::getline(file, line))
 	{
-		int sep1 = line.find(';', 0);
+		int sep1 = static_cast<int>(line.find(';', 0));
 		board.setToEpd(std::string_view(line).substr(0, sep1));
 
 		int moveStart = sep1 + 2;
@@ -205,13 +205,18 @@ void testSEE()
 
 		Move move = *find.move;
 
-		const char* end = find.end;
+		const char* strEnd = find.end;
 
-		end += 2;
+		strEnd += 2;
 
 		int value;
-		auto res = std::from_chars(end, line.c_str() + line.size(), value);
-
+		auto [ptr, ec] = std::from_chars(strEnd, line.c_str() + line.size(), value);
+		if (ec != std::errc())
+		{
+			std::cout << "invalid number parsing value" << std::endl;
+			return;
+		}
+		
 		bool fail = board.see_margin(move, value + 1);
 		bool pass = board.see_margin(move, value);
 		bool failed = false;
@@ -267,7 +272,7 @@ void runTests(Board& board, bool fast)
 			size_t idx = line.find(';', i + 1);
 			if (idx == std::string::npos)
 				break;
-			i = idx;
+			i = static_cast<int>(idx);
 			std::from_chars(line.data() + i + 4, line.data() + line.size(), test.results[line[i + 2] - '1']);
 		}
 		tests.push_back(test);
@@ -277,26 +282,26 @@ void runTests(Board& board, bool fast)
 	uint64_t totalNodes = 0;
 
 	auto t1 = std::chrono::steady_clock::now();
-	for (int i = 0; i < tests.size(); i++)
+	for (size_t i = 0; i < tests.size(); i++)
 	{
 		const auto& test = tests[i];
 		board.setToFen(test.fen);
 		std::cout << "TEST: " << test.fen << std::endl;
-		for (int i = 0; i < 6; i++)
+		for (int j = 0; j < 6; j++)
 		{
-			if (test.results[i] == UINT64_MAX)
+			if (test.results[j] == UINT64_MAX)
 				continue;
-			if (fast && test.results[i] > 100000000)
+			if (fast && test.results[j] > 100000000)
 			{
-				std::cout << "\tSkipped: depth " << i + 1 << std::endl;
+				std::cout << "\tSkipped: depth " << j + 1 << std::endl;
 				continue;
 			}
 			// uint64_t nodes = testGivesCheck<false>(board, i + 1);
-			uint64_t nodes = perft<false>(board, i + 1);
+			uint64_t nodes = perft<false>(board, j + 1);
 			totalNodes += nodes;
-			if (nodes == test.results[i])
+			if (nodes == test.results[j])
 			{
-				std::cout << "\tPassed: depth " << i + 1 << std::endl;
+				std::cout << "\tPassed: depth " << j + 1 << std::endl;
 			}
 			else
 			{
@@ -325,16 +330,16 @@ void testSANFind(const Board& board, Move* begin, Move* end, int len)
 
 	uint64_t maxIdx = 1;
 
-	for (uint64_t i = 0; i < len; i++)
+	for (int i = 0; i < len; i++)
 	{
 		maxIdx *= charCount;
 	}
 	for (uint64_t i = 0; i < maxIdx; i++)
 	{
 		uint64_t tmp = i;
-		for (int i = 0; i < len; i++)
+		for (int j = 0; j < len; j++)
 		{
-			buf[i] = chars[tmp % charCount];
+			buf[j] = chars[tmp % charCount];
 			tmp /= charCount;
 		}
 
