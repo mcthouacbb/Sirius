@@ -50,8 +50,18 @@ set(SRCS
 	"src/comm/input_queue.h"
 	"src/comm/move.cpp"
 	"src/comm/move.h"
+	"src/comm/pgn.cpp"
+	"src/comm/pgn.h"
 	"src/comm/uci.cpp"
 	"src/comm/uci.h"
+
+	"src/tune/error.cpp"
+	"src/tune/error.h"
+	"src/tune/eval_params.cpp"
+	"src/tune/eval_params.h"
+	"src/tune/optimize.h"
+	"src/tune/pos.cpp"
+	"src/tune/pos.h"
 )
 
 add_executable(sirius ${SRCS})
