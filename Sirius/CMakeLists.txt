@@ -59,6 +59,7 @@ set(SRCS
 	"src/tune/error.h"
 	"src/tune/eval_params.cpp"
 	"src/tune/eval_params.h"
+	"src/tune/optimize.cpp"
 	"src/tune/optimize.h"
 	"src/tune/pos.cpp"
 	"src/tune/pos.h"
