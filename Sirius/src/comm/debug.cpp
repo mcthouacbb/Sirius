@@ -259,7 +259,7 @@ void Debug::tuneError(std::istringstream& stream) const
 
 	std::vector<tune::Pos> positions = tune::parseEpdFile(epdData);
 
-	double error = tune::error(positions, tune::defaultParams, kValue);
+	double error = tune::error(positions, tune::defaultParams, kValue) / positions.size();
 	std::cout << "Error: " << error << std::endl;
 }
 

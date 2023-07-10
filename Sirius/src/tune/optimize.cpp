@@ -5,9 +5,12 @@
 namespace tune
 {
 
+constexpr int NUM_THREADS = 3;
+
 EvalParams localOptimize(const EvalParams& initial, const std::vector<Pos>& positions, std::ofstream& outFile, int start)
 {
-	double bestError = error(positions, initial, K_VAL);
+	std::vector<ErrorThread> threads(NUM_THREADS);
+	double bestError = error(positions, initial, K_VAL, threads);
 	EvalParams bestParams = initial;
 	bool improved = true;
 	int it = start;
@@ -22,7 +25,7 @@ EvalParams localOptimize(const EvalParams& initial, const std::vector<Pos>& posi
 				improvedParam = false;
 				EvalParams newParams = bestParams;
 				newParams.params[i] += 5;
-				double newError = error(positions, newParams, K_VAL);
+				double newError = error(positions, newParams, K_VAL, threads);
 				std::cout << "Param: " << i << " Delta: 5, New: " << newError << " best: " << bestError << '\n';
 				if (newError < bestError)
 				{
@@ -34,7 +37,7 @@ EvalParams localOptimize(const EvalParams& initial, const std::vector<Pos>& posi
 				}
 
 				newParams.params[i] -= 10;
-				newError = error(positions, newParams, K_VAL);
+				newError = error(positions, newParams, K_VAL, threads);
 				std::cout << "Param: " << i << " Delta: -5, New: " << newError << " best: " << bestError << '\n';
 				if (newError < bestError)
 				{
@@ -46,7 +49,7 @@ EvalParams localOptimize(const EvalParams& initial, const std::vector<Pos>& posi
 				}
 
 				newParams.params[i] += 4;
-				newError = error(positions, newParams, K_VAL);
+				newError = error(positions, newParams, K_VAL, threads);
 				std::cout << "Param: " << i << " Delta: -1, New: " << newError << " best: " << bestError << '\n';
 				if (newError < bestError)
 				{
@@ -58,7 +61,7 @@ EvalParams localOptimize(const EvalParams& initial, const std::vector<Pos>& posi
 				}
 
 				newParams.params[i] += 2;
-				newError = error(positions, newParams, K_VAL);
+				newError = error(positions, newParams, K_VAL, threads);
 				std::cout << "Param: " << i << " Delta: 1, New: " << newError << " best: " << bestError << '\n';
 				if (newError < bestError)
 				{
