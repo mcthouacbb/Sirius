@@ -8,14 +8,14 @@ std::vector<Pos> parseEpdFile(const std::string& str)
 	std::vector<Pos> positions;
 
 	int lineStart = 0;
-	int lineEnd = str.find('\n', 0);
+	int lineEnd = static_cast<int>(str.find('\n', 0));
 
 	do
 	{
 		if (str[lineStart] == '\0')
 			break;
 		double result;
-		int lastChar = lineEnd == -1 ? str.size() - 1 : lineEnd - 1;
+		int lastChar = lineEnd == -1 ? static_cast<int>(str.size() - 1) : lineEnd - 1;
 		int len = lineEnd - lineStart;
 		if (str[lastChar] == '0')
 		{
@@ -41,7 +41,7 @@ std::vector<Pos> parseEpdFile(const std::string& str)
 		}
 		positions.push_back({str.c_str() + lineStart, len, result});
 		lineStart = lineEnd + 1;
-		lineEnd = str.find('\n', lineStart);
+		lineEnd = static_cast<int>(str.find('\n', lineStart));
 	} while (lineEnd != std::string::npos);
 
 	return positions;

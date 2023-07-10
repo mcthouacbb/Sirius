@@ -51,7 +51,7 @@ void Debug::run()
 
 void Debug::reportSearchInfo(const SearchInfo& info) const
 {
-
+	std::cout << info.nodes << std::endl;
 }
 
 bool Debug::checkInput()
