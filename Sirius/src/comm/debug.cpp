@@ -210,13 +210,11 @@ void Debug::pgnToEpd(std::istringstream& stream) const
 				std::cout << "Skipping book position" << std::endl;
 				continue;
 			}
-			int sign = 1;
 			const char* p = entry.comment.c_str();
 			if (p[0] == '+')
 				p++;
 			if (p[0] == '-')
 			{
-				sign = -1;
 				p++;
 			}
 

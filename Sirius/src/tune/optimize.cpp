@@ -1,5 +1,3 @@
-#pragma once
-
 #include "optimize.h"
 
 namespace tune
@@ -17,7 +15,7 @@ EvalParams localOptimize(const EvalParams& initial, const std::vector<Pos>& posi
 	while (improved)
 	{
 		improved = false;
-		for (int i = 0; i < NUM_PARAMS; i++)
+		for (uint32_t i = 0; i < NUM_PARAMS; i++)
 		{
 			bool improvedParam = false;
 			do

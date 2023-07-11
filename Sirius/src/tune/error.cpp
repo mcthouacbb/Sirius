@@ -114,7 +114,7 @@ double error(const std::vector<Pos>& positions, const EvalParams& params, double
 	std::vector<ErrorThread::Result> results;
 	results.reserve(threads.size());
 	const int BLOCK_COUNT = static_cast<int>(threads.size() + 1);
-	for (int i = 0; i < threads.size(); i++)
+	for (uint32_t i = 0; i < threads.size(); i++)
 	{
 		std::span<const Pos> threadPositions(positions.data() + positions.size() * (i + 1) / BLOCK_COUNT, positions.data() + positions.size() * (i + 2) / BLOCK_COUNT);
 		results.push_back(threads[i].process(threadPositions, params, kValue));
@@ -122,9 +122,9 @@ double error(const std::vector<Pos>& positions, const EvalParams& params, double
 
 	std::span<const Pos> mainThreadPositions(positions.data(), positions.data() + positions.size() / BLOCK_COUNT);
 	double result = error(mainThreadPositions, params, kValue);
-	for (int i = 0; i < results.size(); i++)
+	for (auto& errorResult : results)
 	{
-		result += results[i].waitForResult();
+		result += errorResult.waitForResult();
 	}
 
 	return result / positions.size();
