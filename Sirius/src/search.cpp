@@ -15,12 +15,25 @@ Search::Search(Board& board)
 int Search::iterDeep(int maxDepth)
 {
 	int score = 0;
+	reset();
+	m_ShouldStop = false;
+	m_TimeCheckCounter = TIME_CHECK_INTERVAL;
+	// 3 | 1
+	m_TimeMan.setTimeLeft(Duration(180000000), Duration(1000000));
+	m_TimeMan.startSearch();
 	for (int depth = 1; depth <= maxDepth; depth++)
 	{
 		m_Nodes = 0;
 		m_QNodes = 0;
 		m_Plies[0].pv = m_PV;
 		int searchScore = search(depth, eval::NEG_INF, eval::POS_INF);
+		if (m_ShouldStop)
+		{
+			std::cout << "Depth: " << depth << std::endl;
+			std::cout << "Time Ran Out" << std::endl;
+			std::cout << std::endl;
+			break;
+		}
 		score = searchScore;
 		std::cout << "Depth: " << depth << std::endl;
 		std::cout << "\tNodes: " << m_Nodes << std::endl;
@@ -40,9 +53,20 @@ int Search::iterDeep(int maxDepth)
 	return score;
 }
 
+void printBoard(const Board& board);
 
 int Search::search(int depth, int alpha, int beta)
 {
+	if (--m_TimeCheckCounter == 0)
+	{
+		m_TimeCheckCounter = TIME_CHECK_INTERVAL;
+		if (m_TimeMan.shouldStop())
+		{
+			m_ShouldStop = true;
+			return alpha;
+		}
+	}
+
 	alpha = std::max(alpha, eval::CHECKMATE + m_RootPly);
 	beta = std::min(beta, -eval::CHECKMATE - m_RootPly);
 	if (alpha >= beta)
@@ -62,6 +86,7 @@ int Search::search(int depth, int alpha, int beta)
 	}
 
 	m_Nodes++;
+
 
 	Move moves[256];
 	Move* end = genMoves<MoveGenType::LEGAL>(m_Board, moves, checkInfo);
@@ -93,6 +118,9 @@ int Search::search(int depth, int alpha, int beta)
 		int moveScore = -search(depth - 1, -beta, -alpha);
 		m_RootPly--;
 		m_Board.unmakeMove(move, state);
+
+		if (m_ShouldStop)
+			return alpha;
 
 		if (moveScore >= beta)
 		{

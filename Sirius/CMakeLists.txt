@@ -12,6 +12,8 @@ set(SRCS
 	"src/movegen.h"
 	"src/search.cpp"
 	"src/search.h"
+	"src/time_man.cpp"
+	"src/time_man.h"
 
 	"src/eval/draw.h"
 	"src/eval/eval.cpp"
