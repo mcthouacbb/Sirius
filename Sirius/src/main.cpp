@@ -3,25 +3,16 @@
 #include <fstream>
 #include <charconv>
 #include <vector>
+#include <cstring>
+#include <chrono>
 
 #include "board.h"
 #include "attacks.h"
 #include "movegen.h"
-
-std::string moveStr(Move move)
-{
-	std::string str(4 + (move.type() == MoveType::PROMOTION), ' ');
-	str[0] = static_cast<char>((move.srcPos() & 7) + 'a');
-	str[1] = static_cast<char>((move.srcPos() >> 3) + '1');
-	str[2] = static_cast<char>((move.dstPos() & 7) + 'a');
-	str[3] = static_cast<char>((move.dstPos() >> 3) + '1');
-	if (move.type() == MoveType::PROMOTION)
-	{
-		const char promoChars[4] = {'q', 'r', 'b', 'n'};
-		str[4] = promoChars[(static_cast<int>(move.promotion()) >> 14)];
-	}
-	return str;
-}
+#include "comm/move.h"
+#include "comm/fen.h"
+#include "eval/eval.h"
+#include "search.h"
 
 void printBoard(const Board& board)
 {
@@ -42,7 +33,7 @@ uint64_t perft(Board& board, int depth)
 	if (depth == 0)
 		return 1;
 	Move moves[256];
-	Move* end = genMoves<MoveGenType::LEGAL>(board, moves);
+	Move* end = genMoves<MoveGenType::LEGAL>(board, moves, calcCheckInfo(board, board.currPlayer()));
 	if (depth == 1 && !print)
 		return end - moves;
 
@@ -54,11 +45,79 @@ uint64_t perft(Board& board, int depth)
 		board.makeMove(move, state);
 		uint64_t sub = perft<false>(board, depth - 1);
 		if (print)
-			std::cout << moveStr(move) << ": " << sub << std::endl;
+			std::cout << comm::convMoveToPCN(move) << ": " << sub << std::endl;
 		count += sub;
 		board.unmakeMove(move, state);
 	}
 	return count;
+}
+
+void testSAN(Board& board, int depth)
+{
+	Move moves[256];
+	Move* end = genMoves<MoveGenType::LEGAL>(board, moves, calcCheckInfo(board, board.currPlayer()));
+	
+	for (Move* it = moves; it != end; it++)
+	{
+		std::string str = comm::convMoveToSAN(board, moves, end, *it);
+		auto [move, strEnd] = comm::findMoveFromSAN(board, moves, end, str.c_str());
+		if (move != it)
+		{
+			std::cerr << board.stringRep() << std::endl;
+			std::cout << str << ' ' << comm::convMoveToPCN(*it) << std::endl;
+			std::cerr << "No match " << it - moves << std::endl;
+			exit(1);
+		}
+
+		if (strEnd != str.c_str() + str.length())
+		{
+			std::cerr << board.stringRep() << std::endl;
+			std::cerr << str << ' ' << comm::convMoveToPCN(*it) << std::endl;
+			std::cerr << "String wrong" << std::endl;
+			exit(1);
+		}
+	}
+
+	if (depth == 0)
+		return;
+
+	BoardState state;
+	for (Move* it = moves; it != end; it++)
+	{
+		const auto& move = *it;
+		board.makeMove(move, state);
+		testSAN(board, depth - 1);
+		board.unmakeMove(move, state);
+	}
+}
+
+void testQuiescence(Board& board, int depth)
+{
+	if (depth == 0)
+	{
+		Move captures[256];
+		Move* end = genMoves<MoveGenType::CAPTURES>(board, captures, calcCheckInfo(board, board.currPlayer()));
+
+		for (Move* it = captures; it != end; it++)
+		{
+			if (it->type() != MoveType::ENPASSANT && !(board.getPieceAt(it->dstPos())))
+			{
+				throw std::runtime_error("Not capture");
+			}
+		}
+		return;
+	}
+	Move moves[256];
+	Move* end = genMoves<MoveGenType::LEGAL>(board, moves, calcCheckInfo(board, board.currPlayer()));
+
+	BoardState state;
+	for (Move* it = moves; it != end; it++)
+	{
+		const auto& move = *it;
+		board.makeMove(move, state);
+		testQuiescence(board, depth - 1);
+		board.unmakeMove(move, state);
+	}
 }
 
 struct PerftTest
@@ -67,7 +126,7 @@ struct PerftTest
 	uint64_t results[6];
 };
 
-void runTests(Board& board)
+void runTests(Board& board, bool fast)
 {
 	std::ifstream file("res/perft_tests.txt");
 	if (file.is_open())
@@ -82,7 +141,6 @@ void runTests(Board& board)
 	std::vector<PerftTest> tests;
 	while (std::getline(file, line))
 	{
-		std::cout << line << std::endl;
 		PerftTest test;
 		std::fill(std::begin(test.results), std::end(test.results), UINT64_MAX);
 		int i = 0;
@@ -123,6 +181,9 @@ TEST: 8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1
 */
 
 	uint32_t failCount = 0;
+	uint64_t totalNodes = 0;
+
+	auto t1 = std::chrono::steady_clock::now();
 	for (uint32_t i = 0; i < tests.size(); i++)
 	{
 		const auto& test = tests[i];
@@ -132,19 +193,241 @@ TEST: 8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1
 		{
 			if (test.results[j] == UINT64_MAX)
 				continue;
-			uint64_t nodes = perft<false>(board, i + 1);
+			if (fast && test.results[j] > 100000000)
+			{
+				std::cout << "\tSkipped: depth " << j + 1 << std::endl;
+				continue;
+			}
+			uint64_t nodes = perft<false>(board, j + 1);
+			totalNodes += nodes;
 			if (nodes == test.results[j])
 			{
-				std::cout << "\tPassed: depth " << i + 1 << std::endl;
+				std::cout << "\tPassed: depth " << j + 1 << std::endl;
 			}
 			else
 			{
-				std::cout << "\tFailed: depth " << i + 1 << ", Expected: " << test.results[j] << ", got: " << nodes << std::endl;
+				std::cout << "\tFailed: depth " << j + 1 << ", Expected: " << test.results[j] << ", got: " << nodes << std::endl;
 				failCount++;
 			}
 		}
 	}
+	auto t2 = std::chrono::steady_clock::now();
 	std::cout << "Failed: " << failCount << std::endl;
+	std::cout << "Nodes: " << totalNodes << std::endl;
+	std::cout << "Time: " << (t2 - t1).count() << std::endl;
+}
+
+void testSANFind(const Board& board, Move* begin, Move* end, int len)
+{
+	static constexpr char chars[25] = {
+		'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
+		'1', '2', '3', '4', '5', '6', '7', '8',
+		'K', 'Q', 'R', 'B', 'N', 'q', 'r', 'n',
+		'x'
+	};
+	static constexpr uint64_t charCount = 25;
+	char* buf = new char[len + 1];
+	buf[len] = '\0';
+
+	uint64_t maxIdx = 1;
+
+	for (uint64_t i = 0; i < len; i++)
+	{
+		maxIdx *= charCount;
+	}
+	for (uint64_t i = 0; i < maxIdx; i++)
+	{
+		uint64_t tmp = i;
+		for (int i = 0; i < len; i++)
+		{
+			buf[i] = chars[tmp % charCount];
+			tmp /= charCount;
+		}
+
+		// std::cout << buf << '\n';
+
+		comm::findMoveFromSAN(board, begin, end, buf);
+	}
+	delete[] buf;
+}
+
+enum class Command
+{
+	SET_POSITION,
+	MAKE_MOVE,
+	UNDO_MOVE,
+	PRINT_BOARD,
+	STATIC_EVAL,
+	SEARCH
+};
+
+const char* parseCommand(const char* str, Command& command)
+{
+	switch (str[0])
+	{
+		case 'p':
+			switch (str[1])
+			{
+				case 'o':
+					if (strncmp(str + 2, "sition ", 7) == 0)
+					{
+						command = Command::SET_POSITION;
+						return str + 9;
+					}
+					return nullptr;
+				case 'r':
+					if (strncmp(str + 2, "int", 3) == 0)
+					{
+						command = Command::PRINT_BOARD;
+						return str + 5;
+					}
+					return nullptr;
+				default:
+					return nullptr;
+			}
+		case 'm':
+			if (strncmp(str + 1, "ove ", 4) == 0)
+			{
+				command = Command::MAKE_MOVE;
+				return str + 5;
+			}
+			return nullptr;
+		case 'u':
+			if (strncmp(str + 1, "ndo", 3) == 0)
+			{
+				command = Command::UNDO_MOVE;
+				return str + 4;
+			}
+			return nullptr;
+		case 's':
+			if (strncmp(str + 1, "earch ", 6) == 0)
+			{
+				command = Command::SEARCH;
+				return str + 7;
+			}
+		case 'e':
+			if (strncmp(str + 1, "val", 3) == 0)
+			{
+				command = Command::STATIC_EVAL;
+				return str + 4;
+			}
+			return nullptr;
+		default:
+			return nullptr;
+	}
+}
+
+struct State
+{
+	Board* board;
+	std::vector<BoardState> prevStates;
+	std::vector<Move> prevMoves;
+	Move moves[256];
+	Move* end;
+};
+
+void setPosition(State& state, std::string_view params)
+{
+	if (strncmp(params.data(), "fen ", 4) == 0)
+	{
+		if (!comm::isValidFen(params.data() + 4))
+		{
+			std::cout << "Invalid fen string" << std::endl;
+			return;
+		}
+		state.board->setToFen(params.data() + 4);
+	}
+	else if (strncmp(params.data(), "startpos\0", 9) == 0)
+	{
+		state.board->setToFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+	}
+	else
+	{
+		std::cout << "Invalid position" << std::endl;
+		return;
+	}
+	state.prevStates.clear();
+	state.prevMoves.clear();
+	state.end = genMoves<MoveGenType::LEGAL>(*state.board, state.moves, calcCheckInfo(*state.board, state.board->currPlayer()));
+}
+
+void makeMove(State& state, std::string_view params)
+{
+	auto [move, strEnd] = comm::findMoveFromSAN(*state.board, state.moves, state.end, params.data());
+
+	if (move == nullptr)
+	{
+		std::cout << "Invalid move" << std::endl;
+		return;
+	}
+
+	if (move == state.end)
+	{
+		std::cout << "No move found" << std::endl;
+		return;
+	}
+
+	if (move == state.end + 1)
+	{
+		std::cout << "Move is ambiguous" << std::endl;
+		return;
+	}
+
+	state.prevStates.emplace_back(BoardState());
+	state.board->makeMove(*move, state.prevStates.back());
+	state.prevMoves.push_back(*move);
+
+	state.end = genMoves<MoveGenType::LEGAL>(*state.board, state.moves, calcCheckInfo(*state.board, state.board->currPlayer()));
+}
+
+void undoMove(State& state, std::string_view params)
+{
+	if (state.prevMoves.empty())
+	{
+		std::cout << "No move to undo" << std::endl;
+		return;
+	}
+
+	state.board->unmakeMove(state.prevMoves.back(), state.prevStates.back());
+	state.prevStates.pop_back();
+	state.prevMoves.pop_back();
+
+	state.end = genMoves<MoveGenType::LEGAL>(*state.board, state.moves, calcCheckInfo(*state.board, state.board->currPlayer()));
+}
+
+void staticEval(const Board& board)
+{
+	std::cout << "Eval: " << eval::evaluate(board) << std::endl;
+	std::cout << "Phase: " << board.evalState().phase << std::endl;
+	std::cout << "Eval midgame:\n";
+	std::cout << "\tMaterial:\n";
+	std::cout << "\t\tWhite: " << board.evalState().materialMG[0] << '\n';
+	std::cout << "\t\tBlack: " << board.evalState().materialMG[1] << '\n';
+	std::cout << "Eval endgame:\n";
+	std::cout << "\tMaterial:\n";
+	std::cout << "\t\tWhite: " << board.evalState().materialEG[0] << '\n';
+	std::cout << "\t\tBlack: " << board.evalState().materialEG[1] << '\n';
+}
+
+void searchCommand(Search& search, std::string_view params)
+{
+	int depth;
+	auto [ptr, ec] = std::from_chars(params.data(), params.data() + params.size(), depth);
+
+	if (depth <= 0)
+	{
+		std::cout << "Depth must be greater than 0" << std::endl;
+		return;
+	}
+
+	auto t1 = std::chrono::steady_clock::now();
+	int eval = search.iterDeep(depth);
+	auto t2 = std::chrono::steady_clock::now();
+
+	auto time = std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1);
+
+	std::cout << "Time: " << time.count() << std::endl;
+	std::cout << "Eval: " << eval << std::endl;
 }
 
 int main()
@@ -152,63 +435,57 @@ int main()
 	attacks::init();
 	std::cout << "Hello World!" << std::endl;
 	Board board;
-	// board.setToFen("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
 
-	runTests(board);
-	// board.setToFen("8/8/3p4/1Pp4r/1K5k/5p2/4P1P1/1R6 w - c6 0 3");
-	// std::cout << perft<true>(board, 1) << std::endl;
-	
-	// board.setToFen("8/2p5/3p4/KP5r/1R2Pp1k/8/6P1/8 b - e3 0 1");
-	// runTests(board);
-	// board.setToFen("rnb1kbnr/ppp2ppp/8/3pp3/3PP3/5N2/PPP1QPPR/RNB1KB2 b Qkq - 1 5");
-	// board.setToFen("rnb1kbnr/ppp2ppp/8/3pp3/3PP3/5N2/PPP2PPR/RNBQKB2 w Qkq d6 0 5");
-	// board.setToFen("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8");
-	// board.setToFen("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1");
-	// board.printDbg();
-	// Move moves[256];
-	// Move* end = genMoves<MoveGenType::LEGAL>(board, moves);
-	// std::cout << end - moves << std::endl;
-	// std::cout << perft<true>(board, 3) << std::endl;
-	// BoardState state;
-	// std::cout << perft<true>(board, 1) << std::endl;
-	// board.makeMove(Move(14, 22, MoveType::NONE), state);
-	// board.makeMove(Move(11, 19, MoveType::NONE), state);
-	// board.makeMove(Move(62, 45, MoveType::NONE), state);
-	// board.setToFen("rnbqkb1r/pppppppp/8/8/4n3/3P4/PPPKPPPP/RNBQ1BNR w kq - 3 3");
 	// board.setToFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
-	/*Move moves[256];
-	Move* end = genMoves<MoveGenType::LEGAL>(board, moves);
-	for (Move* it = moves; it != end; it++)
+
+	// testQuiescence(board, 3);
+	// std::cout << "yay" << std::endl;
+	
+	State state;
+	state.board = &board;
+	state.end = genMoves<MoveGenType::LEGAL>(board, state.moves, calcCheckInfo(*state.board, state.board->currPlayer()));
+
+	Search search(board);
+	
+	std::string str;
+	for (;;)
 	{
-		const auto& move = *it;
-		std::cout << moveStr(move) << std::endl;
-	}*/
-	// std::cout << perft<true>(board, 3) << std::endl;
-	// printBoard(board);
-	// runTests(board);
-	// printBB(0x70);
-	// printBB(0x1C);
-	// runTests(board);
-	// auto t1 = std::chrono::steady_clock::now();
-	// board.setToFen("rnb1kbnr/pppp1ppp/4pq2/8/8/5P2/PPPPPKPP/RNBQ1BNR w kq - 2 3");
-	// std::cout << perft<true>(board, 6) << std::endl;
-	// auto t2 = std::chrono::steady_clock::now();
-	// std::cout << (t2 - t1).count() << std::endl;
-	// board.makeMove(Move(10, 18, MoveType::NONE), state);
-	// board.makeMove(Move(52, 44, MoveType::NONE), state);
-	// board.makeMove(Move(11, 19, MoveType::NONE), state);
-	// board.makeMove(Move(61, 25, MoveType::NONE), state);
-	// std::cout << perft<true>(board, 1);
-	// board.makeMove(moves[0], state);
-	// board.unmakeMove(moves[0], state);
-	// board.makeMove(Move(10, 18, MoveType::NONE), state);
-	// board.makeMove(Move(51, 43, MoveType::NONE), state);
-	// board.makeMove(Move(3, 24, MoveType::NONE), state);
-	// printBoard(board);
-	// std::cout << perft<true>(board, 2) << std::endl;
-	// board.printDbg();
-	// std::cout << perft<true>(board, 3) << std::endl;
-	// BoardState state;
-	// board.makeMove(Move(), state);
+		std::getline(std::cin, str);
+		Command command;
+		const char* params = parseCommand(str.c_str(), command);
+		if (params == nullptr)
+		{
+			std::cout << "Invalid command" << std::endl;
+			continue;
+		}
+
+		switch (command)
+		{
+			case Command::SET_POSITION:
+				std::cout << "Set position: " << params << std::endl;
+				setPosition(state, std::string_view(params, str.c_str() + str.size()));
+				break;
+			case Command::MAKE_MOVE:
+				makeMove(state, std::string_view(params, str.c_str() + str.size()));
+				std::cout << "Make move: " << params << std::endl;
+				break;
+			case Command::UNDO_MOVE:
+				undoMove(state, std::string_view(params, str.c_str() + str.size()));
+				std::cout << "Undo move: " << params << std::endl;
+				break;
+			case Command::PRINT_BOARD:
+				std::cout << "Print board: " << params << std::endl;
+				printBoard(board);
+				break;
+			case Command::STATIC_EVAL:
+				std::cout << "Static eval: " << params << std::endl;
+				staticEval(board);
+				break;
+			case Command::SEARCH:
+				std::cout << "Search: " << params << std::endl;
+				searchCommand(search, std::string_view(params, str.c_str() + str.size()));
+				break;
+		}
+	}
 	return 0;
 }

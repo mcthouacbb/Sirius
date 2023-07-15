@@ -1,6 +1,6 @@
 # Chess Engine (untitled)
 
-v0.1
+v1.0
 
 Features
 - Board representation
@@ -55,3 +55,25 @@ Features
 	        - all squares which have pieces that are checking the king
         - pinned
 	        - all squares which contain pieces which are pinned to the king
+- Evaluation
+	- Tapered Evaluation
+    - Material
+	    - Middlegame
+	        - Queen = 900
+	        - Rook = 500
+	        - Bishop = 330
+	        - Knight = 320
+	        - Pawn = 100
+	    - Endgame
+	        - Queen = 900
+            - Rook = 500
+            - Bishop = 330
+            - Knight = 320
+            - Pawn = 100
+- Search
+	- Mate Distance Pruning
+    - Check Extension
+    - PV Collection(pv list on stack)
+    - Move Ordering
+	    - MVV_LVA
+    - Quiescence Search

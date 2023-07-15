@@ -131,7 +131,7 @@ inline uint32_t popLSB(BitBoard& bb)
 	return lsb;
 }
 
-inline uint32_t getPopcnt(BitBoard bb)
+inline int getPopcnt(BitBoard bb)
 {
 	return std::popcount(bb);
 }

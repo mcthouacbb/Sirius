@@ -2,7 +2,7 @@
 
 #include "defs.h"
 #include "bitboard.h"
-#include "move.h"
+#include "eval/eval_state.h"
 
 #include <string_view>
 #include <string>
@@ -29,7 +29,7 @@ public:
 
 	std::string stringRep() const;
 
-	void printDbg();
+	void printDbg() const;
 
 	void makeMove(Move move, BoardState& state);
 	void unmakeMove(Move move, const BoardState& state);
@@ -44,6 +44,8 @@ public:
 	BitBoard getPieces(PieceType type) const;
 	BitBoard getColor(Color color) const;
 	BitBoard getAllPieces() const;
+
+	const eval::EvalState& evalState() const;
 private:
 	void addPiece(int pos, Color color, PieceType piece);
 	void addPiece(int pos, Piece piece);
@@ -55,6 +57,8 @@ private:
 	BitBoard m_Colors[2];
 
 	Color m_CurrPlayer;
+
+	eval::EvalState m_EvalState;
 
 	int m_GamePly;
 	int m_Enpassant;
@@ -87,7 +91,6 @@ inline int Board::castlingRights() const
 	return m_CastlingRights;	
 }
 
-
 inline Piece Board::getPieceAt(uint32_t square) const
 {
 	return m_Squares[square];
@@ -106,4 +109,9 @@ inline BitBoard Board::getColor(Color color) const
 inline BitBoard Board::getAllPieces() const
 {
 	return m_Pieces[0];
+}
+
+inline const eval::EvalState& Board::evalState() const
+{
+	return m_EvalState;
 }

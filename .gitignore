@@ -1,5 +1,11 @@
 # taken from https://github.com/github/gitignore/blob/main/C%2B%2B.gitignore
 
+# Executables
+*.exe
+*.out
+*.app
+
+
 # Prerequisites
 *.d
 
