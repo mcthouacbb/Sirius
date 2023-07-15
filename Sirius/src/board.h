@@ -25,6 +25,7 @@ struct BoardState
 	int repetitions;
 	int lastRepetition;
 	ZKey zkey;
+	ZKey pawnKey;
 	CheckInfo checkInfo;
 
 	Piece capturedPiece;
@@ -63,6 +64,7 @@ public:
 	int castlingRights() const;
 	int pliesFromNull() const;
 	ZKey zkey() const;
+	ZKey pawnKey() const;
 
 	bool isDraw(int searchPly);
 	bool is3FoldDraw(int searchPly);
@@ -168,6 +170,11 @@ inline int Board::castlingRights() const
 inline ZKey Board::zkey() const
 {
 	return m_State->zkey;
+}
+
+inline ZKey Board::pawnKey() const
+{
+	return m_State->pawnKey;
 }
 
 inline Piece Board::getPieceAt(uint32_t square) const

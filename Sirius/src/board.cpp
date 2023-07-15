@@ -20,6 +20,7 @@ void Board::setToFen(const std::string_view& fen)
 	memset(m_Squares, 0, 64 + 72);
 	m_EvalState.init();
 	m_State->zkey.value = 0;
+	m_State->pawnKey.value = 0;
 	int i = 0;
 	int sq = 56;
 	for (;; i++)
@@ -58,6 +59,7 @@ void Board::setToFen(const std::string_view& fen)
 				break;
 			case 'p':
 				m_State->zkey.addPiece(PieceType::PAWN, Color::BLACK, sq);
+				m_State->pawnKey.addPiece(PieceType::PAWN, Color::BLACK, sq);
 				addPiece(sq++, Color::BLACK, PieceType::PAWN);
 				break;
 			case 'K':
@@ -82,6 +84,7 @@ void Board::setToFen(const std::string_view& fen)
 				break;
 			case 'P':
 				m_State->zkey.addPiece(PieceType::PAWN, Color::WHITE, sq);
+				m_State->pawnKey.addPiece(PieceType::PAWN, Color::WHITE, sq);
 				addPiece(sq++, Color::WHITE, PieceType::PAWN);
 				break;
 			case '/':
@@ -166,6 +169,7 @@ void Board::setToEpd(const std::string_view& epd)
 	memset(m_Squares, 0, 64 + 72);
 	m_EvalState.init();
 	m_State->zkey.value = 0;
+	m_State->pawnKey.value = 0;
 	int i = 0;
 	int sq = 56;
 	for (;; i++)
@@ -204,6 +208,7 @@ void Board::setToEpd(const std::string_view& epd)
 				break;
 			case 'p':
 				m_State->zkey.addPiece(PieceType::PAWN, Color::BLACK, sq);
+				m_State->pawnKey.addPiece(PieceType::PAWN, Color::BLACK, sq);
 				addPiece(sq++, Color::BLACK, PieceType::PAWN);
 				break;
 			case 'K':
@@ -228,6 +233,7 @@ void Board::setToEpd(const std::string_view& epd)
 				break;
 			case 'P':
 				m_State->zkey.addPiece(PieceType::PAWN, Color::WHITE, sq);
+				m_State->pawnKey.addPiece(PieceType::PAWN, Color::WHITE, sq);
 				addPiece(sq++, Color::WHITE, PieceType::PAWN);
 				break;
 			case '/':
@@ -511,6 +517,7 @@ void Board::makeMove(Move move, BoardState& state)
 	m_State->epSquare = prev->epSquare;
 	m_State->castlingRights = prev->castlingRights;
 	m_State->zkey = prev->zkey;
+	m_State->pawnKey = prev->pawnKey;
 	m_State->capturedPiece = PIECE_NONE;
 
 	m_GamePly++;
@@ -536,6 +543,8 @@ void Board::makeMove(Move move, BoardState& state)
 				m_State->halfMoveClock = 0;
 				removePiece(move.dstPos());
 				m_State->zkey.removePiece(getPieceType(dstPiece), getPieceColor(dstPiece), move.dstPos());
+				if (getPieceType(dstPiece) == PieceType::PAWN)
+					m_State->pawnKey.removePiece(getPieceType(dstPiece), getPieceColor(dstPiece), move.dstPos());
 			}
 
 			movePiece(move.srcPos(), move.dstPos());
@@ -543,6 +552,7 @@ void Board::makeMove(Move move, BoardState& state)
 
 			if (getPieceType(srcPiece) == PieceType::PAWN)
 			{
+				m_State->pawnKey.movePiece(getPieceType(srcPiece), getPieceColor(srcPiece), move.srcPos(), move.dstPos());
 				m_State->halfMoveClock = 0;
 				if (abs(move.srcPos() - move.dstPos()) == 16)
 				{
@@ -565,6 +575,7 @@ void Board::makeMove(Move move, BoardState& state)
 			}
 			removePiece(move.srcPos());
 			m_State->zkey.removePiece(PieceType::PAWN, m_SideToMove, move.srcPos());
+			m_State->pawnKey.removePiece(PieceType::PAWN, m_SideToMove, move.srcPos());
 			addPiece(move.dstPos(), m_SideToMove, promoPiece(move.promotion()));
 			m_State->zkey.addPiece(promoPiece(move.promotion()), m_SideToMove, move.dstPos());
 			break;
@@ -597,8 +608,10 @@ void Board::makeMove(Move move, BoardState& state)
 			m_State->capturedPiece = makePiece(PieceType::PAWN, flip(m_SideToMove));
 			removePiece(move.dstPos() + offset);
 			m_State->zkey.removePiece(PieceType::PAWN, flip(m_SideToMove), move.dstPos() + offset);
+			m_State->pawnKey.removePiece(PieceType::PAWN, flip(m_SideToMove), move.dstPos() + offset);
 			movePiece(move.srcPos(), move.dstPos());
 			m_State->zkey.movePiece(PieceType::PAWN, m_SideToMove, move.srcPos(), move.dstPos());
+			m_State->pawnKey.movePiece(PieceType::PAWN, m_SideToMove, move.srcPos(), move.dstPos());
 			break;
 		}
 	}
@@ -702,6 +715,7 @@ void Board::makeNullMove(BoardState& state)
 	m_State->epSquare = -1;
 	m_State->castlingRights = prev->castlingRights;
 	m_State->zkey = prev->zkey;
+	m_State->pawnKey = prev->pawnKey;
 	m_State->repetitions = 0;
 	m_State->lastRepetition = 0;
 
