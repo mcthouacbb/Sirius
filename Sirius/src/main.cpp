@@ -231,16 +231,16 @@ void testSANFind(const Board& board, Move* begin, Move* end, int len)
 
 	uint64_t maxIdx = 1;
 
-	for (uint64_t i = 0; i < len; i++)
+	for (int i = 0; i < len; i++)
 	{
 		maxIdx *= charCount;
 	}
 	for (uint64_t i = 0; i < maxIdx; i++)
 	{
 		uint64_t tmp = i;
-		for (int i = 0; i < len; i++)
+		for (int j = 0; j < len; j++)
 		{
-			buf[i] = chars[tmp % charCount];
+			buf[j] = chars[tmp % charCount];
 			tmp /= charCount;
 		}
 
@@ -353,7 +353,8 @@ void setPosition(State& state, std::string_view params)
 
 void makeMove(State& state, std::string_view params)
 {
-	auto [move, strEnd] = comm::findMoveFromSAN(*state.board, state.moves, state.end, params.data());
+	auto find = comm::findMoveFromSAN(*state.board, state.moves, state.end, params.data());
+	auto move = find.move;
 
 	if (move == nullptr)
 	{
@@ -380,7 +381,7 @@ void makeMove(State& state, std::string_view params)
 	state.end = genMoves<MoveGenType::LEGAL>(*state.board, state.moves, calcCheckInfo(*state.board, state.board->currPlayer()));
 }
 
-void undoMove(State& state, std::string_view params)
+void undoMove(State& state, std::string_view)
 {
 	if (state.prevMoves.empty())
 	{
@@ -413,6 +414,12 @@ void searchCommand(Search& search, std::string_view params)
 {
 	int depth;
 	auto [ptr, ec] = std::from_chars(params.data(), params.data() + params.size(), depth);
+	
+	if (ec != std::errc())
+	{
+		std::cout << "Depth must be a valid integer" << std::endl;
+		return;
+	}
 
 	if (depth <= 0)
 	{

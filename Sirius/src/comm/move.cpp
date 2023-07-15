@@ -11,7 +11,7 @@ MoveStrFind findMoveFromPCN(Move* begin, Move* end, const char* moveStr)
 	int src = (moveStr[0] - 'a') + ((moveStr[1] - '1') << 3);
 	int dst = (moveStr[2] - 'a') + ((moveStr[3] - '1') << 3);
 
-	Promotion promotion;
+	Promotion promotion = Promotion(-1);
 	bool isPromotion = false;
 	switch (moveStr[4])
 	{
@@ -58,7 +58,7 @@ MoveStrFind findMoveFromSAN(const Board& board, Move* begin, Move* end, const ch
 	int toFile = -1;
 	int toRank = -1;
 	PieceType piece = PieceType::NONE;
-	Promotion promotion;
+	Promotion promotion = Promotion(-1);
 	bool isPromotion = false;
 	bool isCapture = false;
 
@@ -438,10 +438,10 @@ search_moves:
 std::string convMoveToPCN(Move move)
 {
 	std::string str(4 + (move.type() == MoveType::PROMOTION), ' ');
-	str[0] = (move.srcPos() & 7) + 'a';
-	str[1] = (move.srcPos() >> 3) + '1';
-	str[2] = (move.dstPos() & 7) + 'a';
-	str[3] = (move.dstPos() >> 3) + '1';
+	str[0] = static_cast<char>((move.srcPos() & 7) + 'a');
+	str[1] = static_cast<char>((move.srcPos() >> 3) + '1');
+	str[2] = static_cast<char>((move.dstPos() & 7) + 'a');
+	str[3] = static_cast<char>((move.dstPos() >> 3) + '1');
 	if (move.type() == MoveType::PROMOTION)
 	{
 		str[4] = promoChars[(static_cast<int>(move.promotion()) >> 14)];
@@ -497,8 +497,8 @@ std::string convMoveToSAN(const Board& board, Move* begin, Move* end, Move move)
 				str[2] = '=';
 				str[3] = promoChars[static_cast<int>(move.promotion()) >> 14];
 			}
-			str[0] = (dstPos & 7) + 'a';
-			str[1] = (dstPos >> 3) + '1';
+			str[0] = static_cast<char>((dstPos & 7) + 'a');
+			str[1] = static_cast<char>((dstPos >> 3) + '1');
 			return str;
 		}
 		else
@@ -509,10 +509,10 @@ std::string convMoveToSAN(const Board& board, Move* begin, Move* end, Move move)
 				str[4] = '=';
 				str[5] = promoChars[static_cast<int>(move.promotion()) >> 14];
 			}
-			str[0] = (srcPos & 7) + 'a';
+			str[0] = static_cast<char>((srcPos & 7) + 'a');
 			str[1] = 'x';
-			str[2] = (dstPos & 7) + 'a';
-			str[3] = (dstPos >> 3) + '1';
+			str[2] = static_cast<char>((dstPos & 7) + 'a');
+			str[3] = static_cast<char>((dstPos >> 3) + '1');
 			return str;
 		}
 	}
@@ -531,8 +531,8 @@ std::string convMoveToSAN(const Board& board, Move* begin, Move* end, Move move)
 			{
 				str[1] = 'x';
 			}
-			str[1 + isCapture] = (dstPos & 7) + 'a';
-			str[2 + isCapture] = (dstPos >> 3) + '1';
+			str[1 + isCapture] = static_cast<char>((dstPos & 7) + 'a');
+			str[2 + isCapture] = static_cast<char>((dstPos >> 3) + '1');
 			return str;
 		}
 		
@@ -545,8 +545,8 @@ std::string convMoveToSAN(const Board& board, Move* begin, Move* end, Move move)
 			{
 				str[2] = 'x';
 			}
-			str[2 + isCapture] = (dstPos & 7) + 'a';
-			str[3 + isCapture] = (dstPos >> 3) + '1';
+			str[2 + isCapture] = static_cast<char>((dstPos & 7) + 'a');
+			str[3 + isCapture] = static_cast<char>((dstPos >> 3) + '1');
 			return str;
 		}
 
@@ -554,29 +554,28 @@ std::string convMoveToSAN(const Board& board, Move* begin, Move* end, Move move)
 		{
 			std::string str(4 + isCapture, ' ');
 			str[0] = pceChar;
-			str[1] = (srcPos >> 3) + '1';
+			str[1] = static_cast<char>((srcPos >> 3) + '1');
 			if (isCapture)
 			{
 				str[2] = 'x';
 			}
-			str[2 + isCapture] = (dstPos & 7) + 'a';
-			str[3 + isCapture] = (dstPos >> 3) + '1';
+			str[2 + isCapture] = static_cast<char>((dstPos & 7) + 'a');
+			str[3 + isCapture] = static_cast<char>((dstPos >> 3) + '1');
 			return str;
 		}
 
 		std::string str(5 + isCapture, ' ');
 		str[0] = pceChar;
-		str[1] = (srcPos & 7) + 'a';
-		str[2] = (srcPos >> 3) + '1';
+		str[1] = static_cast<char>((srcPos & 7) + 'a');
+		str[2] = static_cast<char>((srcPos >> 3) + '1');
 		if (isCapture)
 		{
 			str[3] = 'x';
 		}
-		str[3 + isCapture] = (dstPos & 7) + 'a';
-		str[4 + isCapture] = (dstPos >> 3) + '1';
+		str[3 + isCapture] = static_cast<char>((dstPos & 7) + 'a');
+		str[4 + isCapture] = static_cast<char>((dstPos >> 3) + '1');
 		return str;
 	}
-	return "";
 }
 
 

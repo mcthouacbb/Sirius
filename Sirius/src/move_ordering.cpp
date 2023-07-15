@@ -31,7 +31,7 @@ static const int PROMO_BONUS[4] = {
 };
 
 MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end)
-	: m_Moves(begin), m_Size(end - begin)
+	: m_Moves(begin), m_Size(static_cast<uint32_t>(end - begin))
 {
 	for (uint32_t i = 0; i < m_Size; i++)
 	{
@@ -60,7 +60,7 @@ MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end)
 Move MoveOrdering::selectMove(uint32_t index)
 {
 	int bestScore = INT_MIN;
-	uint32_t bestIndex;
+	uint32_t bestIndex = 0;
 	for (uint32_t i = index; i < m_Size; i++)
 	{
 		if (m_MoveScores[i] > bestScore)

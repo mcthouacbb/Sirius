@@ -14,7 +14,7 @@ Search::Search(Board& board)
 
 int Search::iterDeep(int maxDepth)
 {
-	int score;
+	int score = 0;
 	for (int depth = 1; depth <= maxDepth; depth++)
 	{
 		m_Nodes = 0;
