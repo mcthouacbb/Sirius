@@ -36,6 +36,7 @@ void printBoard(const Board& board)
 	std::cout << "Fen: " <<  board.fenStr() << std::endl;
 
 	std::cout << "Zobrist hash: " << board.zkey().value << std::endl;
+	std::cout << "Pawn structure hash: " << board.pawnKey().value << std::endl;
 }
 
 template<bool print>
