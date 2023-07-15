@@ -82,7 +82,7 @@ CheckInfo calcCheckInfo(const Board& board)
 		}
 		else if ((between & (between - 1)) == 0)
 		{
-			pinned |= between & -between;
+			pinned |= between & (0 - between);
 		}
 	}
 
@@ -104,7 +104,7 @@ bool canTakeEP(BitBoard eastRay, BitBoard westRay, BitBoard kingBB, BitBoard ene
 	if (westBlockers == 0)
 		return true;
 
-	BitBoard closestEastBlocker = eastBlockers & -eastBlockers;
+	BitBoard closestEastBlocker = eastBlockers & (0 - eastBlockers);
 	BitBoard other;
 	if (closestEastBlocker & kingBB)
 	{

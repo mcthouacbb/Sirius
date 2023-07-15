@@ -28,7 +28,13 @@
 *.a
 *.lib
 
-# Executables
-*.exe
-*.out
-*.app
+
+
+# for replit
+.ccls-cache
+.replit
+.breakpoints
+replit.nix
+build
+
+build

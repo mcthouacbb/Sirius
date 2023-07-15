@@ -121,8 +121,8 @@ done:
 	}
 	i += 2;
 
-	auto [ptr, ec] = std::from_chars(&fen[i], fen.end(), m_HalfMoveClock);
-	std::from_chars(ptr + 1, fen.end(), m_GamePly);
+	auto [ptr, ec] = std::from_chars(&fen[i], fen.data() + fen.size(), m_HalfMoveClock);
+	std::from_chars(ptr + 1, fen.data() + fen.size(), m_GamePly);
 	m_GamePly = 2 * (m_GamePly - 1) - (m_CurrPlayer == Color::WHITE);
 	return;
 }
@@ -279,7 +279,7 @@ void Board::makeMove(const Move move, BoardState& state)
 			
 			int offset = m_CurrPlayer == Color::WHITE ? -8 : 8;
 			int col = static_cast<int>(flip(m_CurrPlayer)) << 3;
-			state.dstPiece = col | static_cast<int>(PieceType::PAWN);
+			state.dstPiece = static_cast<Piece>(col | static_cast<int>(PieceType::PAWN));
 			removePiece(move.dstPos() + offset);
 			movePiece(move.srcPos(), move.dstPos());
 			break;
@@ -369,7 +369,7 @@ void Board::addPiece(int pos, Color color, PieceType piece)
 {
 	int col = static_cast<int>(color) << 3;
 	// int col = (color == Color::BLACK ? PIECE_COL_MASK : 0);
-	m_Squares[pos] = col | static_cast<int>(piece);
+	m_Squares[pos] = static_cast<Piece>(col | static_cast<int>(piece));
 	
 	BitBoard posBB = 1ull << pos;
 	m_Pieces[static_cast<int>(piece)] |= posBB;

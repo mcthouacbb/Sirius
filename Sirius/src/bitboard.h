@@ -33,7 +33,7 @@ constexpr BitBoard RANK_8 = 0xFF00000000000000;
 template<Color c, int r>
 constexpr BitBoard nthRank()
 {
-	if (c == Color::WHITE)
+	if constexpr (c == Color::WHITE)
 	{
 		return RANK_1 << (8 * r);
 	}

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <bitset>
 #include <bit>
+#include <cassert>
 
 enum class PieceType
 {

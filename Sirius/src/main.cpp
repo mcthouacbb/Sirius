@@ -11,10 +11,10 @@
 std::string moveStr(Move move)
 {
 	std::string str(4 + (move.type() == MoveType::PROMOTION), ' ');
-	str[0] = (move.srcPos() & 7) + 'a';
-	str[1] = (move.srcPos() >> 3) + '1';
-	str[2] = (move.dstPos() & 7) + 'a';
-	str[3] = (move.dstPos() >> 3) + '1';
+	str[0] = static_cast<char>((move.srcPos() & 7) + 'a');
+	str[1] = static_cast<char>((move.srcPos() >> 3) + '1');
+	str[2] = static_cast<char>((move.dstPos() & 7) + 'a');
+	str[3] = static_cast<char>((move.dstPos() >> 3) + '1');
 	if (move.type() == MoveType::PROMOTION)
 	{
 		const char promoChars[4] = {'q', 'r', 'b', 'n'};
@@ -97,7 +97,7 @@ void runTests(Board& board)
 			size_t idx = line.find(';', i + 1);
 			if (idx == std::string::npos)
 				break;
-			i = idx;
+			i = static_cast<int>(idx);
 			std::from_chars(line.data() + i + 4, line.data() + line.size(), test.results[line[i + 2] - '1']);
 		}
 		tests.push_back(test);
@@ -123,23 +123,23 @@ TEST: 8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1
 */
 
 	uint32_t failCount = 0;
-	for (int i = 0; i < tests.size(); i++)
+	for (uint32_t i = 0; i < tests.size(); i++)
 	{
 		const auto& test = tests[i];
 		board.setToFen(test.fen);
 		std::cout << "TEST: " << test.fen << std::endl;
-		for (int i = 0; i < 6; i++)
+		for (int j = 0; j < 6; j++)
 		{
-			if (test.results[i] == UINT64_MAX)
+			if (test.results[j] == UINT64_MAX)
 				continue;
 			uint64_t nodes = perft<false>(board, i + 1);
-			if (nodes == test.results[i])
+			if (nodes == test.results[j])
 			{
 				std::cout << "\tPassed: depth " << i + 1 << std::endl;
 			}
 			else
 			{
-				std::cout << "\tFailed: depth " << i + 1 << ", Expected: " << test.results[i] << ", got: " << nodes << std::endl;
+				std::cout << "\tFailed: depth " << i + 1 << ", Expected: " << test.results[j] << ", got: " << nodes << std::endl;
 				failCount++;
 			}
 		}
@@ -147,7 +147,7 @@ TEST: 8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1
 	std::cout << "Failed: " << failCount << std::endl;
 }
 
-int main(int argc, char** argv)
+int main()
 {
 	attacks::init();
 	std::cout << "Hello World!" << std::endl;
