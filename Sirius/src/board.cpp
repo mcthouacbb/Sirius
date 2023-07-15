@@ -94,6 +94,10 @@ void Board::setToFen(const std::string_view& fen)
 done:
 	i++;
 	m_SideToMove = fen[i] == 'w' ? Color::WHITE : Color::BLACK;
+	if (m_SideToMove == Color::BLACK)
+	{
+		m_State->zkey.flipSideToMove();
+	}
 
 	i += 2;
 	m_State->castlingRights = 0;
@@ -236,6 +240,10 @@ void Board::setToEpd(const std::string_view& epd)
 done:
 	i++;
 	m_SideToMove = epd[i] == 'w' ? Color::WHITE : Color::BLACK;
+	if (m_SideToMove == Color::BLACK)
+	{
+		m_State->zkey.flipSideToMove();
+	}
 
 	i += 2;
 	m_State->castlingRights = 0;
