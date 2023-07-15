@@ -429,7 +429,7 @@ std::string Board::fenStr() const
 	fen += ' ';
 	fen += std::to_string(m_State->halfMoveClock);
 	fen += ' ';
-	fen += std::to_string(m_GamePly / 2 + 1 + (m_SideToMove == Color::BLACK));
+	fen += std::to_string(m_GamePly / 2 + (m_SideToMove == Color::BLACK));
 
 	return fen;
 }
