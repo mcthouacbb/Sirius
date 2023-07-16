@@ -24,6 +24,7 @@ public:
 		PERFT
 	};
 
+	virtual void reportSearchInfo(const SearchInfo& info) const override;
 	virtual void execCommand(const std::string& command) override;
 private:
 	Command getCommand(const std::string& command) const;

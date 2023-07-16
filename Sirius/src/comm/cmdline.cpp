@@ -1,9 +1,9 @@
-
 #include "cmdline.h"
 #include "fen.h"
 #include "move.h"
 #include "../eval/eval.h"
 #include "../misc.h"
+#include "../movegen.h"
 
 #include <fstream>
 #include <sstream>
@@ -14,6 +14,44 @@ namespace comm
 CmdLine::CmdLine()
 {
 	m_Search.setTime(Duration(180000), Duration(1000));
+}
+
+void CmdLine::reportSearchInfo(const SearchInfo& info) const
+{
+	float time = std::chrono::duration_cast<std::chrono::duration<float>>(info.time).count();
+	std::cout << "Depth: " << info.depth << '\n';
+	std::cout << "\tTime Searched: " << time << '\n';
+	std::cout << "\tScore: ";
+	if (eval::isMateScore(info.score))
+	{
+		if (info.score < 0)
+			std::cout << "Mated in " << info.score - eval::CHECKMATE << " plies\n";
+		else
+			std::cout << "Mate in " << -eval::CHECKMATE - info.score << " plies\n";
+	}
+	else
+	{
+		std::cout << info.score << '\n';
+	}
+
+	std::cout << "PV: ";
+
+	Board board;
+	board.setToFen(m_Board.fenStr());
+
+	Move moves[256], *end;
+
+	std::deque<BoardState> states;
+	
+	for (const Move* move = info.pvBegin; move != info.pvEnd; move++)
+	{
+		end = genMoves<MoveGenType::LEGAL>(board, moves, calcCheckInfo(board, board.currPlayer()));
+		std::cout << comm::convMoveToSAN(board, moves, end, *move) << ' ';
+		states.push_back({});
+		board.makeMove(*move, states.back());
+	}
+	
+	std::cout << std::endl;
 }
 
 void CmdLine::execCommand(const std::string& command)

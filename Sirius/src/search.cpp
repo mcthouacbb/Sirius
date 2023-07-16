@@ -3,6 +3,7 @@
 #include "movegen.h"
 #include "move_ordering.h"
 #include "comm/move.h"
+#include "comm/icomm.h"
 #include <cstring>
 
 Search::Search(Board& board)
@@ -31,20 +32,14 @@ int Search::iterDeep(int maxDepth)
 			break;
 		}
 		score = searchScore;
-		std::cout << "Depth: " << depth << std::endl;
-		std::cout << "\tNodes: " << m_Nodes << std::endl;
-		std::cout << "\tQNodes: " << m_QNodes << std::endl;
-		std::cout << "\tPV Length: " << m_Plies[0].pvLength << std::endl;
-		std::cout << "\tEval: " << searchScore << std::endl;
-		std::cout << "\tPV: ";
-		for (int i = 0; i < m_Plies[0].pvLength; i++)
-		{
-			std::cout << comm::convMoveToPCN(m_PV[i]) << ' ';
-		}
-		std::cout << std::endl;
 
-		if (eval::isMateScore(searchScore))
-			return score;
+		comm::SearchInfo searchInfo;
+		searchInfo.depth = depth;
+		searchInfo.time = m_TimeMan.elapsed();
+		searchInfo.pvBegin = m_PV;
+		searchInfo.pvEnd = m_PV + m_Plies[0].pvLength;
+		searchInfo.score = searchScore;
+		comm::currComm->reportSearchInfo(searchInfo);
 	}
 	return score;
 }

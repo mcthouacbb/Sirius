@@ -11,6 +11,7 @@ public:
 	TimeManager() = default;
 
 	void setTimeLeft(Duration time, Duration increment);
+	Duration elapsed();
 
 	void startSearch();
 	bool shouldStop();

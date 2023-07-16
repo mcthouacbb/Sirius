@@ -2,7 +2,13 @@
 #include <string>
 
 #include "attacks.h"
+#include "comm/icomm.h"
 #include "comm/cmdline.h"
+
+namespace comm
+{
+	IComm* currComm;
+}
 
 int main()
 {
@@ -13,6 +19,7 @@ int main()
 	if (mode == "cmdline")
 	{
 		comm::CmdLine cmdLine;
+		comm::currComm = &cmdLine;
 		for (;;)
 		{
 			std::string cmd;
