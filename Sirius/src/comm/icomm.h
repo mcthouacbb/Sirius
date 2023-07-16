@@ -10,14 +10,6 @@
 namespace comm
 {
 
-struct SearchInfo
-{
-	int depth;
-	Duration time;
-	const Move* pvBegin, *pvEnd;
-	int score;
-};
-
 class IComm
 {
 public:

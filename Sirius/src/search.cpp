@@ -9,7 +9,7 @@
 Search::Search(Board& board)
 	: m_Board(board), m_RootPly(0)
 {
-	
+
 }
 
 int Search::iterDeep(int maxDepth)
@@ -32,19 +32,15 @@ int Search::iterDeep(int maxDepth)
 			break;
 		}
 		score = searchScore;
-
-		comm::SearchInfo searchInfo;
-		searchInfo.depth = depth;
-		searchInfo.time = m_TimeMan.elapsed();
-		searchInfo.pvBegin = m_PV;
-		searchInfo.pvEnd = m_PV + m_Plies[0].pvLength;
-		searchInfo.score = searchScore;
-		comm::currComm->reportSearchInfo(searchInfo);
+		m_SearchInfo.depth = depth;
+		m_SearchInfo.time = m_TimeMan.elapsed();
+		m_SearchInfo.pvBegin = m_PV;
+		m_SearchInfo.pvEnd = m_PV + m_Plies[0].pvLength;
+		m_SearchInfo.score = searchScore;
+		comm::currComm->reportSearchInfo(m_SearchInfo);
 	}
 	return score;
 }
-
-void printBoard(const Board& board);
 
 int Search::search(int depth, int alpha, int beta)
 {
@@ -57,8 +53,8 @@ int Search::search(int depth, int alpha, int beta)
 			return alpha;
 		}
 	}
-	
-	m_Nodes++;
+
+	m_SearchInfo.nodes++;
 
 	alpha = std::max(alpha, eval::CHECKMATE + m_RootPly);
 	beta = std::min(beta, -eval::CHECKMATE - m_RootPly);
@@ -80,7 +76,6 @@ int Search::search(int depth, int alpha, int beta)
 
 	m_Nodes++;
 
-
 	Move moves[256];
 	Move* end = genMoves<MoveGenType::LEGAL>(m_Board, moves, checkInfo);
 
@@ -91,7 +86,7 @@ int Search::search(int depth, int alpha, int beta)
 			return eval::CHECKMATE + m_RootPly;
 		return eval::STALEMATE;
 	}
-	
+
 	MoveOrdering ordering(m_Board, moves, end);
 	
 	BoardState state;
@@ -137,7 +132,8 @@ int Search::qsearch(int alpha, int beta)
 {
 	int score = eval::evaluate(m_Board);
 
-	m_QNodes++;
+	m_SearchInfo.nodes++;
+
 	if (score >= beta)
 		return beta;
 	if (score > alpha)
@@ -149,7 +145,7 @@ int Search::qsearch(int alpha, int beta)
 	Move* end = genMoves<MoveGenType::CAPTURES>(m_Board, captures, checkInfo);
 
 	MoveOrdering ordering(m_Board, captures, end);
-	
+
 	BoardState state;
 	for (uint32_t i = 0; i < end - captures; i++)
 	{

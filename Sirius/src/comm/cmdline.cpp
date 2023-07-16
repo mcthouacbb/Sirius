@@ -20,6 +20,7 @@ void CmdLine::reportSearchInfo(const SearchInfo& info) const
 {
 	float time = std::chrono::duration_cast<std::chrono::duration<float>>(info.time).count();
 	std::cout << "Depth: " << info.depth << '\n';
+	std::cout << "\tNodes: " << info.nodes << '\n';
 	std::cout << "\tTime Searched: " << time << '\n';
 	std::cout << "\tScore: ";
 	if (eval::isMateScore(info.score))
@@ -42,7 +43,7 @@ void CmdLine::reportSearchInfo(const SearchInfo& info) const
 	Move moves[256], *end;
 
 	std::deque<BoardState> states;
-	
+
 	for (const Move* move = info.pvBegin; move != info.pvEnd; move++)
 	{
 		end = genMoves<MoveGenType::LEGAL>(board, moves, calcCheckInfo(board, board.currPlayer()));
@@ -50,7 +51,7 @@ void CmdLine::reportSearchInfo(const SearchInfo& info) const
 		states.push_back({});
 		board.makeMove(*move, states.back());
 	}
-	
+
 	std::cout << std::endl;
 }
 
@@ -232,6 +233,15 @@ void CmdLine::searchCommand(std::istringstream& stream)
 	auto time = std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1);
 
 	std::cout << "Eval: " << eval << std::endl;
+	std::cout << "PV: ";
+	for (const Move* move = m_Search.info().pvBegin; move != m_Search.info().pvEnd; move++)
+	{
+		std::cout << comm::convMoveToSAN(m_Board, m_LegalMoves, m_LegalMoves + m_MoveCount, *move) << ' ';
+		makeMove(*move);
+	}
+
+	for (int i = 0; i < m_Search.info().pvEnd - m_Search.info().pvBegin; i++)
+		unmakeMove();
 	std::cout << std::endl;
 }
 
