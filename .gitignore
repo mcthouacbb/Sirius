@@ -41,6 +41,6 @@
 .replit
 .breakpoints
 replit.nix
-main
-main_debug
-Makefile
+build
+
+build
