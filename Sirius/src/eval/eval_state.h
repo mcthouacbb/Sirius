@@ -30,7 +30,7 @@ inline void EvalState::init()
 	materialEG[0] = materialEG[1] = 0;
 }
 
-inline void EvalState::addPiece(Color color, PieceType piece, int square)
+inline void EvalState::addPiece(Color color, PieceType piece, int)
 {
 	materialMG[static_cast<int>(color)] += getPieceValueMG(piece);
 	materialEG[static_cast<int>(color)] += getPieceValueEG(piece);
@@ -38,7 +38,7 @@ inline void EvalState::addPiece(Color color, PieceType piece, int square)
 	phase -= getPiecePhase(piece);
 }
 
-inline void EvalState::removePiece(Color color, PieceType piece, int square)
+inline void EvalState::removePiece(Color color, PieceType piece, int)
 {
 	materialMG[static_cast<int>(color)] -= getPieceValueMG(piece);
 	materialEG[static_cast<int>(color)] -= getPieceValueEG(piece);
@@ -46,7 +46,7 @@ inline void EvalState::removePiece(Color color, PieceType piece, int square)
 	phase += getPiecePhase(piece);
 }
 
-inline void EvalState::movePiece(Color color, PieceType piece, int src, int dst)
+inline void EvalState::movePiece(Color, PieceType, int, int)
 {
 	// material doesn't change
 }

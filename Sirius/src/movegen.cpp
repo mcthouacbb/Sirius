@@ -6,7 +6,7 @@ CheckInfo calcCheckInfo(const Board& board, Color color)
 	BitBoard usBB = board.getColor(color);
 	BitBoard oppBB = board.getColor(flip(color));
 	BitBoard kingBB = board.getPieces(PieceType::KING);
-	
+
 	if ((kingBB & usBB) == 0)
 	{
 		throw std::runtime_error("King bb is zero");
@@ -16,7 +16,7 @@ CheckInfo calcCheckInfo(const Board& board, Color color)
 	{
 		throw std::runtime_error("Opp bb is zero");
 	}
-	
+
 	uint32_t oppKingIdx = getLSB(kingBB & oppBB);
 
 	// calculating illegal king squares
@@ -28,16 +28,16 @@ CheckInfo calcCheckInfo(const Board& board, Color color)
 	else
 		checkBB |= attacks::getPawnBBAttacks<Color::WHITE>(oppPawns);
 
-	
+
 	BitBoard oppKnights = board.getPieces(PieceType::KNIGHT) & oppBB;
-	
-	
+
+
 	uint32_t kingIdx = getLSB(kingBB & usBB);
-	
+
 	BitBoard checkers = 0;
 	checkers |= attacks::getPawnAttacks(color, kingIdx) & oppPawns;
 	checkers |= attacks::getKnightAttacks(kingIdx) & oppKnights;
-	
+
 	while (oppKnights)
 	{
 		uint32_t knightIdx = popLSB(oppKnights);
@@ -70,11 +70,11 @@ CheckInfo calcCheckInfo(const Board& board, Color color)
 		checkBB |= attacks::getQueenAttacks(queenIdx, checkBlockers);
 	}
 
-	
+
 	// calculating checking pieces, pinned pieces, and valid move locations
 
 	BitBoard moveMask = checkers == 0 ? 0xFFFFFFFFFFFFFFFFull : checkers;
-	
+
 	diagPieces &= attacks::getBishopAttacks(kingIdx, diagPieces);
 	straightPieces &= attacks::getRookAttacks(kingIdx, straightPieces);
 
@@ -92,7 +92,7 @@ CheckInfo calcCheckInfo(const Board& board, Color color)
 		}
 		else if ((between & (between - 1)) == 0)
 		{
-			pinned |= between & -between;
+			pinned |= extractLSB(between);
 		}
 	}
 
@@ -100,7 +100,7 @@ CheckInfo calcCheckInfo(const Board& board, Color color)
 	printBB(moveMask);
 	printBB(checkers);
 	printBB(pinned);*/
-	
+
 	return {checkBB, moveMask, checkers, pinned};
 }
 
@@ -114,7 +114,7 @@ bool canTakeEP(BitBoard eastRay, BitBoard westRay, BitBoard kingBB, BitBoard ene
 	if (westBlockers == 0)
 		return true;
 
-	BitBoard closestEastBlocker = eastBlockers & -eastBlockers;
+	BitBoard closestEastBlocker = extractLSB(eastBlockers);
 	BitBoard other;
 	if (closestEastBlocker & kingBB)
 	{
@@ -219,7 +219,7 @@ void genKingMoves(const Board& board, Move*& moves, BitBoard checkBB)
 		{
 			*moves++ = Move(kingIdx, kingIdx + 2, MoveType::CASTLE);
 		}
-		
+
 		if (!(attacks::qscCheckSquares<color>() & checkBB) && !(attacks::qscBlockSquares<color>() & occupied) && (board.castlingRights() & qscBit))
 		{
 			*moves++ = Move(kingIdx, kingIdx - 2, MoveType::CASTLE);
@@ -235,9 +235,9 @@ void genQueenMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard m
 	BitBoard queenBB = board.getPieces(PieceType::QUEEN);
 	BitBoard allPieces = board.getAllPieces();
 	queenBB &= usBB;
-	
+
 	uint32_t kingIdx = getLSB(board.getPieces(PieceType::KING) & usBB);
-	
+
 	while (queenBB)
 	{
 		uint32_t queenIdx = popLSB(queenBB);
@@ -266,9 +266,9 @@ void genRookMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard mo
 	BitBoard rookBB = board.getPieces(PieceType::ROOK);
 	BitBoard allPieces = board.getAllPieces();
 	rookBB &= usBB;
-	
+
 	uint32_t kingIdx = getLSB(board.getPieces(PieceType::KING) & usBB);
-	
+
 	while (rookBB)
 	{
 		uint32_t rookIdx = popLSB(rookBB);
@@ -297,9 +297,9 @@ void genBishopMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard 
 	BitBoard bishopBB = board.getPieces(PieceType::BISHOP);
 	BitBoard allPieces = board.getAllPieces();
 	bishopBB &= usBB;
-	
+
 	uint32_t kingIdx = getLSB(board.getPieces(PieceType::KING) & usBB);
-	
+
 	while (bishopBB)
 	{
 		uint32_t bishopIdx = popLSB(bishopBB);
@@ -328,7 +328,7 @@ void genKnightMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard 
 	BitBoard knightBB = board.getPieces(PieceType::KNIGHT);
 	knightBB &= usBB;
 	knightBB &= ~pinned;
-	
+
 	while (knightBB)
 	{
 		uint32_t knightIdx = popLSB(knightBB);
@@ -352,41 +352,41 @@ void genPawnMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard mo
 	BitBoard oppBB = board.getColor(flip(color));
 	BitBoard pawns = board.getPieces(PieceType::PAWN) & usBB;
 	BitBoard allPieces = board.getAllPieces();
-	
+
 	uint32_t kingIdx = getLSB(board.getPieces(PieceType::KING) & usBB);
 
 	BitBoard pinnedPawns = pinned & pawns;
-	
+
 	pawns ^= pinnedPawns;
-	
+
 
 	if constexpr (type == MoveGenType::LEGAL)
 	{
 		BitBoard pawnPushes = attacks::getPawnBBPushes<color>(pawns | (pinnedPawns & (FILE_A << (kingIdx & 7))));
 		pawnPushes &= ~allPieces;
-		
+
 		BitBoard doublePushes = attacks::getPawnBBPushes<color>(pawnPushes & nthRank<color, 2>());
 		doublePushes &= ~allPieces;
 		doublePushes &= moveMask;
-		
+
 		pawnPushes &= moveMask;
-	
+
 		BitBoard promotions = pawnPushes & nthRank<color, 7>();
-		
+
 		pawnPushes ^= promotions;
-		
+
 		while (pawnPushes)
 		{
 			uint32_t push = popLSB(pawnPushes);
 			*moves++ = Move(push - attacks::pawnPushOffset<color>(), push, MoveType::NONE);
 		}
-	
+
 		while (doublePushes)
 		{
 			uint32_t dPush = popLSB(doublePushes);
 			*moves++ = Move(dPush - 2 * attacks::pawnPushOffset<color>(), dPush, MoveType::NONE);
 		}
-	
+
 		while (promotions)
 		{
 			uint32_t promotion = popLSB(promotions);
@@ -419,7 +419,7 @@ void genPawnMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard mo
 	eastCaptures &= moveMask;
 
 	eastCaptures &= oppBB;
-	
+
 	BitBoard promotions = eastCaptures & nthRank<color, 7>();
 	eastCaptures ^= promotions;
 
@@ -437,7 +437,7 @@ void genPawnMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard mo
 		*moves++ = Move(promotion - attacks::pawnPushOffset<color>() - 1, promotion, MoveType::PROMOTION, Promotion::BISHOP);
 		*moves++ = Move(promotion - attacks::pawnPushOffset<color>() - 1, promotion, MoveType::PROMOTION, Promotion::KNIGHT);
 	}
-	
+
 
 	BitBoard westCaptures = attacks::getPawnBBWestAttacks<color>(pawns | (pinnedPawns & attacks::getRay(kingIdx, attacks::pawnWestCaptureDir<color>())));
 	if (board.epSquare() != -1)
@@ -459,7 +459,7 @@ void genPawnMoves(const Board& board, Move*& moves, BitBoard pinned, BitBoard mo
 	westCaptures &= moveMask;
 
 	westCaptures &= oppBB;
-	
+
 	promotions = westCaptures & nthRank<color, 7>();
 	westCaptures ^= promotions;
 

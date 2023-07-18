@@ -8,13 +8,13 @@
 Search::Search(Board& board)
 	: m_Board(board), m_RootPly(0)
 {
-	
+
 }
 
 
 int Search::iterDeep(int maxDepth)
 {
-	int score;
+	int score = 0;
 	for (int depth = 1; depth <= maxDepth; depth++)
 	{
 		m_Nodes = 0;
@@ -47,14 +47,14 @@ int Search::search(int depth, int alpha, int beta)
 	beta = std::min(beta, -eval::CHECKMATE - m_RootPly);
 	if (alpha >= beta)
 		return alpha;
-	
+
 	CheckInfo checkInfo = calcCheckInfo(m_Board, m_Board.currPlayer());
 
 	if (checkInfo.checkers)
 	{
 		depth = std::max(depth + 1, 1);
 	}
-	
+
 	if (depth <= 0)
 	{
 		m_Plies[m_RootPly].pvLength = 0;
@@ -73,9 +73,9 @@ int Search::search(int depth, int alpha, int beta)
 			return eval::CHECKMATE + m_RootPly;
 		return eval::STALEMATE;
 	}
-	
+
 	MoveOrdering ordering(m_Board, moves, end);
-	
+
 	BoardState state;
 
 	Move childPV[MAX_PLY];
@@ -131,7 +131,7 @@ int Search::qsearch(int alpha, int beta, int depth)
 	Move* end = genMoves<MoveGenType::CAPTURES>(m_Board, captures, checkInfo);
 
 	MoveOrdering ordering(m_Board, captures, end);
-	
+
 	BoardState state;
 	for (uint32_t i = 0; i < end - captures; i++)
 	{
