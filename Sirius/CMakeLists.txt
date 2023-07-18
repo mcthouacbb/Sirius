@@ -25,6 +25,8 @@ set(SRCS
 
 	"src/comm/fen.cpp"
 	"src/comm/fen.h"
+	"src/comm/input_queue.cpp"
+	"src/comm/input_queue.h"
 	"src/comm/move.cpp"
 	"src/comm/move.h"
 )
