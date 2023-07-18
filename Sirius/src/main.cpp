@@ -442,16 +442,65 @@ void searchCommand(Search& search, std::string_view params)
 	std::cout << "Eval: " << eval << std::endl;
 }
 
+void execCommand(State& state, Search& search, const std::string& str)
+{
+	Command command;
+	const char* params = parseCommand(str.c_str(), command);
+	if (params == nullptr)
+	{
+		std::cout << "Invalid command" << std::endl;
+		return;
+	}
+
+	switch (command)
+	{
+		case Command::SET_POSITION:
+			std::cout << "Set position: " << params << std::endl;
+			setPosition(state, std::string_view(params, str.c_str() + str.size()));
+			break;
+		case Command::MAKE_MOVE:
+			makeMove(state, std::string_view(params, str.c_str() + str.size()));
+			std::cout << "Make move: " << params << std::endl;
+			break;
+		case Command::UNDO_MOVE:
+			undoMove(state, std::string_view(params, str.c_str() + str.size()));
+			std::cout << "Undo move: " << params << std::endl;
+			break;
+		case Command::PRINT_BOARD:
+			std::cout << "Print board: " << params << std::endl;
+			printBoard(*state.board);
+			break;
+		case Command::STATIC_EVAL:
+			std::cout << "Static eval: " << params << std::endl;
+			staticEval(*state.board);
+			break;
+		case Command::SEARCH:
+			std::cout << "Search: " << params << std::endl;
+			searchCommand(search, std::string_view(params, str.c_str() + str.size()));
+			break;
+	}
+}
+
 int main()
 {
 	attacks::init();
 	std::cout << "Hello World!" << std::endl;
-	Board board;
 
 	// board.setToFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
 
 	// testQuiescence(board, 3);
 	// std::cout << "yay" << std::endl;
+
+	std::string str;
+	std::getline(std::cin, str);
+
+	if (str == "uci")
+	{
+		// TODO: uci stuff
+		return 0;
+	}
+
+	Board board;
 
 	State state;
 	state.board = &board;
@@ -459,45 +508,12 @@ int main()
 
 	Search search(board);
 
-	std::string str;
+	execCommand(state, search, str);
+
 	for (;;)
 	{
 		std::getline(std::cin, str);
-		Command command;
-		const char* params = parseCommand(str.c_str(), command);
-		if (params == nullptr)
-		{
-			std::cout << "Invalid command" << std::endl;
-			continue;
-		}
-
-		switch (command)
-		{
-			case Command::SET_POSITION:
-				std::cout << "Set position: " << params << std::endl;
-				setPosition(state, std::string_view(params, str.c_str() + str.size()));
-				break;
-			case Command::MAKE_MOVE:
-				makeMove(state, std::string_view(params, str.c_str() + str.size()));
-				std::cout << "Make move: " << params << std::endl;
-				break;
-			case Command::UNDO_MOVE:
-				undoMove(state, std::string_view(params, str.c_str() + str.size()));
-				std::cout << "Undo move: " << params << std::endl;
-				break;
-			case Command::PRINT_BOARD:
-				std::cout << "Print board: " << params << std::endl;
-				printBoard(board);
-				break;
-			case Command::STATIC_EVAL:
-				std::cout << "Static eval: " << params << std::endl;
-				staticEval(board);
-				break;
-			case Command::SEARCH:
-				std::cout << "Search: " << params << std::endl;
-				searchCommand(search, std::string_view(params, str.c_str() + str.size()));
-				break;
-		}
+		execCommand(state, search, str);
 	}
 	return 0;
 }
