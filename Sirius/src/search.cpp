@@ -27,7 +27,7 @@ void Search::reset()
 	memset(m_History, 0, sizeof(m_History));
 	m_SearchInfo.nodes = 0;
 
-	for (int i = 0; i < MAX_PLY; i++)
+	for (int i = 0; i <= MAX_PLY; i++)
 	{
 		m_Plies[i].killers[0] = m_Plies[i].killers[1] = Move();
 		m_Plies[i].pv = nullptr;
@@ -59,7 +59,7 @@ int Search::qsearch()
 int Search::iterDeep(const SearchLimits& limits)
 {
 	int maxDepth = std::min(limits.maxDepth, MAX_PLY - 1);
-	Move pv[MAX_PLY];
+	Move pv[MAX_PLY + 1];
 	int score = 0;
 
 	reset();
@@ -195,7 +195,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		m_History[static_cast<int>(m_Board.sideToMove())]
 	);
 
-	Move childPV[MAX_PLY];
+	Move childPV[MAX_PLY + 1];
 	searchPly[1].pv = childPV;
 
 	searchPly->bestMove = Move();
@@ -303,12 +303,12 @@ int Search::qsearch(SearchPly* searchPly, int alpha, int beta)
 	if (score > alpha)
 		alpha = score;
 
-	if (m_RootPly > MAX_PLY)
+	if (m_RootPly >= MAX_PLY)
 		return alpha;
 
 	// CheckInfo checkInfo = calcCheckInfo(m_Board, m_Board.sideToMove());
 
-	Move childPV[MAX_PLY];
+	Move childPV[MAX_PLY + 1];
 	searchPly[1].pv = childPV;
 
 	Move captures[256];

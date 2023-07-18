@@ -73,7 +73,7 @@ private:
 	SearchInfo m_SearchInfo;
 	TT m_TT;
 	int m_RootPly;
-	Move m_PV[MAX_PLY];
+	Move m_PV[MAX_PLY + 1];
 	int m_History[2][4096];
 	SearchPly m_Plies[MAX_PLY + 1];
 };
