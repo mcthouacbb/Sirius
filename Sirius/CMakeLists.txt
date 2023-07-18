@@ -1,4 +1,6 @@
 set(SRCS
+	"src/sirius.h"
+
 	"src/attacks.cpp"
 	"src/attacks.h"
 	"src/bitboard.h"
