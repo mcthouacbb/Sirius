@@ -39,7 +39,7 @@ void TimeManager::startSearch()
 	m_StartTime = std::chrono::steady_clock::now();
 }
 
-bool TimeManager::shouldStop(const SearchInfo& searchInfo)
+bool TimeManager::shouldStop()
 {
 	switch (m_Limits->policy)
 	{
@@ -49,7 +49,6 @@ bool TimeManager::shouldStop(const SearchInfo& searchInfo)
 		case SearchPolicy::DYN_CLOCK:
 			return elapsed() > m_AllocatedTime;
 		default:
-			assert(false && "Invalid SearchPolicy");
-			return searchInfo.nodes > 0;
+			return false;
 	}
 }

@@ -33,6 +33,8 @@ set(SRCS
 	"src/comm/input_queue.h"
 	"src/comm/move.cpp"
 	"src/comm/move.h"
+	"src/comm/uci.cpp"
+	"src/comm/uci.h"
 )
 
 add_executable(sirius ${SRCS})
