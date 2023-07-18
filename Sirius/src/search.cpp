@@ -68,6 +68,8 @@ int Search::iterDeep(int maxDepth)
 
 int Search::iterDeepUCI(const SearchLimits& limits, comm::UCI& uci)
 {
+	int maxDepth = std::min(limits.maxDepth, MAX_PLY - 1);
+
 	m_UCI = &uci;
 	int score = 0;
 	m_TimeMan.setLimits(limits, m_Board.currPlayer());
@@ -78,7 +80,7 @@ int Search::iterDeepUCI(const SearchLimits& limits, comm::UCI& uci)
 	m_ShouldStop = false;
 	m_CheckCounter = CHECK_INTERVAL;
 	Move pv[256];
-	for (int depth = 1; depth <= limits.maxDepth; depth++)
+	for (int depth = 1; depth <= maxDepth; depth++)
 	{
 		m_Plies[0].pv = pv;
 		int searchScore = search(depth, &m_Plies[0], eval::NEG_INF, eval::POS_INF, true);
@@ -132,6 +134,9 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		depth = std::max(depth + 1, 1);
 	}
 
+	if (m_RootPly >= MAX_PLY)
+		return eval::evaluate(m_Board);
+
 	if (depth <= 0)
 	{
 		searchPly->pvLength = 0;
@@ -161,8 +166,8 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 	BoardState state;
 
-	Move childPV[MAX_PLY];
-	searchPly[1].pv = childPV;
+	Move childPV[MAX_PLY + 1];
+	m_Plies[m_RootPly + 1].pv = childPV;
 
 	searchPly->bestMove = Move();
 
@@ -223,6 +228,9 @@ int Search::qsearch(int alpha, int beta)
 		return beta;
 	if (score > alpha)
 		alpha = score;
+
+	if (m_RootPly >= MAX_PLY)
+		return alpha;
 
 	CheckInfo checkInfo = calcCheckInfo(m_Board, m_Board.currPlayer());
 
