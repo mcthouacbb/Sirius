@@ -23,8 +23,6 @@ set(SRCS
 	"src/eval/phase.h"
 	"src/eval/psqt.h"
 
-	"src/comm/command.cpp"
-	"src/comm/command.h"
 	"src/comm/fen.cpp"
 	"src/comm/fen.h"
 	"src/comm/move.cpp"
