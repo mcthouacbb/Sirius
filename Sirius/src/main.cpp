@@ -258,7 +258,8 @@ enum class Command
 	UNDO_MOVE,
 	PRINT_BOARD,
 	STATIC_EVAL,
-	SEARCH
+	SEARCH,
+	QUIT
 };
 
 const char* parseCommand(const char* str, Command& command)
@@ -309,6 +310,13 @@ const char* parseCommand(const char* str, Command& command)
 			if (strncmp(str + 1, "val", 3) == 0)
 			{
 				command = Command::STATIC_EVAL;
+				return str + 4;
+			}
+			return nullptr;
+		case 'q':
+			if (strncmp(str + 1, "uit", 3) == 0)
+			{
+				command = Command::QUIT;
 				return str + 4;
 			}
 			return nullptr;
@@ -442,14 +450,14 @@ void searchCommand(Search& search, std::string_view params)
 	std::cout << "Eval: " << eval << std::endl;
 }
 
-void execCommand(State& state, Search& search, const std::string& str)
+bool execCommand(State& state, Search& search, const std::string& str)
 {
 	Command command;
 	const char* params = parseCommand(str.c_str(), command);
 	if (params == nullptr)
 	{
 		std::cout << "Invalid command" << std::endl;
-		return;
+		return false;
 	}
 
 	switch (command)
@@ -478,7 +486,11 @@ void execCommand(State& state, Search& search, const std::string& str)
 			std::cout << "Search: " << params << std::endl;
 			searchCommand(search, std::string_view(params, str.c_str() + str.size()));
 			break;
+		case Command::QUIT:
+			std::cout << "Quitting" << std::endl;
+			return true;
 	}
+	return false;
 }
 
 int main()
@@ -508,12 +520,14 @@ int main()
 
 	Search search(board);
 
-	execCommand(state, search, str);
+	if (execCommand(state, search, str))
+		return 0;
 
 	for (;;)
 	{
 		std::getline(std::cin, str);
-		execCommand(state, search, str);
+		if (execCommand(state, search, str))
+			return 0;
 	}
 	return 0;
 }
