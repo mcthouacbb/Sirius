@@ -73,7 +73,7 @@ private:
 	int m_RootPly;
 	uint64_t m_Nodes;
 	uint64_t m_QNodes;
-	Move m_PV[MAX_PLY];
-	SearchPly m_Plies[MAX_PLY];
+	Move m_PV[MAX_PLY + 1];
+	SearchPly m_Plies[MAX_PLY + 1];
 };
 
