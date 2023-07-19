@@ -13,7 +13,7 @@ MoveStrFind findMoveFromPCN(const Move* begin, const Move* end, const char* move
 
 	Promotion promotion = Promotion(-1);
 	bool isPromotion = false;
-	switch (moveStr[4])
+	switch (tolower(moveStr[4]))
 	{
 		case 'q':
 			promotion = Promotion::QUEEN;
