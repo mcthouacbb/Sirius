@@ -56,7 +56,7 @@ void testSAN(Board& board, int depth)
 {
 	Move moves[256];
 	Move* end = genMoves<MoveGenType::LEGAL>(board, moves, calcCheckInfo(board, board.currPlayer()));
-	
+
 	for (Move* it = moves; it != end; it++)
 	{
 		std::string str = comm::convMoveToSAN(board, moves, end, *it);
@@ -149,13 +149,13 @@ void runTests(Board& board, bool fast)
 		test.fen = line.substr(0, i);
 
 		std::from_chars(line.data() + i + 4, line.data() + line.size(), test.results[line[i + 2] - '1']);
-		
+
 		while (true)
 		{
 			size_t idx = line.find(';', i + 1);
 			if (idx == std::string::npos)
 				break;
-			i = idx;
+			i = static_cast<int>(idx);
 			std::from_chars(line.data() + i + 4, line.data() + line.size(), test.results[line[i + 2] - '1']);
 		}
 		tests.push_back(test);
@@ -173,7 +173,7 @@ void runTests(Board& board, bool fast)
 	}*/
 
 /*
-TEST: 8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1 
+TEST: 8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1
     Passed: depth 4
     Failed: depth 5, Expected: 674624, got: 674543
     Failed: depth 6, Expected: 11030083, got: 11027209
@@ -184,29 +184,29 @@ TEST: 8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1
 	uint64_t totalNodes = 0;
 
 	auto t1 = std::chrono::steady_clock::now();
-	for (int i = 0; i < tests.size(); i++)
+	for (size_t i = 0; i < tests.size(); i++)
 	{
 		const auto& test = tests[i];
 		board.setToFen(test.fen);
 		std::cout << "TEST: " << test.fen << std::endl;
-		for (int i = 0; i < 6; i++)
+		for (int j = 0; j < 6; j++)
 		{
-			if (test.results[i] == UINT64_MAX)
+			if (test.results[j] == UINT64_MAX)
 				continue;
-			if (fast && test.results[i] > 100000000)
+			if (fast && test.results[j] > 100000000)
 			{
-				std::cout << "\tSkipped: depth " << i + 1 << std::endl;
+				std::cout << "\tSkipped: depth " << j + 1 << std::endl;
 				continue;
 			}
-			uint64_t nodes = perft<false>(board, i + 1);
+			uint64_t nodes = perft<false>(board, j + 1);
 			totalNodes += nodes;
-			if (nodes == test.results[i])
+			if (nodes == test.results[j])
 			{
-				std::cout << "\tPassed: depth " << i + 1 << std::endl;
+				std::cout << "\tPassed: depth " << j + 1 << std::endl;
 			}
 			else
 			{
-				std::cout << "\tFailed: depth " << i + 1 << ", Expected: " << test.results[i] << ", got: " << nodes << std::endl;
+				std::cout << "\tFailed: depth " << j + 1 << ", Expected: " << test.results[j] << ", got: " << nodes << std::endl;
 				failCount++;
 			}
 		}
@@ -231,16 +231,16 @@ void testSANFind(const Board& board, Move* begin, Move* end, int len)
 
 	uint64_t maxIdx = 1;
 
-	for (uint64_t i = 0; i < len; i++)
+	for (int i = 0; i < len; i++)
 	{
 		maxIdx *= charCount;
 	}
 	for (uint64_t i = 0; i < maxIdx; i++)
 	{
 		uint64_t tmp = i;
-		for (int i = 0; i < len; i++)
+		for (int j = 0; j < len; j++)
 		{
-			buf[i] = chars[tmp % charCount];
+			buf[j] = chars[tmp % charCount];
 			tmp /= charCount;
 		}
 
@@ -380,7 +380,7 @@ void makeMove(State& state, std::string_view params)
 	state.end = genMoves<MoveGenType::LEGAL>(*state.board, state.moves, calcCheckInfo(*state.board, state.board->currPlayer()));
 }
 
-void undoMove(State& state, std::string_view params)
+void undoMove(State& state, std::string_view)
 {
 	if (state.prevMoves.empty())
 	{
@@ -418,7 +418,13 @@ void staticEval(const Board& board)
 void searchCommand(Search& search, std::string_view params)
 {
 	int depth;
-	auto [ptr, ec] = std::from_chars(params.data(), params.data() + params.size(), depth);
+	auto result = std::from_chars(params.data(), params.data() + params.size(), depth);
+
+	if (result.ec != std::errc())
+	{
+		std::cout << "Depth must be a valid integer" << std::endl;
+		return;
+	}
 
 	if (depth <= 0)
 	{
@@ -436,7 +442,7 @@ void searchCommand(Search& search, std::string_view params)
 	std::cout << "Eval: " << eval << std::endl;
 }
 
-int main(int argc, char** argv)
+int main()
 {
 	attacks::init();
 	std::cout << "Hello World!" << std::endl;
@@ -446,13 +452,13 @@ int main(int argc, char** argv)
 
 	// testQuiescence(board, 3);
 	// std::cout << "yay" << std::endl;
-	
+
 	State state;
 	state.board = &board;
 	state.end = genMoves<MoveGenType::LEGAL>(board, state.moves, calcCheckInfo(*state.board, state.board->currPlayer()));
 
 	Search search(board);
-	
+
 	std::string str;
 	for (;;)
 	{

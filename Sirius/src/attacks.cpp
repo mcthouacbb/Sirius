@@ -380,7 +380,7 @@ void initSlidingPieces()
 			(getRay(square, Direction::SOUTH) & ~RANK_1) |
 			(getRay(square, Direction::EAST) & ~FILE_H) |
 			(getRay(square, Direction::WEST) & ~FILE_A);
-		
+
 		rookTable[square].magic = rookMagics[square];
 		rookTable[square].shift = 64 - rookIndexBits[square];
 		rookTable[square].mask = rookMask;
@@ -389,7 +389,7 @@ void initSlidingPieces()
 		for (uint32_t i = 0; i < (1u << rookIndexBits[square]); i++)
 		{
 			BitBoard blockers = getMaskBlockerIdx(rookMask, i);
-			uint32_t idx = (blockers * rookMagics[square]) >> (64 - rookIndexBits[square]);
+			uint32_t idx = static_cast<uint32_t>((blockers * rookMagics[square]) >> (64 - rookIndexBits[square]));
 			rookTable[square].attackData[idx] = getRookAttacksSlow(square, blockers);
 			currRook++;
 		}
@@ -408,8 +408,8 @@ void initSlidingPieces()
 		for (uint32_t i = 0; i < (1u << bishopIndexBits[square]); i++)
 		{
 			BitBoard blockers = getMaskBlockerIdx(bishopMask, i);
-			uint32_t idx = (blockers * bishopMagics[square]) >> (64 - bishopIndexBits[square]);
-			
+			uint32_t idx = static_cast<uint32_t>((blockers * bishopMagics[square]) >> (64 - bishopIndexBits[square]));
+
 			bishopTable[square].attackData[idx] = getBishopAttacksSlow(square, blockers);
 			currBishop++;
 		}
@@ -437,6 +437,7 @@ Direction oppDir(Direction d)
 		case Direction::SOUTH_WEST:
 			return Direction::NORTH_EAST;
 	}
+	return Direction(-1);
 }
 
 void initBetweenBBs()

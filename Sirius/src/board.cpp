@@ -122,8 +122,8 @@ done:
 	}
 	i += 2;
 
-	auto [ptr, ec] = std::from_chars(&fen[i], fen.end(), m_HalfMoveClock);
-	std::from_chars(ptr + 1, fen.end(), m_GamePly);
+	auto [ptr, ec] = std::from_chars(&fen[i], fen.data() + fen.size(), m_HalfMoveClock);
+	std::from_chars(ptr + 1, fen.data() + fen.size(), m_GamePly);
 	m_GamePly = 2 * m_GamePly - 1 - (m_CurrPlayer == Color::WHITE);
 }
 
@@ -205,23 +205,23 @@ void Board::makeMove(const Move move, BoardState& state)
 	state.halfMoveClock = m_HalfMoveClock;
 	state.epSquare = m_Enpassant;
 	state.castlingRights = m_CastlingRights;
-	
+
 
 	switch (move.type())
 	{
 		case MoveType::NONE:
 		{
 			state.srcPiece = m_Squares[move.srcPos()];
-			
+
 			Piece dstPiece = m_Squares[move.dstPos()];
 			state.dstPiece = dstPiece;
-		
+
 			if (dstPiece)
 			{
 				m_HalfMoveClock = 0;
 				removePiece(move.dstPos());
 			}
-			
+
 			movePiece(move.srcPos(), move.dstPos());
 			if ((state.srcPiece & PIECE_TYPE_MASK) == static_cast<int>(PieceType::PAWN))
 			{
@@ -240,12 +240,12 @@ void Board::makeMove(const Move move, BoardState& state)
 
 			Piece dstPiece = m_Squares[move.dstPos()];
 			state.dstPiece = dstPiece;
-		
+
 			if (dstPiece)
 			{
 				removePiece(move.dstPos());
 			}
-			
+
 			const PieceType promoPieces[4] = {
 				PieceType::QUEEN,
 				PieceType::ROOK,
@@ -273,20 +273,20 @@ void Board::makeMove(const Move move, BoardState& state)
 			break;
 		}
 		case MoveType::ENPASSANT:
-		{	
+		{
 			m_HalfMoveClock = 0;
 
 			state.srcPiece = m_Squares[move.srcPos()];
-			
+
 			int offset = m_CurrPlayer == Color::WHITE ? -8 : 8;
 			int col = static_cast<int>(flip(m_CurrPlayer)) << 3;
-			state.dstPiece = col | static_cast<int>(PieceType::PAWN);
+			state.dstPiece = static_cast<Piece>(col | static_cast<int>(PieceType::PAWN));
 			removePiece(move.dstPos() + offset);
 			movePiece(move.srcPos(), move.dstPos());
 			break;
 		}
 	}
-	
+
 	m_CastlingRights &= attacks::getCastleMask(move.srcPos());
 	m_CastlingRights &= attacks::getCastleMask(move.dstPos());
 
@@ -358,7 +358,7 @@ void Board::unmakeMove(Move move, const BoardState& state)
 		printBB(m_Pieces[0] ^ (m_Colors[0] | m_Colors[1]));
 		throw std::runtime_error("Impossible");
 	}
-	
+
 	/*if (m_Colors[static_cast<int>(Color::WHITE)] & (1ull << 49))
 	{
 		std::cout << "HELLO?" << std::endl;
@@ -370,8 +370,8 @@ void Board::addPiece(int pos, Color color, PieceType piece)
 {
 	int col = static_cast<int>(color) << 3;
 	// int col = (color == Color::BLACK ? PIECE_COL_MASK : 0);
-	m_Squares[pos] = col | static_cast<int>(piece);
-	
+	m_Squares[pos] = static_cast<Piece>(col | static_cast<int>(piece));
+
 	BitBoard posBB = 1ull << pos;
 	m_Pieces[static_cast<int>(piece)] |= posBB;
 	m_Colors[static_cast<int>(color)] |= posBB;
