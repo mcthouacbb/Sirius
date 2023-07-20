@@ -3,6 +3,7 @@
 #include "movegen.h"
 #include "move_ordering.h"
 #include "comm/move.h"
+#include "comm/uci.h"
 #include <cstring>
 
 Search::Search(Board& board)
@@ -40,8 +41,12 @@ int Search::iterDeep(int maxDepth)
 	{
 		m_Nodes = 0;
 		m_QNodes = 0;
+		m_RootPly = 0;
 		m_Plies[0].pv = m_PV;
+
+		m_CheckCounter = UINT32_MAX;
 		int searchScore = search(depth, &m_Plies[0], eval::NEG_INF, eval::POS_INF, true);
+
 		score = searchScore;
 		std::cout << "Depth: " << depth << std::endl;
 		std::cout << "\tNodes: " << m_Nodes << std::endl;
@@ -61,9 +66,60 @@ int Search::iterDeep(int maxDepth)
 	return score;
 }
 
+int Search::iterDeepUCI(const SearchLimits& limits, comm::UCI& uci)
+{
+	m_UCI = &uci;
+	int score = 0;
+	m_TimeMan.setLimits(limits, m_Board.currPlayer());
+	m_TimeMan.startSearch();
+	m_Nodes = 0;
+	m_QNodes = 0;
+	m_RootPly = 0;
+	m_ShouldStop = false;
+	m_CheckCounter = CHECK_INTERVAL;
+	Move pv[256];
+	for (int depth = 1; depth <= limits.maxDepth; depth++)
+	{
+		m_Plies[0].pv = pv;
+		int searchScore = search(depth, &m_Plies[0], eval::NEG_INF, eval::POS_INF, true);
+		score = searchScore;
+
+		if (m_ShouldStop)
+			break;
+
+		memcpy(m_PV, m_Plies[0].pv, m_Plies[0].pvLength * sizeof(Move));
+		SearchInfo info;
+		info.depth = depth;
+		info.nodes = m_QNodes + m_Nodes;
+		info.time = m_TimeMan.elapsed();
+		info.pvBegin = m_PV;
+		info.pvEnd = m_PV + m_Plies[0].pvLength;
+		info.score = searchScore;
+
+		m_UCI->reportSearchInfo(info);
+	}
+	return score;
+}
+
 
 int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool isPV)
 {
+	if (m_CheckCounter != UINT32_MAX && --m_CheckCounter == 0)
+	{
+		m_CheckCounter = CHECK_INTERVAL;
+		if (m_TimeMan.shouldStop())
+		{
+			m_ShouldStop = true;
+			return alpha;
+		}
+
+		if (m_UCI->checkInput())
+		{
+			m_ShouldStop = true;
+			return alpha;
+		}
+	}
+
 	alpha = std::max(alpha, eval::CHECKMATE + m_RootPly);
 	beta = std::min(beta, -eval::CHECKMATE - m_RootPly);
 	if (alpha >= beta)
@@ -128,8 +184,12 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 			if (moveScore > alpha && isPV)
 				moveScore = -search(depth - 1, searchPly + 1, -beta, -alpha, true);
 		}
+
 		m_RootPly--;
 		m_Board.unmakeMove(move, state);
+
+		if (m_ShouldStop)
+			return alpha;
 
 		if (moveScore >= beta)
 		{

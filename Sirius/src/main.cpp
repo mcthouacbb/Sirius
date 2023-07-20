@@ -12,6 +12,7 @@
 #include "comm/move.h"
 #include "comm/fen.h"
 #include "eval/eval.h"
+#include "comm/uci.h"
 #include "search.h"
 
 void printBoard(const Board& board)
@@ -508,7 +509,8 @@ int main()
 
 	if (str == "uci")
 	{
-		// TODO: uci stuff
+		comm::UCI uci;
+		uci.run();
 		return 0;
 	}
 

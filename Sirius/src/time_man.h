@@ -18,7 +18,7 @@ public:
 	Duration elapsed();
 
 	void startSearch();
-	bool shouldStop(const SearchInfo& searchInfo);
+	bool shouldStop();
 private:
 	TimePoint m_StartTime;
 	Duration m_AllocatedTime;
