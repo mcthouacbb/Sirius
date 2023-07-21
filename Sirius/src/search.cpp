@@ -112,7 +112,10 @@ int Search::search(int depth, int alpha, int beta)
 	}
 
 	if (m_RootPly >= MAX_PLY)
+	{
+		m_Plies[m_RootPly].pvLength = 0;
 		return eval::evaluate(m_Board);
+	}
 
 	if (depth <= 0)
 	{
