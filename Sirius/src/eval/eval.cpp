@@ -5,7 +5,7 @@ namespace eval
 
 void init()
 {
-	initPSQT();
+
 }
 
 namespace
