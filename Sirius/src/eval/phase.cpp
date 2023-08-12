@@ -27,8 +27,8 @@ int getPiecePhase(PieceType piece)
 
 int getFullEval(int mg, int eg, int phase)
 {
-	int phaseFactor = (phase * 256 + TOTAL_PHASE / 2) / TOTAL_PHASE;
-	return (mg * (256 - phaseFactor) + eg * phaseFactor) / 256;
+	phase = std::min(phase, TOTAL_PHASE);
+	return (mg * (TOTAL_PHASE - phase) + eg * phase) / TOTAL_PHASE;
 }
 
 }
