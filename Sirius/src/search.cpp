@@ -144,15 +144,12 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 	if (m_RootPly >= MAX_PLY)
 	{
-		int eval = eval::evaluate(m_Board);
 		searchPly->pvLength = 0;
-		return std::max(std::min(eval, beta), alpha);
+		return eval::evaluate(m_Board);
 	}
 
 	if (depth <= 0)
-	{
 		return qsearch(searchPly, alpha, beta);
-	}
 
 	int hashScore = INT_MIN;
 	Move hashMove = Move();
@@ -178,7 +175,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 			if (nullScore >= beta)
 			{
 				searchPly->pvLength = 0;
-				return beta;
+				return nullScore;
 			}
 		}
 	}
@@ -218,6 +215,8 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		!eval::isMateScore(alpha) &&
 		!eval::isMateScore(beta) &&
 		!inCheck;
+
+	int bestScore = eval::NEG_INF;
 
 	for (uint32_t i = 0; i < end - moves; i++)
 	{
@@ -268,31 +267,36 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		if (m_ShouldStop)
 			return alpha;
 
-		if (moveScore >= beta)
+		if (moveScore > bestScore)
 		{
-			if (move.type() != MoveType::PROMOTION && state.capturedPiece == PIECE_NONE)
-			{
-				storeKiller(searchPly, move);
-				m_History[static_cast<int>(m_Board.sideToMove())][move.fromTo()] += depth * depth;
-			}
-			m_TT.store(bucket, m_Board.zkey(), depth, m_RootPly, beta, move, TTEntry::Type::LOWER_BOUND);
-			return beta;
-		}
+			bestScore = moveScore;
 
-		if (moveScore > alpha)
-		{
-			type = TTEntry::Type::EXACT;
-			alpha = moveScore;
-			searchPly->bestMove = move;
-			searchPly->pv[0] = move;
-			searchPly->pvLength = searchPly[1].pvLength + 1;
-			memcpy(searchPly->pv + 1, searchPly[1].pv, searchPly[1].pvLength * sizeof(Move));
+			if (bestScore >= beta)
+			{
+				if (move.type() != MoveType::PROMOTION && state.capturedPiece == PIECE_NONE)
+				{
+					storeKiller(searchPly, move);
+					m_History[static_cast<int>(m_Board.sideToMove())][move.fromTo()] += depth * depth;
+				}
+				m_TT.store(bucket, m_Board.zkey(), depth, m_RootPly, bestScore, move, TTEntry::Type::LOWER_BOUND);
+				return bestScore;
+			}
+
+			if (bestScore > alpha)
+			{
+				type = TTEntry::Type::EXACT;
+				alpha = bestScore;
+				searchPly->bestMove = move;
+				searchPly->pv[0] = move;
+				searchPly->pvLength = searchPly[1].pvLength + 1;
+				memcpy(searchPly->pv + 1, searchPly[1].pv, searchPly[1].pvLength * sizeof(Move));
+			}
 		}
 	}
 
-	m_TT.store(bucket, m_Board.zkey(), depth, m_RootPly, alpha, searchPly->bestMove, type);
+	m_TT.store(bucket, m_Board.zkey(), depth, m_RootPly, bestScore, searchPly->bestMove, type);
 
-	return alpha;
+	return bestScore;
 }
 
 int Search::qsearch(SearchPly* searchPly, int alpha, int beta)
@@ -301,19 +305,17 @@ int Search::qsearch(SearchPly* searchPly, int alpha, int beta)
 	if (eval::isImmediateDraw(m_Board))
 		return eval::DRAW;
 
-	int score = eval::evaluate(m_Board);
+	int eval = eval::evaluate(m_Board);
 
 	m_SearchInfo.nodes++;
 
-	if (score >= beta)
-		return beta;
-	if (score > alpha)
-		alpha = score;
+	if (eval >= beta)
+		return eval;
+	if (eval > alpha)
+		alpha = eval;
 
 	if (m_RootPly >= MAX_PLY)
 		return alpha;
-
-	// CheckInfo checkInfo = calcCheckInfo(m_Board, m_Board.sideToMove());
 
 	Move childPV[MAX_PLY + 1];
 	searchPly[1].pv = childPV;
@@ -335,19 +337,24 @@ int Search::qsearch(SearchPly* searchPly, int alpha, int beta)
 		m_Board.unmakeMove(move);
 		m_RootPly--;
 
-		if (moveScore >= beta)
-			return beta;
-
-		if (moveScore > alpha)
+		if (moveScore > eval)
 		{
-			searchPly->pvLength = searchPly[1].pvLength + 1;
-			searchPly->pv[0] = move;
+			eval = moveScore;
 
-			memcpy(searchPly->pv + 1, searchPly[1].pv, searchPly[1].pvLength * sizeof(Move));
+			if (eval >= beta)
+				return eval;
 
-			alpha = moveScore;
+			if (eval > alpha)
+			{
+				searchPly->pvLength = searchPly[1].pvLength + 1;
+				searchPly->pv[0] = move;
+
+				memcpy(searchPly->pv + 1, searchPly[1].pv, searchPly[1].pvLength * sizeof(Move));
+
+				alpha = eval;
+			}
 		}
 	}
 
-	return alpha;
+	return eval;
 }
