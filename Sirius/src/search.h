@@ -55,6 +55,7 @@ public:
 	Search(Board& board);
 
 	int iterDeep(const SearchLimits& limits);
+	int aspWindows(int depth, int prevScore);
 
 	int search(int depth);
 	int qsearch();

@@ -68,25 +68,10 @@ int Search::iterDeep(const SearchLimits& limits)
 	m_TimeMan.setLimits(limits, m_Board.sideToMove());
 	m_TimeMan.startSearch();
 
-	int alpha = eval::NEG_INF;
-	int beta = eval::POS_INF;
-
 	for (int depth = 1; depth <= maxDepth; depth++)
 	{
-		int searchScore;
 		m_Plies[0].pv = pv;
-		while (true) {
-			searchScore = search(depth, &m_Plies[0], alpha, beta, true);
-			if (m_ShouldStop)
-				break;
-
-			if (searchScore <= alpha)
-				alpha -= 25;
-			else if (searchScore >= beta)
-				beta += 25;
-			else
-				break;
-		}
+		int searchScore = aspWindows(depth, score);
 		if (m_ShouldStop)
 			break;
 		memcpy(m_PV, m_Plies[0].pv, m_Plies[0].pvLength * sizeof(Move));
@@ -97,11 +82,33 @@ int Search::iterDeep(const SearchLimits& limits)
 		m_SearchInfo.pvEnd = m_PV + m_Plies[0].pvLength;
 		m_SearchInfo.score = searchScore;
 		comm::currComm->reportSearchInfo(m_SearchInfo);
-
-		alpha = std::max(score - 50, eval::NEG_INF);
-		beta = std::min(score + 50, eval::POS_INF);
 	}
 	return score;
+}
+
+int Search::aspWindows(int depth, int prevScore)
+{
+	int delta = 25;
+	int alpha = prevScore - delta;
+	int beta = prevScore + delta;
+
+	while (true)
+	{
+		int searchScore = search(depth, &m_Plies[0], alpha, beta, true);
+		if (m_ShouldStop)
+			return searchScore;
+
+		if (searchScore <= alpha)
+		{
+			beta = (alpha + beta) / 2;
+			alpha -= delta;
+		}
+		else if (searchScore >= beta)
+			beta += delta;
+		else
+			return searchScore;
+		delta *= 2;
+	}
 }
 
 int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool isPV)
