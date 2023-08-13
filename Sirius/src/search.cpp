@@ -163,14 +163,16 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 	BoardState state;
 
-	if (m_Board.pliesFromNull() > 0 && !m_Board.checkers())
+	if (!isPV && m_Board.pliesFromNull() > 0 && !m_Board.checkers())
 	{
 		int R = 2;
 		BitBoard nonPawns = m_Board.getColor(m_Board.sideToMove()) ^ m_Board.getPieces(m_Board.sideToMove(), PieceType::PAWN);
 		if ((nonPawns & (nonPawns - 1)) && depth >= R)
 		{
 			m_Board.makeNullMove(state);
+			m_RootPly++;
 			int nullScore = -search(depth - R - 1, searchPly + 1, -beta, -beta + 1, false);
+			m_RootPly--;
 			m_Board.unmakeNullMove();
 			if (nullScore >= beta)
 			{
@@ -249,16 +251,16 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 		int newDepth = depth + givesCheck - 1;
 		int moveScore;
-		if (searchPly->bestMove == Move())
+		if (i == 0)
 			moveScore = -search(newDepth, searchPly + 1, -beta, -alpha, isPV);
 		else
 		{
 			moveScore = -search(newDepth - reduction, searchPly + 1, -(alpha + 1), -alpha, false);
 
-			if (moveScore > alpha && reduction)
-				moveScore = -search(newDepth, searchPly + 1, -(alpha + 1), -alpha, false);
+			/*if (moveScore > alpha && reduction)
+				moveScore = -search(newDepth, searchPly + 1, -(alpha + 1), -alpha, false);*/
 
-			if (moveScore > alpha && isPV)
+			if (moveScore > alpha && (isPV || reduction > 0))
 				moveScore = -search(newDepth, searchPly + 1, -beta, -alpha, true);
 		}
 		m_RootPly--;
