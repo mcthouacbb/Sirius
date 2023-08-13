@@ -161,23 +161,36 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		return hashScore;
 	}
 
+	int staticEval = eval::evaluate(m_Board);
 	BoardState state;
 
-	if (!isPV && m_Board.pliesFromNull() > 0 && !m_Board.checkers())
+	if (!isPV && !m_Board.checkers())
 	{
-		int R = 2;
-		BitBoard nonPawns = m_Board.getColor(m_Board.sideToMove()) ^ m_Board.getPieces(m_Board.sideToMove(), PieceType::PAWN);
-		if ((nonPawns & (nonPawns - 1)) && depth >= R)
+		// reverse futility pruning
+		if (depth <= 8 && staticEval >= beta + 75 * depth)
 		{
-			m_Board.makeNullMove(state);
-			m_RootPly++;
-			int nullScore = -search(depth - R - 1, searchPly + 1, -beta, -beta + 1, false);
-			m_RootPly--;
-			m_Board.unmakeNullMove();
-			if (nullScore >= beta)
+			searchPly->pvLength = 0;
+			return staticEval;
+		}
+
+		// null move pruning
+
+		if (m_Board.pliesFromNull() > 0)
+		{
+			int R = 2;
+			BitBoard nonPawns = m_Board.getColor(m_Board.sideToMove()) ^ m_Board.getPieces(m_Board.sideToMove(), PieceType::PAWN);
+			if ((nonPawns & (nonPawns - 1)) && depth >= R)
 			{
-				searchPly->pvLength = 0;
-				return nullScore;
+				m_Board.makeNullMove(state);
+				m_RootPly++;
+				int nullScore = -search(depth - R - 1, searchPly + 1, -beta, -beta + 1, false);
+				m_RootPly--;
+				m_Board.unmakeNullMove();
+				if (nullScore >= beta)
+				{
+					searchPly->pvLength = 0;
+					return nullScore;
+				}
 			}
 		}
 	}
@@ -207,8 +220,6 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	searchPly->bestMove = Move();
 
 	TTEntry::Type type = TTEntry::Type::UPPER_BOUND;
-
-	int staticEval = depth == 1 ? eval::evaluate(m_Board) : 0;
 	bool inCheck = m_Board.checkers() != 0;
 
 	bool fprune =
@@ -289,9 +300,12 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 				type = TTEntry::Type::EXACT;
 				alpha = bestScore;
 				searchPly->bestMove = move;
-				searchPly->pv[0] = move;
-				searchPly->pvLength = searchPly[1].pvLength + 1;
-				memcpy(searchPly->pv + 1, searchPly[1].pv, searchPly[1].pvLength * sizeof(Move));
+				if (isPV)
+				{
+					searchPly->pv[0] = move;
+					searchPly->pvLength = searchPly[1].pvLength + 1;
+					memcpy(searchPly->pv + 1, searchPly[1].pv, searchPly[1].pvLength * sizeof(Move));
+				}
 			}
 		}
 	}
