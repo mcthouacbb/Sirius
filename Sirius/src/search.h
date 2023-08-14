@@ -46,12 +46,12 @@ struct SearchLimits
 	};
 };
 
+namespace search
+{
+
 class Search
 {
 public:
-	static constexpr uint32_t CHECK_INTERVAL = 2048;
-	static constexpr int FUTILITY_MARGIN = 250;
-
 	Search(Board& board);
 
 	int iterDeep(const SearchLimits& limits);
@@ -82,4 +82,7 @@ private:
 inline const SearchInfo& Search::info() const
 {
 	return m_SearchInfo;
+}
+
+
 }

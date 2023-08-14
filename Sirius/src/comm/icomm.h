@@ -40,7 +40,7 @@ protected:
 	std::vector<Move> m_PrevMoves;
 	Move m_LegalMoves[256];
 	uint32_t m_MoveCount;
-	Search m_Search;
+	search::Search m_Search;
 };
 
 extern IComm* currComm;

@@ -4,8 +4,12 @@
 #include "move_ordering.h"
 #include "comm/move.h"
 #include "comm/icomm.h"
+#include "search_params.h"
 #include <cstring>
 #include <climits>
+
+namespace search
+{
 
 Search::Search(Board& board)
 	: m_Board(board), m_TT(1024 * 1024), m_RootPly(0)
@@ -64,7 +68,7 @@ int Search::iterDeep(const SearchLimits& limits)
 
 	reset();
 	m_ShouldStop = false;
-	m_CheckCounter = CHECK_INTERVAL;
+	m_CheckCounter = TIME_CHECK_INTERVAL;
 	m_TimeMan.setLimits(limits, m_Board.sideToMove());
 	m_TimeMan.startSearch();
 
@@ -88,7 +92,7 @@ int Search::iterDeep(const SearchLimits& limits)
 
 int Search::aspWindows(int depth, int prevScore)
 {
-	int delta = 25;
+	int delta = ASP_INIT_DELTA;
 	int alpha = prevScore - delta;
 	int beta = prevScore + delta;
 
@@ -115,7 +119,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 {
 	if (--m_CheckCounter == 0)
 	{
-		m_CheckCounter = CHECK_INTERVAL;
+		m_CheckCounter = TIME_CHECK_INTERVAL;
 		if (m_TimeMan.shouldStop(m_SearchInfo))
 		{
 			m_ShouldStop = true;
@@ -167,7 +171,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	if (!isPV && !m_Board.checkers())
 	{
 		// reverse futility pruning
-		if (depth <= 8 && staticEval >= beta + 75 * depth)
+		if (depth <= RFP_MAX_DEPTH && staticEval >= beta + RFP_MARGIN * depth)
 		{
 			searchPly->pvLength = 0;
 			return staticEval;
@@ -178,9 +182,9 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		if (m_Board.pliesFromNull() > 0)
 		{
 			BitBoard nonPawns = m_Board.getColor(m_Board.sideToMove()) ^ m_Board.getPieces(m_Board.sideToMove(), PieceType::PAWN);
-			if ((nonPawns & (nonPawns - 1)) && depth >= 2)
+			if ((nonPawns & (nonPawns - 1)) && depth >= NMP_MIN_DEPTH)
 			{
-				int r = 3;
+				int r = NMP_BASE_REDUCTION;
 				m_Board.makeNullMove(state);
 				m_RootPly++;
 				int nullScore = -search(depth - r, searchPly + 1, -beta, -beta + 1, false);
@@ -222,9 +226,10 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	TTEntry::Type type = TTEntry::Type::UPPER_BOUND;
 	bool inCheck = m_Board.checkers() != 0;
 
+	// very basic futility pruning
 	bool fprune =
-		depth == 1 &&
-		staticEval + FUTILITY_MARGIN < alpha &&
+		depth <= FP_MAX_DEPTH &&
+		staticEval + FP_MARGIN < alpha &&
 		!eval::isMateScore(alpha) &&
 		!eval::isMateScore(beta) &&
 		!inCheck;
@@ -242,14 +247,14 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 			!givesCheck &&
 			!isCapture &&
 			!isPromotion &&
-			i > 3)
+			i >= FP_MIN_MOVES)
 		{
 			continue;
 		}
 
 		int reduction = 0;
-		if (i >= (isPV ? 15u : 4u) &&
-			depth >= 3 &&
+		if (i >= (isPV ? LMR_MIN_MOVES_PV : LMR_MIN_MOVES_NON_PV) &&
+			depth >= LMR_MIN_DEPTH &&
 			!givesCheck &&
 			!isCapture &&
 			!isPromotion &&
@@ -373,4 +378,7 @@ int Search::qsearch(SearchPly* searchPly, int alpha, int beta)
 	}
 
 	return eval;
+}
+
+
 }
