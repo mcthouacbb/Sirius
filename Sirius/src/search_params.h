@@ -15,10 +15,13 @@ constexpr int FP_MARGIN = 250;
 constexpr uint32_t FP_MIN_MOVES = 4;
 constexpr uint32_t FP_MAX_DEPTH = 1;
 
-constexpr uint32_t LMR_MIN_DEPTH = 3;
 
-constexpr uint32_t LMR_MIN_MOVES_NON_PV = 4;
-constexpr uint32_t LMR_MIN_MOVES_PV = 15;
+constexpr uint32_t LMR_MIN_DEPTH = 3;
+constexpr uint32_t LMR_MIN_MOVES_NON_PV = 3;
+constexpr uint32_t LMR_MIN_MOVES_PV = 5;
+
+constexpr double LMR_BASE = 0.77;
+constexpr double LMR_DIVISOR = 2.36;
 
 
 }

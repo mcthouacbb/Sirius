@@ -11,6 +11,19 @@
 namespace search
 {
 
+int lmrTable[64][64];
+
+void init()
+{
+	for (int d = 1; d < 64; d++)
+	{
+		for (int i = 1; i < 64; i++)
+		{
+			lmrTable[d][i] = static_cast<int>(LMR_BASE + std::log(static_cast<double>(d)) * std::log(static_cast<double>(i)) / LMR_DIVISOR);
+		}
+	}
+}
+
 Search::Search(Board& board)
 	: m_Board(board), m_TT(1024 * 1024), m_RootPly(0)
 {
@@ -255,12 +268,16 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		int reduction = 0;
 		if (i >= (isPV ? LMR_MIN_MOVES_PV : LMR_MIN_MOVES_NON_PV) &&
 			depth >= LMR_MIN_DEPTH &&
-			!givesCheck &&
 			!isCapture &&
 			!isPromotion &&
 			!inCheck)
 		{
-			reduction = 1;
+			reduction = lmrTable[std::min(depth, 63)][std::min(i, 63u)];
+			
+			reduction -= isPV;
+			reduction -= givesCheck;
+
+			reduction = std::clamp(reduction, 0, depth - 2);
 		}
 		m_Board.makeMove(move, state);
 		m_RootPly++;

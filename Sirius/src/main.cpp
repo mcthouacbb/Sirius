@@ -18,6 +18,7 @@ int main()
 	attacks::init();
 	zobrist::init();
 	eval::init();
+	search::init();
 
 	std::string mode;
 	std::getline(std::cin, mode);

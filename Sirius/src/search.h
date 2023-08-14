@@ -49,6 +49,8 @@ struct SearchLimits
 namespace search
 {
 
+void init();
+
 class Search
 {
 public:
