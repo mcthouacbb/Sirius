@@ -177,13 +177,13 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 		if (m_Board.pliesFromNull() > 0)
 		{
-			int R = 2;
 			BitBoard nonPawns = m_Board.getColor(m_Board.sideToMove()) ^ m_Board.getPieces(m_Board.sideToMove(), PieceType::PAWN);
-			if ((nonPawns & (nonPawns - 1)) && depth >= R)
+			if ((nonPawns & (nonPawns - 1)) && depth >= 2)
 			{
+				int r = 3;
 				m_Board.makeNullMove(state);
 				m_RootPly++;
-				int nullScore = -search(depth - R - 1, searchPly + 1, -beta, -beta + 1, false);
+				int nullScore = -search(depth - r, searchPly + 1, -beta, -beta + 1, false);
 				m_RootPly--;
 				m_Board.unmakeNullMove();
 				if (nullScore >= beta)
