@@ -11,6 +11,17 @@
 namespace search
 {
 
+namespace
+{
+
+void updateHistory(int& history, int bonus)
+{
+	history += bonus;
+}
+
+
+}
+
 int lmrTable[64][64];
 
 void init()
@@ -239,6 +250,9 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	TTEntry::Type type = TTEntry::Type::UPPER_BOUND;
 	bool inCheck = m_Board.checkers() != 0;
 
+	Move quietsTried[256];
+	int numQuietsTried = 0;
+
 	// very basic futility pruning
 	bool fprune =
 		depth <= FP_MAX_DEPTH &&
@@ -273,13 +287,15 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 			!inCheck)
 		{
 			reduction = lmrTable[std::min(depth, 63)][std::min(i, 63u)];
-			
+
 			reduction -= isPV;
 			reduction -= givesCheck;
 
 			reduction = std::clamp(reduction, 0, depth - 2);
 		}
 		m_Board.makeMove(move, state);
+		if (!isPromotion && !isCapture)
+			quietsTried[numQuietsTried++] = move;
 		m_RootPly++;
 
 		int newDepth = depth + givesCheck - 1;
@@ -308,10 +324,16 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 			if (bestScore >= beta)
 			{
-				if (move.type() != MoveType::PROMOTION && state.capturedPiece == PIECE_NONE)
+				if (!isPromotion && !isCapture)
 				{
 					storeKiller(searchPly, move);
-					m_History[static_cast<int>(m_Board.sideToMove())][move.fromTo()] += depth * depth;
+
+					int historyBonus = depth * depth;
+					updateHistory(m_History[static_cast<int>(m_Board.sideToMove())][historyIndex(move)], historyBonus);
+					for (int j = 0; j < numQuietsTried - 1; j++)
+					{
+						updateHistory(m_History[static_cast<int>(m_Board.sideToMove())][historyIndex(quietsTried[j])], -historyBonus);
+					}
 				}
 				m_TT.store(bucket, m_Board.zkey(), depth, m_RootPly, bestScore, move, TTEntry::Type::LOWER_BOUND);
 				return bestScore;
