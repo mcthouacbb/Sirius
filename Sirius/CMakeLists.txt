@@ -19,6 +19,7 @@ set(SRCS
 	"src/prng.h"
 	"src/search.cpp"
 	"src/search.h"
+	"src/search_params.h"
 	"src/time_man.cpp"
 	"src/time_man.h"
 	"src/tt.cpp"
