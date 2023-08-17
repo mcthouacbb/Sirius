@@ -145,3 +145,10 @@ inline Promotion Move::promotion() const
 {
 	return static_cast<Promotion>(m_Data & PROMOTION_MASK);
 }
+
+constexpr int MAX_PLY = 128;
+constexpr int SCORE_MAX = 32767;
+constexpr int SCORE_MATE = 32700;
+constexpr int SCORE_MATE_IN_MAX = SCORE_MATE - MAX_PLY;
+constexpr int SCORE_WIN = 31000;
+constexpr int SCORE_DRAW = 0;

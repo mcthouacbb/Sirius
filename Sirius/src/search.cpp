@@ -69,7 +69,7 @@ int Search::search(int depth)
 {
 	Move pv[256];
 	m_Plies[0].pv = pv;
-	int searchScore = search(depth, m_Plies, eval::NEG_INF, eval::POS_INF, true);
+	int searchScore = search(depth, m_Plies, -SCORE_MAX, SCORE_MAX, true);
 	memcpy(m_PV, pv, m_Plies[0].pvLength * sizeof(Move));
 	m_SearchInfo.depth = depth;
 	m_SearchInfo.time = Duration(0);
@@ -81,7 +81,7 @@ int Search::search(int depth)
 
 int Search::qsearch()
 {
-	return qsearch(m_Plies, eval::NEG_INF, eval::POS_INF);
+	return qsearch(m_Plies, -SCORE_MAX, SCORE_MAX);
 }
 
 int Search::iterDeep(const SearchLimits& limits)
@@ -159,15 +159,15 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 	m_SearchInfo.nodes++;
 
-	alpha = std::max(alpha, eval::CHECKMATE + m_RootPly);
-	beta = std::min(beta, -eval::CHECKMATE - m_RootPly);
+	alpha = std::max(alpha, -SCORE_MATE + m_RootPly);
+	beta = std::min(beta, SCORE_MATE - m_RootPly);
 	if (alpha >= beta)
 		return alpha;
 
 	if (eval::isImmediateDraw(m_Board) || m_Board.isDraw(m_RootPly))
 	{
 		searchPly->pvLength = 0;
-		return eval::DRAW;
+		return SCORE_DRAW;
 	}
 
 	if (m_RootPly >= MAX_PLY)
@@ -230,8 +230,8 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	{
 		searchPly->pvLength = 0;
 		if (m_Board.checkers())
-			return eval::CHECKMATE + m_RootPly;
-		return eval::STALEMATE;
+			return -SCORE_MATE + m_RootPly;
+		return SCORE_DRAW;
 	}
 	MoveOrdering ordering(
 		m_Board,
@@ -261,7 +261,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		!eval::isMateScore(beta) &&
 		!inCheck;
 
-	int bestScore = eval::NEG_INF;
+	int bestScore = -SCORE_MAX;
 
 	for (uint32_t i = 0; i < end - moves; i++)
 	{
@@ -363,7 +363,7 @@ int Search::qsearch(SearchPly* searchPly, int alpha, int beta)
 {
 	searchPly->pvLength = 0;
 	if (eval::isImmediateDraw(m_Board))
-		return eval::DRAW;
+		return SCORE_DRAW;
 
 	int eval = eval::evaluate(m_Board);
 

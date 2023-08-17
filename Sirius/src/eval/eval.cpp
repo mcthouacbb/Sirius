@@ -36,7 +36,7 @@ int evalPSQTEG(const Board& board, Color color)
 int evaluate(const Board& board)
 {
 	if (!eval::canForceMate(board))
-		return eval::DRAW;
+		return SCORE_DRAW;
 	return rawEval(board);
 }
 

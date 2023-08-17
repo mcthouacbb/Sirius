@@ -65,9 +65,9 @@ void CmdLine::reportSearchInfo(const SearchInfo& info) const
 	if (eval::isMateScore(info.score))
 	{
 		if (info.score < 0)
-			std::cout << "Mated in " << info.score - eval::CHECKMATE << " plies\n";
+			std::cout << "Mated in " << info.score + SCORE_MATE << " plies\n";
 		else
-			std::cout << "Mate in " << -eval::CHECKMATE - info.score << " plies\n";
+			std::cout << "Mate in " << SCORE_MATE - info.score << " plies\n";
 	}
 	else
 	{

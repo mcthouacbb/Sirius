@@ -8,17 +8,11 @@
 namespace eval
 {
 
-constexpr int NEG_INF = -1000000;
-constexpr int POS_INF = 1000000;
-constexpr int CHECKMATE = -32700;
-constexpr int STALEMATE = 0;
-constexpr int DRAW = 0;
-
 void init();
 
 inline bool isMateScore(int score)
 {
-	return std::abs(CHECKMATE) - std::abs(score) < 256;
+    return std::abs(score) >= SCORE_MATE_IN_MAX;
 }
 
 int evaluate(const Board& board);

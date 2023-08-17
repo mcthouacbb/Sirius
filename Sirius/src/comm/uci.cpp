@@ -59,11 +59,11 @@ void UCI::reportSearchInfo(const SearchInfo& info) const
 	{
 		if (info.score > 0)
 		{
-			std::cout << "mate " << ((-eval::CHECKMATE - info.score) + 1) / 2;
+			std::cout << "mate " << ((SCORE_MATE - info.score) + 1) / 2;
 		}
 		else
 		{
-			std::cout << "mate -" << (info.score - eval::CHECKMATE) / 2;
+			std::cout << "mate -" << (info.score + SCORE_MATE) / 2;
 		}
 	}
 	else

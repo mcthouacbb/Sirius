@@ -5,8 +5,6 @@
 #include "tt.h"
 #include "time_man.h"
 
-constexpr int MAX_PLY = 128;
-
 struct SearchPly
 {
 	Move* pv;
