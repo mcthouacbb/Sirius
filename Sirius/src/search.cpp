@@ -297,6 +297,11 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 			{
 				continue;
 			}
+
+			if (!isPV &&
+				depth <= MAX_SEE_PRUNE_DEPTH &&
+				!m_Board.see_margin(move, depth * SEE_PRUNE_MARGIN))
+				continue;
 		}
 
 		int reduction = 0;

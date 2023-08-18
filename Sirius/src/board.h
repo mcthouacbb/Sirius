@@ -105,7 +105,7 @@ private:
 	int seePieceValue(PieceType type) const;
 
 	static constexpr int SEE_PIECE_VALUES[6] = {
-		0, 900, 500, 330, 320, 100
+		0, 1300, 675, 450, 450, 100
 	};
 
 	Piece m_Squares[64];

@@ -15,6 +15,8 @@ constexpr int FP_BASE_MARGIN = 120;
 constexpr int FP_DEPTH_MARGIN = 75;
 constexpr uint32_t FP_MAX_DEPTH = 6;
 
+constexpr uint32_t MAX_SEE_PRUNE_DEPTH = 8;
+constexpr int SEE_PRUNE_MARGIN = -100;
 
 constexpr uint32_t LMR_MIN_DEPTH = 3;
 constexpr uint32_t LMR_MIN_MOVES_NON_PV = 3;
