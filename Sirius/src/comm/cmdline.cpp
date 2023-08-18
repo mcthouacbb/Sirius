@@ -376,7 +376,7 @@ void CmdLine::searchCommand(std::istringstream& stream)
 
 	m_State = CommState::SEARCHING;
 	auto t1 = std::chrono::steady_clock::now();
-	int eval = m_Search.iterDeep(limits);
+	int eval = m_Search.iterDeep(limits, true);
 	auto t2 = std::chrono::steady_clock::now();
 	if (m_State == CommState::QUITTING)
 		return;

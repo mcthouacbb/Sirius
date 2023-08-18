@@ -3,6 +3,8 @@ set(SRCS
 
 	"src/attacks.cpp"
 	"src/attacks.h"
+	"src/bench.cpp"
+	"src/bench.h"
 	"src/bitboard.h"
 	"src/board.cpp"
 	"src/board.h"

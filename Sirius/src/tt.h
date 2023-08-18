@@ -47,6 +47,12 @@ public:
 	{
 		m_CurrAge = (m_CurrAge + 1) & 255;
 	}
+
+	void reset()
+	{
+		memset(m_Buckets, 0, m_Size * sizeof(TTBucket));
+		m_CurrAge = 0;
+	}
 private:
 	TTBucket* m_Buckets;
 	size_t m_Size;

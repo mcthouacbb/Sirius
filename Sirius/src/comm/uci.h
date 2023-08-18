@@ -25,7 +25,8 @@ public:
 		STOP,
 		QUIT,
 
-		DBG_PRINT
+		DBG_PRINT,
+		BENCH
 	};
 
 
@@ -42,6 +43,7 @@ private:
 	void newGameCommand();
 	void positionCommand(std::istringstream& stream);
 	void goCommand(std::istringstream& stream);
+	void benchCommand(std::istringstream& stream);
 
 	InputQueue m_InputQueue;
 };

@@ -44,6 +44,11 @@ struct SearchLimits
 	};
 };
 
+struct BenchData
+{
+	uint64_t nodes;
+};
+
 namespace search
 {
 
@@ -54,11 +59,15 @@ class Search
 public:
 	Search(Board& board);
 
-	int iterDeep(const SearchLimits& limits);
+	void newGame();
+
+	int iterDeep(const SearchLimits& limits, bool report);
 	int aspWindows(int depth, int prevScore);
 
 	int search(int depth);
 	int qsearch();
+
+	BenchData benchSearch(int depth);
 
 	const SearchInfo& info() const;
 private:

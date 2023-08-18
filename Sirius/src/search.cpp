@@ -65,6 +65,12 @@ void Search::reset()
 	m_TT.incAge();
 }
 
+void Search::newGame()
+{
+	reset();
+	m_TT.reset();
+}
+
 int Search::search(int depth)
 {
 	Move pv[256];
@@ -84,7 +90,7 @@ int Search::qsearch()
 	return qsearch(m_Plies, -SCORE_MAX, SCORE_MAX);
 }
 
-int Search::iterDeep(const SearchLimits& limits)
+int Search::iterDeep(const SearchLimits& limits, bool report)
 {
 	int maxDepth = std::min(limits.maxDepth, MAX_PLY - 1);
 	Move pv[MAX_PLY + 1];
@@ -109,7 +115,8 @@ int Search::iterDeep(const SearchLimits& limits)
 		m_SearchInfo.pvBegin = m_PV;
 		m_SearchInfo.pvEnd = m_PV + m_Plies[0].pvLength;
 		m_SearchInfo.score = searchScore;
-		comm::currComm->reportSearchInfo(m_SearchInfo);
+		if (report)
+			comm::currComm->reportSearchInfo(m_SearchInfo);
 	}
 	return score;
 }
@@ -137,6 +144,20 @@ int Search::aspWindows(int depth, int prevScore)
 			return searchScore;
 		delta *= 2;
 	}
+}
+
+BenchData Search::benchSearch(int depth)
+{
+	SearchLimits limits;
+	limits.policy = SearchPolicy::INFINITE;
+	limits.maxDepth = depth;
+
+	iterDeep(limits, false);
+
+	BenchData data;
+	data.nodes = m_SearchInfo.nodes;
+
+	return data;
 }
 
 int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool isPV)

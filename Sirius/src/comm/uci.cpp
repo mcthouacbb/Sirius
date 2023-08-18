@@ -6,6 +6,7 @@
 #include "move.h"
 #include "../eval/eval.h"
 #include "../misc.h"
+#include "../bench.h"
 
 namespace comm
 {
@@ -132,6 +133,9 @@ void UCI::execCommand(const std::string& command)
 		case Command::DBG_PRINT:
 			printBoard(m_Board);
 			break;
+		case Command::BENCH:
+			benchCommand(stream);
+			break;
 	}
 }
 
@@ -144,7 +148,7 @@ UCI::Command UCI::getCommand(const std::string& command) const
 	else if (command == "ucinewgame")
 		return Command::NEW_GAME;
 	else if (command == "position")
-			return Command::POSITION;
+		return Command::POSITION;
 	else if (command == "go")
 		return Command::GO;
 	else if (command == "stop")
@@ -153,6 +157,8 @@ UCI::Command UCI::getCommand(const std::string& command) const
 		return Command::QUIT;
 	else if (command == "d")
 		return Command::DBG_PRINT;
+	else if (command == "bench")
+		return Command::BENCH;
 
 	return Command::INVALID;
 }
@@ -167,7 +173,7 @@ void UCI::uciCommand() const
 
 void UCI::newGameCommand()
 {
-	// lol
+	m_Search.newGame();
 }
 
 void UCI::positionCommand(std::istringstream& stream)
@@ -293,12 +299,25 @@ void UCI::goCommand(std::istringstream& stream)
 	}
 
 	m_State = CommState::SEARCHING;
-	m_Search.iterDeep(limits);
+	m_Search.iterDeep(limits, true);
 	if (m_State == CommState::QUITTING)
 		return;
 	m_State = CommState::IDLE;
 
 	std::cout << "bestmove " << comm::convMoveToPCN(m_Search.info().pvBegin[0]) << std::endl;
+}
+
+void UCI::benchCommand(std::istringstream& stream)
+{
+	int depth;
+	stream >> depth;
+	if (depth < 0)
+	{
+		std::cout << "Invalid depth" << std::endl;
+		return;
+	}
+
+	runBench(m_Board, m_Search, depth);
 }
 
 
