@@ -11,20 +11,23 @@ Inspired/helped by
 - Zurichess
 - [The Chess Programming Wiki](https://www.chessprogramming.org/)
 - [TalkChess/The Computer Chess Club](https://www.talkchess.com/forum3/viewforum.php?f=2)
+- [People in this OpenBench Instance](https://chess.swehosting.se/index/)
+    - [@JW](https://github.com/jacquesRW/)
+    - [@Ciekce](https://github.com/ciekce/)
 - Many others
 
 CLI Usage
 - Type "uci" for the UCI protocol(not recommended for direct use, usually used by a chess GUI)
-	- Protocol is explained [here](https://www.wbec-ridderkerk.nl/html/UCIProtocol.html)
-- Type "cmdline" for the CLI protocol(best suited for direct use)
-	- Protocol is explained below
+    - Protocol is explained [here](https://www.wbec-ridderkerk.nl/html/UCIProtocol.html)
+- Type "cmdline" for the CLI protocol(Mainly for convenience in certain situations)
+    - Protocol is explained below
 
 Command Line Protocol(for debugging/convenience)
 - `"position" {"fen" | "startpos"} [fenString]`
     - Set the board position to the starting position or the fenString
 - `"print"`
     - Print the current state of the board
-      	- Piece positions
+          - Piece positions
         - Number of plies since the start of the game(starts at 0)
         - Half Move Clock
             - Used to detect 50 move rule draws
@@ -61,68 +64,35 @@ Command Line Protocol(for debugging/convenience)
     - Opening book is currently hardcoded to "Sirius/res/gaviota_trim.pgn"
     - Prints "No moves in book found" if position is not in book
 
+Non-standard UCI commands
+- `"d"`
+    - Prints a string representation of the board from white's perspective
+- `"bench" <depth>`
+    - Runs an <depth> depth search on a set of internal benchmark positions and prints out the number of nodes and the time token.
+
 Features
 - Board representation
-    - 9 BitBoards
-        - 1 for all pieces
-        - 2 for each color
-        - 6 for each piece
+    - BitBoards
     - Mailbox 0x88
-        - array of 64 bytes
-        - 0 = no piece
-        - 1 = White King
-        - 2 = White Queen
-        - 3 = White Rook
-        - 4 = White Bishop
-        - 5 = White Knight
-        - 6 = White Pawn
-        - 9 = Black King
-        - 10 = Black Queen
-        - 11 = Black Rook
-        - 12 = Black Bishop
-        - 13 = Black Knight
-        - 14 = Black Pawn
     - Zobrist hashing
-    - Move Representation
-        - 16 bits
-            - 0-5: source position
-            - 6-12: destination position
-            - 13-14: move type
-                - none
-                - castle
-                - promotion
-                - en passant
-            - 15-16: promotion piece
-                - queen
-                - rook
-                - bishop
-                - knight
+    - Packed 16 bit Move Representation
+    - Static Exchange Evaluation
 - Move Generation
     - Magic Bitboards for sliding pieces
-        - Variable shift approach
-    - 41984 byte bishop table
-    - 819200 byte rook table
-    - 3 Bitboards for legality checks
-        - move mask
-            - valid destination squares for non-king pieces
-            - either block check or capture checking piece
-            - 0 when in double check
-        - checkers
-            - all squares which have pieces that are checking the king
-        - pinned
-            - all squares which contain pieces which are pinned to the king
+    - Legal move generation
 - Evaluation
     - Tapered Evaluation
     - Material
-        - Middlegame and Endgame
     - Piece Square Tables
     - Tuning via Texel's Tuning Method
 - Search
-    - Alpha-Beta Pruning
+    - Fail-soft Alpha-Beta Pruning
     - PV Collection(pv list on stack)
+    - Iterative Deepening
+    - Aspiration Windows
     - Move Ordering
         - TT Move Ordering
-        - MVV_LVA
+        - MVV LVA
         - Killer Moves Heuristic
         - History Heuristic
     - Quiescence Search
@@ -131,12 +101,12 @@ Features
     - Transposition Table
         - 4 entries per bucket
         - Always replace least depth
-        - 16 bytes per entry
-        - 64 bytes per bucket
     - Selectivity
         - Check Extension
         - Mate Distance Pruning
         - Principal Variation Search(PVS)
+        - Reverse Futility Pruning
         - Null Move Pruning
         - Futility Pruning
         - Late Move Reductions
+        - SEE pruning
