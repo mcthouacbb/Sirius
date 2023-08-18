@@ -11,9 +11,9 @@ constexpr int RFP_MARGIN = 75;
 constexpr uint32_t NMP_MIN_DEPTH = 2;
 constexpr int NMP_BASE_REDUCTION = 3;
 
-constexpr int FP_MARGIN = 250;
-constexpr uint32_t FP_MIN_MOVES = 4;
-constexpr uint32_t FP_MAX_DEPTH = 1;
+constexpr int FP_BASE_MARGIN = 120;
+constexpr int FP_DEPTH_MARGIN = 75;
+constexpr uint32_t FP_MAX_DEPTH = 6;
 
 
 constexpr uint32_t LMR_MIN_DEPTH = 3;

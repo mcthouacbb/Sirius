@@ -164,6 +164,8 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	if (alpha >= beta)
 		return alpha;
 
+	bool root = m_RootPly == 0;
+
 	if (eval::isImmediateDraw(m_Board) || m_Board.isDraw(m_RootPly))
 	{
 		searchPly->pvLength = 0;
@@ -253,14 +255,6 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	Move quietsTried[256];
 	int numQuietsTried = 0;
 
-	// very basic futility pruning
-	bool fprune =
-		depth <= FP_MAX_DEPTH &&
-		staticEval + FP_MARGIN < alpha &&
-		!eval::isMateScore(alpha) &&
-		!eval::isMateScore(beta) &&
-		!inCheck;
-
 	int bestScore = -SCORE_MAX;
 
 	for (uint32_t i = 0; i < end - moves; i++)
@@ -270,13 +264,18 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		bool isCapture = m_Board.getPieceAt(move.dstPos()) != PIECE_NONE;
 		bool isPromotion = move.type() == MoveType::PROMOTION;
 
-		if (fprune &&
-			!givesCheck &&
-			!isCapture &&
-			!isPromotion &&
-			i >= FP_MIN_MOVES)
+		int baseLMR = lmrTable[std::min(depth, 63)][std::min(i, 63u)];
+
+		if (!root && !isCapture && bestScore > -SCORE_WIN)
 		{
-			continue;
+			int lmrDepth = std::max(depth - baseLMR, 0);
+			if (lmrDepth <= FP_MAX_DEPTH &&
+				!inCheck &&
+				alpha < SCORE_WIN &&
+				staticEval + FP_BASE_MARGIN + FP_DEPTH_MARGIN * lmrDepth <= alpha)
+			{
+				continue;
+			}
 		}
 
 		int reduction = 0;
@@ -286,7 +285,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 			!isPromotion &&
 			!inCheck)
 		{
-			reduction = lmrTable[std::min(depth, 63)][std::min(i, 63u)];
+			reduction = baseLMR;
 
 			reduction -= isPV;
 			reduction -= givesCheck;
