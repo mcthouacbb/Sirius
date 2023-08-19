@@ -16,6 +16,7 @@ namespace
 
 void updateHistory(int& history, int bonus)
 {
+	history -= history * std::abs(bonus) / 65536;
 	history += bonus;
 }
 
@@ -353,7 +354,8 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 				{
 					storeKiller(searchPly, move);
 
-					int historyBonus = depth * depth;
+					// formula from akimbo
+					int historyBonus = std::min(16 * depth * depth, 1200);
 					updateHistory(m_History[static_cast<int>(m_Board.sideToMove())][historyIndex(move)], historyBonus);
 					for (int j = 0; j < numQuietsTried - 1; j++)
 					{
