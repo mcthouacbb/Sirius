@@ -16,7 +16,7 @@ namespace
 
 void updateHistory(int& history, int bonus)
 {
-	history -= history * std::abs(bonus) / 65536;
+	history -= history * std::abs(bonus) / MoveOrdering::HISTORY_MAX;
 	history += bonus;
 }
 
@@ -281,14 +281,15 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 	for (uint32_t i = 0; i < end - moves; i++)
 	{
-		Move move = ordering.selectMove(i);
+		auto [move, moveScore] = ordering.selectMove(i);
 		bool givesCheck = m_Board.givesCheck(move);
 		bool isCapture = m_Board.getPieceAt(move.dstPos()) != PIECE_NONE;
 		bool isPromotion = move.type() == MoveType::PROMOTION;
+		bool quietLosing = moveScore < MoveOrdering::KILLER_SCORE;
 
 		int baseLMR = lmrTable[std::min(depth, 63)][std::min(i, 63u)];
 
-		if (!root && !isCapture && bestScore > -SCORE_WIN)
+		if (!root && quietLosing && bestScore > -SCORE_WIN)
 		{
 			int lmrDepth = std::max(depth - baseLMR, 0);
 			if (lmrDepth <= FP_MAX_DEPTH &&
@@ -308,8 +309,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		int reduction = 0;
 		if (i >= (isPV ? LMR_MIN_MOVES_PV : LMR_MIN_MOVES_NON_PV) &&
 			depth >= LMR_MIN_DEPTH &&
-			!isCapture &&
-			!isPromotion &&
+			quietLosing &&
 			!inCheck)
 		{
 			reduction = baseLMR;
@@ -325,18 +325,18 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		m_RootPly++;
 
 		int newDepth = depth + givesCheck - 1;
-		int moveScore;
+		int score;
 		if (i == 0)
-			moveScore = -search(newDepth, searchPly + 1, -beta, -alpha, isPV);
+			score = -search(newDepth, searchPly + 1, -beta, -alpha, isPV);
 		else
 		{
-			moveScore = -search(newDepth - reduction, searchPly + 1, -(alpha + 1), -alpha, false);
+			score = -search(newDepth - reduction, searchPly + 1, -(alpha + 1), -alpha, false);
 
 			/*if (moveScore > alpha && reduction)
 				moveScore = -search(newDepth, searchPly + 1, -(alpha + 1), -alpha, false);*/
 
-			if (moveScore > alpha && (isPV || reduction > 0))
-				moveScore = -search(newDepth, searchPly + 1, -beta, -alpha, true);
+			if (score > alpha && (isPV || reduction > 0))
+				score = -search(newDepth, searchPly + 1, -beta, -alpha, true);
 		}
 		m_RootPly--;
 		m_Board.unmakeMove(move);
@@ -344,9 +344,9 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		if (m_ShouldStop)
 			return alpha;
 
-		if (moveScore > bestScore)
+		if (score > bestScore)
 		{
-			bestScore = moveScore;
+			bestScore = score;
 
 			if (bestScore >= beta)
 			{
@@ -415,18 +415,18 @@ int Search::qsearch(SearchPly* searchPly, int alpha, int beta)
 	BoardState state;
 	for (uint32_t i = 0; i < end - captures; i++)
 	{
-		Move move = ordering.selectMove(i);
+		auto [move, moveScore] = ordering.selectMove(i);
 		if (!m_Board.see_margin(move, 0))
 			continue;
 		m_Board.makeMove(move, state);
 		m_RootPly++;
-		int moveScore = -qsearch(searchPly + 1, -beta, -alpha);
+		int score = -qsearch(searchPly + 1, -beta, -alpha);
 		m_Board.unmakeMove(move);
 		m_RootPly--;
 
-		if (moveScore > eval)
+		if (score > eval)
 		{
-			eval = moveScore;
+			eval = score;
 
 			if (eval >= beta)
 				return eval;

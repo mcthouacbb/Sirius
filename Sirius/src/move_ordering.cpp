@@ -2,6 +2,9 @@
 
 #include <climits>
 
+namespace
+{
+
 static const int MVV_LVA[7][7] = {
 	// none
 	{0, 0, 0, 0, 0, 0, 0}, // none x none, none x K, none x Q, none x R, none x B, none x N, none x P
@@ -19,16 +22,19 @@ static const int MVV_LVA[7][7] = {
 	{0, 0, 55, 45, 35, 25, 15}  // P x none, P x K, P x Q, P x R, P x B, P x N, P x P
 };
 
-static const int PROMO_BONUS[4] = {
-	// queen
-	400,
-	// rook
-	300,
-	// bishop
-	200,
-	// knight
-	100
-};
+int mvvLva(const Board& board, Move move)
+{
+	int srcPiece = static_cast<int>(getPieceType(board.getPieceAt(move.srcPos())));
+	int dstPiece = static_cast<int>(getPieceType(board.getPieceAt(move.dstPos())));
+	return MVV_LVA[srcPiece][dstPiece];
+}
+
+int promotionBonus(Move move)
+{
+	return 4 - (static_cast<int>(move.promotion()) >> 14);
+}
+
+}
 
 MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end)
 	: m_Moves(begin), m_Size(static_cast<uint32_t>(end - begin))
@@ -42,16 +48,9 @@ MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end)
 		bool isPromotion = move.type() == MoveType::PROMOTION;
 
 		if (isCapture)
-		{
-			int srcPiece = static_cast<int>(getPieceType(board.getPieceAt(move.srcPos())));
-			int dstPiece = static_cast<int>(getPieceType(board.getPieceAt(move.dstPos())));
-			score = CAPTURE_BONUS + MVV_LVA[srcPiece][dstPiece];
-		}
-
+			score += mvvLva(board, move);
 		if (isPromotion)
-		{
-			score += PROMO_BONUS[static_cast<int>(move.promotion()) >> 14];
-		}
+			score += 100 * promotionBonus(move);
 
 		m_MoveScores[i] = score;
 	}
@@ -77,29 +76,21 @@ MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end, Move hash
 
 		if (isCapture)
 		{
-			int srcPiece = static_cast<int>(getPieceType(board.getPieceAt(move.srcPos())));
-			int dstPiece = static_cast<int>(getPieceType(board.getPieceAt(move.dstPos())));
-			score = CAPTURE_BONUS + MVV_LVA[srcPiece][dstPiece];
+			score = CAPTURE_SCORE * board.see_margin(move, 0) + mvvLva(board, move);
 		}
-
-		if (isPromotion)
+		else if (isPromotion)
 		{
-			score += PROMO_BONUS[static_cast<int>(move.promotion()) >> 14];
+			score = PROMOTION_SCORE + promotionBonus(move);
 		}
-
-		if (!isCapture && !isPromotion)
-		{
-			if (move == killers[0] || move == killers[1])
-				score = KILLER_BONUS;
-			else
-				score = HISTORY_BONUS + history[historyIndex(move)];
-		}
-
+		else if (move == killers[0] || move == killers[1])
+			score = KILLER_SCORE;
+		else
+			score = history[historyIndex(move)];
 		m_MoveScores[i] = score;
 	}
 }
 
-Move MoveOrdering::selectMove(uint32_t index)
+ExtMove MoveOrdering::selectMove(uint32_t index)
 {
 	int bestScore = INT_MIN;
 	uint32_t bestIndex = index;
@@ -115,5 +106,5 @@ Move MoveOrdering::selectMove(uint32_t index)
 	std::swap(m_Moves[bestIndex], m_Moves[index]);
 	std::swap(m_MoveScores[bestIndex], m_MoveScores[index]);
 
-	return m_Moves[index];
+	return {m_Moves[index], m_MoveScores[index]};
 }
