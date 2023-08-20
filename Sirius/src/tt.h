@@ -23,8 +23,7 @@ struct TTEntry
 
 static_assert(sizeof(TTEntry) == 16, "TTEntry must be 16 bytes");
 
-
-constexpr int ENTRY_COUNT = 4;
+static constexpr int ENTRY_COUNT = 4;
 
 struct alignas(64) TTBucket
 {
@@ -34,6 +33,8 @@ struct alignas(64) TTBucket
 class TT
 {
 public:
+	static constexpr int GEN_CYCLE_LENGTH = 256;
+
 	TT(size_t size);
 	~TT();
 
@@ -42,10 +43,11 @@ public:
 
 	TTBucket* probe(ZKey key, int depth, int ply, int alpha, int beta, int& score, Move& move);
 	void store(TTBucket* bucket, ZKey key, int depth, int ply, int score, Move move, TTEntry::Type type);
+	int quality(int age, int depth) const;
 
 	void incAge()
 	{
-		m_CurrAge = (m_CurrAge + 1) & 255;
+		m_CurrAge = (m_CurrAge + 1) & (GEN_CYCLE_LENGTH);
 	}
 
 	void reset()

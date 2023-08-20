@@ -59,23 +59,14 @@ TTBucket* TT::probe(ZKey key, int depth, int ply, int alpha, int beta, int& scor
 				break;
 			case TTEntry::Type::EXACT:
 				score = retrieveScore(entry->score, ply);
-				entry->age = static_cast<uint8_t>(m_CurrAge);
 				break;
 			case TTEntry::Type::LOWER_BOUND:
 				if (beta <= entry->score)
-				{
 					score = retrieveScore(entry->score, ply);
-
-					entry->age = static_cast<uint8_t>(m_CurrAge);
-				}
 				break;
 			case TTEntry::Type::UPPER_BOUND:
 				if (alpha >= entry->score)
-				{
 					score = retrieveScore(entry->score, ply);
-
-					entry->age = static_cast<uint8_t>(m_CurrAge);
-				}
 				break;
 		}
 	}
@@ -87,6 +78,8 @@ TTBucket* TT::probe(ZKey key, int depth, int ply, int alpha, int beta, int& scor
 
 void TT::store(TTBucket* bucket, ZKey key, int depth, int ply, int score, Move move, TTEntry::Type type)
 {
+	// always replace an entry if it was already in the tt
+	// idea from crafty
 	for (int i = 0; i < ENTRY_COUNT; i++)
 	{
 		if (bucket->entries[i].key == key)
@@ -100,28 +93,21 @@ void TT::store(TTBucket* bucket, ZKey key, int depth, int ply, int score, Move m
 		}
 	}
 
-	int bestDepth = 256;
+	int currQuality = quality(m_CurrAge, depth);
 	TTEntry* replace = nullptr;
 	for (int i = 0; i < ENTRY_COUNT; i++)
 	{
-		if (bucket->entries[i].age != m_CurrAge && bucket->entries[i].depth < bestDepth)
+		int entryQuality = quality(bucket->entries[i].age, bucket->entries[i].depth);
+		if (entryQuality < currQuality)
 		{
-			bestDepth = bucket->entries[i].depth;
+			currQuality = entryQuality;
 			replace = &bucket->entries[i];
 		}
 	}
 
+	// don't replace if current quality is worse than quality of entries already present
 	if (!replace)
-	{
-		for (int i = 0; i < ENTRY_COUNT; i++)
-		{
-			if (bucket->entries[i].depth < bestDepth)
-			{
-				bestDepth = bucket->entries[i].depth;
-				replace = &bucket->entries[i];
-			}
-		}
-	}
+		return;
 
 	replace->key = key;
 	replace->depth = static_cast<uint8_t>(depth);
@@ -129,4 +115,14 @@ void TT::store(TTBucket* bucket, ZKey key, int depth, int ply, int score, Move m
 	replace->bestMove = move;
 	replace->type = type;
 	replace->age = static_cast<uint8_t>(m_CurrAge);
+}
+
+int TT::quality(int age, int depth) const
+{
+	int ageDiff = m_CurrAge - age;
+	if (ageDiff < 0)
+	{
+		ageDiff += GEN_CYCLE_LENGTH;
+	}
+	return depth - 2 * ageDiff;
 }
