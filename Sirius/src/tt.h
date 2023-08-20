@@ -5,27 +5,42 @@
 
 struct TTEntry
 {
-	ZKey key;
+	uint16_t key16;
 	int16_t score;
 	Move bestMove;
 	uint8_t depth;
-	enum class Type : uint8_t
+	// 2 bits bound(lower), 6 bits gen(upper)
+	uint8_t genBound;
+
+	enum class Bound : uint8_t
 	{
 		NONE,
 		EXACT,
 		LOWER_BOUND,
 		UPPER_BOUND
-	} type;
-	uint8_t age;
+	};
 
-	char padding; // ignored
+	uint8_t gen()
+	{
+		return genBound >> 2;
+	}
+
+	Bound bound()
+	{
+		return static_cast<Bound>(genBound & 3);
+	}
+
+	static uint8_t makeGenBound(uint8_t gen, Bound bound)
+	{
+		return static_cast<int>(bound) | (gen << 2);
+	}
 };
 
-static_assert(sizeof(TTEntry) == 16, "TTEntry must be 16 bytes");
+static_assert(sizeof(TTEntry) == 8, "TTEntry must be 8 bytes");
 
 static constexpr int ENTRY_COUNT = 4;
 
-struct alignas(64) TTBucket
+struct alignas(32) TTBucket
 {
 	TTEntry entries[ENTRY_COUNT];
 };
@@ -33,7 +48,7 @@ struct alignas(64) TTBucket
 class TT
 {
 public:
-	static constexpr int GEN_CYCLE_LENGTH = 256;
+	static constexpr int GEN_CYCLE_LENGTH = 1 << 6;
 
 	TT(size_t size);
 	~TT();
@@ -42,7 +57,7 @@ public:
 	TT& operator=(const TT&) = delete;
 
 	TTBucket* probe(ZKey key, int depth, int ply, int alpha, int beta, int& score, Move& move);
-	void store(TTBucket* bucket, ZKey key, int depth, int ply, int score, Move move, TTEntry::Type type);
+	void store(TTBucket* bucket, ZKey key, int depth, int ply, int score, Move move, TTEntry::Bound type);
 	int quality(int age, int depth) const;
 
 	void incAge()

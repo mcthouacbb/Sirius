@@ -37,7 +37,7 @@ void init()
 }
 
 Search::Search(Board& board)
-	: m_Board(board), m_TT(1024 * 1024), m_RootPly(0)
+	: m_Board(board), m_TT(2 * 1024 * 1024), m_RootPly(0)
 {
 
 }
@@ -271,7 +271,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 	searchPly->bestMove = Move();
 
-	TTEntry::Type type = TTEntry::Type::UPPER_BOUND;
+	TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
 	bool inCheck = m_Board.checkers() != 0;
 
 	Move quietsTried[256];
@@ -362,13 +362,13 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 						updateHistory(m_History[static_cast<int>(m_Board.sideToMove())][historyIndex(quietsTried[j])], -historyBonus);
 					}
 				}
-				m_TT.store(bucket, m_Board.zkey(), depth, m_RootPly, bestScore, move, TTEntry::Type::LOWER_BOUND);
+				m_TT.store(bucket, m_Board.zkey(), depth, m_RootPly, bestScore, move, TTEntry::Bound::LOWER_BOUND);
 				return bestScore;
 			}
 
 			if (bestScore > alpha)
 			{
-				type = TTEntry::Type::EXACT;
+				bound = TTEntry::Bound::EXACT;
 				alpha = bestScore;
 				searchPly->bestMove = move;
 				if (isPV)
@@ -381,7 +381,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		}
 	}
 
-	m_TT.store(bucket, m_Board.zkey(), depth, m_RootPly, bestScore, searchPly->bestMove, type);
+	m_TT.store(bucket, m_Board.zkey(), depth, m_RootPly, bestScore, searchPly->bestMove, bound);
 
 	return bestScore;
 }
