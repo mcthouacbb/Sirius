@@ -36,13 +36,19 @@ int promotionBonus(Move move)
 
 }
 
-MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end)
+MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end, Move hashMove)
 	: m_Moves(begin), m_Size(static_cast<uint32_t>(end - begin))
 {
 	for (uint32_t i = 0; i < m_Size; i++)
 	{
 		int score = 0;
 		Move move = begin[i];
+
+		if (move == hashMove)
+		{
+			m_MoveScores[i] = 10000000;
+			continue;
+		}
 
 		bool isCapture = static_cast<bool>(board.getPieceAt(move.dstPos()));
 		bool isPromotion = move.type() == MoveType::PROMOTION;
@@ -66,8 +72,7 @@ MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end, Move hash
 
 		if (move == hashMove)
 		{
-			score = 1000000;
-			m_MoveScores[i] = score;
+			m_MoveScores[i] = 1000000;
 			continue;
 		}
 

@@ -21,7 +21,7 @@ public:
 	static constexpr int PROMOTION_SCORE = 65555;
 	static constexpr int CAPTURE_SCORE = 65560;
 
-	MoveOrdering(const Board& board, Move* begin, Move* end);
+	MoveOrdering(const Board& board, Move* begin, Move* end, Move hashMove);
 	MoveOrdering(const Board& board, Move* begin, Move* end, Move hashMove, Move (&killers)[2], int (&history)[4096]);
 
 	ExtMove selectMove(uint32_t index);

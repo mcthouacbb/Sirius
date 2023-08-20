@@ -392,6 +392,17 @@ int Search::qsearch(SearchPly* searchPly, int alpha, int beta)
 	if (eval::isImmediateDraw(m_Board))
 		return SCORE_DRAW;
 
+	int hashScore = INT_MIN;
+	Move hashMove = Move();
+	// qsearch is always depth 0
+	m_TT.probe(m_Board.zkey(), 0, m_RootPly, alpha, beta, hashScore, hashMove);
+
+	if (hashScore != INT_MIN)
+	{
+		searchPly->pvLength = 0;
+		return hashScore;
+	}
+
 	int eval = eval::evaluate(m_Board);
 
 	m_SearchInfo.nodes++;
@@ -410,7 +421,7 @@ int Search::qsearch(SearchPly* searchPly, int alpha, int beta)
 	Move captures[256];
 	Move* end = genMoves<MoveGenType::CAPTURES>(m_Board, captures);
 
-	MoveOrdering ordering(m_Board, captures, end);
+	MoveOrdering ordering(m_Board, captures, end, hashMove);
 
 	BoardState state;
 	for (uint32_t i = 0; i < end - captures; i++)
