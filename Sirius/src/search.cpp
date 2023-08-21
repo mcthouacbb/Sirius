@@ -5,8 +5,10 @@
 #include "comm/move.h"
 #include "comm/icomm.h"
 #include "search_params.h"
+
 #include <cstring>
 #include <climits>
+#include <algorithm>
 
 namespace search
 {
