@@ -303,6 +303,12 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 			}
 
 			if (!isPV &&
+				!inCheck &&
+				depth <= LMP_MAX_DEPTH &&
+				static_cast<int>(i) >= LMP_MIN_MOVES_BASE + depth * depth)
+				break;
+
+			if (!isPV &&
 				depth <= MAX_SEE_PRUNE_DEPTH &&
 				!m_Board.see_margin(move, depth * SEE_PRUNE_MARGIN))
 				continue;
