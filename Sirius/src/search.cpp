@@ -395,7 +395,7 @@ int Search::qsearch(SearchPly* searchPly, int alpha, int beta)
 	int hashScore = INT_MIN;
 	Move hashMove = Move();
 	// qsearch is always depth 0
-	m_TT.probe(m_Board.zkey(), 0, m_RootPly, alpha, beta, hashScore, hashMove);
+	TTBucket* bucket = m_TT.probe(m_Board.zkey(), 0, m_RootPly, alpha, beta, hashScore, hashMove);
 
 	if (hashScore != INT_MIN)
 	{
@@ -424,6 +424,8 @@ int Search::qsearch(SearchPly* searchPly, int alpha, int beta)
 	MoveOrdering ordering(m_Board, captures, end, hashMove);
 
 	BoardState state;
+	TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
+	searchPly->bestMove = Move();
 	for (uint32_t i = 0; i < end - captures; i++)
 	{
 		auto [move, moveScore] = ordering.selectMove(i);
@@ -440,19 +442,27 @@ int Search::qsearch(SearchPly* searchPly, int alpha, int beta)
 			eval = score;
 
 			if (eval >= beta)
+			{
+				m_TT.store(bucket, m_Board.zkey(), 0, m_RootPly, eval, move, TTEntry::Bound::LOWER_BOUND);
 				return eval;
+			}
 
 			if (eval > alpha)
 			{
+				searchPly->bestMove = move;
+
 				searchPly->pvLength = searchPly[1].pvLength + 1;
 				searchPly->pv[0] = move;
-
 				memcpy(searchPly->pv + 1, searchPly[1].pv, searchPly[1].pvLength * sizeof(Move));
 
 				alpha = eval;
+				bound = TTEntry::Bound::EXACT;
 			}
 		}
 	}
+
+	m_TT.store(bucket, m_Board.zkey(), 0, m_RootPly, eval, searchPly->bestMove, bound);
+
 
 	return eval;
 }
