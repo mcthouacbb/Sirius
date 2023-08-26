@@ -47,8 +47,6 @@ set(SRCS
 	"src/comm/fen.h"
 	"src/comm/icomm.cpp"
 	"src/comm/icomm.h"
-	"src/comm/input_queue.cpp"
-	"src/comm/input_queue.h"
 	"src/comm/move.cpp"
 	"src/comm/move.h"
 	"src/comm/uci.cpp"

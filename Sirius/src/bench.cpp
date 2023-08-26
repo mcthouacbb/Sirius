@@ -53,17 +53,19 @@ constexpr const char* fens[] = { // fens from stormphrax, which got them from al
 	"2r2b2/5p2/5k2/p1r1pP2/P2pB3/1P3P2/K1P3R1/7R w - - 23 93"
 };
 
-void runBench(Board& board, search::Search& search, int depth)
+void runBench(search::Search& search, int depth)
 {
 	uint64_t nodes = 0;
 	auto t1 = std::chrono::steady_clock::now();
+	BoardState state;
+	Board board(state);
 	for (auto fen : fens)
 	{
 		board.setToFen(fen);
 
 		search.newGame();
 
-		BenchData data = search.benchSearch(depth);
+		BenchData data = search.benchSearch(depth, board, state);
 
 		nodes += data.nodes;
 	}

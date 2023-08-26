@@ -2,7 +2,6 @@
 
 #include "icomm.h"
 #include "../book.h"
-#include "input_queue.h"
 
 namespace comm
 {
@@ -32,11 +31,9 @@ public:
 
 	virtual void run() override;
 	virtual void reportSearchInfo(const SearchInfo& info) const override;
-	virtual bool checkInput() override;
+	virtual void reportBestMove(Move bestMove) const override;
 private:
-	static bool shouldQuit(const std::string& str);
-
-	void execCommand(const std::string& command);
+	bool execCommand(const std::string& command);
 	Command getCommand(const std::string& command) const;
 
 	void setPositionCommand(std::istringstream& stream);
@@ -50,7 +47,6 @@ private:
 	void runPerftCommand(std::istringstream& stream);
 	void probeBookCommand();
 
-	InputQueue m_InputQueue;
 	Book m_Book;
 };
 

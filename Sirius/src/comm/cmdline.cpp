@@ -12,51 +12,39 @@
 namespace comm
 {
 
-bool CmdLine::shouldQuit(const std::string& str)
-{
-	return str == "quit";
-}
-
 CmdLine::CmdLine()
-	: m_InputQueue(shouldQuit)
 {
-	std::ifstream openings("res/gaviota_trim.pgn");
-
-	std::ostringstream sstr;
-	sstr << openings.rdbuf();
-	std::string pgnData = sstr.str();
-
 	std::cout << "Sirius v" << SIRIUS_VERSION_STRING << std::endl;
 
-	m_Book.loadFromPGN(pgnData.c_str());
+	std::ifstream openings("res/gaviota_trim.pgn");
+	if (openings.is_open())
+	{
+		std::ostringstream sstr;
+		sstr << openings.rdbuf();
+		std::string pgnData = sstr.str();
+
+		m_Book.loadFromPGN(pgnData.c_str());
+	}
+	else
+	{
+		std::cout << "No opening book loaded" << std::endl;
+	}
 }
 
 void CmdLine::run()
 {
-	for (;;)
+	while (true)
 	{
-		std::unique_lock<std::mutex> lock(m_InputQueue.mutex());
-		m_InputQueue.cond().wait(
-			lock,
-			[this]{return m_InputQueue.hasInput();}
-		);
-
-		while (m_InputQueue.hasInput())
-		{
-			std::string input = m_InputQueue.pop();
-			lock.unlock();
-			execCommand(input);
-			if (m_State == CommState::QUITTING)
-				return;
-			lock.lock();
-		}
-
-		lock.unlock();
+		std::string command;
+		std::getline(std::cin, command);
+		if (execCommand(command))
+			return;
 	}
 }
 
 void CmdLine::reportSearchInfo(const SearchInfo& info) const
 {
+	auto lock = lockStdout();
 	float time = std::chrono::duration_cast<std::chrono::duration<float>>(info.time).count();
 	std::cout << "Depth: " << info.depth << '\n';
 	std::cout << "\tNodes: " << info.nodes << '\n';
@@ -76,7 +64,8 @@ void CmdLine::reportSearchInfo(const SearchInfo& info) const
 
 	std::cout << "PV: ";
 
-	Board board;
+	BoardState root;
+	Board board(root);
 	board.setToFen(m_Board.fenStr());
 
 	Move moves[256], *end;
@@ -94,7 +83,13 @@ void CmdLine::reportSearchInfo(const SearchInfo& info) const
 	std::cout << std::endl;
 }
 
-void CmdLine::execCommand(const std::string& command)
+void CmdLine::reportBestMove(Move bestMove) const
+{
+	auto lock = lockStdout();
+	std::cout << "best move: " << comm::convMoveToSAN(m_Board, m_LegalMoves, m_LegalMoves + m_MoveCount, bestMove) << std::endl;
+}
+
+bool CmdLine::execCommand(const std::string& command)
 {
 	std::istringstream stream(command);
 
@@ -110,111 +105,45 @@ void CmdLine::execCommand(const std::string& command)
 			std::cout << "Invalid Command: " << command << std::endl;
 			break;
 		case Command::SET_POSITION:
-			if (m_State != CommState::IDLE)
-			{
-				std::cout << "Error: Cannot set position while thinking" << std::endl;
-				break;
-			}
 			setPositionCommand(stream);
 			break;
 		case Command::MAKE_MOVE:
-			if (m_State != CommState::IDLE)
-			{
-				std::cout << "Error: Cannot make move while thinking" << std::endl;
-				break;
-			}
 			makeMoveCommand(stream);
 			break;
 		case Command::UNDO_MOVE:
-			if (m_State != CommState::IDLE)
-			{
-				std::cout << "Error: Cannot undo move while thinking" << std::endl;
-				break;
-			}
 			undoMoveCommand();
 			break;
 		case Command::PRINT_BOARD:
-			if (m_State != CommState::IDLE)
-			{
-				std::cout << "Error: Cannot print board while thinking" << std::endl;
-				break;
-			}
 			printBoardCommand();
 			break;
 		case Command::STATIC_EVAL:
-			if (m_State != CommState::IDLE)
-			{
-				std::cout << "Error: Cannot print static eval while thinking" << std::endl;
-				break;
-			}
 			staticEvalCommand();
 			break;
 		case Command::QUIESCENCE_EVAL:
-			if (m_State != CommState::IDLE)
-			{
-				std::cout << "Error: Cannot print quiescence eval while thinking" << std::endl;
-				break;
-			}
 			quiescenceEvalCommand();
 			break;
 		case Command::SEARCH:
-			if (m_State != CommState::IDLE)
-			{
-				std::cout << "Error: Cannot start search while already searching\n";
-				std::cout << "Abort the search or wait for it to finish to start a new one" << std::endl;
-				break;
-			}
 			searchCommand(stream);
 			break;
 		case Command::RUN_TESTS:
-			if (m_State != CommState::IDLE)
-			{
-				std::cout << "Cannot run tests while thinking" << std::endl;
-				break;
-			}
-			runTestsCommand();
+			if (!m_Search.searching())
+				runTestsCommand();
 			break;
 		case Command::PERFT:
-			if (m_State != CommState::IDLE)
-			{
-				std::cout << "Cannot run perft while thinking" << std::endl;
-				break;
-			}
-			runPerftCommand(stream);
+			if (!m_Search.searching())
+				runPerftCommand(stream);
 			break;
 		case Command::BOOK:
-			if (m_State != CommState::IDLE)
-			{
-				std::cout << "Cannot probe book while thinking" << std::endl;
-				break;
-			}
 			probeBookCommand();
 			break;
 		case Command::STOP:
-			if (m_State != CommState::SEARCHING)
-			{
-				std::cout << "No search to stop" << std::endl;
-				break;
-			}
-			m_State = CommState::ABORTING;
-			std::cout << "Aborting search" << std::endl;
+			if (m_Search.searching())
+				m_Search.stop();
 			break;
 		case Command::QUIT:
-			m_State = CommState::QUITTING;
-			std::cout << "Quitting" << std::endl;
-			break;;
+			return true;
 	}
-}
-
-bool CmdLine::checkInput()
-{
-	m_InputQueue.mutex().lock();
-	while (m_InputQueue.hasInput())
-	{
-		execCommand(m_InputQueue.pop());
-	}
-	m_InputQueue.mutex().unlock();
-	return m_State == CommState::ABORTING || m_State == CommState::QUITTING;
+	return false;
 }
 
 CmdLine::Command CmdLine::getCommand(const std::string& command) const
@@ -281,18 +210,21 @@ void CmdLine::makeMoveCommand(std::istringstream& stream)
 	MoveStrFind find = comm::findMoveFromSAN(m_Board, m_LegalMoves, m_LegalMoves + m_MoveCount, move.c_str());
 	if (find.move == nullptr)
 	{
+		auto lock = lockStdout();
 		std::cout << "Invalid move string" << std::endl;
 		return;
 	}
 
 	if (find.move == m_LegalMoves + m_MoveCount)
 	{
+		auto lock = lockStdout();
 		std::cout << "Move not found" << std::endl;
 		return;
 	}
 
 	if (find.move == m_LegalMoves + m_MoveCount + 1)
 	{
+		auto lock = lockStdout();
 		std::cout << "Move is ambiguous" << std::endl;
 		return;
 	}
@@ -304,6 +236,7 @@ void CmdLine::undoMoveCommand()
 {
 	if (m_PrevMoves.empty())
 	{
+		auto lock = lockStdout();
 		std::cout << "No moves to undo" << std::endl;
 		return;
 	}
@@ -313,11 +246,13 @@ void CmdLine::undoMoveCommand()
 
 void CmdLine::printBoardCommand()
 {
+	auto lock = lockStdout();
 	printBoard(m_Board);
 }
 
 void CmdLine::staticEvalCommand()
 {
+	auto lock = lockStdout();
 	std::cout << "Eval: " << eval::evaluate(m_Board) << std::endl;
 	std::cout << "Phase: " << m_Board.evalState().phase << std::endl;
 	std::cout << "Eval midgame:\n";
@@ -338,53 +273,42 @@ void CmdLine::staticEvalCommand()
 
 void CmdLine::quiescenceEvalCommand()
 {
-	int eval = m_Search.qsearch();
-	std::cout << "Quiescence eval: " << eval << std::endl;
+	auto lock = lockStdout();
+	std::cout << "Quiescence eval currently not working" << std::endl;
+	//int eval = m_Search.qsearch();
+	//std::cout << "Quiescence eval: " << eval << std::endl;
 }
 
 void CmdLine::searchCommand(std::istringstream& stream)
 {
-	SearchLimits limits;
+	SearchLimits limits = {};
 	limits.maxDepth = 1000;
 
 	std::string tok;
 	stream >> tok;
 	if (tok == "infinite")
 	{
-		limits.policy = SearchPolicy::INFINITE;
+
 	}
 	else if (tok == "depth")
 	{
 		uint32_t depth;
 		stream >> depth;
-		limits.policy = SearchPolicy::INFINITE;
 		limits.maxDepth = depth;
 	}
 	else if (tok == "time")
 	{
 		uint32_t millis;
 		stream >> millis;
-		limits.policy = SearchPolicy::FIXED_TIME;
-		limits.time = Duration(millis);
+		limits.maxTime = Duration(millis);
 	}
 	else
 	{
+		auto lock = lockStdout();
 		std::cout << "No search policy specified, defaulting to infinite" << std::endl;
-		limits.policy = SearchPolicy::INFINITE;
 	}
 
-
-	m_State = CommState::SEARCHING;
-	auto t1 = std::chrono::steady_clock::now();
-	int eval = m_Search.iterDeep(limits, true);
-	auto t2 = std::chrono::steady_clock::now();
-	if (m_State == CommState::QUITTING)
-		return;
-	m_State = CommState::IDLE;
-
-	auto time = std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1);
-
-	std::cout << "Eval: " << eval << std::endl;
+	m_Search.run(limits, m_BoardStates);
 }
 
 void CmdLine::runTestsCommand()
@@ -406,6 +330,7 @@ void CmdLine::runPerftCommand(std::istringstream& stream)
 
 void CmdLine::probeBookCommand()
 {
+	auto lock = lockStdout();
 	const std::vector<BookEntry>* entries = m_Book.lookup(m_Board.zkey());
 
 	if (!entries)

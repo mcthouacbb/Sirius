@@ -10,14 +10,6 @@
 namespace comm
 {
 
-enum class CommState
-{
-	IDLE,
-	SEARCHING,
-	ABORTING,
-	QUITTING
-};
-
 class IComm
 {
 public:
@@ -30,14 +22,16 @@ public:
 
 	virtual void run() = 0;
 	virtual void reportSearchInfo(const SearchInfo& info) const = 0;
-	virtual bool checkInput() = 0;
+	virtual void reportBestMove(Move bestMove) const = 0;
 private:
 	void calcLegalMoves();
 protected:
-	Board m_Board;
-	CommState m_State;
-	std::deque<BoardState> m_PrevStates;
+	std::unique_lock<std::mutex> lockStdout() const;
+
+	mutable std::mutex m_StdoutMutex;
+	std::deque<BoardState> m_BoardStates;
 	std::vector<Move> m_PrevMoves;
+	Board m_Board;
 	Move m_LegalMoves[256];
 	uint32_t m_MoveCount;
 	search::Search m_Search;

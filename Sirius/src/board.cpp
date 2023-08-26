@@ -5,13 +5,20 @@
 #include <charconv>
 
 Board::Board()
+	: m_Squares(), m_Pieces(), m_Colors(), m_SideToMove(), m_EvalState(), m_GamePly(), m_State(nullptr), m_RootState(nullptr)
+{
+
+}
+
+Board::Board(BoardState& rootState)
+	: m_RootState(&rootState)
 {
 	setToFen(defaultFen);
 }
 
 void Board::setToFen(const std::string_view& fen)
 {
-	m_State = &m_RootState;
+	m_State = m_RootState;
 	m_State->pliesFromNull = 0;
 	m_State->repetitions = 0;
 	m_State->lastRepetition = 0;
@@ -160,7 +167,7 @@ done:
 
 void Board::setToEpd(const std::string_view& epd)
 {
-	m_State = &m_RootState;
+	m_State = m_RootState;
 	m_State->pliesFromNull = 0;
 	m_State->repetitions = 0;
 	m_State->lastRepetition = 0;
@@ -306,6 +313,16 @@ done:
 	updateCheckInfo();
 }
 
+void Board::setState(const Board& other, BoardState& currState, BoardState& rootState)
+{
+	memcpy(m_Squares, other.m_Squares, 64 + 72);
+	m_SideToMove = other.m_SideToMove;
+	m_EvalState = other.m_EvalState;
+	m_GamePly = other.m_GamePly;
+	m_State = &currState;
+	m_RootState = &rootState;
+}
+
 const char pieceChars[16] = {
 	' ', 'K', 'Q', 'R', 'B', 'N', 'P', '#',
 	' ', 'k', 'q', 'r', 'b', 'n', 'p', '&'
@@ -323,7 +340,11 @@ void Board::printDbg() const
 
 	for (int j = 56; j >= 0; j -= 8)
 	{
-		std::cout << between;
+
+
+
+
+		between;
 		for (int i = j; i < j + 8; i++)
 		{
 			std::cout << "| ";

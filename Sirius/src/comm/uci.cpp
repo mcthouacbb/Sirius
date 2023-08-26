@@ -11,13 +11,7 @@
 namespace comm
 {
 
-bool UCI::shouldQuit(const std::string& str)
-{
-	return str == "quit";
-}
-
 UCI::UCI()
-	: m_InputQueue(shouldQuit)
 {
 
 }
@@ -26,30 +20,18 @@ void UCI::run()
 {
 	uciCommand();
 
-	for (;;)
+	while (true)
 	{
-		std::unique_lock<std::mutex> lock(m_InputQueue.mutex());
-		m_InputQueue.cond().wait(
-			lock,
-			[this]{return m_InputQueue.hasInput();}
-		);
-
-		while (m_InputQueue.hasInput())
-		{
-			std::string input = m_InputQueue.pop();
-			lock.unlock();
-			execCommand(input);
-			if (m_State == CommState::QUITTING)
-				return;
-			lock.lock();
-		}
-
-		lock.unlock();
+		std::string command;
+		std::getline(std::cin, command);
+		if (execCommand(command))
+			return;
 	}
 }
 
 void UCI::reportSearchInfo(const SearchInfo& info) const
 {
+	auto lock = lockStdout();
 	std::cout << "info depth " << info.depth;
 	std::cout << " time " << info.time.count();
 	std::cout << " nodes " << info.nodes;
@@ -80,19 +62,13 @@ void UCI::reportSearchInfo(const SearchInfo& info) const
 	std::cout << std::endl;
 }
 
-bool UCI::checkInput()
+void UCI::reportBestMove(Move bestMove) const
 {
-	m_InputQueue.mutex().lock();
-	while (m_InputQueue.hasInput())
-	{
-		execCommand(m_InputQueue.pop());
-	}
-	m_InputQueue.mutex().unlock();
-	return m_State == CommState::ABORTING || m_State == CommState::QUITTING;
+	auto lock = lockStdout();
+	std::cout << "bestmove " << comm::convMoveToPCN(bestMove) << std::endl;
 }
 
-
-void UCI::execCommand(const std::string& command)
+bool UCI::execCommand(const std::string& command)
 {
 	std::istringstream stream(command);
 
@@ -108,35 +84,41 @@ void UCI::execCommand(const std::string& command)
 			uciCommand();
 			break;
 		case Command::IS_READY:
+		{
+			auto lock = lockStdout();
 			std::cout << "readyok" << std::endl;
 			break;
+		}
 		case Command::NEW_GAME:
-			if (m_State == CommState::IDLE)
+			if (!m_Search.searching())
 				newGameCommand();
 			break;
 		case Command::POSITION:
-			if (m_State == CommState::IDLE)
-				positionCommand(stream);
+			positionCommand(stream);
 			break;
 		case Command::GO:
-			if (m_State == CommState::IDLE)
-				goCommand(stream);
+			// cannot be sent while searching as it will block the main thread until the in progress search finishes
+			goCommand(stream);
 			break;
 		case Command::STOP:
-			if (m_State == CommState::SEARCHING)
-				m_State = CommState::ABORTING;
+			if (m_Search.searching())
+				m_Search.stop();
 			break;
 		case Command::QUIT:
-			m_State = CommState::QUITTING;
-			break;
+			return true;
 		// non standard commands
 		case Command::DBG_PRINT:
+		{
+			auto lock = lockStdout();
 			printBoard(m_Board);
 			break;
+		}
 		case Command::BENCH:
-			benchCommand(stream);
+			if (!m_Search.searching())
+				benchCommand(stream);
 			break;
 	}
+	return false;
 }
 
 UCI::Command UCI::getCommand(const std::string& command) const
@@ -166,6 +148,7 @@ UCI::Command UCI::getCommand(const std::string& command) const
 
 void UCI::uciCommand() const
 {
+	auto lock = lockStdout();
 	std::cout << "id name Sirius v" << SIRIUS_VERSION_STRING << std::endl;
 	std::cout << "id author AspectOfTheNoob\n";
 	std::cout << "uciok" << std::endl;
@@ -234,7 +217,6 @@ void UCI::goCommand(std::istringstream& stream)
 {
 	std::string tok;
 	SearchLimits limits = {};
-	limits.policy = SearchPolicy::INFINITE;
 	limits.maxDepth = 1000;
 	while (stream.tellg() != -1)
 	{
@@ -244,28 +226,28 @@ void UCI::goCommand(std::istringstream& stream)
 			int wtime;
 			stream >> wtime;
 			limits.clock.timeLeft[static_cast<int>(Color::WHITE)] = Duration(wtime);
-			limits.policy = SearchPolicy::DYN_CLOCK;
+			limits.clock.enabled = true;
 		}
 		else if (tok == "btime")
 		{
 			int btime;
 			stream >> btime;
 			limits.clock.timeLeft[static_cast<int>(Color::BLACK)] = Duration(btime);
-			limits.policy = SearchPolicy::DYN_CLOCK;
+			limits.clock.enabled = true;
 		}
 		else if (tok == "winc")
 		{
 			int winc;
 			stream >> winc;
 			limits.clock.increments[static_cast<int>(Color::WHITE)] = Duration(winc);
-			limits.policy = SearchPolicy::DYN_CLOCK;
+			limits.clock.enabled = true;
 		}
 		else if (tok == "binc")
 		{
 			int binc;
 			stream >> binc;
 			limits.clock.increments[static_cast<int>(Color::BLACK)] = Duration(binc);
-			limits.policy = SearchPolicy::DYN_CLOCK;
+			limits.clock.enabled = true;
 		}
 		else if (tok == "movestogo")
 		{
@@ -289,22 +271,15 @@ void UCI::goCommand(std::istringstream& stream)
 		{
 			int time;
 			stream >> time;
-			limits.time = Duration(time);
-			limits.policy = SearchPolicy::FIXED_TIME;
+			limits.maxTime = Duration(time);
 		}
 		else if (tok == "infinite")
 		{
-			limits.policy = SearchPolicy::INFINITE;
+
 		}
 	}
 
-	m_State = CommState::SEARCHING;
-	m_Search.iterDeep(limits, true);
-	if (m_State == CommState::QUITTING)
-		return;
-	m_State = CommState::IDLE;
-
-	std::cout << "bestmove " << comm::convMoveToPCN(m_Search.info().pvBegin[0]) << std::endl;
+	m_Search.run(limits, m_BoardStates);
 }
 
 void UCI::benchCommand(std::istringstream& stream)
@@ -317,7 +292,7 @@ void UCI::benchCommand(std::istringstream& stream)
 		return;
 	}
 
-	runBench(m_Board, m_Search, depth);
+	runBench(m_Search, depth);
 }
 
 

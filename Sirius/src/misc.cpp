@@ -177,7 +177,8 @@ void testSEE()
 	std::ifstream file("res/see_tests.epd");
 
 	std::string line;
-	Board board;
+	BoardState rootState;
+	Board board(rootState);
 	Move moves[256];
 	Move* end;
 	int failCount = 0;
@@ -217,7 +218,7 @@ void testSEE()
 			std::cout << "invalid number parsing value" << std::endl;
 			return;
 		}
-		
+
 		bool fail = board.see_margin(move, value + 1);
 		bool pass = board.see_margin(move, value);
 		bool failed = false;

@@ -10,7 +10,8 @@ void Book::loadFromPGN(const char* pgn)
 	const char* currChar = pgn;
 	while (isdigit(*currChar) || isspace(*currChar) || *currChar == '.')
 		currChar++;
-	Board board;
+	BoardState rootState;
+	Board board(rootState);
 
 	Move moves[256];
 	Move* end;
