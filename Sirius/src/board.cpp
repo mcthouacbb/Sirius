@@ -306,6 +306,15 @@ done:
 	updateCheckInfo();
 }
 
+void Board::setState(Board& other)
+{
+	memcpy(m_Squares, other.m_Squares, 64 + 72);
+	m_SideToMove = other.m_SideToMove;
+	m_EvalState = other.m_EvalState;
+	m_GamePly = other.m_GamePly;
+	m_State = other.m_State;
+}
+
 const char pieceChars[16] = {
 	' ', 'K', 'Q', 'R', 'B', 'N', 'P', '#',
 	' ', 'k', 'q', 'r', 'b', 'n', 'p', '&'

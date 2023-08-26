@@ -32,7 +32,7 @@ public:
 
 	virtual void run() override;
 	virtual void reportSearchInfo(const SearchInfo& info) const override;
-	virtual bool checkInput() override;
+	virtual void reportBestMove(Move move) const override;
 private:
 	static bool shouldQuit(const std::string& str);
 

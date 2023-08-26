@@ -1,4 +1,4 @@
-#include "../sirius.h"
+/*#include "../sirius.h"
 #include "cmdline.h"
 #include "fen.h"
 #include "move.h"
@@ -422,4 +422,4 @@ void CmdLine::probeBookCommand()
 
 
 
-}
+}*/

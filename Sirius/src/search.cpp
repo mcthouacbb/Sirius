@@ -38,10 +38,38 @@ void init()
 	}
 }
 
-Search::Search(Board& board)
-	: m_Board(board), m_TT(2 * 1024 * 1024), m_RootPly(0)
+SearchThread::SearchThread(uint32_t id, std::thread&& thread)
+	: id(id), thread(std::move(thread))
 {
 
+}
+
+void SearchThread::reset()
+{
+	memset(history, 0, sizeof(history));
+	nodes = 0;
+	rootPly = 0;
+	checkCounter = TIME_CHECK_INTERVAL;
+
+	for (int i = 0; i <= MAX_PLY; i++)
+	{
+		plies[i].killers[0] = plies[i].killers[1] = Move();
+		plies[i].pv = nullptr;
+		plies[i].pvLength = 0;
+	}
+}
+
+Search::Search(Board& board)
+	: m_Board(board), m_TT(2 * 1024 * 1024), m_WakeFlag(WakeFlag::NONE), m_ShouldStop(false), m_RunningThreads(0)
+{
+	setThreads(1);
+}
+
+Search::~Search()
+{
+	if (searching())
+		stop();
+	joinThreads();
 }
 
 void Search::storeKiller(SearchPly* ply, Move killer)
@@ -53,78 +81,169 @@ void Search::storeKiller(SearchPly* ply, Move killer)
 	}
 }
 
-void Search::reset()
-{
-	memset(m_History, 0, sizeof(m_History));
-	m_SearchInfo.nodes = 0;
-
-	for (int i = 0; i <= MAX_PLY; i++)
-	{
-		m_Plies[i].killers[0] = m_Plies[i].killers[1] = Move();
-		m_Plies[i].pv = nullptr;
-		m_Plies[i].pvLength = 0;
-	}
-
-	m_TT.incAge();
-}
-
 void Search::newGame()
 {
-	reset();
+	for (auto& thread : m_Threads)
+	{
+		thread.reset();
+	}
 	m_TT.reset();
 }
 
-int Search::search(int depth)
+void Search::run(const SearchLimits& limits)
 {
-	Move pv[256];
-	m_Plies[0].pv = pv;
-	int searchScore = search(depth, m_Plies, -SCORE_MAX, SCORE_MAX, true);
-	memcpy(m_PV, pv, m_Plies[0].pvLength * sizeof(Move));
-	m_SearchInfo.depth = depth;
-	m_SearchInfo.time = Duration(0);
-	m_SearchInfo.pvBegin = m_PV;
-	m_SearchInfo.pvEnd = m_PV + m_Plies[0].pvLength;
-	m_SearchInfo.score = searchScore;
-	return searchScore;
-}
+	m_WakeMutex.lock();
 
-int Search::qsearch()
-{
-	return qsearch(m_Plies, -SCORE_MAX, SCORE_MAX);
-}
-
-int Search::iterDeep(const SearchLimits& limits, bool report)
-{
-	int maxDepth = std::min(limits.maxDepth, MAX_PLY - 1);
-	Move pv[MAX_PLY + 1];
-	int score = 0;
-
-	reset();
-	m_ShouldStop = false;
-	m_CheckCounter = TIME_CHECK_INTERVAL;
+	m_TT.incAge();
 	m_TimeMan.setLimits(limits, m_Board.sideToMove());
 	m_TimeMan.startSearch();
 
+	m_ShouldStop.store(false, std::memory_order_relaxed);
+
+	m_WakeFlag.store(WakeFlag::SEARCH, std::memory_order_seq_cst);
+
+	for (auto& thread : m_Threads)
+	{
+		thread.board.setState(m_Board);
+		thread.limits = limits;
+	}
+
+	m_RunningThreads.store(static_cast<int>(m_Threads.size()), std::memory_order::seq_cst);
+
+	m_WakeMutex.unlock();
+	m_WakeCV.notify_all();
+}
+
+void Search::stop()
+{
+	m_ShouldStop.store(true, std::memory_order_relaxed);
+
+	if (m_RunningThreads.load(std::memory_order_seq_cst) > 0)
+	{
+		std::unique_lock lock(m_StopMutex);
+		m_StopCV.wait(lock, [this]
+		{
+			return m_RunningThreads.load(std::memory_order_seq_cst) == 0;
+		});
+	}
+}
+
+void Search::setThreads(int count)
+{
+	if (m_Threads.size() != count)
+	{
+		joinThreads();
+		m_Threads.clear();
+		m_Threads.reserve(count);
+		for (int i = 0; i < count; i++)
+		{
+			m_Threads.emplace_back(i, std::thread());
+			auto& searchThread = m_Threads.back();
+			searchThread.thread = std::thread([this, &searchThread]
+			{
+				threadLoop(searchThread);
+			});
+		}
+	}
+}
+
+bool Search::searching() const
+{
+	return m_RunningThreads.load(std::memory_order_seq_cst) != 0;
+}
+
+void Search::joinThreads()
+{
+	m_WakeFlag.store(WakeFlag::QUIT, std::memory_order_seq_cst);
+
+	m_WakeCV.notify_all();
+
+	for (auto& thread : m_Threads)
+	{
+		thread.thread.join();
+	}
+
+	m_WakeFlag.store(WakeFlag::NONE, std::memory_order_seq_cst);
+}
+
+void Search::threadLoop(SearchThread& thread)
+{
+	while (true)
+	{
+		std::unique_lock<std::mutex> uniqueLock(m_WakeMutex);
+		WakeFlag flag;
+		m_WakeCV.wait(uniqueLock, [&thread, &flag, this]
+		{
+			flag = m_WakeFlag.load(std::memory_order_seq_cst);
+			return flag != WakeFlag::NONE;
+		});
+
+
+		switch (flag)
+		{
+			case WakeFlag::QUIT:
+				return;
+			case WakeFlag::SEARCH:
+				iterDeep(thread, thread.isMainThread(), true);
+				break;
+			case WakeFlag::NONE:
+				// unreachable;
+				break;
+		}
+	}
+}
+
+int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
+{
+	int maxDepth = std::min(thread.limits.maxDepth, MAX_PLY - 1);
+	Move pv[MAX_PLY + 1];
+	int score = 0;
+
+	thread.reset();
+	thread.checkCounter = TIME_CHECK_INTERVAL;
+
+	report = report && normalSearch;
+
 	for (int depth = 1; depth <= maxDepth; depth++)
 	{
-		m_Plies[0].pv = pv;
-		int searchScore = aspWindows(depth, score);
+		thread.plies[0].pv = pv;
+		int searchScore = aspWindows(thread, depth, score);
 		if (m_ShouldStop)
 			break;
-		memcpy(m_PV, m_Plies[0].pv, m_Plies[0].pvLength * sizeof(Move));
+		memcpy(thread.pv, thread.plies[0].pv, thread.plies[0].pvLength * sizeof(Move));
 		score = searchScore;
-		m_SearchInfo.depth = depth;
-		m_SearchInfo.time = m_TimeMan.elapsed();
-		m_SearchInfo.pvBegin = m_PV;
-		m_SearchInfo.pvEnd = m_PV + m_Plies[0].pvLength;
-		m_SearchInfo.score = searchScore;
 		if (report)
-			comm::currComm->reportSearchInfo(m_SearchInfo);
+		{
+			SearchInfo info;
+			info.nodes = thread.nodes;
+			info.depth = depth;
+			info.time = m_TimeMan.elapsed();
+			info.pvBegin = pv;
+			info.pvEnd = pv + thread.plies[0].pvLength;
+			info.score = searchScore;
+			if (report)
+			{
+				comm::currComm->reportSearchInfo(info);
+			}
+		}
 	}
+
+	if (report)
+	{
+		comm::currComm->reportBestMove(pv[0]);
+	}
+
+	if (normalSearch)
+	{
+		m_RunningThreads--;
+		m_StopCV.notify_one();
+		m_WakeFlag.store(WakeFlag::NONE, std::memory_order_seq_cst);
+	}
+
 	return score;
 }
 
-int Search::aspWindows(int depth, int prevScore)
+int Search::aspWindows(SearchThread& thread, int depth, int prevScore)
 {
 	int delta = ASP_INIT_DELTA;
 	int alpha = prevScore - delta;
@@ -132,7 +251,7 @@ int Search::aspWindows(int depth, int prevScore)
 
 	while (true)
 	{
-		int searchScore = search(depth, &m_Plies[0], alpha, beta, true);
+		int searchScore = search(thread, depth, &thread.plies[0], alpha, beta, true);
 		if (m_ShouldStop)
 			return searchScore;
 
@@ -155,59 +274,65 @@ BenchData Search::benchSearch(int depth)
 	limits.policy = SearchPolicy::INFINITE;
 	limits.maxDepth = depth;
 
-	iterDeep(limits, false);
+	std::unique_ptr<SearchThread> thread = std::make_unique<SearchThread>(0, std::thread());
+	thread->limits = limits;
+	thread->board.setState(m_Board);
+
+	iterDeep(*thread, false, false);
 
 	BenchData data;
-	data.nodes = m_SearchInfo.nodes;
+	data.nodes = thread->nodes;
 
 	return data;
 }
 
-int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool isPV)
+int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int alpha, int beta, bool isPV)
 {
-	if (--m_CheckCounter == 0)
+	if (--thread.checkCounter == 0)
 	{
-		m_CheckCounter = TIME_CHECK_INTERVAL;
-		if (m_TimeMan.shouldStop(m_SearchInfo))
+		thread.checkCounter = TIME_CHECK_INTERVAL;
+		if (thread.isMainThread() && m_TimeMan.shouldStop(thread.limits))
 		{
-			m_ShouldStop = true;
-			return alpha;
-		}
-
-		if (comm::currComm->checkInput())
-		{
-			m_ShouldStop = true;
+			m_ShouldStop.store(true, std::memory_order_relaxed);
 			return alpha;
 		}
 	}
 
-	m_SearchInfo.nodes++;
+	if (m_ShouldStop.load(std::memory_order_relaxed))
+		return alpha;
 
-	alpha = std::max(alpha, -SCORE_MATE + m_RootPly);
-	beta = std::min(beta, SCORE_MATE - m_RootPly);
+	thread.nodes++;
+
+	auto& rootPly = thread.rootPly;
+	auto& board = thread.board;
+	auto& history = thread.history;
+
+
+	alpha = std::max(alpha, -SCORE_MATE + rootPly);
+	beta = std::min(beta, SCORE_MATE - rootPly);
 	if (alpha >= beta)
 		return alpha;
 
-	bool root = m_RootPly == 0;
+	bool root = rootPly == 0;
 
-	if (eval::isImmediateDraw(m_Board) || m_Board.isDraw(m_RootPly))
+	if (eval::isImmediateDraw(board) || board.isDraw(rootPly))
 	{
 		searchPly->pvLength = 0;
 		return SCORE_DRAW;
 	}
 
-	if (m_RootPly >= MAX_PLY)
+	if (rootPly >= MAX_PLY)
 	{
 		searchPly->pvLength = 0;
-		return eval::evaluate(m_Board);
+		return eval::evaluate(board);
 	}
 
 	if (depth <= 0)
-		return qsearch(searchPly, alpha, beta);
+		return qsearch(thread, searchPly, alpha, beta);
 
 	int hashScore = INT_MIN;
 	Move hashMove = Move();
-	TTBucket* bucket = m_TT.probe(m_Board.zkey(), depth, m_RootPly, alpha, beta, hashScore, hashMove);
+	TTBucket* bucket = m_TT.probe(board.zkey(), depth, rootPly, alpha, beta, hashScore, hashMove);
 
 	if (hashScore != INT_MIN && !isPV)
 	{
@@ -215,10 +340,10 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		return hashScore;
 	}
 
-	int staticEval = eval::evaluate(m_Board);
+	int staticEval = eval::evaluate(board);
 	BoardState state;
 
-	if (!isPV && !m_Board.checkers())
+	if (!isPV && !board.checkers())
 	{
 		// reverse futility pruning
 		if (depth <= RFP_MAX_DEPTH && staticEval >= beta + RFP_MARGIN * depth)
@@ -229,17 +354,17 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 		// null move pruning
 
-		if (m_Board.pliesFromNull() > 0)
+		if (board.pliesFromNull() > 0)
 		{
-			BitBoard nonPawns = m_Board.getColor(m_Board.sideToMove()) ^ m_Board.getPieces(m_Board.sideToMove(), PieceType::PAWN);
+			BitBoard nonPawns = board.getColor(board.sideToMove()) ^ board.getPieces(board.sideToMove(), PieceType::PAWN);
 			if ((nonPawns & (nonPawns - 1)) && depth >= NMP_MIN_DEPTH)
 			{
 				int r = NMP_BASE_REDUCTION;
-				m_Board.makeNullMove(state);
-				m_RootPly++;
-				int nullScore = -search(depth - r, searchPly + 1, -beta, -beta + 1, false);
-				m_RootPly--;
-				m_Board.unmakeNullMove();
+				board.makeNullMove(state);
+				rootPly++;
+				int nullScore = -search(thread, depth - r, searchPly + 1, -beta, -beta + 1, false);
+				rootPly--;
+				board.unmakeNullMove();
 				if (nullScore >= beta)
 				{
 					searchPly->pvLength = 0;
@@ -250,22 +375,22 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	}
 
 	Move moves[256];
-	Move* end = genMoves<MoveGenType::LEGAL>(m_Board, moves);
+	Move* end = genMoves<MoveGenType::LEGAL>(board, moves);
 
 	if (moves == end)
 	{
 		searchPly->pvLength = 0;
-		if (m_Board.checkers())
-			return -SCORE_MATE + m_RootPly;
+		if (board.checkers())
+			return -SCORE_MATE + rootPly;
 		return SCORE_DRAW;
 	}
 	MoveOrdering ordering(
-		m_Board,
+		board,
 		moves,
 		end,
 		hashMove,
 		searchPly->killers,
-		m_History[static_cast<int>(m_Board.sideToMove())]
+		thread.history[static_cast<int>(board.sideToMove())]
 	);
 
 	Move childPV[MAX_PLY + 1];
@@ -274,7 +399,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	searchPly->bestMove = Move();
 
 	TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
-	bool inCheck = m_Board.checkers() != 0;
+	bool inCheck = board.checkers() != 0;
 
 	Move quietsTried[256];
 	int numQuietsTried = 0;
@@ -284,8 +409,8 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 	for (uint32_t i = 0; i < end - moves; i++)
 	{
 		auto [move, moveScore] = ordering.selectMove(i);
-		bool givesCheck = m_Board.givesCheck(move);
-		bool isCapture = m_Board.getPieceAt(move.dstPos()) != PIECE_NONE;
+		bool givesCheck = board.givesCheck(move);
+		bool isCapture = board.getPieceAt(move.dstPos()) != PIECE_NONE;
 		bool isPromotion = move.type() == MoveType::PROMOTION;
 		bool quietLosing = moveScore < MoveOrdering::KILLER_SCORE;
 
@@ -310,7 +435,7 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 			if (!isPV &&
 				depth <= MAX_SEE_PRUNE_DEPTH &&
-				!m_Board.see_margin(move, depth * SEE_PRUNE_MARGIN))
+				!board.see_margin(move, depth * SEE_PRUNE_MARGIN))
 				continue;
 		}
 
@@ -327,27 +452,27 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 			reduction = std::clamp(reduction, 0, depth - 2);
 		}
-		m_Board.makeMove(move, state);
+		board.makeMove(move, state);
 		if (!isPromotion && !isCapture)
 			quietsTried[numQuietsTried++] = move;
-		m_RootPly++;
+		rootPly++;
 
 		int newDepth = depth + givesCheck - 1;
 		int score;
 		if (i == 0)
-			score = -search(newDepth, searchPly + 1, -beta, -alpha, isPV);
+			score = -search(thread, newDepth, searchPly + 1, -beta, -alpha, isPV);
 		else
 		{
-			score = -search(newDepth - reduction, searchPly + 1, -(alpha + 1), -alpha, false);
+			score = -search(thread, newDepth - reduction, searchPly + 1, -(alpha + 1), -alpha, false);
 
 			/*if (moveScore > alpha && reduction)
 				moveScore = -search(newDepth, searchPly + 1, -(alpha + 1), -alpha, false);*/
 
 			if (score > alpha && (isPV || reduction > 0))
-				score = -search(newDepth, searchPly + 1, -beta, -alpha, true);
+				score = -search(thread, newDepth, searchPly + 1, -beta, -alpha, true);
 		}
-		m_RootPly--;
-		m_Board.unmakeMove(move);
+		rootPly--;
+		board.unmakeMove(move);
 
 		if (m_ShouldStop)
 			return alpha;
@@ -364,13 +489,13 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 
 					// formula from akimbo
 					int historyBonus = std::min(16 * depth * depth, 1200);
-					updateHistory(m_History[static_cast<int>(m_Board.sideToMove())][historyIndex(move)], historyBonus);
+					updateHistory(history[static_cast<int>(board.sideToMove())][historyIndex(move)], historyBonus);
 					for (int j = 0; j < numQuietsTried - 1; j++)
 					{
-						updateHistory(m_History[static_cast<int>(m_Board.sideToMove())][historyIndex(quietsTried[j])], -historyBonus);
+						updateHistory(history[static_cast<int>(board.sideToMove())][historyIndex(quietsTried[j])], -historyBonus);
 					}
 				}
-				m_TT.store(bucket, m_Board.zkey(), depth, m_RootPly, bestScore, move, TTEntry::Bound::LOWER_BOUND);
+				m_TT.store(bucket, board.zkey(), depth, rootPly, bestScore, move, TTEntry::Bound::LOWER_BOUND);
 				return bestScore;
 			}
 
@@ -389,21 +514,23 @@ int Search::search(int depth, SearchPly* searchPly, int alpha, int beta, bool is
 		}
 	}
 
-	m_TT.store(bucket, m_Board.zkey(), depth, m_RootPly, bestScore, searchPly->bestMove, bound);
+	m_TT.store(bucket, board.zkey(), depth, rootPly, bestScore, searchPly->bestMove, bound);
 
 	return bestScore;
 }
 
-int Search::qsearch(SearchPly* searchPly, int alpha, int beta)
+int Search::qsearch(SearchThread& thread, SearchPly* searchPly, int alpha, int beta)
 {
+	auto& rootPly = thread.rootPly;
+	auto& board = thread.board;
 	searchPly->pvLength = 0;
-	if (eval::isImmediateDraw(m_Board))
+	if (eval::isImmediateDraw(board))
 		return SCORE_DRAW;
 
 	int hashScore = INT_MIN;
 	Move hashMove = Move();
 	// qsearch is always depth 0
-	TTBucket* bucket = m_TT.probe(m_Board.zkey(), 0, m_RootPly, alpha, beta, hashScore, hashMove);
+	TTBucket* bucket = m_TT.probe(board.zkey(), 0, rootPly, alpha, beta, hashScore, hashMove);
 
 	if (hashScore != INT_MIN)
 	{
@@ -411,25 +538,25 @@ int Search::qsearch(SearchPly* searchPly, int alpha, int beta)
 		return hashScore;
 	}
 
-	int eval = eval::evaluate(m_Board);
+	int eval = eval::evaluate(board);
 
-	m_SearchInfo.nodes++;
+	thread.nodes++;
 
 	if (eval >= beta)
 		return eval;
 	if (eval > alpha)
 		alpha = eval;
 
-	if (m_RootPly >= MAX_PLY)
+	if (rootPly >= MAX_PLY)
 		return alpha;
 
 	Move childPV[MAX_PLY + 1];
 	searchPly[1].pv = childPV;
 
 	Move captures[256];
-	Move* end = genMoves<MoveGenType::CAPTURES>(m_Board, captures);
+	Move* end = genMoves<MoveGenType::CAPTURES>(board, captures);
 
-	MoveOrdering ordering(m_Board, captures, end, hashMove);
+	MoveOrdering ordering(board, captures, end, hashMove);
 
 	BoardState state;
 	TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
@@ -437,13 +564,13 @@ int Search::qsearch(SearchPly* searchPly, int alpha, int beta)
 	for (uint32_t i = 0; i < end - captures; i++)
 	{
 		auto [move, moveScore] = ordering.selectMove(i);
-		if (!m_Board.see_margin(move, 0))
+		if (!board.see_margin(move, 0))
 			continue;
-		m_Board.makeMove(move, state);
-		m_RootPly++;
-		int score = -qsearch(searchPly + 1, -beta, -alpha);
-		m_Board.unmakeMove(move);
-		m_RootPly--;
+		board.makeMove(move, state);
+		rootPly++;
+		int score = -qsearch(thread, searchPly + 1, -beta, -alpha);
+		board.unmakeMove(move);
+		rootPly--;
 
 		if (score > eval)
 		{
@@ -451,7 +578,7 @@ int Search::qsearch(SearchPly* searchPly, int alpha, int beta)
 
 			if (eval >= beta)
 			{
-				m_TT.store(bucket, m_Board.zkey(), 0, m_RootPly, eval, move, TTEntry::Bound::LOWER_BOUND);
+				m_TT.store(bucket, board.zkey(), 0, rootPly, eval, move, TTEntry::Bound::LOWER_BOUND);
 				return eval;
 			}
 
@@ -469,7 +596,7 @@ int Search::qsearch(SearchPly* searchPly, int alpha, int beta)
 		}
 	}
 
-	m_TT.store(bucket, m_Board.zkey(), 0, m_RootPly, eval, searchPly->bestMove, bound);
+	m_TT.store(bucket, board.zkey(), 0, rootPly, eval, searchPly->bestMove, bound);
 
 
 	return eval;

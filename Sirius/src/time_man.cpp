@@ -4,8 +4,6 @@
 
 void TimeManager::setLimits(const SearchLimits& limits, Color us)
 {
-	m_Limits = &limits;
-
 	switch (limits.policy)
 	{
 		case SearchPolicy::FIXED_TIME:
@@ -39,17 +37,16 @@ void TimeManager::startSearch()
 	m_StartTime = std::chrono::steady_clock::now();
 }
 
-bool TimeManager::shouldStop(const SearchInfo& searchInfo)
+bool TimeManager::shouldStop(const SearchLimits& limits)
 {
-	switch (m_Limits->policy)
+	switch (limits.policy)
 	{
 		case SearchPolicy::INFINITE:
 			return false;
 		case SearchPolicy::FIXED_TIME:
 		case SearchPolicy::DYN_CLOCK:
 			return elapsed() > m_AllocatedTime;
-		default:
-			assert(false && "Invalid SearchPolicy");
-			return searchInfo.nodes > 0;
 	}
+	// unreachable
+	return false;
 }

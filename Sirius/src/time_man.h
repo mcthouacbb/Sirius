@@ -6,8 +6,28 @@
 using TimePoint = std::chrono::steady_clock::time_point;
 using Duration = std::chrono::milliseconds;
 
-struct SearchLimits;
-struct SearchInfo;
+
+enum class SearchPolicy
+{
+	INFINITE,
+	FIXED_TIME,
+	DYN_CLOCK
+};
+
+struct SearchLimits
+{
+	SearchPolicy policy;
+	int maxDepth;
+	union
+	{
+		Duration time;
+		struct
+		{
+			Duration timeLeft[2];
+			Duration increments[2];
+		} clock;
+	};
+};
 
 class TimeManager
 {
@@ -18,9 +38,8 @@ public:
 	Duration elapsed();
 
 	void startSearch();
-	bool shouldStop(const SearchInfo& searchInfo);
+	bool shouldStop(const SearchLimits& searchLimits);
 private:
 	TimePoint m_StartTime;
 	Duration m_AllocatedTime;
-	const SearchLimits* m_Limits;
 };

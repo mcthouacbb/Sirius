@@ -43,8 +43,12 @@ public:
 	Board(const Board&) = delete;
 	Board& operator=(const Board&) = delete;
 
+	Board(Board&&) = default;
+	Board& operator=(Board&&) = default;
+
 	void setToFen(const std::string_view& fen);
 	void setToEpd(const std::string_view& epd);
+	void setState(Board& other);
 
 	std::string stringRep() const;
 	std::string fenStr() const;

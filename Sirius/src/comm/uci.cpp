@@ -11,13 +11,7 @@
 namespace comm
 {
 
-bool UCI::shouldQuit(const std::string& str)
-{
-	return str == "quit";
-}
-
 UCI::UCI()
-	: m_InputQueue(shouldQuit)
 {
 
 }
@@ -26,25 +20,12 @@ void UCI::run()
 {
 	uciCommand();
 
-	for (;;)
+	while (true)
 	{
-		std::unique_lock<std::mutex> lock(m_InputQueue.mutex());
-		m_InputQueue.cond().wait(
-			lock,
-			[this]{return m_InputQueue.hasInput();}
-		);
-
-		while (m_InputQueue.hasInput())
-		{
-			std::string input = m_InputQueue.pop();
-			lock.unlock();
-			execCommand(input);
-			if (m_State == CommState::QUITTING)
-				return;
-			lock.lock();
-		}
-
-		lock.unlock();
+		std::string command;
+		std::getline(std::cin, command);
+		if (execCommand(command))
+			return;
 	}
 }
 
@@ -80,19 +61,12 @@ void UCI::reportSearchInfo(const SearchInfo& info) const
 	std::cout << std::endl;
 }
 
-bool UCI::checkInput()
+void UCI::reportBestMove(Move move) const
 {
-	m_InputQueue.mutex().lock();
-	while (m_InputQueue.hasInput())
-	{
-		execCommand(m_InputQueue.pop());
-	}
-	m_InputQueue.mutex().unlock();
-	return m_State == CommState::ABORTING || m_State == CommState::QUITTING;
+	std::cout << "bestmove " << comm::convMoveToPCN(move) << std::endl;
 }
 
-
-void UCI::execCommand(const std::string& command)
+bool UCI::execCommand(const std::string& command)
 {
 	std::istringstream stream(command);
 
@@ -108,35 +82,37 @@ void UCI::execCommand(const std::string& command)
 			uciCommand();
 			break;
 		case Command::IS_READY:
+			lockStdout();
 			std::cout << "readyok" << std::endl;
 			break;
 		case Command::NEW_GAME:
-			if (m_State == CommState::IDLE)
+			if (!m_Search.searching())
 				newGameCommand();
-			break;
 		case Command::POSITION:
-			if (m_State == CommState::IDLE)
+			if (!m_Search.searching())
 				positionCommand(stream);
 			break;
 		case Command::GO:
-			if (m_State == CommState::IDLE)
+			if (!m_Search.searching())
 				goCommand(stream);
 			break;
 		case Command::STOP:
-			if (m_State == CommState::SEARCHING)
-				m_State = CommState::ABORTING;
+			if (m_Search.searching())
+				m_Search.stop();
 			break;
 		case Command::QUIT:
-			m_State = CommState::QUITTING;
-			break;
+			return true;
 		// non standard commands
 		case Command::DBG_PRINT:
+			lockStdout();
 			printBoard(m_Board);
 			break;
 		case Command::BENCH:
-			benchCommand(stream);
+			if (!m_Search.searching())
+				benchCommand(stream);
 			break;
 	}
+	return false;
 }
 
 UCI::Command UCI::getCommand(const std::string& command) const
@@ -166,6 +142,7 @@ UCI::Command UCI::getCommand(const std::string& command) const
 
 void UCI::uciCommand() const
 {
+	lockStdout();
 	std::cout << "id name Sirius v" << SIRIUS_VERSION_STRING << std::endl;
 	std::cout << "id author AspectOfTheNoob\n";
 	std::cout << "uciok" << std::endl;
@@ -298,13 +275,7 @@ void UCI::goCommand(std::istringstream& stream)
 		}
 	}
 
-	m_State = CommState::SEARCHING;
-	m_Search.iterDeep(limits, true);
-	if (m_State == CommState::QUITTING)
-		return;
-	m_State = CommState::IDLE;
-
-	std::cout << "bestmove " << comm::convMoveToPCN(m_Search.info().pvBegin[0]) << std::endl;
+	m_Search.run(limits);
 }
 
 void UCI::benchCommand(std::istringstream& stream)

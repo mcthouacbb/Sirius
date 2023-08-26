@@ -5,7 +5,7 @@ namespace comm
 {
 
 IComm::IComm()
-	: m_State(CommState::IDLE), m_Search(m_Board)
+	: m_Search(m_Board)
 {
 	calcLegalMoves();
 }
@@ -41,6 +41,11 @@ void IComm::calcLegalMoves()
 {
 	Move* end = genMoves<MoveGenType::LEGAL>(m_Board, m_LegalMoves);
 	m_MoveCount = static_cast<uint32_t>(end - m_LegalMoves);
+}
+
+std::unique_lock<std::mutex> IComm::lockStdout() const
+{
+	return std::unique_lock<std::mutex>(m_StdoutMutex);
 }
 
 

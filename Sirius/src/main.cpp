@@ -23,13 +23,13 @@ int main()
 	std::string mode;
 	std::getline(std::cin, mode);
 
-	if (mode == "cmdline")
+	/*if (mode == "cmdline")
 	{
 		comm::CmdLine cmdLine;
 		comm::currComm = &cmdLine;
 		cmdLine.run();
 	}
-	else if (mode == "uci")
+	else */if (mode == "uci")
 	{
 		comm::UCI uci;
 		comm::currComm = &uci;
