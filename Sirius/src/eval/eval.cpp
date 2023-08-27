@@ -3,11 +3,6 @@
 namespace eval
 {
 
-void init()
-{
-
-}
-
 namespace
 {
 

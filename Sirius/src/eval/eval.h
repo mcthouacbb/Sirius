@@ -8,8 +8,6 @@
 namespace eval
 {
 
-void init();
-
 inline bool isMateScore(int score)
 {
     return std::abs(score) >= SCORE_MATE_IN_MAX;
