@@ -332,7 +332,11 @@ void Board::printDbg() const
 
 	for (int j = 56; j >= 0; j -= 8)
 	{
-		std::cout << between;
+		
+		
+		
+		
+		between;
 		for (int i = j; i < j + 8; i++)
 		{
 			std::cout << "| ";

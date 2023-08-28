@@ -31,6 +31,7 @@ void UCI::run()
 
 void UCI::reportSearchInfo(const SearchInfo& info) const
 {
+	auto lock = lockStdout();
 	std::cout << "info depth " << info.depth;
 	std::cout << " time " << info.time.count();
 	std::cout << " nodes " << info.nodes;
@@ -63,6 +64,7 @@ void UCI::reportSearchInfo(const SearchInfo& info) const
 
 void UCI::reportBestMove(Move move) const
 {
+	auto lock = lockStdout();
 	std::cout << "bestmove " << comm::convMoveToPCN(move) << std::endl;
 }
 
@@ -82,12 +84,15 @@ bool UCI::execCommand(const std::string& command)
 			uciCommand();
 			break;
 		case Command::IS_READY:
-			lockStdout();
+		{
+			auto lock = lockStdout();
 			std::cout << "readyok" << std::endl;
 			break;
+		}
 		case Command::NEW_GAME:
 			if (!m_Search.searching())
 				newGameCommand();
+			break;
 		case Command::POSITION:
 			if (!m_Search.searching())
 				positionCommand(stream);
@@ -104,9 +109,11 @@ bool UCI::execCommand(const std::string& command)
 			return true;
 		// non standard commands
 		case Command::DBG_PRINT:
-			lockStdout();
+		{
+			auto lock = lockStdout();
 			printBoard(m_Board);
 			break;
+		}
 		case Command::BENCH:
 			if (!m_Search.searching())
 				benchCommand(stream);
@@ -142,7 +149,7 @@ UCI::Command UCI::getCommand(const std::string& command) const
 
 void UCI::uciCommand() const
 {
-	lockStdout();
+	auto lock = lockStdout();
 	std::cout << "id name Sirius v" << SIRIUS_VERSION_STRING << std::endl;
 	std::cout << "id author AspectOfTheNoob\n";
 	std::cout << "uciok" << std::endl;

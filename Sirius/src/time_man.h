@@ -35,10 +35,10 @@ public:
 	TimeManager() = default;
 
 	void setLimits(const SearchLimits& searchLimits, Color us);
-	Duration elapsed();
+	Duration elapsed() const;
 
 	void startSearch();
-	bool shouldStop(const SearchLimits& searchLimits);
+	bool shouldStop(const SearchLimits& searchLimits) const;
 private:
 	TimePoint m_StartTime;
 	Duration m_AllocatedTime;

@@ -8,7 +8,6 @@ void TimeManager::setLimits(const SearchLimits& limits, Color us)
 	{
 		case SearchPolicy::FIXED_TIME:
 			m_AllocatedTime = limits.time;
-			std::cout << m_AllocatedTime.count() << std::endl;
 			break;
 		case SearchPolicy::DYN_CLOCK:
 			m_AllocatedTime = limits.clock.timeLeft[static_cast<int>(us)] / 40 + limits.clock.increments[static_cast<int>(us)] / 2;
@@ -27,7 +26,7 @@ void TimeManager::setLimits(const SearchLimits& limits, Color us)
 	}
 }
 
-Duration TimeManager::elapsed()
+Duration TimeManager::elapsed() const
 {
 	return std::chrono::duration_cast<Duration>(std::chrono::steady_clock::now() - m_StartTime);
 }
@@ -37,7 +36,7 @@ void TimeManager::startSearch()
 	m_StartTime = std::chrono::steady_clock::now();
 }
 
-bool TimeManager::shouldStop(const SearchLimits& limits)
+bool TimeManager::shouldStop(const SearchLimits& limits) const
 {
 	switch (limits.policy)
 	{

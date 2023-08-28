@@ -61,6 +61,7 @@ struct SearchThread
 	std::thread thread;
 
 	Board board;
+	TimeManager timeMan;
 
 	uint64_t nodes = 0;
 
@@ -108,8 +109,6 @@ private:
 	std::mutex m_StopMutex;
 	std::condition_variable m_StopCV;
 	std::atomic<int> m_RunningThreads;
-
-	TimeManager m_TimeMan;
 
 	std::vector<SearchThread> m_Threads;
 };

@@ -39,7 +39,7 @@ void init()
 }
 
 SearchThread::SearchThread(uint32_t id, std::thread&& thread)
-	: id(id), thread(std::move(thread))
+	: id(id), thread(std::move(thread)), history(), limits(), plies(), pv()
 {
 
 }
@@ -95,8 +95,6 @@ void Search::run(const SearchLimits& limits)
 	m_WakeMutex.lock();
 
 	m_TT.incAge();
-	m_TimeMan.setLimits(limits, m_Board.sideToMove());
-	m_TimeMan.startSearch();
 
 	m_ShouldStop.store(false, std::memory_order_relaxed);
 
@@ -104,11 +102,17 @@ void Search::run(const SearchLimits& limits)
 
 	for (auto& thread : m_Threads)
 	{
+		if (thread.isMainThread())
+		{
+			thread.timeMan.setLimits(limits, m_Board.sideToMove());
+			thread.timeMan.startSearch();
+		}
+
 		thread.board.setState(m_Board);
 		thread.limits = limits;
 	}
 
-	m_RunningThreads.store(static_cast<int>(m_Threads.size()), std::memory_order::seq_cst);
+	m_RunningThreads.store(static_cast<int>(m_Threads.size()), std::memory_order_seq_cst);
 
 	m_WakeMutex.unlock();
 	m_WakeCV.notify_all();
@@ -196,11 +200,13 @@ void Search::threadLoop(SearchThread& thread)
 int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
 {
 	int maxDepth = std::min(thread.limits.maxDepth, MAX_PLY - 1);
-	Move pv[MAX_PLY + 1];
+	Move pv[MAX_PLY + 1] = {};
 	int score = 0;
 
 	thread.reset();
 	thread.checkCounter = TIME_CHECK_INTERVAL;
+	if (report)
+		thread.timeMan.startSearch();
 
 	report = report && normalSearch;
 
@@ -217,7 +223,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
 			SearchInfo info;
 			info.nodes = thread.nodes;
 			info.depth = depth;
-			info.time = m_TimeMan.elapsed();
+			info.time = thread.timeMan.elapsed();
 			info.pvBegin = pv;
 			info.pvEnd = pv + thread.plies[0].pvLength;
 			info.score = searchScore;
@@ -291,7 +297,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 	if (--thread.checkCounter == 0)
 	{
 		thread.checkCounter = TIME_CHECK_INTERVAL;
-		if (thread.isMainThread() && m_TimeMan.shouldStop(thread.limits))
+		if (thread.isMainThread() && thread.timeMan.shouldStop(thread.limits))
 		{
 			m_ShouldStop.store(true, std::memory_order_relaxed);
 			return alpha;
