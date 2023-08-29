@@ -1,6 +1,8 @@
 #include "tt.h"
 #include "eval/eval.h"
 
+#include <climits>
+
 TT::TT(size_t size)
 	: m_Size(size)
 {

@@ -3,6 +3,8 @@
 #include "zobrist.h"
 #include "defs.h"
 
+#include <cstring>
+
 struct TTEntry
 {
 	uint16_t key16;

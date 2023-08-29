@@ -5,23 +5,23 @@ constexpr uint32_t TIME_CHECK_INTERVAL = 2048;
 
 constexpr int ASP_INIT_DELTA = 25;
 
-constexpr uint32_t RFP_MAX_DEPTH = 8;
+constexpr int RFP_MAX_DEPTH = 8;
 constexpr int RFP_MARGIN = 75;
 
-constexpr uint32_t NMP_MIN_DEPTH = 2;
+constexpr int NMP_MIN_DEPTH = 2;
 constexpr int NMP_BASE_REDUCTION = 3;
 
 constexpr int FP_BASE_MARGIN = 120;
 constexpr int FP_DEPTH_MARGIN = 75;
-constexpr uint32_t FP_MAX_DEPTH = 6;
+constexpr int FP_MAX_DEPTH = 6;
 
 constexpr int LMP_MAX_DEPTH = 8;
 constexpr int LMP_MIN_MOVES_BASE = 3;
 
-constexpr uint32_t MAX_SEE_PRUNE_DEPTH = 8;
+constexpr int MAX_SEE_PRUNE_DEPTH = 8;
 constexpr int SEE_PRUNE_MARGIN = -100;
 
-constexpr uint32_t LMR_MIN_DEPTH = 3;
+constexpr int LMR_MIN_DEPTH = 3;
 constexpr uint32_t LMR_MIN_MOVES_NON_PV = 3;
 constexpr uint32_t LMR_MIN_MOVES_PV = 5;
 

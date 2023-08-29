@@ -9,6 +9,7 @@
 #include <cstring>
 #include <climits>
 #include <algorithm>
+#include <cmath>
 
 namespace search
 {
