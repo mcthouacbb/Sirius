@@ -966,75 +966,6 @@ bool Board::see_margin(Move move, int margin) const
 	return us;
 }
 
-bool Board::givesCheck(Move move) const
-{
-	uint32_t oppKingIdx = getLSB(getPieces(flip(m_SideToMove), PieceType::KING));
-	switch (move.type())
-	{
-		case MoveType::NONE:
-		{
-			PieceType piece = getPieceType(getPieceAt(move.srcPos()));
-			int dstPos = move.dstPos();
-			BitBoard checkSqrs = checkSquares(piece);
-			if (checkSqrs & (1ull << dstPos))
-				return true;
-
-			return (checkBlockers(flip(m_SideToMove)) & (1ull << move.srcPos())) &&
-				!(attacks::aligned(move.srcPos(), move.dstPos(), oppKingIdx));
-		}
-		case MoveType::ENPASSANT:
-		{
-			int dstPos = move.dstPos();
-			BitBoard checkSqrs = checkSquares(PieceType::PAWN);
-			if (checkSqrs & (1ull << dstPos))
-				return true;
-			int offset = m_SideToMove == Color::WHITE ? -8 : 8;
-			int capturedPawn = dstPos + offset;
-
-			BitBoard postBB = getAllPieces() ^ (1ull << move.srcPos()) ^ (1ull << move.dstPos()) ^ (1ull << capturedPawn);
-
-			return (attacks::getRookAttacks(oppKingIdx, postBB) & (getPieces(m_SideToMove, PieceType::ROOK) | getPieces(m_SideToMove, PieceType::QUEEN))) ||
-				(attacks::getBishopAttacks(oppKingIdx, postBB) & (getPieces(m_SideToMove, PieceType::BISHOP) | getPieces(m_SideToMove, PieceType::QUEEN)));
-		}
-		case MoveType::CASTLE:
-		{
-			int dstPos = move.dstPos() + (move.srcPos() > move.dstPos() ? -1 : 1);
-			BitBoard checkSqrs = checkSquares(PieceType::ROOK);
-			if (checkSqrs & (1ull << dstPos))
-				return true;
-
-			// enemy king on back rank special case
-			return checkSquares(PieceType::ROOK) & (1ull << move.srcPos()) &&
-				attacks::aligned(move.srcPos(), move.dstPos(), oppKingIdx);
-		}
-		case MoveType::PROMOTION:
-		{
-			int piece = (static_cast<int>(move.promotion()) >> 14) + static_cast<int>(PieceType::QUEEN);
-			int dstPos = move.dstPos();
-			BitBoard checkSqrs = checkSquares(static_cast<PieceType>(piece));
-			if (checkSqrs & (1ull << dstPos))
-				return true;
-
-			if ((checkBlockers(flip(m_SideToMove)) & (1ull << move.srcPos())) &&
-				!attacks::aligned(move.srcPos(), move.dstPos(), oppKingIdx))
-				return true;
-
-			if (checkSquares(PieceType::ROOK) & (1ull << move.srcPos()) &&
-				attacks::aligned(move.srcPos(), move.dstPos(), oppKingIdx) &&
-				(move.promotion() == Promotion::ROOK || move.promotion() == Promotion::QUEEN))
-			{
-				return true;
-			}
-
-			return checkSquares(PieceType::BISHOP) & (1ull << move.srcPos()) &&
-				attacks::aligned(move.srcPos(), move.dstPos(), oppKingIdx) &&
-				(move.promotion() == Promotion::BISHOP || move.promotion() == Promotion::QUEEN);
-		}
-	}
-	assert(false && "Invalid move type in Board::givesCheck");
-	return false;
-}
-
 void Board::updateCheckInfo()
 {
 	uint32_t whiteKingIdx = getLSB(getPieces(Color::WHITE, PieceType::KING));
@@ -1045,20 +976,6 @@ void Board::updateCheckInfo()
 		pinnersBlockers(whiteKingIdx, getColor(Color::BLACK), m_State->checkInfo.pinners[static_cast<int>(Color::WHITE)]);
 	m_State->checkInfo.blockers[static_cast<int>(Color::BLACK)] =
 		pinnersBlockers(blackKingIdx, getColor(Color::WHITE), m_State->checkInfo.pinners[static_cast<int>(Color::BLACK)]);
-
-	uint32_t oppKingIdx = m_SideToMove == Color::WHITE ? blackKingIdx : whiteKingIdx;
-
-	m_State->checkInfo.checkSquares[static_cast<int>(PieceType::ROOK) - static_cast<int>(PieceType::QUEEN)] =
-		attacks::getRookAttacks(oppKingIdx, getAllPieces());
-	m_State->checkInfo.checkSquares[static_cast<int>(PieceType::BISHOP) - static_cast<int>(PieceType::QUEEN)] =
-		attacks::getBishopAttacks(oppKingIdx, getAllPieces());
-	m_State->checkInfo.checkSquares[static_cast<int>(PieceType::QUEEN) - static_cast<int>(PieceType::QUEEN)] =
-		m_State->checkInfo.checkSquares[static_cast<int>(PieceType::ROOK) - static_cast<int>(PieceType::QUEEN)] |
-		m_State->checkInfo.checkSquares[static_cast<int>(PieceType::BISHOP) - static_cast<int>(PieceType::QUEEN)];
-	m_State->checkInfo.checkSquares[static_cast<int>(PieceType::KNIGHT) - static_cast<int>(PieceType::QUEEN)] =
-		attacks::getKnightAttacks(oppKingIdx);
-	m_State->checkInfo.checkSquares[static_cast<int>(PieceType::PAWN) - static_cast<int>(PieceType::QUEEN)] =
-		attacks::getPawnAttacks(flip(m_SideToMove), oppKingIdx);
 }
 
 void Board::calcRepetitions()

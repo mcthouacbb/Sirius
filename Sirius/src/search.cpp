@@ -438,7 +438,6 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 	for (uint32_t i = 0; i < end - moves; i++)
 	{
 		auto [move, moveScore] = ordering.selectMove(i);
-		bool givesCheck = board.givesCheck(move);
 		bool isCapture = board.getPieceAt(move.dstPos()) != PIECE_NONE;
 		bool isPromotion = move.type() == MoveType::PROMOTION;
 		bool quietLosing = moveScore < MoveOrdering::KILLER_SCORE;
@@ -467,6 +466,11 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 				!board.see_margin(move, depth * SEE_PRUNE_MARGIN))
 				continue;
 		}
+		board.makeMove(move, state);
+		bool givesCheck = board.checkers() != 0;
+		if (!isPromotion && !isCapture)
+			quietsTried[numQuietsTried++] = move;
+		rootPly++;
 
 		int reduction = 0;
 		if (i >= (isPV ? LMR_MIN_MOVES_PV : LMR_MIN_MOVES_NON_PV) &&
@@ -481,10 +485,6 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 
 			reduction = std::clamp(reduction, 0, depth - 2);
 		}
-		board.makeMove(move, state);
-		if (!isPromotion && !isCapture)
-			quietsTried[numQuietsTried++] = move;
-		rootPly++;
 
 		int newDepth = depth + givesCheck - 1;
 		int score;

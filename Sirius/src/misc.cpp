@@ -67,43 +67,6 @@ uint64_t perft(Board& board, int depth)
 template uint64_t perft<true>(Board& board, int depth);
 template uint64_t perft<false>(Board& board, int depth);
 
-template<bool print>
-uint64_t testGivesCheck(Board& board, int depth)
-{
-	if (depth == 0)
-		return 1;
-	Move moves[256];
-	Move* end = genMoves<MoveGenType::LEGAL>(board, moves);
-	if (depth == 1 && !print)
-		return end - moves;
-
-	uint64_t count = 0;
-	BoardState state;
-	for (Move* it = moves; it != end; it++)
-	{
-		const auto& move = *it;
-		bool givesCheck = board.givesCheck(move);
-		board.makeMove(move, state);
-		bool inCheck = board.checkers() != 0;
-		if (givesCheck != inCheck)
-		{
-			std::cout << comm::convMoveToPCN(move) << std::endl;
-			board.unmakeMove(move);
-			// printBoard(board);
-			throw std::runtime_error("WHAT?");
-		}
-		uint64_t sub = perft<false>(board, depth - 1);
-		if (print)
-			std::cout << comm::convMoveToPCN(move) << ": " << sub << std::endl;
-		count += sub;
-		board.unmakeMove(move);
-	}
-	return count;
-}
-
-template uint64_t testGivesCheck<true>(Board& board, int depth);
-template uint64_t testGivesCheck<false>(Board& board, int depth);
-
 void testSAN(Board& board, int depth)
 {
 	Move moves[256];

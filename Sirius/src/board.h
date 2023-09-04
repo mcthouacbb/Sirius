@@ -13,7 +13,6 @@ struct CheckInfo
 	BitBoard checkers;
 	BitBoard pinners[2];
 	BitBoard blockers[2];
-	BitBoard checkSquares[5];
 };
 
 struct BoardState
@@ -93,10 +92,8 @@ public:
 	BitBoard checkers() const;
 	BitBoard pinners(Color color) const;
 	BitBoard checkBlockers(Color color) const;
-	BitBoard checkSquares(PieceType piece) const;
 
 	bool see_margin(Move move, int margin) const;
-	bool givesCheck(Move move) const;
 
 	const eval::EvalState& evalState() const;
 private:
@@ -240,12 +237,6 @@ inline BitBoard Board::pinners(Color color) const
 inline BitBoard Board::checkBlockers(Color color) const
 {
 	return m_State->checkInfo.blockers[static_cast<int>(color)];
-}
-
-inline BitBoard Board::checkSquares(PieceType piece) const
-{
-	const BitBoard* b = m_State->checkInfo.checkSquares - static_cast<int>(PieceType::QUEEN);
-	return b[static_cast<int>(piece)];
 }
 
 inline int Board::seePieceValue(PieceType type) const
