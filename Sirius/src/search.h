@@ -7,6 +7,11 @@
 
 #include <array>
 #include <deque>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <atomic>
+#include <vector>
 
 struct SearchPly
 {

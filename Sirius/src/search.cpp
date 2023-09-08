@@ -41,7 +41,7 @@ void init()
 
 // initialize wakeFlag to search to allow for waiting on search thread at init
 SearchThread::SearchThread(uint32_t id, std::thread&& thread)
-	: id(id), thread(std::move(thread)), wakeFlag(WakeFlag::SEARCH), history(), limits(), plies(), pv()
+	: id(id), thread(std::move(thread)), wakeFlag(WakeFlag::SEARCH), limits(), pv(), history(), plies()
 {
 
 }
@@ -88,7 +88,7 @@ void SearchThread::join()
 }
 
 Search::Search(Board& board)
-	: m_Board(board), m_TT(2 * 1024 * 1024), m_ShouldStop(false)
+	: m_Board(board), m_ShouldStop(false), m_TT(2 * 1024 * 1024)
 {
 	setThreads(1);
 }
@@ -162,7 +162,7 @@ void Search::stop()
 
 void Search::setThreads(int count)
 {
-	if (m_Threads.size() != count)
+	if (static_cast<int>(m_Threads.size()) != count)
 	{
 		joinThreads();
 		m_Threads.clear();
