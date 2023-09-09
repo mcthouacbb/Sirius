@@ -20,14 +20,14 @@ void init()
 	for (int color = 0; color < 2; color++)
 		for (int piece = 0; piece < 6; piece++)
 			for (int square = 0; square < 64; square++)
-				pieceSquares[color][piece][square] = prng.next64();
+				pieceSquares[color][5 - piece][square] = prng.next64();
 
 	for (int i = 0; i < 16; i++)
 		castlingRights[i] = prng.next64();
-	
+
 	for (int i = 0; i < 8; i++)
 		epFiles[i] = prng.next64();
-	
+
 	blackToMove = prng.next64();
 }
 

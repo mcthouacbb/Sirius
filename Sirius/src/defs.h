@@ -10,12 +10,12 @@ enum class PieceType
 {
 	ALL = 0,
 	NONE = 0,
-	KING,
-	QUEEN,
-	ROOK,
-	BISHOP,
+	PAWN,
 	KNIGHT,
-	PAWN
+	BISHOP,
+	ROOK,
+	QUEEN,
+	KING
 };
 
 enum class Color
@@ -65,19 +65,19 @@ enum class MoveType
 
 enum class Promotion
 {
-	QUEEN = 0 << 14,
-	ROOK = 1 << 14,
-	BISHOP = 2 << 14,
-	KNIGHT = 3 << 14
+	KNIGHT = 0 << 14,
+	BISHOP = 1 << 14,
+	ROOK = 2 << 14,
+	QUEEN = 3 << 14
 };
 
 inline PieceType promoPiece(Promotion promo)
 {
 	static const PieceType promoPieces[4] = {
-		PieceType::QUEEN,
-		PieceType::ROOK,
+		PieceType::KNIGHT,
 		PieceType::BISHOP,
-		PieceType::KNIGHT
+		PieceType::ROOK,
+		PieceType::QUEEN
 	};
 
 	return promoPieces[static_cast<int>(promo) >> 14];

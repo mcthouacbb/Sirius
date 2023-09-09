@@ -324,8 +324,8 @@ void Board::setState(const Board& other, BoardState& currState, BoardState& root
 }
 
 const char pieceChars[16] = {
-	' ', 'K', 'Q', 'R', 'B', 'N', 'P', '#',
-	' ', 'k', 'q', 'r', 'b', 'n', 'p', '&'
+	' ', 'P', 'N', 'B', 'R', 'Q', 'K', '#',
+	' ', 'p', 'n', 'b', 'r', 'q', 'k', '&'
 };
 
 // maybe include these

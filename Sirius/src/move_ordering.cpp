@@ -26,12 +26,12 @@ int mvvLva(const Board& board, Move move)
 {
 	int srcPiece = static_cast<int>(getPieceType(board.getPieceAt(move.srcPos())));
 	int dstPiece = static_cast<int>(getPieceType(board.getPieceAt(move.dstPos())));
-	return MVV_LVA[srcPiece][dstPiece];
+	return MVV_LVA[7 - srcPiece][7 - dstPiece];
 }
 
 int promotionBonus(Move move)
 {
-	return 4 - (static_cast<int>(move.promotion()) >> 14);
+	return 1 + (static_cast<int>(move.promotion()) >> 14);
 }
 
 }

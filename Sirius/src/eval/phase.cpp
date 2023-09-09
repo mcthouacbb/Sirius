@@ -6,18 +6,18 @@ namespace eval
 const int PHASE_WEIGHTS[] = {
 	// none
 	0,
-	// king
-	0,
-	// queen
-	QUEEN_PHASE,
-	// rook
-	ROOK_PHASE,
-	// bishop
-	BISHOP_PHASE,
+	// pawn
+	PAWN_PHASE,
 	// knight
 	KNIGHT_PHASE,
-	// PAWN
-	PAWN_PHASE
+	// bishop
+	BISHOP_PHASE,
+	// rook
+	ROOK_PHASE,
+	// queen
+	QUEEN_PHASE,
+	// king
+	0
 };
 
 int getPiecePhase(PieceType piece)

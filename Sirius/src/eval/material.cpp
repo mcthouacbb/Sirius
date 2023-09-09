@@ -6,35 +6,35 @@ namespace eval
 const int PIECE_VALUES_MG[] = {
 	// none
 	0,
-	// king
-	0,
-	// queen
-	QUEEN_VALUE_MG,
-	// rook
-	ROOK_VALUE_MG,
-	// bishop
-	BISHOP_VALUE_MG,
+	// pawn
+	PAWN_VALUE_MG,
 	// knight
 	KNIGHT_VALUE_MG,
-	// pawn
-	PAWN_VALUE_MG
+	// bishop
+	BISHOP_VALUE_MG,
+	// rook
+	ROOK_VALUE_MG,
+	// queen
+	QUEEN_VALUE_MG,
+	// king
+	0
 };
 
 const int PIECE_VALUES_EG[] = {
 	// none
 	0,
-	// king
-	0,
-	// queen
-	QUEEN_VALUE_EG,
-	// rook
-	ROOK_VALUE_EG,
-	// bishop
-	BISHOP_VALUE_EG,
+	// pawn
+	PAWN_VALUE_EG,
 	// knight
 	KNIGHT_VALUE_EG,
-	// pawn
-	PAWN_VALUE_EG
+	// bishop
+	BISHOP_VALUE_EG,
+	// rook
+	ROOK_VALUE_EG,
+	// queen
+	QUEEN_VALUE_EG,
+	// king
+	0
 };
 
 int getPieceValueMG(PieceType piece)

@@ -3,8 +3,8 @@
 namespace comm
 {
 
-const char promoChars[4] = {'Q', 'R', 'B', 'N'};
-const char pieceChars[5] = {'K', 'Q', 'R', 'B', 'N'};
+const char promoChars[4] = {'N', 'B', 'R', 'Q'};
+const char pieceChars[5] = {'N', 'B', 'R', 'Q', 'K'};
 
 MoveStrFind findMoveFromPCN(const Move* begin, const Move* end, const char* moveStr)
 {
@@ -518,7 +518,7 @@ std::string convMoveToSAN(const Board& board, const Move* begin, const Move* end
 	}
 	else
 	{
-		char pceChar = pieceChars[static_cast<int>(piece) - 1];
+		char pceChar = pieceChars[static_cast<int>(piece) - 2];
 
 		int srcPos = move.srcPos();
 		int dstPos = move.dstPos();
