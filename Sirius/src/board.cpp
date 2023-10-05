@@ -323,59 +323,14 @@ void Board::setState(const Board& other, BoardState& currState, BoardState& root
 	m_RootState = &rootState;
 }
 
-const char pieceChars[16] = {
-	' ', 'P', 'N', 'B', 'R', 'Q', 'K', '#',
-	' ', 'p', 'n', 'b', 'r', 'q', 'k', '&'
+constexpr char pieceChars[16] = {
+    ' ', 'P', 'N', 'B', 'R', 'Q', 'K', '#',
+    ' ', 'p', 'n', 'b', 'r', 'q', 'k', '&'
 };
-
-// maybe include these
-/*const char* pieceChars[16] = {
-	" ", "♔", "♕", "♖", "♗", "♘", "♙", "#",
-	" ", "♚", "♛", "♜", "♝", "♞", "♟", "&"
-};*/
-
-void Board::printDbg() const
-{
-	const char* between = "+---+---+---+---+---+---+---+---+\n";
-
-	for (int j = 56; j >= 0; j -= 8)
-	{
-        std::cout << between << std::endl;
-		for (int i = j; i < j + 8; i++)
-		{
-			std::cout << "| ";
-			Piece piece = m_Squares[i];
-			std::cout << pieceChars[static_cast<int>(piece)];
-			std::cout << " ";
-		}
-		std::cout << "|\n";
-	}
-	std::cout << between << std::endl;
-
-	std::cout << "All:\n";
-	printBB(m_Pieces[0]);
-
-	std::cout << "White:\n";
-	printBB(m_Colors[0]);
-	std::cout << "Black:\n";
-	printBB(m_Colors[1]);
-
-	std::cout << "King:\n";
-	printBB(m_Pieces[1]);
-	std::cout << "Queen:\n";
-	printBB(m_Pieces[2]);
-	std::cout << "Rook:\n";
-	printBB(m_Pieces[3]);
-	std::cout << "Bishop:\n";
-	printBB(m_Pieces[4]);
-	std::cout << "Knight:\n";
-	printBB(m_Pieces[5]);
-	std::cout << "Pawn:\n";
-	printBB(m_Pieces[6]);
-}
 
 std::string Board::stringRep() const
 {
+    
 	std::string result;
 	const char* between = "+---+---+---+---+---+---+---+---+\n";
 
@@ -520,15 +475,6 @@ void Board::makeMove(Move move, BoardState& state)
 	BoardState* prev = m_State;
 	m_State = &state;
 
-	/*state.halfMoveClock = m_HalfMoveClock;
-	state.reversiblePly = m_ReversiblePly;
-	state.pliesFromNull = m_PliesFromNull;
-	state.epSquare = m_EpSquare;
-	state.castlingRights = m_CastlingRights;
-	state.zkey = m_ZKey;
-	state.checkInfo = m_CheckInfo;
-	state.capturedPiece = 0;*/
-
 	m_State->halfMoveClock = prev->halfMoveClock + 1;
 	m_State->pliesFromNull = prev->pliesFromNull + 1;
 	m_State->epSquare = prev->epSquare;
@@ -656,12 +602,6 @@ void Board::makeMove(Move move, BoardState& state)
 
 	updateCheckInfo();
 	calcRepetitions();
-
-	/*if (m_Colors[static_cast<int>(Color::WHITE)] & (1ull << 49))
-	{
-		std::cout << "HELLO?" << std::endl;
-		yesnt();
-	}*/
 }
 
 void Board::unmakeMove(Move move)
@@ -713,12 +653,6 @@ void Board::unmakeMove(Move move)
 	}
 
 	m_State = m_State->prev;
-
-	/*if (m_Colors[static_cast<int>(Color::WHITE)] & (1ull << 49))
-	{
-		std::cout << "HELLO?" << std::endl;
-		yesnt();
-	}*/
 }
 
 void Board::makeNullMove(BoardState& state)
