@@ -362,25 +362,7 @@ search_moves:
 	else if (moveStr[moveLen] == '#')
 		moveLen++;
 	int toSquare = toFile | (toRank << 3);
-	// std::cout << toSquare << std::endl;
-	/*std::cout << "From File: " << fromFile << std::endl;
-	std::cout << "From Rank: " << fromRank << std::endl;
-	std::cout << "To File: " << toFile << std::endl;
-	std::cout << "To Rank: " << toRank << std::endl;
-	std::cout << "To Square: " << toSquare << std::endl;
-	std::cout << "Piece: " << static_cast<int>(piece) << std::endl;
-	std::cout << "is promotion: " << isPromotion << std::endl;
-	if (isPromotion)
-		std::cout << "promotion: " << (static_cast<int>(promotion) >> 14) << std::endl;
-	std::cout << "Is capture: " << isCapture << std::endl;
-
-	std::cout << "Move length: " << moveLen << std::endl;
-
-	std::cout << std::endl;*/
-
-	// if (isCapture && !board.getPieceAt(toSquare))
-		// return {end, moveStr + moveLen};
-
+    
 	if (!isCapture && board.getPieceAt(toSquare) != PIECE_NONE)
 	{
 		return {end, moveStr + moveLen};

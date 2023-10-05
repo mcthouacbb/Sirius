@@ -23,7 +23,6 @@ void Book::loadFromPGN(const char* pgn)
 			end = genMoves<MoveGenType::LEGAL>(board, moves);
 
 			comm::MoveStrFind find = comm::findMoveFromSAN(board, moves, end, currChar);
-			// std::cout.write(currChar, std::min(static_cast<int>(strlen(currChar)), 10)) << std::endl << std::endl;
 			if (!find.move)
 				throw std::runtime_error("Invalid");
 			if (find.move == end)
