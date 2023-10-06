@@ -38,7 +38,7 @@ void UCI::reportSearchInfo(const SearchInfo& info) const
 	uint64_t nps = info.nodes * 1000ULL / (info.time.count() < 1 ? 1 : info.time.count());
 	std::cout << " nps " << nps;
 	std::cout << " score ";
-	if (eval::isMateScore(info.score))
+	if (isMateScore(info.score))
 	{
 		if (info.score > 0)
 		{

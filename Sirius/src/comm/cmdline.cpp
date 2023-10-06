@@ -50,7 +50,7 @@ void CmdLine::reportSearchInfo(const SearchInfo& info) const
 	std::cout << "\tNodes: " << info.nodes << '\n';
 	std::cout << "\tTime Searched: " << time << '\n';
 	std::cout << "\tScore: ";
-	if (eval::isMateScore(info.score))
+	if (isMateScore(info.score))
 	{
 		if (info.score < 0)
 			std::cout << "Mated in " << info.score + SCORE_MATE << " plies\n";
@@ -255,20 +255,7 @@ void CmdLine::staticEvalCommand()
 	auto lock = lockStdout();
 	std::cout << "Eval: " << eval::evaluate(m_Board) << std::endl;
 	std::cout << "Phase: " << m_Board.evalState().phase << std::endl;
-	std::cout << "Eval midgame:\n";
-	std::cout << "\tMaterial:\n";
-	std::cout << "\t\tWhite: " << m_Board.evalState().materialMG[0] << '\n';
-	std::cout << "\t\tBlack: " << m_Board.evalState().materialMG[1] << '\n';
-	std::cout << "\tPiece Square Tables:\n";
-	std::cout << "\t\tWhite: " << m_Board.evalState().psqtMG[0] << '\n';
-	std::cout << "\t\tBlack: " << m_Board.evalState().psqtMG[1] << '\n';
-	std::cout << "Eval endgame:\n";
-	std::cout << "\tMaterial:\n";
-	std::cout << "\t\tWhite: " << m_Board.evalState().materialEG[0] << '\n';
-	std::cout << "\t\tBlack: " << m_Board.evalState().materialEG[1] << '\n';
-	std::cout << "\tPiece Square Tables:\n";
-	std::cout << "\t\tWhite: " << m_Board.evalState().psqtEG[0] << '\n';
-	std::cout << "\t\tBlack: " << m_Board.evalState().psqtEG[1] << '\n';
+    std::cout << "Piece Square Tables: " << m_Board.evalState().materialPsqt.mg() << ' ' << m_Board.evalState().materialPsqt.eg() << std::endl;
 }
 
 void CmdLine::quiescenceEvalCommand()
