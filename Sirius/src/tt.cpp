@@ -17,7 +17,7 @@ TT::~TT()
 
 inline int retrieveScore(int score, int ply)
 {
-	if (eval::isMateScore(score))
+	if (isMateScore(score))
 	{
 		score -= score < 0 ? -ply : ply;
 	}
@@ -26,7 +26,7 @@ inline int retrieveScore(int score, int ply)
 
 inline int storeScore(int score, int ply)
 {
-	if (eval::isMateScore(score))
+	if (isMateScore(score))
 	{
 		score += score < 0 ? -ply : ply;
 	}
