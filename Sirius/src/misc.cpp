@@ -308,8 +308,6 @@ void testSANFind(const Board& board, Move* begin, Move* end, int len)
 			tmp /= charCount;
 		}
 
-		// std::cout << buf << '\n';
-
 		comm::findMoveFromSAN(board, begin, end, buf);
 	}
 	delete[] buf;

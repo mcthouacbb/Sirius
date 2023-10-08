@@ -382,7 +382,6 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 		}
 
 		// null move pruning
-
 		if (board.pliesFromNull() > 0)
 		{
 			BitBoard nonPawns = board.getColor(board.sideToMove()) ^ board.getPieces(board.sideToMove(), PieceType::PAWN);
@@ -493,9 +492,6 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 		else
 		{
 			score = -search(thread, newDepth - reduction, searchPly + 1, -(alpha + 1), -alpha, false);
-
-			/*if (moveScore > alpha && reduction)
-				moveScore = -search(newDepth, searchPly + 1, -(alpha + 1), -alpha, false);*/
 
 			if (score > alpha && (isPV || reduction > 0))
 				score = -search(thread, newDepth, searchPly + 1, -beta, -alpha, true);
