@@ -1,6 +1,6 @@
 #include "book.h"
-#include "comm/move.h"
-#include "movegen.h"
+#include "move.h"
+#include "../movegen.h"
 #include <algorithm>
 #include <deque>
 #include <cstring>

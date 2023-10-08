@@ -1,6 +1,6 @@
 #pragma once
 
-#include "zobrist.h"
+#include "../zobrist.h"
 #include <unordered_map>
 #include <vector>
 

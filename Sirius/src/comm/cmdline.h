@@ -1,7 +1,7 @@
 #pragma once
 
 #include "icomm.h"
-#include "../book.h"
+#include "book.h"
 
 namespace comm
 {
