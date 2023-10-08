@@ -2,23 +2,9 @@
 
 v4.0
 
-Minimal UCI Support
-
-Inspired/helped by
-- Stockfish
-- Ethereal
-- Crafty
-- Zurichess
-- [The Chess Programming Wiki](https://www.chessprogramming.org/)
-- [TalkChess/The Computer Chess Club](https://www.talkchess.com/forum3/viewforum.php?f=2)
-- [People in this OpenBench Instance](https://chess.swehosting.se/index/)
-    - [@JW](https://github.com/jacquesRW/)
-    - [@Ciekce](https://github.com/ciekce/)
-- Many others
-
 CLI Usage
 - Type "uci" for the UCI protocol(not recommended for direct use, usually used by a chess GUI)
-    - Protocol is explained [here](https://www.wbec-ridderkerk.nl/html/UCIProtocol.html)
+    - Protocol is explained [here](https://backscattering.de/chess/uci)
 - Type "cmdline" for the CLI protocol(Mainly for convenience in certain situations)
     - Protocol is explained below
 
@@ -47,11 +33,14 @@ Command Line Protocol(for debugging/convenience)
     - Prints the static evaluation of the position
 - `"qeval"`
     - Prints the quiescence evaluation of the position
-- `"search" <depth>`
-    - Performs an iterative deepening search up to depth
-    - Prints out the evaluation and PV of each depth
-    - Prints out search statistics
-    - WARNING: Search time increases exponentially with depth
+    - Currently not working
+- `"search" "depth" <depth>`
+- `"search" "time" <time>`
+- `"search" "infinite"`
+    - Performs an iterative deepening search up to depth, until time time, or until interrupted
+    - Prints out the evaluation, node count, and PV of each depth
+- `"stop"`
+    - Stops the search
 - `"tests"`
     - Runs test suite
     - Currently, only perft tests are run
@@ -87,26 +76,37 @@ Features
     - Tuning via Texel's Tuning Method
 - Search
     - Fail-soft Alpha-Beta Pruning
-    - PV Collection(pv list on stack)
     - Iterative Deepening
     - Aspiration Windows
+    - Mate Distance Pruning
     - Move Ordering
         - TT Move Ordering
         - MVV LVA
+        - SEE Move Ordering
         - Killer Moves Heuristic
         - History Heuristic
     - Quiescence Search
-        - Captures Only
         - SEE Pruning
     - Transposition Table
-        - 4 entries per bucket
-        - Always replace least depth
+        - Stockfish/Ethereal replacement scheme
     - Selectivity
         - Check Extension
-        - Mate Distance Pruning
         - Principal Variation Search(PVS)
+            - 2 Fold LMR
         - Reverse Futility Pruning
         - Null Move Pruning
         - Futility Pruning
-        - Late Move Reductions
+        - Late Move Pruning
         - SEE pruning
+        - Late Move Reductions
+
+Inspired/helped by
+- [Stockfish](https://github.com/official-stockfish/Stockfish)
+- [Ethereal](https://github.com/AndyGrant/Ethereal), one of the best references for chess engines
+- Crafty
+- Zurichess
+- [The Chess Programming Wiki](https://www.chessprogramming.org/), a bit outdated but nonetheless an excellent resource
+- [@JW](https://github.com/jw1912), developer of [Akimbo](https://github.com/jw1912/akimbo), helped me a ton with developing and testing the engine
+- [@Ciekce](https://github.com/ciekce/), developer of [Stormphrax](https://github.com/ciekce/Stormphrax), who, along with JW, taught me many things about Chess Programming, and an excellent c++ programmer
+- [@Alex2262][https://github.com/Alex2262], developer of [Altaire](https://github.com/Alex2262/AltairChessEngine)
+- Many others
