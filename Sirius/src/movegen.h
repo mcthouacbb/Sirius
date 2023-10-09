@@ -4,8 +4,8 @@
 
 enum class MoveGenType
 {
-	LEGAL,
-	CAPTURES
+    LEGAL,
+    CAPTURES
 };
 
 template<MoveGenType type>

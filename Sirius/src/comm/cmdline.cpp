@@ -14,322 +14,322 @@ namespace comm
 
 CmdLine::CmdLine()
 {
-	std::cout << "Sirius v" << SIRIUS_VERSION_STRING << std::endl;
+    std::cout << "Sirius v" << SIRIUS_VERSION_STRING << std::endl;
 
-	std::ifstream openings("res/gaviota_trim.pgn");
-	if (openings.is_open())
-	{
-		std::ostringstream sstr;
-		sstr << openings.rdbuf();
-		std::string pgnData = sstr.str();
+    std::ifstream openings("res/gaviota_trim.pgn");
+    if (openings.is_open())
+    {
+        std::ostringstream sstr;
+        sstr << openings.rdbuf();
+        std::string pgnData = sstr.str();
 
-		m_Book.loadFromPGN(pgnData.c_str());
-	}
-	else
-	{
-		std::cout << "No opening book loaded" << std::endl;
-	}
+        m_Book.loadFromPGN(pgnData.c_str());
+    }
+    else
+    {
+        std::cout << "No opening book loaded" << std::endl;
+    }
 }
 
 void CmdLine::run()
 {
-	while (true)
-	{
-		std::string command;
-		std::getline(std::cin, command);
-		if (execCommand(command))
-			return;
-	}
+    while (true)
+    {
+        std::string command;
+        std::getline(std::cin, command);
+        if (execCommand(command))
+            return;
+    }
 }
 
 void CmdLine::reportSearchInfo(const SearchInfo& info) const
 {
-	auto lock = lockStdout();
-	float time = std::chrono::duration_cast<std::chrono::duration<float>>(info.time).count();
-	std::cout << "Depth: " << info.depth << '\n';
-	std::cout << "\tNodes: " << info.nodes << '\n';
-	std::cout << "\tTime Searched: " << time << '\n';
-	std::cout << "\tScore: ";
-	if (isMateScore(info.score))
-	{
-		if (info.score < 0)
-			std::cout << "Mated in " << info.score + SCORE_MATE << " plies\n";
-		else
-			std::cout << "Mate in " << SCORE_MATE - info.score << " plies\n";
-	}
-	else
-	{
-		std::cout << info.score << '\n';
-	}
+    auto lock = lockStdout();
+    float time = std::chrono::duration_cast<std::chrono::duration<float>>(info.time).count();
+    std::cout << "Depth: " << info.depth << '\n';
+    std::cout << "\tNodes: " << info.nodes << '\n';
+    std::cout << "\tTime Searched: " << time << '\n';
+    std::cout << "\tScore: ";
+    if (isMateScore(info.score))
+    {
+        if (info.score < 0)
+            std::cout << "Mated in " << info.score + SCORE_MATE << " plies\n";
+        else
+            std::cout << "Mate in " << SCORE_MATE - info.score << " plies\n";
+    }
+    else
+    {
+        std::cout << info.score << '\n';
+    }
 
-	std::cout << "PV: ";
+    std::cout << "PV: ";
 
-	BoardState root;
-	Board board(root);
-	board.setToFen(m_Board.fenStr());
+    BoardState root;
+    Board board(root);
+    board.setToFen(m_Board.fenStr());
 
-	Move moves[256], *end;
+    Move moves[256], *end;
 
-	std::deque<BoardState> states;
+    std::deque<BoardState> states;
 
-	for (const Move* move = info.pvBegin; move != info.pvEnd; move++)
-	{
-		end = genMoves<MoveGenType::LEGAL>(board, moves);
-		std::cout << comm::convMoveToSAN(board, moves, end, *move) << ' ';
-		states.push_back({});
-		board.makeMove(*move, states.back());
-	}
+    for (const Move* move = info.pvBegin; move != info.pvEnd; move++)
+    {
+        end = genMoves<MoveGenType::LEGAL>(board, moves);
+        std::cout << comm::convMoveToSAN(board, moves, end, *move) << ' ';
+        states.push_back({});
+        board.makeMove(*move, states.back());
+    }
 
-	std::cout << std::endl;
+    std::cout << std::endl;
 }
 
 void CmdLine::reportBestMove(Move bestMove) const
 {
-	auto lock = lockStdout();
-	std::cout << "best move: " << comm::convMoveToSAN(m_Board, m_LegalMoves, m_LegalMoves + m_MoveCount, bestMove) << std::endl;
+    auto lock = lockStdout();
+    std::cout << "best move: " << comm::convMoveToSAN(m_Board, m_LegalMoves, m_LegalMoves + m_MoveCount, bestMove) << std::endl;
 }
 
 bool CmdLine::execCommand(const std::string& command)
 {
-	std::istringstream stream(command);
+    std::istringstream stream(command);
 
-	std::string commandName;
+    std::string commandName;
 
-	stream >> commandName;
+    stream >> commandName;
 
-	Command comm = getCommand(commandName);
+    Command comm = getCommand(commandName);
 
-	switch (comm)
-	{
-		case Command::INVALID:
-			std::cout << "Invalid Command: " << command << std::endl;
-			break;
-		case Command::SET_POSITION:
-			setPositionCommand(stream);
-			break;
-		case Command::MAKE_MOVE:
-			makeMoveCommand(stream);
-			break;
-		case Command::UNDO_MOVE:
-			undoMoveCommand();
-			break;
-		case Command::PRINT_BOARD:
-			printBoardCommand();
-			break;
-		case Command::STATIC_EVAL:
-			staticEvalCommand();
-			break;
-		case Command::QUIESCENCE_EVAL:
-			quiescenceEvalCommand();
-			break;
-		case Command::SEARCH:
-			searchCommand(stream);
-			break;
-		case Command::RUN_TESTS:
-			if (!m_Search.searching())
-				runTestsCommand();
-			break;
-		case Command::PERFT:
-			if (!m_Search.searching())
-				runPerftCommand(stream);
-			break;
-		case Command::BOOK:
-			probeBookCommand();
-			break;
-		case Command::STOP:
-			if (m_Search.searching())
-				m_Search.stop();
-			break;
-		case Command::QUIT:
-			return true;
-	}
-	return false;
+    switch (comm)
+    {
+        case Command::INVALID:
+            std::cout << "Invalid Command: " << command << std::endl;
+            break;
+        case Command::SET_POSITION:
+            setPositionCommand(stream);
+            break;
+        case Command::MAKE_MOVE:
+            makeMoveCommand(stream);
+            break;
+        case Command::UNDO_MOVE:
+            undoMoveCommand();
+            break;
+        case Command::PRINT_BOARD:
+            printBoardCommand();
+            break;
+        case Command::STATIC_EVAL:
+            staticEvalCommand();
+            break;
+        case Command::QUIESCENCE_EVAL:
+            quiescenceEvalCommand();
+            break;
+        case Command::SEARCH:
+            searchCommand(stream);
+            break;
+        case Command::RUN_TESTS:
+            if (!m_Search.searching())
+                runTestsCommand();
+            break;
+        case Command::PERFT:
+            if (!m_Search.searching())
+                runPerftCommand(stream);
+            break;
+        case Command::BOOK:
+            probeBookCommand();
+            break;
+        case Command::STOP:
+            if (m_Search.searching())
+                m_Search.stop();
+            break;
+        case Command::QUIT:
+            return true;
+    }
+    return false;
 }
 
 CmdLine::Command CmdLine::getCommand(const std::string& command) const
 {
-	if (command == "position")
-		return Command::SET_POSITION;
-	else if (command == "move")
-		return Command::MAKE_MOVE;
-	else if (command == "undo")
-		return Command::UNDO_MOVE;
-	else if (command == "print")
-		return Command::PRINT_BOARD;
-	else if (command == "eval")
-		return Command::STATIC_EVAL;
-	else if (command == "qeval")
-		return Command::QUIESCENCE_EVAL;
-	else if (command == "search")
-		return Command::SEARCH;
-	else if (command == "tests")
-		return Command::RUN_TESTS;
-	else if (command == "perft")
-		return Command::PERFT;
-	else if (command == "book")
-		return Command::BOOK;
-	else if (command == "stop")
-		return Command::STOP;
-	else if (command == "quit")
-		return Command::QUIT;
+    if (command == "position")
+        return Command::SET_POSITION;
+    else if (command == "move")
+        return Command::MAKE_MOVE;
+    else if (command == "undo")
+        return Command::UNDO_MOVE;
+    else if (command == "print")
+        return Command::PRINT_BOARD;
+    else if (command == "eval")
+        return Command::STATIC_EVAL;
+    else if (command == "qeval")
+        return Command::QUIESCENCE_EVAL;
+    else if (command == "search")
+        return Command::SEARCH;
+    else if (command == "tests")
+        return Command::RUN_TESTS;
+    else if (command == "perft")
+        return Command::PERFT;
+    else if (command == "book")
+        return Command::BOOK;
+    else if (command == "stop")
+        return Command::STOP;
+    else if (command == "quit")
+        return Command::QUIT;
 
-	return Command::INVALID;
+    return Command::INVALID;
 }
 
 void CmdLine::setPositionCommand(std::istringstream& stream)
 {
-	std::string tok;
-	stream >> tok;
-	if (tok == "fen")
-	{
-		std::string str = stream.str();
-		stream.ignore();
-		const char* fen = str.c_str() + stream.tellg();
-		std::cout << "fen: " << fen << std::endl;
-		if (!comm::isValidFen(fen))
-		{
-			std::cout << "Invalid fen string" << std::endl;;
-			return;
-		}
-		setToFen(fen);
-	}
-	else if (tok == "startpos")
-	{
-		setToFen(Board::defaultFen);
-	}
-	else
-	{
-		std::cout << "Invalid position" << std::endl;
-	}
+    std::string tok;
+    stream >> tok;
+    if (tok == "fen")
+    {
+        std::string str = stream.str();
+        stream.ignore();
+        const char* fen = str.c_str() + stream.tellg();
+        std::cout << "fen: " << fen << std::endl;
+        if (!comm::isValidFen(fen))
+        {
+            std::cout << "Invalid fen string" << std::endl;;
+            return;
+        }
+        setToFen(fen);
+    }
+    else if (tok == "startpos")
+    {
+        setToFen(Board::defaultFen);
+    }
+    else
+    {
+        std::cout << "Invalid position" << std::endl;
+    }
 }
 
 void CmdLine::makeMoveCommand(std::istringstream& stream)
 {
-	std::string move;
-	stream >> move;
-	MoveStrFind find = comm::findMoveFromSAN(m_Board, m_LegalMoves, m_LegalMoves + m_MoveCount, move.c_str());
-	if (find.move == nullptr)
-	{
-		auto lock = lockStdout();
-		std::cout << "Invalid move string" << std::endl;
-		return;
-	}
+    std::string move;
+    stream >> move;
+    MoveStrFind find = comm::findMoveFromSAN(m_Board, m_LegalMoves, m_LegalMoves + m_MoveCount, move.c_str());
+    if (find.move == nullptr)
+    {
+        auto lock = lockStdout();
+        std::cout << "Invalid move string" << std::endl;
+        return;
+    }
 
-	if (find.move == m_LegalMoves + m_MoveCount)
-	{
-		auto lock = lockStdout();
-		std::cout << "Move not found" << std::endl;
-		return;
-	}
+    if (find.move == m_LegalMoves + m_MoveCount)
+    {
+        auto lock = lockStdout();
+        std::cout << "Move not found" << std::endl;
+        return;
+    }
 
-	if (find.move == m_LegalMoves + m_MoveCount + 1)
-	{
-		auto lock = lockStdout();
-		std::cout << "Move is ambiguous" << std::endl;
-		return;
-	}
+    if (find.move == m_LegalMoves + m_MoveCount + 1)
+    {
+        auto lock = lockStdout();
+        std::cout << "Move is ambiguous" << std::endl;
+        return;
+    }
 
-	makeMove(*find.move);
+    makeMove(*find.move);
 }
 
 void CmdLine::undoMoveCommand()
 {
-	if (m_PrevMoves.empty())
-	{
-		auto lock = lockStdout();
-		std::cout << "No moves to undo" << std::endl;
-		return;
-	}
+    if (m_PrevMoves.empty())
+    {
+        auto lock = lockStdout();
+        std::cout << "No moves to undo" << std::endl;
+        return;
+    }
 
-	unmakeMove();
+    unmakeMove();
 }
 
 void CmdLine::printBoardCommand()
 {
-	auto lock = lockStdout();
-	printBoard(m_Board);
+    auto lock = lockStdout();
+    printBoard(m_Board);
 }
 
 void CmdLine::staticEvalCommand()
 {
-	auto lock = lockStdout();
-	std::cout << "Eval: " << eval::evaluate(m_Board) << std::endl;
-	std::cout << "Phase: " << m_Board.evalState().phase << std::endl;
+    auto lock = lockStdout();
+    std::cout << "Eval: " << eval::evaluate(m_Board) << std::endl;
+    std::cout << "Phase: " << m_Board.evalState().phase << std::endl;
     std::cout << "Piece Square Tables: " << m_Board.evalState().materialPsqt.mg() << ' ' << m_Board.evalState().materialPsqt.eg() << std::endl;
 }
 
 void CmdLine::quiescenceEvalCommand()
 {
-	auto lock = lockStdout();
-	std::cout << "Quiescence eval currently not working" << std::endl;
-	//int eval = m_Search.qsearch();
-	//std::cout << "Quiescence eval: " << eval << std::endl;
+    auto lock = lockStdout();
+    std::cout << "Quiescence eval currently not working" << std::endl;
+    //int eval = m_Search.qsearch();
+    //std::cout << "Quiescence eval: " << eval << std::endl;
 }
 
 void CmdLine::searchCommand(std::istringstream& stream)
 {
-	SearchLimits limits = {};
-	limits.maxDepth = 1000;
+    SearchLimits limits = {};
+    limits.maxDepth = 1000;
 
-	std::string tok;
-	stream >> tok;
-	if (tok == "infinite")
-	{
+    std::string tok;
+    stream >> tok;
+    if (tok == "infinite")
+    {
 
-	}
-	else if (tok == "depth")
-	{
-		uint32_t depth;
-		stream >> depth;
-		limits.maxDepth = depth;
-	}
-	else if (tok == "time")
-	{
-		uint32_t millis;
-		stream >> millis;
-		limits.maxTime = Duration(millis);
-	}
-	else
-	{
-		auto lock = lockStdout();
-		std::cout << "No search policy specified, defaulting to infinite" << std::endl;
-	}
+    }
+    else if (tok == "depth")
+    {
+        uint32_t depth;
+        stream >> depth;
+        limits.maxDepth = depth;
+    }
+    else if (tok == "time")
+    {
+        uint32_t millis;
+        stream >> millis;
+        limits.maxTime = Duration(millis);
+    }
+    else
+    {
+        auto lock = lockStdout();
+        std::cout << "No search policy specified, defaulting to infinite" << std::endl;
+    }
 
-	m_Search.run(limits, m_BoardStates);
+    m_Search.run(limits, m_BoardStates);
 }
 
 void CmdLine::runTestsCommand()
 {
-	runTests(m_Board, false);
+    runTests(m_Board, false);
 }
 
 void CmdLine::runPerftCommand(std::istringstream& stream)
 {
-	uint32_t depth;
-	stream >> depth;
+    uint32_t depth;
+    stream >> depth;
 
-	auto t1 = std::chrono::steady_clock::now();
-	uint64_t result = perft<true>(m_Board, depth);
-	auto t2 = std::chrono::steady_clock::now();
-	std::cout << "Nodes: " << result << std::endl;
-	std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1).count() << std::endl;
+    auto t1 = std::chrono::steady_clock::now();
+    uint64_t result = perft<true>(m_Board, depth);
+    auto t2 = std::chrono::steady_clock::now();
+    std::cout << "Nodes: " << result << std::endl;
+    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1).count() << std::endl;
 }
 
 void CmdLine::probeBookCommand()
 {
-	auto lock = lockStdout();
-	const std::vector<BookEntry>* entries = m_Book.lookup(m_Board.zkey());
+    auto lock = lockStdout();
+    const std::vector<BookEntry>* entries = m_Book.lookup(m_Board.zkey());
 
-	if (!entries)
-		std::cout << "No moves in book found" << std::endl;
-	else
-	{
-		for (const auto& entry : *entries)
-		{
-			std::cout << comm::convMoveToSAN(m_Board, m_LegalMoves, m_LegalMoves + m_MoveCount, entry.move) << ' ';
-		}
-		std::cout << std::endl;
-	}
+    if (!entries)
+        std::cout << "No moves in book found" << std::endl;
+    else
+    {
+        for (const auto& entry : *entries)
+        {
+            std::cout << comm::convMoveToSAN(m_Board, m_LegalMoves, m_LegalMoves + m_MoveCount, entry.move) << ' ';
+        }
+        std::cout << std::endl;
+    }
 }
 
 
