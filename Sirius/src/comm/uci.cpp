@@ -284,15 +284,7 @@ void UCI::goCommand(std::istringstream& stream)
 
 void UCI::benchCommand(std::istringstream& stream)
 {
-    int depth;
-    stream >> depth;
-    if (depth < 0)
-    {
-        std::cout << "Invalid depth" << std::endl;
-        return;
-    }
-
-    runBench(m_Search, depth);
+    runBench(m_Search, BENCH_DEPTH);
 }
 
 
