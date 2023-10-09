@@ -8,11 +8,6 @@
 #include "comm/uci.h"
 #include "eval/eval.h"
 
-namespace comm
-{
-	IComm* currComm;
-}
-
 int main()
 {
 	attacks::init();

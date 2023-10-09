@@ -3,6 +3,8 @@
 
 namespace comm
 {
+    
+IComm* currComm;
 
 IComm::IComm()
 	: m_BoardStates(1, BoardState{}), m_Board(m_BoardStates.front()), m_Search(m_Board)
