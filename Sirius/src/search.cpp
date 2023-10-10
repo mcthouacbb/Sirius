@@ -343,6 +343,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
         return alpha;
 
     bool root = rootPly == 0;
+    bool inCheck = board.checkers() != 0;
 
     if (eval::isImmediateDraw(board) || board.isDraw(rootPly))
     {
@@ -372,7 +373,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     int staticEval = eval::evaluate(board);
     BoardState state;
 
-    if (!isPV && !board.checkers())
+    if (!isPV && !inCheck)
     {
         // reverse futility pruning
         if (depth <= RFP_MAX_DEPTH && staticEval >= beta + RFP_MARGIN * depth)
@@ -408,7 +409,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     if (moves == end)
     {
         searchPly->pvLength = 0;
-        if (board.checkers())
+        if (inCheck)
             return -SCORE_MATE + rootPly;
         return SCORE_DRAW;
     }
@@ -427,21 +428,20 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     searchPly->bestMove = Move();
 
     TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
-    bool inCheck = board.checkers() != 0;
 
     Move quietsTried[256];
     int numQuietsTried = 0;
 
     int bestScore = -SCORE_MAX;
 
-    for (uint32_t i = 0; i < end - moves; i++)
+    for (int movesPlayed = 0; movesPlayed < end - moves; movesPlayed++)
     {
-        auto [move, moveScore] = ordering.selectMove(i);
+        auto [move, moveScore] = ordering.selectMove(static_cast<uint32_t>(movesPlayed));
         bool isCapture = board.getPieceAt(move.dstPos()) != PIECE_NONE;
         bool isPromotion = move.type() == MoveType::PROMOTION;
         bool quietLosing = moveScore < MoveOrdering::KILLER_SCORE;
 
-        int baseLMR = lmrTable[std::min(depth, 63)][std::min(i, 63u)];
+        int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
 
         if (!root && quietLosing && bestScore > -SCORE_WIN)
         {
@@ -457,7 +457,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
             if (!isPV &&
                 !inCheck &&
                 depth <= LMP_MAX_DEPTH &&
-                static_cast<int>(i) >= LMP_MIN_MOVES_BASE + depth * depth)
+                movesPlayed >= LMP_MIN_MOVES_BASE + depth * depth)
                 break;
 
             if (!isPV &&
@@ -472,7 +472,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
         rootPly++;
 
         int reduction = 0;
-        if (i >= (isPV ? LMR_MIN_MOVES_PV : LMR_MIN_MOVES_NON_PV) &&
+        if (movesPlayed >= (isPV ? LMR_MIN_MOVES_PV : LMR_MIN_MOVES_NON_PV) &&
             depth >= LMR_MIN_DEPTH &&
             quietLosing &&
             !inCheck)
@@ -487,7 +487,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 
         int newDepth = depth + givesCheck - 1;
         int score;
-        if (i == 0)
+        if (movesPlayed == 0)
             score = -search(thread, newDepth, searchPly + 1, -beta, -alpha, isPV);
         else
         {
@@ -514,10 +514,10 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 
                     // formula from akimbo
                     int historyBonus = std::min(16 * depth * depth, 1200);
-                    updateHistory(history[static_cast<int>(board.sideToMove())][historyIndex(move)], historyBonus);
+                    updateHistory(history[static_cast<int>(board.sideToMove())][move.fromTo()], historyBonus);
                     for (int j = 0; j < numQuietsTried - 1; j++)
                     {
-                        updateHistory(history[static_cast<int>(board.sideToMove())][historyIndex(quietsTried[j])], -historyBonus);
+                        updateHistory(history[static_cast<int>(board.sideToMove())][quietsTried[j].fromTo()], -historyBonus);
                     }
                 }
                 m_TT.store(bucket, board.zkey(), depth, rootPly, bestScore, move, TTEntry::Bound::LOWER_BOUND);
@@ -586,9 +586,9 @@ int Search::qsearch(SearchThread& thread, SearchPly* searchPly, int alpha, int b
     BoardState state;
     TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
     searchPly->bestMove = Move();
-    for (uint32_t i = 0; i < end - captures; i++)
+    for (uint32_t movesPlayed = 0; movesPlayed < end - captures; movesPlayed++)
     {
-        auto [move, moveScore] = ordering.selectMove(i);
+        auto [move, moveScore] = ordering.selectMove(movesPlayed);
         if (!board.see_margin(move, 0))
             continue;
         board.makeMove(move, state);

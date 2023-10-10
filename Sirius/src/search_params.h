@@ -22,8 +22,8 @@ constexpr int MAX_SEE_PRUNE_DEPTH = 8;
 constexpr int SEE_PRUNE_MARGIN = -100;
 
 constexpr int LMR_MIN_DEPTH = 3;
-constexpr uint32_t LMR_MIN_MOVES_NON_PV = 3;
-constexpr uint32_t LMR_MIN_MOVES_PV = 5;
+constexpr int LMR_MIN_MOVES_NON_PV = 3;
+constexpr int LMR_MIN_MOVES_PV = 5;
 
 constexpr double LMR_BASE = 0.77;
 constexpr double LMR_DIVISOR = 2.36;

@@ -2,11 +2,6 @@
 
 #include "board.h"
 
-inline int historyIndex(Move move)
-{
-    return move.fromTo();
-}
-
 struct ExtMove
 {
     Move move;

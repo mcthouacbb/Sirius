@@ -73,7 +73,7 @@ MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end, Move hash
         else if (move == killers[0] || move == killers[1])
             score = KILLER_SCORE;
         else
-            score = history[historyIndex(move)];
+            score = history[move.fromTo()];
         m_MoveScores[i] = score;
     }
 }
