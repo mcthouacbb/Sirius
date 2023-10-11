@@ -8,7 +8,7 @@ namespace eval
 #define S(mg, eg) PackedScore(mg, eg)
 
 constexpr PackedScore MATERIAL[7] = {
-    S(0, 0), S(74, 99), S(335, 258), S(374, 286), S(492, 506), S(1029, 942)
+    S(0, 0), S(74, 99), S(335, 258), S(374, 286), S(492, 506), S(1029, 942), S(0, 0)
 };
 
 constexpr PackedScore PSQT[7][64] = {
