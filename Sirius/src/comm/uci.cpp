@@ -115,7 +115,7 @@ bool UCI::execCommand(const std::string& command)
         }
         case Command::BENCH:
             if (!m_Search.searching())
-                benchCommand(stream);
+                benchCommand();
             break;
     }
     return false;
@@ -282,7 +282,7 @@ void UCI::goCommand(std::istringstream& stream)
     m_Search.run(limits, m_BoardStates);
 }
 
-void UCI::benchCommand(std::istringstream& stream)
+void UCI::benchCommand()
 {
     runBench(m_Search, BENCH_DEPTH);
 }

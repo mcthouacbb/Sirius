@@ -40,7 +40,7 @@ private:
     void newGameCommand();
     void positionCommand(std::istringstream& stream);
     void goCommand(std::istringstream& stream);
-    void benchCommand(std::istringstream& stream);
+    void benchCommand();
 };
 
 
