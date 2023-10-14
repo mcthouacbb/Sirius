@@ -88,7 +88,13 @@ void SearchThread::join()
 }
 
 Search::Search(Board& board)
+<<<<<<< Updated upstream
 	: m_Board(board), m_ShouldStop(false), m_TT(2 * 1024 * 1024)
+||||||| constructed merge base
+	: m_Board(board), m_TT(1024 * 1024), m_RootPly(0)
+=======
+	: m_Board(board), m_TT(8 * 1024 * 1024), m_RootPly(0)
+>>>>>>> Stashed changes
 {
 	setThreads(1);
 }
@@ -359,14 +365,27 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 	if (depth <= 0)
 		return qsearch(thread, searchPly, alpha, beta);
 
+<<<<<<< Updated upstream
 	int hashScore = INT_MIN;
 	Move hashMove = Move();
 	TTBucket* bucket = m_TT.probe(board.zkey(), depth, rootPly, alpha, beta, hashScore, hashMove);
+||||||| constructed merge base
+	int hashScore = INT_MIN;
+	Move hashMove = Move();
+	TTBucket* bucket = m_TT.probe(m_Board.zkey(), depth, m_RootPly, alpha, beta, hashScore, hashMove);
+=======
+	int ttScore = INT_MIN;
+	Move ttMove = Move();
+	TTEntry* entry = m_TT.probe(m_Board.zkey(), m_RootPly, ttScore, ttMove);
+>>>>>>> Stashed changes
 
-	if (hashScore != INT_MIN && !isPV)
+	if (ttScore != INT_MIN && !isPV && depth >= entry->depth &&
+		(entry->bound() == TTEntry::Bound::EXACT ||
+		entry->bound() == TTEntry::Bound::LOWER && alpha >= ttScore ||
+		entry->bound() == TTEntry::Bound::UPPER && beta <= ttScore))
 	{
 		searchPly->pvLength = 0;
-		return hashScore;
+		return ttScore;
 	}
 
 	int staticEval = eval::evaluate(board);
@@ -417,7 +436,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 		board,
 		moves,
 		end,
-		hashMove,
+		ttMove,
 		searchPly->killers,
 		thread.history[static_cast<int>(board.sideToMove())]
 	);
@@ -427,8 +446,16 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 
 	searchPly->bestMove = Move();
 
+<<<<<<< Updated upstream
 	TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
 	bool inCheck = board.checkers() != 0;
+||||||| constructed merge base
+	TTEntry::Type type = TTEntry::Type::UPPER_BOUND;
+	bool inCheck = m_Board.checkers() != 0;
+=======
+	TTEntry::Bound bound = TTEntry::Bound::UPPER;
+	bool inCheck = m_Board.checkers() != 0;
+>>>>>>> Stashed changes
 
 	Move quietsTried[256];
 	int numQuietsTried = 0;
@@ -524,7 +551,13 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 						updateHistory(history[static_cast<int>(board.sideToMove())][historyIndex(quietsTried[j])], -historyBonus);
 					}
 				}
+<<<<<<< Updated upstream
 				m_TT.store(bucket, board.zkey(), depth, rootPly, bestScore, move, TTEntry::Bound::LOWER_BOUND);
+||||||| constructed merge base
+				m_TT.store(bucket, m_Board.zkey(), depth, m_RootPly, bestScore, move, TTEntry::Type::LOWER_BOUND);
+=======
+				m_TT.store(entry, m_Board.zkey(), depth, m_RootPly, bestScore, move, TTEntry::Bound::LOWER);
+>>>>>>> Stashed changes
 				return bestScore;
 			}
 
@@ -543,7 +576,13 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 		}
 	}
 
+<<<<<<< Updated upstream
 	m_TT.store(bucket, board.zkey(), depth, rootPly, bestScore, searchPly->bestMove, bound);
+||||||| constructed merge base
+	m_TT.store(bucket, m_Board.zkey(), depth, m_RootPly, bestScore, searchPly->bestMove, type);
+=======
+	m_TT.store(entry, m_Board.zkey(), depth, m_RootPly, bestScore, searchPly->bestMove, bound);
+>>>>>>> Stashed changes
 
 	return bestScore;
 }
