@@ -341,21 +341,17 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     beta = std::min(beta, SCORE_MATE - rootPly);
     if (alpha >= beta)
         return alpha;
+    
+    searchPly->pvLength = 0;
 
     bool root = rootPly == 0;
     bool inCheck = board.checkers() != 0;
 
     if (eval::isImmediateDraw(board) || board.isDraw(rootPly))
-    {
-        searchPly->pvLength = 0;
         return SCORE_DRAW;
-    }
 
     if (rootPly >= MAX_PLY)
-    {
-        searchPly->pvLength = 0;
         return eval::evaluate(board);
-    }
 
     if (depth <= 0)
         return qsearch(thread, searchPly, alpha, beta);
@@ -365,10 +361,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     TTBucket* bucket = m_TT.probe(board.zkey(), depth, rootPly, alpha, beta, hashScore, hashMove);
 
     if (hashScore != INT_MIN && !isPV)
-    {
-        searchPly->pvLength = 0;
         return hashScore;
-    }
 
     int staticEval = eval::evaluate(board);
     BoardState state;
@@ -377,10 +370,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     {
         // reverse futility pruning
         if (depth <= RFP_MAX_DEPTH && staticEval >= beta + RFP_MARGIN * depth)
-        {
-            searchPly->pvLength = 0;
             return staticEval;
-        }
 
         // null move pruning
         if (board.pliesFromNull() > 0)
@@ -395,10 +385,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
                 rootPly--;
                 board.unmakeNullMove();
                 if (nullScore >= beta)
-                {
-                    searchPly->pvLength = 0;
                     return nullScore;
-                }
             }
         }
     }
@@ -408,7 +395,6 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 
     if (moves == end)
     {
-        searchPly->pvLength = 0;
         if (inCheck)
             return -SCORE_MATE + rootPly;
         return SCORE_DRAW;
@@ -558,10 +544,7 @@ int Search::qsearch(SearchThread& thread, SearchPly* searchPly, int alpha, int b
     TTBucket* bucket = m_TT.probe(board.zkey(), 0, rootPly, alpha, beta, hashScore, hashMove);
 
     if (hashScore != INT_MIN)
-    {
-        searchPly->pvLength = 0;
         return hashScore;
-    }
 
     int eval = eval::evaluate(board);
 
