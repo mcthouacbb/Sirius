@@ -37,7 +37,7 @@ inline int storeScore(int score, int ply)
     return score;
 }
 
-TTBucket* TT::probe(ZKey key, int depth, int ply, int alpha, int beta, int& score, Move& move)
+TTBucket* TT::probe(ZKey key, bool& found, int ply, int& score, Move& move, int& depth, TTEntry::Bound& bound)
 {
     TTBucket& bucket = m_Buckets[key.value % m_Buckets.size()];
     TTEntry* entry = nullptr;
@@ -53,30 +53,15 @@ TTBucket* TT::probe(ZKey key, int depth, int ply, int alpha, int beta, int& scor
 
     if (!entry)
     {
+        found = false;
         return &bucket;
     }
+    found = true;
 
-    if (entry->depth >= depth)
-    {
-        switch (entry->bound())
-        {
-            case TTEntry::Bound::NONE:
-                break;
-            case TTEntry::Bound::EXACT:
-                score = retrieveScore(entry->score, ply);
-                break;
-            case TTEntry::Bound::LOWER_BOUND:
-                if (beta <= entry->score)
-                    score = retrieveScore(entry->score, ply);
-                break;
-            case TTEntry::Bound::UPPER_BOUND:
-                if (alpha >= entry->score)
-                    score = retrieveScore(entry->score, ply);
-                break;
-        }
-    }
-
+    score = retrieveScore(entry->score, ply);
     move = entry->bestMove;
+    depth = entry->depth;
+    bound = entry->bound();
 
     return &bucket;
 }
@@ -131,4 +116,9 @@ int TT::quality(int age, int depth) const
         ageDiff += GEN_CYCLE_LENGTH;
     }
     return depth - 2 * ageDiff;
+}
+
+uint32_t TT::index(uint64_t key) const
+{
+    return static_cast<uint32_t>(key % m_Buckets.size());
 }

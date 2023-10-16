@@ -345,7 +345,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     beta = std::min(beta, SCORE_MATE - rootPly);
     if (alpha >= beta)
         return alpha;
-    
+
     searchPly->pvLength = 0;
 
     bool root = rootPly == 0;
@@ -360,12 +360,22 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     if (depth <= 0)
         return qsearch(thread, searchPly, alpha, beta);
 
-    int hashScore = INT_MIN;
-    Move hashMove = Move();
-    TTBucket* bucket = m_TT.probe(board.zkey(), depth, rootPly, alpha, beta, hashScore, hashMove);
+    int ttScore;
+    Move ttMove = Move();
+    int ttDepth;
+    TTEntry::Bound ttBound;
+    bool ttHit;
+    TTBucket* bucket = m_TT.probe(board.zkey(), ttHit, rootPly, ttScore, ttMove, ttDepth, ttBound);
 
-    if (hashScore != INT_MIN && !isPV)
-        return hashScore;
+    if (ttHit)
+    {
+        if (!isPV && ttDepth >= depth && (
+            ttBound == TTEntry::Bound::EXACT ||
+            (ttBound == TTEntry::Bound::LOWER_BOUND && ttScore >= beta) ||
+            (ttBound == TTEntry::Bound::UPPER_BOUND && ttScore <= alpha)
+        ))
+            return ttScore;
+    }
 
     int staticEval = eval::evaluate(board);
     BoardState state;
@@ -407,7 +417,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
         board,
         moves,
         end,
-        hashMove,
+        ttMove,
         searchPly->killers,
         thread.history[static_cast<int>(board.sideToMove())]
     );
@@ -542,13 +552,22 @@ int Search::qsearch(SearchThread& thread, SearchPly* searchPly, int alpha, int b
     if (eval::isImmediateDraw(board))
         return SCORE_DRAW;
 
-    int hashScore = INT_MIN;
-    Move hashMove = Move();
+    int ttScore;
+    Move ttMove = Move();
+    int ttDepth;
+    TTEntry::Bound ttBound;
+    bool ttHit;
     // qsearch is always depth 0
-    TTBucket* bucket = m_TT.probe(board.zkey(), 0, rootPly, alpha, beta, hashScore, hashMove);
+    TTBucket* bucket = m_TT.probe(board.zkey(), ttHit, rootPly, ttScore, ttMove, ttDepth, ttBound);
 
-    if (hashScore != INT_MIN)
-        return hashScore;
+    if (ttHit)
+    {
+        if (ttBound == TTEntry::Bound::EXACT ||
+            (ttBound == TTEntry::Bound::LOWER_BOUND && ttScore >= beta) ||
+            (ttBound == TTEntry::Bound::UPPER_BOUND && ttScore <= alpha)
+        )
+            return ttScore;
+    }
 
     int eval = eval::evaluate(board);
 
@@ -568,7 +587,7 @@ int Search::qsearch(SearchThread& thread, SearchPly* searchPly, int alpha, int b
     Move captures[256];
     Move* end = genMoves<MoveGenType::CAPTURES>(board, captures);
 
-    MoveOrdering ordering(board, captures, end, hashMove);
+    MoveOrdering ordering(board, captures, end, ttMove);
 
     BoardState state;
     TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;

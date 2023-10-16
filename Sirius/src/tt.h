@@ -63,9 +63,10 @@ public:
     TT(const TT&) = delete;
     TT& operator=(const TT&) = delete;
 
-    TTBucket* probe(ZKey key, int depth, int ply, int alpha, int beta, int& score, Move& move);
+    TTBucket* probe(ZKey key, bool& found, int ply, int& score, Move& move, int& depth, TTEntry::Bound& bound);
     void store(TTBucket* bucket, ZKey key, int depth, int ply, int score, Move move, TTEntry::Bound type);
     int quality(int age, int depth) const;
+    uint32_t index(uint64_t key) const;
 
     void incAge()
     {
