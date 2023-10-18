@@ -68,14 +68,13 @@ void CmdLine::reportSearchInfo(const SearchInfo& info) const
     Board board(root);
     board.setToFen(m_Board.fenStr());
 
-    Move moves[256], *end;
-
     std::deque<BoardState> states;
 
     for (const Move* move = info.pvBegin; move != info.pvEnd; move++)
     {
-        end = genMoves<MoveGenType::LEGAL>(board, moves);
-        std::cout << comm::convMoveToSAN(board, moves, end, *move) << ' ';
+        MoveList moves;
+        genMoves<MoveGenType::LEGAL>(board, moves);
+        std::cout << comm::convMoveToSAN(board, moves, *move) << ' ';
         states.push_back({});
         board.makeMove(*move, states.back());
     }
@@ -86,7 +85,7 @@ void CmdLine::reportSearchInfo(const SearchInfo& info) const
 void CmdLine::reportBestMove(Move bestMove) const
 {
     auto lock = lockStdout();
-    std::cout << "best move: " << comm::convMoveToSAN(m_Board, m_LegalMoves, m_LegalMoves + m_MoveCount, bestMove) << std::endl;
+    std::cout << "best move: " << comm::convMoveToSAN(m_Board, m_LegalMoves, bestMove) << std::endl;
 }
 
 bool CmdLine::execCommand(const std::string& command)
@@ -207,29 +206,29 @@ void CmdLine::makeMoveCommand(std::istringstream& stream)
 {
     std::string move;
     stream >> move;
-    MoveStrFind find = comm::findMoveFromSAN(m_Board, m_LegalMoves, m_LegalMoves + m_MoveCount, move.c_str());
-    if (find.move == nullptr)
+    MoveStrFind find = comm::findMoveFromSAN(m_Board, m_LegalMoves, move.c_str());
+    if (find.result == comm::MoveStrFind::Result::INVALID)
     {
         auto lock = lockStdout();
         std::cout << "Invalid move string" << std::endl;
         return;
     }
 
-    if (find.move == m_LegalMoves + m_MoveCount)
+    if (find.result == comm::MoveStrFind::Result::NOT_FOUND)
     {
         auto lock = lockStdout();
         std::cout << "Move not found" << std::endl;
         return;
     }
 
-    if (find.move == m_LegalMoves + m_MoveCount + 1)
+    if (find.result == comm::MoveStrFind::Result::AMBIGUOUS)
     {
         auto lock = lockStdout();
         std::cout << "Move is ambiguous" << std::endl;
         return;
     }
 
-    makeMove(*find.move);
+    makeMove(find.move);
 }
 
 void CmdLine::undoMoveCommand()
@@ -326,7 +325,7 @@ void CmdLine::probeBookCommand()
     {
         for (const auto& entry : *entries)
         {
-            std::cout << comm::convMoveToSAN(m_Board, m_LegalMoves, m_LegalMoves + m_MoveCount, entry.move) << ' ';
+            std::cout << comm::convMoveToSAN(m_Board, m_LegalMoves, entry.move) << ' ';
         }
         std::cout << std::endl;
     }

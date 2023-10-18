@@ -19,13 +19,13 @@ int promotionBonus(Move move)
 
 }
 
-MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end, Move hashMove)
-    : m_Moves(begin), m_Size(static_cast<uint32_t>(end - begin))
+MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove)
+    : m_Moves(moves)
 {
-    for (uint32_t i = 0; i < m_Size; i++)
+    for (uint32_t i = 0; i < m_Moves.size(); i++)
     {
         int score = 0;
-        Move move = begin[i];
+        Move move = m_Moves[i];
 
         if (move == hashMove)
         {
@@ -45,13 +45,13 @@ MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end, Move hash
     }
 }
 
-MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end, Move hashMove, std::array<Move, 2>& killers, std::array<int, 4096>& history)
-    : m_Moves(begin), m_Size(static_cast<uint32_t>(end - begin))
+MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, std::array<Move, 2>& killers, std::array<int, 4096>& history)
+    : m_Moves(moves)
 {
-    for (uint32_t i = 0; i < m_Size; i++)
+    for (uint32_t i = 0; i < m_Moves.size(); i++)
     {
         int score = 0;
-        Move move = begin[i];
+        Move move = m_Moves[i];
 
         if (move == hashMove)
         {
@@ -82,7 +82,7 @@ ExtMove MoveOrdering::selectMove(uint32_t index)
 {
     int bestScore = INT_MIN;
     uint32_t bestIndex = index;
-    for (uint32_t i = index; i < m_Size; i++)
+    for (uint32_t i = index; i < m_Moves.size(); i++)
     {
         if (m_MoveScores[i] > bestScore)
         {

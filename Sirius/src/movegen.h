@@ -1,6 +1,7 @@
 #pragma once
 
 #include "board.h"
+#include "util/static_vector.h"
 
 enum class MoveGenType
 {
@@ -8,5 +9,7 @@ enum class MoveGenType
     CAPTURES
 };
 
+using MoveList = StaticVector<Move, 256>;
+
 template<MoveGenType type>
-Move* genMoves(const Board& board, Move* moves);
+void genMoves(const Board& board, MoveList& moves);

@@ -3,6 +3,7 @@
 #include "../board.h"
 #include "../search.h"
 #include "../time_man.h"
+#include "../movegen.h"
 #include <deque>
 #include <vector>
 #include <string>
@@ -32,8 +33,7 @@ protected:
     std::deque<BoardState> m_BoardStates;
     std::vector<Move> m_PrevMoves;
     Board m_Board;
-    Move m_LegalMoves[256];
-    uint32_t m_MoveCount;
+    MoveList m_LegalMoves;
     search::Search m_Search;
 };
 

@@ -44,16 +44,15 @@ uint64_t perft(Board& board, int depth)
 {
     if (depth == 0)
         return 1;
-    Move moves[256];
-    Move* end = genMoves<MoveGenType::LEGAL>(board, moves);
+    MoveList moves;
+    genMoves<MoveGenType::LEGAL>(board, moves);
     if (depth == 1 && !print)
-        return end - moves;
+        return moves.size();
 
     uint64_t count = 0;
     BoardState state;
-    for (Move* it = moves; it != end; it++)
+    for (Move move : moves)
     {
-        const auto& move = *it;
         board.makeMove(move, state);
         uint64_t sub = perft<false>(board, depth - 1);
         if (print)
@@ -69,25 +68,25 @@ template uint64_t perft<false>(Board& board, int depth);
 
 void testSAN(Board& board, int depth)
 {
-    Move moves[256];
-    Move* end = genMoves<MoveGenType::LEGAL>(board, moves);
+    MoveList moves;
+    genMoves<MoveGenType::LEGAL>(board, moves);
 
-    for (Move* it = moves; it != end; it++)
+    for (Move move : moves)
     {
-        std::string str = comm::convMoveToSAN(board, moves, end, *it);
-        auto [move, strEnd] = comm::findMoveFromSAN(board, moves, end, str.c_str());
-        if (move != it)
+        std::string str = comm::convMoveToSAN(board, moves, move);
+        auto find = comm::findMoveFromSAN(board, moves, str.c_str());
+        if (find.move != move)
         {
             std::cerr << board.stringRep() << std::endl;
-            std::cout << str << ' ' << comm::convMoveToPCN(*it) << std::endl;
-            std::cerr << "No match " << it - moves << std::endl;
+            std::cout << str << ' ' << comm::convMoveToPCN(move) << std::endl;
+            std::cerr << "No match " << std::endl;
             exit(1);
         }
 
-        if (strEnd != str.c_str() + str.length())
+        if (find.len != static_cast<int>(str.length()))
         {
             std::cerr << board.stringRep() << std::endl;
-            std::cerr << str << ' ' << comm::convMoveToPCN(*it) << std::endl;
+            std::cerr << str << ' ' << comm::convMoveToPCN(move) << std::endl;
             std::cerr << "String wrong" << std::endl;
             exit(1);
         }
@@ -97,9 +96,8 @@ void testSAN(Board& board, int depth)
         return;
 
     BoardState state;
-    for (Move* it = moves; it != end; it++)
+    for (Move move : moves)
     {
-        const auto& move = *it;
         board.makeMove(move, state);
         testSAN(board, depth - 1);
         board.unmakeMove(move);
@@ -110,25 +108,24 @@ void testQuiescence(Board& board, int depth)
 {
     if (depth == 0)
     {
-        Move captures[256];
-        Move* end = genMoves<MoveGenType::CAPTURES>(board, captures);
+        MoveList captures;
+        genMoves<MoveGenType::CAPTURES>(board, captures);
 
-        for (Move* it = captures; it != end; it++)
+        for (Move move : captures)
         {
-            if (it->type() != MoveType::ENPASSANT && board.getPieceAt(it->dstPos()) == PIECE_NONE)
+            if (move.type() != MoveType::ENPASSANT && board.getPieceAt(move.dstPos()) == PIECE_NONE)
             {
                 throw std::runtime_error("Not capture");
             }
         }
         return;
     }
-    Move moves[256];
-    Move* end = genMoves<MoveGenType::LEGAL>(board, moves);
+    MoveList moves;
+    genMoves<MoveGenType::LEGAL>(board, moves);
 
     BoardState state;
-    for (Move* it = moves; it != end; it++)
+    for (Move move : moves)
     {
-        const auto& move = *it;
         board.makeMove(move, state);
         testQuiescence(board, depth - 1);
         board.unmakeMove(move);
@@ -142,8 +139,6 @@ void testSEE()
     std::string line;
     BoardState rootState;
     Board board(rootState);
-    Move moves[256];
-    Move* end;
     int failCount = 0;
     int passCount = 0;
     while (std::getline(file, line))
@@ -152,25 +147,26 @@ void testSEE()
         board.setToEpd(std::string_view(line).substr(0, sep1));
 
         int moveStart = sep1 + 2;
-        end = genMoves<MoveGenType::LEGAL>(board, moves);
+        
+        MoveList moves;
+        genMoves<MoveGenType::LEGAL>(board, moves);
 
-        comm::MoveStrFind find = comm::findMoveFromSAN(board, moves, end, line.c_str() + moveStart);
-        if (find.move == nullptr)
+        auto find = comm::findMoveFromSAN(board, moves, line.c_str() + moveStart);
+        if (find.result == comm::MoveStrFind::Result::INVALID)
         {
             throw std::runtime_error("Invalid move");
         }
-        if (find.move == end)
+        if (find.result == comm::MoveStrFind::Result::NOT_FOUND)
         {
             throw std::runtime_error("Move not found");
         }
-        if (find.move == end + 1)
+        if (find.result == comm::MoveStrFind::Result::AMBIGUOUS)
         {
             throw std::runtime_error("Ambiguous move");
         }
 
-        Move move = *find.move;
-
-        const char* strEnd = find.end;
+        Move move = find.move;
+        const char* strEnd = line.c_str() + moveStart + find.len;
 
         strEnd += 2;
 
@@ -261,7 +257,6 @@ void runTests(Board& board, bool fast)
                 std::cout << "\tSkipped: depth " << j + 1 << std::endl;
                 continue;
             }
-            // uint64_t nodes = testGivesCheck<false>(board, i + 1);
             uint64_t nodes = perft<false>(board, j + 1);
             totalNodes += nodes;
             if (nodes == test.results[j])
@@ -270,7 +265,7 @@ void runTests(Board& board, bool fast)
             }
             else
             {
-                std::cout << "\tFailed: depth " << i + 1 << ", Expected: " << test.results[i] << ", got: " << nodes << std::endl;
+                std::cout << "\tFailed: depth " << j + 1 << ", Expected: " << test.results[j] << ", got: " << nodes << std::endl;
                 failCount++;
             }
         }
@@ -281,7 +276,7 @@ void runTests(Board& board, bool fast)
     std::cout << "Time: " << (t2 - t1).count() << std::endl;
 }
 
-void testSANFind(const Board& board, Move* begin, Move* end, int len)
+void testSANFind(const Board& board, const MoveList& moveList, int len)
 {
     static constexpr std::array<char, 25> chars = {
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
@@ -308,7 +303,7 @@ void testSANFind(const Board& board, Move* begin, Move* end, int len)
             tmp /= charCount;
         }
 
-        comm::findMoveFromSAN(board, begin, end, buf);
+        comm::findMoveFromSAN(board, moveList, buf);
     }
     delete[] buf;
 }

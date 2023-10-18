@@ -404,10 +404,10 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
         }
     }
 
-    Move moves[256];
-    Move* end = genMoves<MoveGenType::LEGAL>(board, moves);
+    MoveList moves;
+    genMoves<MoveGenType::LEGAL>(board, moves);
 
-    if (moves == end)
+    if (moves.size() == 0)
     {
         if (inCheck)
             return -SCORE_MATE + rootPly;
@@ -416,7 +416,6 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     MoveOrdering ordering(
         board,
         moves,
-        end,
         ttMove,
         searchPly->killers,
         thread.history[static_cast<int>(board.sideToMove())]
@@ -429,12 +428,11 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 
     TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
 
-    Move quietsTried[256];
-    int numQuietsTried = 0;
+    MoveList quietsTried;
 
     int bestScore = -SCORE_MAX;
 
-    for (int movesPlayed = 0; movesPlayed < end - moves; movesPlayed++)
+    for (int movesPlayed = 0; movesPlayed < static_cast<int>(moves.size()); movesPlayed++)
     {
         auto [move, moveScore] = ordering.selectMove(static_cast<uint32_t>(movesPlayed));
         bool isCapture = board.getPieceAt(move.dstPos()) != PIECE_NONE;
@@ -468,7 +466,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
         board.makeMove(move, state);
         bool givesCheck = board.checkers() != 0;
         if (!isPromotion && !isCapture)
-            quietsTried[numQuietsTried++] = move;
+            quietsTried.push_back(move);
         rootPly++;
 
         int reduction = 0;
@@ -515,7 +513,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
                     // formula from akimbo
                     int historyBonus = std::min(16 * depth * depth, 1200);
                     updateHistory(history[static_cast<int>(board.sideToMove())][move.fromTo()], historyBonus);
-                    for (int j = 0; j < numQuietsTried - 1; j++)
+                    for (int j = 0; j < static_cast<int>(quietsTried.size() - 1); j++)
                     {
                         updateHistory(history[static_cast<int>(board.sideToMove())][quietsTried[j].fromTo()], -historyBonus);
                     }
@@ -584,15 +582,15 @@ int Search::qsearch(SearchThread& thread, SearchPly* searchPly, int alpha, int b
     std::array<Move, MAX_PLY + 1> childPV;
     searchPly[1].pv = childPV.data();
 
-    Move captures[256];
-    Move* end = genMoves<MoveGenType::CAPTURES>(board, captures);
+    MoveList captures;
+    genMoves<MoveGenType::CAPTURES>(board, captures);
 
-    MoveOrdering ordering(board, captures, end, ttMove);
+    MoveOrdering ordering(board, captures, ttMove);
 
     BoardState state;
     TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
     searchPly->bestMove = Move();
-    for (uint32_t movesPlayed = 0; movesPlayed < end - captures; movesPlayed++)
+    for (uint32_t movesPlayed = 0; movesPlayed < captures.size(); movesPlayed++)
     {
         auto [move, moveScore] = ordering.selectMove(movesPlayed);
         if (!board.see_margin(move, 0))

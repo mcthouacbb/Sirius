@@ -1,5 +1,5 @@
 #include "zobrist.h"
-#include "prng.h"
+#include "util/prng.h"
 #include <iostream>
 #include <array>
 

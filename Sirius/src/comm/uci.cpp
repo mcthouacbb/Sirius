@@ -183,8 +183,8 @@ void UCI::positionCommand(std::istringstream& stream)
                 while (stream.tellg() != -1)
                 {
                     stream >> tok;
-                    MoveStrFind find = comm::findMoveFromPCN(m_LegalMoves, m_LegalMoves + m_MoveCount, tok.c_str());
-                    Move move = *find.move;
+                    MoveStrFind find = comm::findMoveFromPCN(m_LegalMoves, tok.c_str());
+                    Move move = find.move;
                     makeMove(move);
                 }
             }
@@ -211,8 +211,8 @@ void UCI::positionCommand(std::istringstream& stream)
             while (stream.tellg() != -1)
             {
                 stream >> tok;
-                MoveStrFind find = comm::findMoveFromPCN(m_LegalMoves, m_LegalMoves + m_MoveCount, tok.c_str());
-                Move move = *find.move;
+                MoveStrFind find = comm::findMoveFromPCN(m_LegalMoves, tok.c_str());
+                Move move = find.move;
                 makeMove(move);
             }
         }

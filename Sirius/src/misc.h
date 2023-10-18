@@ -1,4 +1,5 @@
 #include "board.h"
+#include "movegen.h"
 
 void printBoard(const Board& board);
 
@@ -13,4 +14,4 @@ void testSEE();
 
 void runTests(Board& board, bool fast);
 
-void testSANFind(const Board& board, Move* begin, Move* end, int len);
+void testSANFind(const Board& board, const MoveList& moveList, int len);
