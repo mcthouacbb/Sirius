@@ -86,6 +86,8 @@ bool isValidFen(const char* fen)
     {
         switch (c)
         {
+            default:
+                return false;
             case '/':
                 if (square != 64 - slashCount * 8)
                     return false;
