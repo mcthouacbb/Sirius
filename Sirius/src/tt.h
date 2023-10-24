@@ -55,6 +55,8 @@ public:
     TT(size_t size);
     ~TT();
 
+    void resize(int mb);
+
     TT(const TT&) = delete;
     TT& operator=(const TT&) = delete;
 

@@ -101,6 +101,11 @@ public:
     void setThreads(int count);
     bool searching() const;
     BenchData benchSearch(int depth, const Board& board, BoardState& state);
+
+    void setTTSize(int mb)
+    {
+        m_TT.resize(mb);
+    }
 private:
     void joinThreads();
     void threadLoop(SearchThread& thread);
