@@ -5,111 +5,94 @@
 namespace
 {
 
-static const int MVV_LVA[7][7] = {
-	// none
-	{0, 0, 0, 0, 0, 0, 0}, // none x none, none x K, none x Q, none x R, none x B, none x N, none x P
-	// king
-	{0, 0, 50, 40, 30, 20, 10}, // K x none, K x K, K x Q, K x R, K x B, K x N, K x P
-	// queen
-	{0, 0, 51, 41, 31, 21, 11}, // Q x none, Q x K, Q x Q, Q x R, Q x B, Q x N, Q x P
-	// rook
-	{0, 0, 52, 42, 32, 22, 12}, // R x none, R x K, R x Q, R x R, R x B, R x N, R x P
-	// bishop
-	{0, 0, 53, 43, 33, 23, 13}, // B x none, B x K, B x Q, B x R, B x B, B x N, B x P
-	// knight
-	{0, 0, 54, 44, 34, 24, 14}, // N x none, N x K, N x Q, N x R, N x B, N x N, N x P
-	// pawn
-	{0, 0, 55, 45, 35, 25, 15}  // P x none, P x K, P x Q, P x R, P x B, P x N, P x P
-};
-
 int mvvLva(const Board& board, Move move)
 {
-	int srcPiece = static_cast<int>(getPieceType(board.getPieceAt(move.srcPos())));
-	int dstPiece = static_cast<int>(getPieceType(board.getPieceAt(move.dstPos())));
-	return MVV_LVA[7 - srcPiece][7 - dstPiece];
+    int srcPiece = static_cast<int>(getPieceType(board.getPieceAt(move.srcPos())));
+    int dstPiece = static_cast<int>(getPieceType(board.getPieceAt(move.dstPos())));
+    return 10 * dstPiece - srcPiece + 6;
 }
 
 int promotionBonus(Move move)
 {
-	return 1 + (static_cast<int>(move.promotion()) >> 14);
+    return 1 + (static_cast<int>(move.promotion()) >> 14);
 }
 
 }
 
 MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end, Move hashMove)
-	: m_Moves(begin), m_Size(static_cast<uint32_t>(end - begin))
+    : m_Moves(begin), m_Size(static_cast<uint32_t>(end - begin))
 {
-	for (uint32_t i = 0; i < m_Size; i++)
-	{
-		int score = 0;
-		Move move = begin[i];
+    for (uint32_t i = 0; i < m_Size; i++)
+    {
+        int score = 0;
+        Move move = begin[i];
 
-		if (move == hashMove)
-		{
-			m_MoveScores[i] = 10000000;
-			continue;
-		}
+        if (move == hashMove)
+        {
+            m_MoveScores[i] = 10000000;
+            continue;
+        }
 
-		bool isCapture = static_cast<bool>(board.getPieceAt(move.dstPos()));
-		bool isPromotion = move.type() == MoveType::PROMOTION;
+        bool isCapture = static_cast<bool>(board.getPieceAt(move.dstPos()));
+        bool isPromotion = move.type() == MoveType::PROMOTION;
 
-		if (isCapture)
-			score += mvvLva(board, move);
-		if (isPromotion)
-			score += 100 * promotionBonus(move);
+        if (isCapture)
+            score += mvvLva(board, move);
+        if (isPromotion)
+            score += 100 * promotionBonus(move);
 
-		m_MoveScores[i] = score;
-	}
+        m_MoveScores[i] = score;
+    }
 }
 
 MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end, Move hashMove, Move (&killers)[2], int (&history)[4096])
-	: m_Moves(begin), m_Size(static_cast<uint32_t>(end - begin))
+    : m_Moves(begin), m_Size(static_cast<uint32_t>(end - begin))
 {
-	for (uint32_t i = 0; i < m_Size; i++)
-	{
-		int score = 0;
-		Move move = begin[i];
+    for (uint32_t i = 0; i < m_Size; i++)
+    {
+        int score = 0;
+        Move move = begin[i];
 
-		if (move == hashMove)
-		{
-			m_MoveScores[i] = 1000000;
-			continue;
-		}
+        if (move == hashMove)
+        {
+            m_MoveScores[i] = 1000000;
+            continue;
+        }
 
-		bool isCapture = static_cast<bool>(board.getPieceAt(move.dstPos()));
-		bool isPromotion = move.type() == MoveType::PROMOTION;
+        bool isCapture = static_cast<bool>(board.getPieceAt(move.dstPos()));
+        bool isPromotion = move.type() == MoveType::PROMOTION;
 
-		if (isCapture)
-		{
-			score = CAPTURE_SCORE * board.see_margin(move, 0) + mvvLva(board, move);
-		}
-		else if (isPromotion)
-		{
-			score = PROMOTION_SCORE + promotionBonus(move);
-		}
-		else if (move == killers[0] || move == killers[1])
-			score = KILLER_SCORE;
-		else
-			score = history[historyIndex(move)];
-		m_MoveScores[i] = score;
-	}
+        if (isCapture)
+        {
+            score = CAPTURE_SCORE * board.see_margin(move, 0) + mvvLva(board, move);
+        }
+        else if (isPromotion)
+        {
+            score = PROMOTION_SCORE + promotionBonus(move);
+        }
+        else if (move == killers[0] || move == killers[1])
+            score = KILLER_SCORE;
+        else
+            score = history[move.fromTo()];
+        m_MoveScores[i] = score;
+    }
 }
 
 ExtMove MoveOrdering::selectMove(uint32_t index)
 {
-	int bestScore = INT_MIN;
-	uint32_t bestIndex = index;
-	for (uint32_t i = index; i < m_Size; i++)
-	{
-		if (m_MoveScores[i] > bestScore)
-		{
-			bestScore = m_MoveScores[i];
-			bestIndex = i;
-		}
-	}
+    int bestScore = INT_MIN;
+    uint32_t bestIndex = index;
+    for (uint32_t i = index; i < m_Size; i++)
+    {
+        if (m_MoveScores[i] > bestScore)
+        {
+            bestScore = m_MoveScores[i];
+            bestIndex = i;
+        }
+    }
 
-	std::swap(m_Moves[bestIndex], m_Moves[index]);
-	std::swap(m_MoveScores[bestIndex], m_MoveScores[index]);
+    std::swap(m_Moves[bestIndex], m_Moves[index]);
+    std::swap(m_MoveScores[bestIndex], m_MoveScores[index]);
 
-	return {m_Moves[index], m_MoveScores[index]};
+    return {m_Moves[index], m_MoveScores[index]};
 }

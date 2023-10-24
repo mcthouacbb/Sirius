@@ -8,35 +8,30 @@
 #include "comm/uci.h"
 #include "eval/eval.h"
 
-namespace comm
-{
-	IComm* currComm;
-}
-
 int main()
 {
-	attacks::init();
-	zobrist::init();
-	search::init();
+    attacks::init();
+    zobrist::init();
+    search::init();
 
-	std::string mode;
-	std::getline(std::cin, mode);
+    std::string mode;
+    std::getline(std::cin, mode);
 
-	if (mode == "cmdline")
-	{
-		comm::CmdLine cmdLine;
-		comm::currComm = &cmdLine;
-		cmdLine.run();
-	}
-	else if (mode == "uci")
-	{
-		comm::UCI uci;
-		comm::currComm = &uci;
-		uci.run();
-	}
-	else
-	{
-		std::cout << "Unrecognized mode" << std::endl;
-	}
-	return 0;
+    if (mode == "cmdline")
+    {
+        comm::CmdLine cmdLine;
+        comm::currComm = &cmdLine;
+        cmdLine.run();
+    }
+    else if (mode == "uci")
+    {
+        comm::UCI uci;
+        comm::currComm = &uci;
+        uci.run();
+    }
+    else
+    {
+        std::cout << "Unrecognized mode" << std::endl;
+    }
+    return 0;
 }

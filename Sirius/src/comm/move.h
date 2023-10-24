@@ -7,8 +7,8 @@ namespace comm
 
 struct MoveStrFind
 {
-	const Move* move;
-	const char* end;
+    const Move* move;
+    const char* end;
 
 // invalid = {nullptr, moveStr};
 // not found = {end, moveStr + moveLen};

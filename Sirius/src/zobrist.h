@@ -12,16 +12,16 @@ void init();
 
 struct ZKey
 {
-	uint64_t value;
+    uint64_t value;
 
-	void flipSideToMove();
-	void addPiece(PieceType piece, Color color, uint32_t square);
-	void removePiece(PieceType piece, Color color, uint32_t square);
-	void movePiece(PieceType piece, Color color, uint32_t src, uint32_t dst);
+    void flipSideToMove();
+    void addPiece(PieceType piece, Color color, uint32_t square);
+    void removePiece(PieceType piece, Color color, uint32_t square);
+    void movePiece(PieceType piece, Color color, uint32_t src, uint32_t dst);
 
-	void updateCastlingRights(uint32_t rights);
-	void updateEP(uint32_t epFile);
+    void updateCastlingRights(uint32_t rights);
+    void updateEP(uint32_t epFile);
 
-	bool operator==(const ZKey& other) const = default;
-	bool operator!=(const ZKey& other) const = default;
+    bool operator==(const ZKey& other) const = default;
+    bool operator!=(const ZKey& other) const = default;
 };

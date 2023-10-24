@@ -36,110 +36,110 @@ constexpr BitBoard DARK_SQUARES = 0xAA55AA55AA55AA55ull;
 template<Color c, int r>
 constexpr BitBoard nthRank()
 {
-	if constexpr (c == Color::WHITE)
-	{
-		return RANK_1 << (8 * r);
-	}
-	else
-	{
-		return RANK_8 >> (8 * r);
-	}
+    if constexpr (c == Color::WHITE)
+    {
+        return RANK_1 << (8 * r);
+    }
+    else
+    {
+        return RANK_8 >> (8 * r);
+    }
 }
 
 
 inline uint8_t reverse(uint8_t b) {
-	 b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
-	 b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
-	 b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
-	 return b;
+     b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+     b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+     b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+     return b;
 }
 
 inline void printBB(BitBoard bb)
 {
-	for (int i = 0; i < 8; i++)
-	{
-		uint8_t val = reverse(bb >> 56);
-		std::cout << std::bitset<8>(val) << std::endl;
-		bb <<= 8;
-	}
-	std::cout << std::endl;
+    for (int i = 0; i < 8; i++)
+    {
+        uint8_t val = reverse(bb >> 56);
+        std::cout << std::bitset<8>(val) << std::endl;
+        bb <<= 8;
+    }
+    std::cout << std::endl;
 }
 
 inline BitBoard shiftNorth(BitBoard bb)
 {
-	return bb << 8;
+    return bb << 8;
 }
 
 inline BitBoard shiftSouth(BitBoard bb)
 {
-	return bb >> 8;
+    return bb >> 8;
 }
 
 inline BitBoard shiftEast(BitBoard bb)
 {
-	return (bb << 1) & ~FILE_A;
+    return (bb << 1) & ~FILE_A;
 }
 
 inline BitBoard shiftWest(BitBoard bb)
 {
-	return (bb >> 1) & ~FILE_H;
+    return (bb >> 1) & ~FILE_H;
 }
 
 inline BitBoard shiftNorthEast(BitBoard bb)
 {
-	return shiftNorth(shiftEast(bb));
+    return shiftNorth(shiftEast(bb));
 }
 
 inline BitBoard shiftNorthWest(BitBoard bb)
 {
-	return shiftNorth(shiftWest(bb));
+    return shiftNorth(shiftWest(bb));
 }
 
 inline BitBoard shiftSouthEast(BitBoard bb)
 {
-	return shiftSouth(shiftEast(bb));
+    return shiftSouth(shiftEast(bb));
 }
 
 inline BitBoard shiftSouthWest(BitBoard bb)
 {
-	return shiftSouth(shiftWest(bb));
+    return shiftSouth(shiftWest(bb));
 }
 
 inline uint32_t getLSB(BitBoard bb)
 {
 #if defined(__GNUC__)
-	return __builtin_ctzll(bb);
+    return __builtin_ctzll(bb);
 #elif defined(_MSC_VER)
-	unsigned long idx;
-	_BitScanForward64(&idx, bb);
-	return idx;
+    unsigned long idx;
+    _BitScanForward64(&idx, bb);
+    return idx;
 #endif
 }
 
 inline uint32_t getMSB(BitBoard bb)
 {
 #if defined(__GNUC__)
-	return 63 - __builtin_clzll(bb);
+    return 63 - __builtin_clzll(bb);
 #elif defined(_MSC_VER)
-	unsigned long idx;
-	_BitScanReverse64(&idx, bb);
-	return idx;
+    unsigned long idx;
+    _BitScanReverse64(&idx, bb);
+    return idx;
 #endif
 }
 
 inline BitBoard extractLSB(BitBoard bb)
 {
-	return bb & (0 - bb);
+    return bb & (0 - bb);
 }
 
 inline uint32_t popLSB(BitBoard& bb)
 {
-	uint32_t lsb = getLSB(bb);
-	bb &= bb - 1;
-	return lsb;
+    uint32_t lsb = getLSB(bb);
+    bb &= bb - 1;
+    return lsb;
 }
 
 inline int getPopcnt(BitBoard bb)
 {
-	return std::popcount(bb);
+    return std::popcount(bb);
 }

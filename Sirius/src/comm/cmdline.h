@@ -1,7 +1,7 @@
 #pragma once
 
 #include "icomm.h"
-#include "../book.h"
+#include "book.h"
 
 namespace comm
 {
@@ -9,45 +9,45 @@ namespace comm
 class CmdLine : public IComm
 {
 public:
-	CmdLine();
-	virtual ~CmdLine() override = default;
+    CmdLine();
+    virtual ~CmdLine() override = default;
 
-	enum class Command
-	{
-		INVALID,
-		SET_POSITION,
-		MAKE_MOVE,
-		UNDO_MOVE,
-		PRINT_BOARD,
-		STATIC_EVAL,
-		QUIESCENCE_EVAL,
-		SEARCH,
-		RUN_TESTS,
-		PERFT,
-		BOOK,
-		STOP,
-		QUIT
-	};
+    enum class Command
+    {
+        INVALID,
+        SET_POSITION,
+        MAKE_MOVE,
+        UNDO_MOVE,
+        PRINT_BOARD,
+        STATIC_EVAL,
+        QUIESCENCE_EVAL,
+        SEARCH,
+        RUN_TESTS,
+        PERFT,
+        BOOK,
+        STOP,
+        QUIT
+    };
 
-	virtual void run() override;
-	virtual void reportSearchInfo(const SearchInfo& info) const override;
-	virtual void reportBestMove(Move bestMove) const override;
+    virtual void run() override;
+    virtual void reportSearchInfo(const SearchInfo& info) const override;
+    virtual void reportBestMove(Move bestMove) const override;
 private:
-	bool execCommand(const std::string& command);
-	Command getCommand(const std::string& command) const;
+    bool execCommand(const std::string& command);
+    Command getCommand(const std::string& command) const;
 
-	void setPositionCommand(std::istringstream& stream);
-	void makeMoveCommand(std::istringstream& stream);
-	void undoMoveCommand();
-	void printBoardCommand();
-	void staticEvalCommand();
-	void quiescenceEvalCommand();
-	void searchCommand(std::istringstream& stream);
-	void runTestsCommand();
-	void runPerftCommand(std::istringstream& stream);
-	void probeBookCommand();
+    void setPositionCommand(std::istringstream& stream);
+    void makeMoveCommand(std::istringstream& stream);
+    void undoMoveCommand();
+    void printBoardCommand();
+    void staticEvalCommand();
+    void quiescenceEvalCommand();
+    void searchCommand(std::istringstream& stream);
+    void runTestsCommand();
+    void runPerftCommand(std::istringstream& stream);
+    void probeBookCommand();
 
-	Book m_Book;
+    Book m_Book;
 };
 
 }
