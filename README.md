@@ -2,6 +2,53 @@
 
 v4.0
 
+Building
+- TODO
+
+Features
+- Board representation
+    - BitBoards
+    - Mailbox 0x88
+    - Zobrist hashing
+    - Packed 16 bit Move Representation
+    - Static Exchange Evaluation
+- Move Generation
+    - Magic Bitboards for sliding pieces
+    - Legal move generation
+- Evaluation
+    - Tapered Evaluation
+    - Material
+    - Piece Square Tables
+    - Tuning via Texel's Tuning Method
+- Search
+    - Fail-soft Alpha-Beta Pruning
+    - Iterative Deepening
+    - Aspiration Windows
+    - Mate Distance Pruning
+    - Move Ordering
+        - TT Move Ordering
+        - MVV LVA
+        - SEE Move Ordering
+        - Killer Moves Heuristic
+        - History Heuristic
+            - History Malus
+            - History Gravity
+    - Quiescence Search
+        - SEE Pruning
+    - Transposition Table
+        - Stockfish/Ethereal replacement scheme
+        - Cutoffs
+    - Selectivity
+        - Check Extension
+        - Principal Variation Search(PVS)
+            - 2 Fold LMR
+        - Reverse Futility Pruning
+        - Null Move Pruning
+        - Futility Pruning
+        - Late Move Pruning
+        - SEE pruning
+        - Late Move Reductions
+
 CLI Usage
 - Type "uci" for the UCI protocol(not recommended for direct use, usually used by a chess GUI)
     - Protocol is explained [here](https://backscattering.de/chess/uci)
@@ -32,7 +79,7 @@ Command Line Protocol(for debugging/convenience)
 - `"eval"`
     - Prints the static evaluation of the position
 - `"qeval"`
-    - Prints the quiescence evaluation of the position
+    - Prints the quiescence search evaluation of the position
     - Currently not working
 - `"search" "depth" <depth>`
 - `"search" "time" <time>`
@@ -58,47 +105,6 @@ Non-standard UCI commands
     - Prints a string representation of the board from white's perspective
 - `"bench" <depth>`
     - Runs an <depth> depth search on a set of internal benchmark positions and prints out the number of nodes and the time token.
-
-Features
-- Board representation
-    - BitBoards
-    - Mailbox 0x88
-    - Zobrist hashing
-    - Packed 16 bit Move Representation
-    - Static Exchange Evaluation
-- Move Generation
-    - Magic Bitboards for sliding pieces
-    - Legal move generation
-- Evaluation
-    - Tapered Evaluation
-    - Material
-    - Piece Square Tables
-    - Tuning via Texel's Tuning Method
-- Search
-    - Fail-soft Alpha-Beta Pruning
-    - Iterative Deepening
-    - Aspiration Windows
-    - Mate Distance Pruning
-    - Move Ordering
-        - TT Move Ordering
-        - MVV LVA
-        - SEE Move Ordering
-        - Killer Moves Heuristic
-        - History Heuristic
-    - Quiescence Search
-        - SEE Pruning
-    - Transposition Table
-        - Stockfish/Ethereal replacement scheme
-    - Selectivity
-        - Check Extension
-        - Principal Variation Search(PVS)
-            - 2 Fold LMR
-        - Reverse Futility Pruning
-        - Null Move Pruning
-        - Futility Pruning
-        - Late Move Pruning
-        - SEE pruning
-        - Late Move Reductions
 
 Inspired/helped by
 - [Stockfish](https://github.com/official-stockfish/Stockfish)
