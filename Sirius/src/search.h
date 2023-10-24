@@ -54,9 +54,6 @@ struct SearchThread
     SearchThread(const SearchThread&) = delete;
     SearchThread& operator=(const SearchThread&) = delete;
 
-    SearchThread(SearchThread&&) noexcept = default;
-    SearchThread& operator=(SearchThread&&) noexcept = default;
-
     bool isMainThread() const
     {
         return id == 0;

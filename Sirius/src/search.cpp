@@ -208,7 +208,7 @@ void Search::threadLoop(SearchThread& thread)
         thread.cv.notify_one();
 
         thread.wakeFlag = WakeFlag::NONE;
-        thread.cv.wait(uniqueLock, [&thread, this]
+        thread.cv.wait(uniqueLock, [&thread]
         {
             return thread.wakeFlag != WakeFlag::NONE;
         });
