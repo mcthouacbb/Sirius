@@ -3,6 +3,8 @@
 
 #include <climits>
 
+#include <iostream>
+
 TT::TT(size_t size)
     : m_Size(size)
 {
@@ -13,6 +15,15 @@ TT::TT(size_t size)
 TT::~TT()
 {
     delete[] m_Buckets;
+}
+
+// I'll change this later
+void TT::resize(int mb)
+{
+    size_t size = mb * 1024 * 1024 / sizeof(TTBucket);
+    m_Buckets = new TTBucket[size]();
+    m_Size = size;
+    m_CurrAge = 0;
 }
 
 inline int retrieveScore(int score, int ply)

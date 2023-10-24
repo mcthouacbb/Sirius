@@ -104,6 +104,9 @@ bool UCI::execCommand(const std::string& command)
             if (m_Search.searching())
                 m_Search.stop();
             break;
+        case Command::SET_OPTION:
+            setOptionCommand(stream);
+            break;
         case Command::QUIT:
             return true;
         // non standard commands
@@ -135,6 +138,8 @@ UCI::Command UCI::getCommand(const std::string& command) const
         return Command::GO;
     else if (command == "stop")
         return Command::STOP;
+    else if (command == "setoption")
+        return Command::SET_OPTION;
     else if (command == "quit")
         return Command::QUIT;
     else if (command == "d")
@@ -150,7 +155,10 @@ void UCI::uciCommand() const
 {
     auto lock = lockStdout();
     std::cout << "id name Sirius v" << SIRIUS_VERSION_STRING << std::endl;
-    std::cout << "id author AspectOfTheNoob\n";
+    std::cout << "id author AspectOfTheNoob" << std::endl;
+    std::cout << "option name Hash type spin default 64 min 1 max 2048" << std::endl;
+    // lol
+    std::cout << "option name Threads type spin default 1 min 1 max 1" << std::endl;
     std::cout << "uciok" << std::endl;
 }
 
@@ -280,6 +288,29 @@ void UCI::goCommand(std::istringstream& stream)
     }
 
     m_Search.run(limits, m_BoardStates);
+}
+
+void UCI::setOptionCommand(std::istringstream& stream)
+{
+    std::string tok, name;
+    stream >> tok;
+    if (tok != "name")
+        return;
+    stream >> name;
+    stream >> tok;
+    if (tok != "value")
+        return;
+
+    if (name == "Hash")
+    {
+        int mb;
+        stream >> mb;
+        m_Search.setTTSize(mb);
+    }
+    else if (name == "Threads")
+    {
+        // lol
+    }
 }
 
 void UCI::benchCommand()

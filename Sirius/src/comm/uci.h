@@ -22,6 +22,7 @@ public:
         POSITION,
         GO,
         STOP,
+        SET_OPTION,
         QUIT,
 
         DBG_PRINT,
@@ -40,6 +41,7 @@ private:
     void newGameCommand();
     void positionCommand(std::istringstream& stream);
     void goCommand(std::istringstream& stream);
+    void setOptionCommand(std::istringstream& stream);
     void benchCommand();
 };
 
