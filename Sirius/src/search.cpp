@@ -307,6 +307,11 @@ BenchData Search::benchSearch(int depth, const Board& board, BoardState& state)
     thread->limits = limits;
     thread->board.setState(board, state, state);
 
+    m_TimeMan.setLimits(limits, m_Board.sideToMove());
+    m_TimeMan.startSearch();
+
+    m_ShouldStop.store(false, std::memory_order_relaxed);
+
     iterDeep(*thread, false, false);
 
     BenchData data = {};
