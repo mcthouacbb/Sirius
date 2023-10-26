@@ -1,6 +1,16 @@
 # Sirius
 
-v4.0
+A chess engine written in c++.
+Sirius does not come with a gui. To play against it, you should download a chess GUI that supports the Universal Chess Interface(UCI) protocol
+Optionally, you can also play from the command line, though it is a bit cumbersome
+
+## Strength
+See [Releases](https://github.com/mcthouacbb/Sirius/releases)
+
+| Version | Release Date | [CCRL Blitz](https://ccrl.chessdom.com/ccrl/404/) | [CCRL 40/15](https://ccrl.chessdom.com/ccrl/4040/) |
+| --- | --- | --- | --- |
+| 5.0 | N/A | N/A | N/A |
+
 
 ## Features
 - Board representation
