@@ -2,10 +2,6 @@
 
 v4.0
 
-## Building
-- It's just CMake lol
-- C++20 required
-
 ## Features
 - Board representation
     - BitBoards
@@ -68,6 +64,9 @@ v4.0
 | Hash             | integer |      64       |        [1, 2048]          | Size of the transposition table in Megabytes.                                        |
 | Threads          | integer |       1       |         [1, 1]            | Number of threads used to search (currently does nothing).                           |
 
+## Building
+- It's just CMake lol
+- C++20 required
 
 ## Credits/Thanks
 - [Stockfish](https://github.com/official-stockfish/Stockfish), the best chess engine
