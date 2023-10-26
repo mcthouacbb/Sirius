@@ -86,6 +86,7 @@ v4.0
 
 
 <div id="command-line-protocol"></div>
+
 ## Command Line Protocol
 - `"position" {"fen" | "startpos"} [fenString]`
     - Set the board position to the starting position or the fenString
