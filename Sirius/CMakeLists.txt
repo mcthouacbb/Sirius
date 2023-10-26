@@ -52,10 +52,19 @@ set(SRCS
     "src/comm/uci.h"
 )
 
-add_executable(sirius ${SRCS})
 
-target_compile_features(sirius PRIVATE cxx_std_20)
+if("${SIRIUS_EXE_EXTENSION}" STREQUAL "")
+    message("none")
+    set(SIRIUS_EXE_NAME "sirius")
+else()
+    message("${SIRIUS_EXE_EXTENSION} bruh")
+    set(SIRIUS_EXE_NAME "sirius-${SIRIUS_EXE_EXTENSION}")
+endif()
+
+add_executable(${SIRIUS_EXE_NAME} ${SRCS})
+
+target_compile_features(${SIRIUS_EXE_NAME} PRIVATE cxx_std_20)
 
 # for Visual Studio/MSVC
-set_target_properties(sirius PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+set_target_properties(${SIRIUS_EXE_NAME} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRCS})
