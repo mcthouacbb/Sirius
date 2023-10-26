@@ -1,28 +1,103 @@
 # Sirius
 
-v4.0
+A chess engine written in c++.
+Sirius does not come with a gui. To play against it, you should download a chess GUI that supports the Universal Chess Interface(UCI) protocol
+Optionally, you can also play from the command line, though it is a bit cumbersome
 
-Minimal UCI Support
+## Strength
+See [Releases](https://github.com/mcthouacbb/Sirius/releases)
 
-Inspired/helped by
-- Stockfish
-- Ethereal
+| Version | Release Date | [CCRL Blitz](https://ccrl.chessdom.com/ccrl/404/) | [CCRL 40/15](https://ccrl.chessdom.com/ccrl/4040/) |
+| --- | --- | --- | --- |
+| 5.0 | N/A | N/A | N/A |
+
+
+## Features
+- Board representation
+    - BitBoards
+    - Mailbox 0x88
+    - Zobrist hashing
+    - Packed 16 bit Move Representation
+    - Static Exchange Evaluation
+- Move Generation
+    - Magic Bitboards for sliding pieces
+    - Legal move generation
+- Evaluation
+    - Tapered Evaluation
+    - Material
+    - Piece Square Tables
+    - Tuning via Texel's Tuning Method
+- Search
+    - Fail-soft Alpha-Beta Pruning
+    - Iterative Deepening
+    - Aspiration Windows
+    - Mate Distance Pruning
+    - Move Ordering
+        - TT Move Ordering
+        - MVV LVA
+        - SEE Move Ordering
+        - Killer Moves Heuristic
+        - History Heuristic
+            - History Malus
+            - History Gravity
+    - Quiescence Search
+        - SEE Pruning
+    - Transposition Table
+        - Stockfish/Ethereal replacement scheme
+        - Cutoffs
+    - Selectivity
+        - Check Extension
+        - Principal Variation Search(PVS)
+            - 2 Fold LMR
+        - Reverse Futility Pruning
+        - Null Move Pruning
+        - Futility Pruning
+        - Late Move Pruning
+        - SEE pruning
+        - Late Move Reductions
+
+## CLI Usage
+- Type "uci" for the UCI protocol(not recommended for direct use, usually used by a chess GUI)
+    - Protocol is explained [here](https://backscattering.de/chess/uci)
+- Type "cmdline" for the CLI protocol(Mainly for convenience in certain situations)
+    - Protocol is explained [below](#command-line-protocol)
+
+## Non-standard UCI commands
+- `"d"`
+    - Prints a string representation of the board from white's perspective
+- `"bench" <depth>`
+    - Runs an <depth> depth search on a set of internal benchmark positions and prints out the number of nodes and the time token.
+
+## UCI options
+| Name             |  Type   | Default value |       Valid values        | Description                                                                          |
+|:-----------------|:-------:|:-------------:|:-------------------------:|:-------------------------------------------------------------------------------------|
+| Hash             | integer |      64       |        [1, 2048]          | Size of the transposition table in Megabytes.                                        |
+| Threads          | integer |       1       |         [1, 1]            | Number of threads used to search (currently does nothing).                           |
+
+## Building
+- It's just CMake lol
+- C++20 required
+
+## Credits/Thanks
+- [The Chess Programming Wiki](https://www.chessprogramming.org/), a bit outdated but nonetheless an excellent resource
+- [Stockfish](https://github.com/official-stockfish/Stockfish)
+- [Ethereal](https://github.com/AndyGrant/Ethereal), one of the best references for chess programming
 - Crafty
 - Zurichess
-- [The Chess Programming Wiki](https://www.chessprogramming.org/)
-- [TalkChess/The Computer Chess Club](https://www.talkchess.com/forum3/viewforum.php?f=2)
-- [People in this OpenBench Instance](https://chess.swehosting.se/index/)
-    - [@JW](https://github.com/jacquesRW/)
-    - [@Ciekce](https://github.com/ciekce/)
+- The Engine Programming Discord Server, and the people in it
+    - [@JW](https://github.com/jw1912), developer of [Akimbo](https://github.com/jw1912/akimbo), helped me a ton with developing and testing the engine
+    - [@Ciekce](https://github.com/ciekce/), developer of [Stormphrax](https://github.com/ciekce/Stormphrax), who, along with JW, taught me many things about Chess Programming, and is an excellent c++ programmer
+    - [@Alex2262](https://github.com/Alex2262), developer of [Altaire](https://github.com/Alex2262/AltairChessEngine)
+- The Stockfish Discord Server
+- The [Sebastian Lague Chess-Challenge](https://github.com/seblague/Chess-challenge) Discord Server
+	- Not a direct resource, but led to me finding many of the above mentioned resources
+- [Rustic Chess Blog](https://rustic-chess.org/), currently a WIP but it has excellent explanations for the techniques it does explain.
 - Many others
 
-CLI Usage
-- Type "uci" for the UCI protocol(not recommended for direct use, usually used by a chess GUI)
-    - Protocol is explained [here](https://www.wbec-ridderkerk.nl/html/UCIProtocol.html)
-- Type "cmdline" for the CLI protocol(Mainly for convenience in certain situations)
-    - Protocol is explained below
 
-Command Line Protocol(for debugging/convenience)
+<div id="command-line-protocol"></div>
+
+## Command Line Protocol
 - `"position" {"fen" | "startpos"} [fenString]`
     - Set the board position to the starting position or the fenString
 - `"print"`
@@ -46,12 +121,15 @@ Command Line Protocol(for debugging/convenience)
 - `"eval"`
     - Prints the static evaluation of the position
 - `"qeval"`
-    - Prints the quiescence evaluation of the position
-- `"search" <depth>`
-    - Performs an iterative deepening search up to depth
-    - Prints out the evaluation and PV of each depth
-    - Prints out search statistics
-    - WARNING: Search time increases exponentially with depth
+    - Prints the quiescence search evaluation of the position
+    - Currently not working
+- `"search" "depth" <depth>`
+- `"search" "time" <time>`
+- `"search" "infinite"`
+    - Performs an iterative deepening search up to depth, until time time, or until interrupted
+    - Prints out the evaluation, node count, and PV of each depth
+- `"stop"`
+    - Stops the search
 - `"tests"`
     - Runs test suite
     - Currently, only perft tests are run
@@ -63,50 +141,3 @@ Command Line Protocol(for debugging/convenience)
     - Returns all the moves in the opening book
     - Opening book is currently hardcoded to "Sirius/res/gaviota_trim.pgn"
     - Prints "No moves in book found" if position is not in book
-
-Non-standard UCI commands
-- `"d"`
-    - Prints a string representation of the board from white's perspective
-- `"bench" <depth>`
-    - Runs an <depth> depth search on a set of internal benchmark positions and prints out the number of nodes and the time token.
-
-Features
-- Board representation
-    - BitBoards
-    - Mailbox 0x88
-    - Zobrist hashing
-    - Packed 16 bit Move Representation
-    - Static Exchange Evaluation
-- Move Generation
-    - Magic Bitboards for sliding pieces
-    - Legal move generation
-- Evaluation
-    - Tapered Evaluation
-    - Material
-    - Piece Square Tables
-    - Tuning via Texel's Tuning Method
-- Search
-    - Fail-soft Alpha-Beta Pruning
-    - PV Collection(pv list on stack)
-    - Iterative Deepening
-    - Aspiration Windows
-    - Move Ordering
-        - TT Move Ordering
-        - MVV LVA
-        - Killer Moves Heuristic
-        - History Heuristic
-    - Quiescence Search
-        - Captures Only
-        - SEE Pruning
-    - Transposition Table
-        - 4 entries per bucket
-        - Always replace least depth
-    - Selectivity
-        - Check Extension
-        - Mate Distance Pruning
-        - Principal Variation Search(PVS)
-        - Reverse Futility Pruning
-        - Null Move Pruning
-        - Futility Pruning
-        - Late Move Reductions
-        - SEE pruning
