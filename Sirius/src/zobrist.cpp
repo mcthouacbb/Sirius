@@ -1,6 +1,7 @@
 #include "zobrist.h"
 #include "prng.h"
 #include <iostream>
+#include <array>
 
 #include <bitset>
 
@@ -8,9 +9,9 @@ namespace zobrist
 {
 
 uint64_t blackToMove;
-uint64_t pieceSquares[2][6][64];
-uint64_t castlingRights[16];
-uint64_t epFiles[8];
+std::array<std::array<std::array<uint64_t, 64>, 6>, 2> pieceSquares;
+std::array<uint64_t, 16> castlingRights;
+std::array<uint64_t, 8> epFiles;
 
 void init()
 {

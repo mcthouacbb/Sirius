@@ -1,6 +1,7 @@
 #pragma once
 
 #include "board.h"
+#include <array>
 
 struct ExtMove
 {
@@ -17,12 +18,12 @@ public:
     static constexpr int CAPTURE_SCORE = 65560;
 
     MoveOrdering(const Board& board, Move* begin, Move* end, Move hashMove);
-    MoveOrdering(const Board& board, Move* begin, Move* end, Move hashMove, Move (&killers)[2], int (&history)[4096]);
+    MoveOrdering(const Board& board, Move* begin, Move* end, Move hashMove, std::array<Move, 2>& killers, std::array<int, 4096>& history);
 
     ExtMove selectMove(uint32_t index);
 private:
 
     Move* m_Moves;
     uint32_t m_Size;
-    int m_MoveScores[256];
+    std::array<int, 256> m_MoveScores;;
 };

@@ -205,7 +205,7 @@ void testSEE()
 struct PerftTest
 {
     std::string fen;
-    uint64_t results[6];
+    std::array<uint64_t, 6> results;
 };
 
 void runTests(Board& board, bool fast)
@@ -283,7 +283,7 @@ void runTests(Board& board, bool fast)
 
 void testSANFind(const Board& board, Move* begin, Move* end, int len)
 {
-    static constexpr char chars[25] = {
+    static constexpr std::array<char, 25> chars = {
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
         '1', '2', '3', '4', '5', '6', '7', '8',
         'K', 'Q', 'R', 'B', 'N', 'q', 'r', 'n',

@@ -3,7 +3,7 @@
 namespace eval
 {
 
-const int PHASE_WEIGHTS[] = {
+constexpr int PHASE_WEIGHTS[] = {
     // none
     0,
     // pawn

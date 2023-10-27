@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <array>
 #include "defs.h"
 
 using TimePoint = std::chrono::steady_clock::time_point;
@@ -13,8 +14,8 @@ struct SearchLimits
 
     struct
     {
-        Duration timeLeft[2];
-        Duration increments[2];
+        std::array<Duration, 2> timeLeft;
+        std::array<Duration, 2> increments;
         bool enabled;
     } clock;
 };

@@ -24,7 +24,10 @@ void Board::setToFen(const std::string_view& fen)
     m_State->lastRepetition = 0;
 
 
-    memset(m_Squares, 0, 64 + 72);
+    m_Squares = {};
+    m_Pieces = {};
+    m_Colors = {};
+    
     m_EvalState.init();
     m_State->zkey.value = 0;
     m_State->pawnKey.value = 0;
@@ -172,8 +175,10 @@ void Board::setToEpd(const std::string_view& epd)
     m_State->repetitions = 0;
     m_State->lastRepetition = 0;
 
-
-    memset(m_Squares, 0, 64 + 72);
+    m_Squares = {};
+    m_Pieces = {};
+    m_Colors = {};
+    
     m_EvalState.init();
     m_State->zkey.value = 0;
     m_State->pawnKey.value = 0;
@@ -315,7 +320,9 @@ done:
 
 void Board::setState(const Board& other, BoardState& currState, BoardState& rootState)
 {
-    memcpy(m_Squares, other.m_Squares, 64 + 72);
+    m_Squares = other.m_Squares;
+    m_Pieces = other.m_Pieces;
+    m_Colors = other.m_Colors;
     m_SideToMove = other.m_SideToMove;
     m_EvalState = other.m_EvalState;
     m_GamePly = other.m_GamePly;
@@ -323,7 +330,7 @@ void Board::setState(const Board& other, BoardState& currState, BoardState& root
     m_RootState = &rootState;
 }
 
-constexpr char pieceChars[16] = {
+constexpr std::array<char, 16> pieceChars = {
     ' ', 'P', 'N', 'B', 'R', 'Q', 'K', '#',
     ' ', 'p', 'n', 'b', 'r', 'q', 'k', '&'
 };

@@ -45,7 +45,7 @@ MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end, Move hash
     }
 }
 
-MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end, Move hashMove, Move (&killers)[2], int (&history)[4096])
+MoveOrdering::MoveOrdering(const Board& board, Move* begin, Move* end, Move hashMove, std::array<Move, 2>& killers, std::array<int, 4096>& history)
     : m_Moves(begin), m_Size(static_cast<uint32_t>(end - begin))
 {
     for (uint32_t i = 0; i < m_Size; i++)

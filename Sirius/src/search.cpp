@@ -26,7 +26,7 @@ void updateHistory(int& history, int bonus)
 
 }
 
-int lmrTable[64][64];
+std::array<std::array<int, 64>, 64> lmrTable;
 
 void init()
 {
@@ -48,7 +48,7 @@ SearchThread::SearchThread(uint32_t id, std::thread&& thread)
 
 void SearchThread::reset()
 {
-    memset(history, 0, sizeof(history));
+    history = {};
     nodes = 0;
     rootPly = 0;
     checkCounter = TIME_CHECK_INTERVAL;
@@ -233,7 +233,7 @@ void Search::threadLoop(SearchThread& thread)
 int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
 {
     int maxDepth = std::min(thread.limits.maxDepth, MAX_PLY - 1);
-    Move pv[MAX_PLY + 1] = {};
+    std::array<Move, MAX_PLY + 1> pv = {};
     int score = 0;
 
     thread.reset();
@@ -243,11 +243,10 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
 
     for (int depth = 1; depth <= maxDepth; depth++)
     {
-        thread.plies[0].pv = pv;
+        thread.plies[0].pv = pv.data();
         int searchScore = aspWindows(thread, depth, score);
         if (m_ShouldStop)
             break;
-        memcpy(thread.pv, thread.plies[0].pv, thread.plies[0].pvLength * sizeof(Move));
         score = searchScore;
         if (report)
         {
@@ -255,8 +254,8 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
             info.nodes = thread.nodes;
             info.depth = depth;
             info.time = m_TimeMan.elapsed();
-            info.pvBegin = pv;
-            info.pvEnd = pv + thread.plies[0].pvLength;
+            info.pvBegin = pv.data();
+            info.pvEnd = pv.data() + thread.plies[0].pvLength;
             info.score = searchScore;
             if (report)
             {
@@ -413,8 +412,8 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
         thread.history[static_cast<int>(board.sideToMove())]
     );
 
-    Move childPV[MAX_PLY + 1];
-    searchPly[1].pv = childPV;
+    std::array<Move, MAX_PLY + 1> childPV;
+    searchPly[1].pv = childPV.data();
 
     searchPly->bestMove = Move();
 
@@ -563,8 +562,8 @@ int Search::qsearch(SearchThread& thread, SearchPly* searchPly, int alpha, int b
     if (rootPly >= MAX_PLY)
         return alpha;
 
-    Move childPV[MAX_PLY + 1];
-    searchPly[1].pv = childPV;
+    std::array<Move, MAX_PLY + 1> childPV;
+    searchPly[1].pv = childPV.data();
 
     Move captures[256];
     Move* end = genMoves<MoveGenType::CAPTURES>(board, captures);

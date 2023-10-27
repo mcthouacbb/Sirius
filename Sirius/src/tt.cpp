@@ -6,23 +6,16 @@
 #include <iostream>
 
 TT::TT(size_t size)
-    : m_Size(size)
+    : m_Buckets(size)
 {
     m_CurrAge = 0;
-    m_Buckets = new TTBucket[size]();
-}
-
-TT::~TT()
-{
-    delete[] m_Buckets;
 }
 
 // I'll change this later
 void TT::resize(int mb)
 {
     size_t size = mb * 1024 * 1024 / sizeof(TTBucket);
-    m_Buckets = new TTBucket[size]();
-    m_Size = size;
+    m_Buckets.resize(size, {});
     m_CurrAge = 0;
 }
 
@@ -46,7 +39,7 @@ inline int storeScore(int score, int ply)
 
 TTBucket* TT::probe(ZKey key, int depth, int ply, int alpha, int beta, int& score, Move& move)
 {
-    TTBucket& bucket = m_Buckets[key.value % m_Size];
+    TTBucket& bucket = m_Buckets[key.value % m_Buckets.size()];
     TTEntry* entry = nullptr;
     uint16_t key16 = key.value >> 48;
     for (int i = 0; i < ENTRY_COUNT; i++)
