@@ -57,7 +57,6 @@ if("${SIRIUS_EXE_EXTENSION}" STREQUAL "")
     message("none")
     set(SIRIUS_EXE_NAME "sirius")
 else()
-    message("${SIRIUS_EXE_EXTENSION} bruh")
     set(SIRIUS_EXE_NAME "sirius-${SIRIUS_EXE_EXTENSION}")
 endif()
 

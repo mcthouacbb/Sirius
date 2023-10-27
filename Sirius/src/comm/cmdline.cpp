@@ -14,7 +14,7 @@ namespace comm
 
 CmdLine::CmdLine()
 {
-    std::cout << "Sirius v" << SIRIUS_VERSION_STRING << std::endl;
+    std::cout << "Sirius " << SIRIUS_VERSION_STRING << std::endl;
 
     std::ifstream openings("res/gaviota_trim.pgn");
     if (openings.is_open())
