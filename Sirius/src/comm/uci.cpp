@@ -154,7 +154,7 @@ UCI::Command UCI::getCommand(const std::string& command) const
 void UCI::uciCommand() const
 {
     auto lock = lockStdout();
-    std::cout << "id name Sirius v" << SIRIUS_VERSION_STRING << std::endl;
+    std::cout << "id name Sirius " << SIRIUS_VERSION_STRING << std::endl;
     std::cout << "id author AspectOfTheNoob" << std::endl;
     std::cout << "option name Hash type spin default 64 min 1 max 2048" << std::endl;
     // lol
