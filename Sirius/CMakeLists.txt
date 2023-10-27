@@ -16,7 +16,6 @@ set(SRCS
     "src/move_ordering.h"
     "src/movegen.cpp"
     "src/movegen.h"
-    "src/prng.h"
     "src/search.cpp"
     "src/search.h"
     "src/search_params.h"
@@ -50,6 +49,9 @@ set(SRCS
     "src/comm/move.h"
     "src/comm/uci.cpp"
     "src/comm/uci.h"
+
+    "src/util/static_vector.h"
+    "src/util/prng.h"
 )
 
 

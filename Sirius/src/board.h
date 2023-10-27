@@ -7,12 +7,13 @@
 
 #include <string_view>
 #include <string>
+#include <array>
 
 struct CheckInfo
 {
     BitBoard checkers;
-    BitBoard pinners[2];
-    BitBoard blockers[2];
+    std::array<BitBoard, 2> pinners;
+    std::array<BitBoard, 2> blockers;
 };
 
 struct BoardState
@@ -106,13 +107,13 @@ private:
 
     int seePieceValue(PieceType type) const;
 
-    static constexpr int SEE_PIECE_VALUES[6] = {
+    static constexpr std::array<int, 6> SEE_PIECE_VALUES = {
         100, 450, 450, 675, 1300, 0
     };
 
-    Piece m_Squares[64];
-    BitBoard m_Pieces[7];
-    BitBoard m_Colors[2];
+    std::array<Piece, 64> m_Squares;
+    std::array<BitBoard, 7> m_Pieces;
+    std::array<BitBoard, 2> m_Colors;
 
     Color m_SideToMove;
 

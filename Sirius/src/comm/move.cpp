@@ -6,7 +6,7 @@ namespace comm
 const char promoChars[4] = {'N', 'B', 'R', 'Q'};
 const char pieceChars[5] = {'N', 'B', 'R', 'Q', 'K'};
 
-MoveStrFind findMoveFromPCN(const Move* begin, const Move* end, const char* moveStr)
+MoveStrFind findMoveFromPCN(const MoveList& legalMoves, const char* moveStr)
 {
     int src = (moveStr[0] - 'a') + ((moveStr[1] - '1') << 3);
     int dst = (moveStr[2] - 'a') + ((moveStr[3] - '1') << 3);
@@ -33,25 +33,26 @@ MoveStrFind findMoveFromPCN(const Move* begin, const Move* end, const char* move
             break;
     }
 
-    for (const Move* it = begin; it != end; it++)
+    for (size_t i = 0; i < legalMoves.size(); i++)
     {
-        if (it->srcPos() == src && it->dstPos() == dst)
+        Move move = legalMoves[i];
+        if (move.srcPos() == src && move.dstPos() == dst)
         {
             if (isPromotion)
             {
-                if (it->type() == MoveType::PROMOTION && it->promotion() == promotion)
-                    return {it, moveStr + 4 + isPromotion};
+                if (move.type() == MoveType::PROMOTION && move.promotion() == promotion)
+                    return {MoveStrFind::Result::FOUND, move, 5};
             }
             else
             {
-                return {it, moveStr + 4 + isPromotion};
+                return {MoveStrFind::Result::FOUND, move, 4};
             }
         }
     }
-    return {nullptr, moveStr + 4 + isPromotion};
+    return {MoveStrFind::Result::NOT_FOUND, Move(), 4 + isPromotion};
 }
 
-MoveStrFind findMoveFromSAN(const Board& board, const Move* begin, const Move* end, const char* moveStr)
+MoveStrFind findMoveFromSAN(const Board& board, const MoveList& legalMoves, const char* moveStr)
 {
     int fromFile = -1;
     int fromRank = -1;
@@ -65,7 +66,7 @@ MoveStrFind findMoveFromSAN(const Board& board, const Move* begin, const Move* e
     int moveLen = -1;
 
     if (moveStr[0] == '\0')
-        return {nullptr, moveStr};
+        return {MoveStrFind::Result::INVALID, Move(), 0};
 
     switch (moveStr[0])
     {
@@ -105,41 +106,43 @@ MoveStrFind findMoveFromSAN(const Board& board, const Move* begin, const Move* e
             break;
         case 'O':
             if (moveStr[1] != '-')
-                return {nullptr, moveStr};
+                return {MoveStrFind::Result::INVALID, Move(), 0};
             if (moveStr[2] != 'O')
-                return {nullptr, moveStr};
+                return {MoveStrFind::Result::INVALID, Move(), 0};
             if (moveStr[3] != '-')
             {
-                for (const Move* it = begin; it != end; it++)
+                for (size_t i = 0; i < legalMoves.size(); i++)
                 {
-                    if (it->type() == MoveType::CASTLE && it->dstPos() > it->srcPos())
+                    Move move = legalMoves[i];
+                    if (move.type() == MoveType::CASTLE && move.dstPos() > move.srcPos())
                     {
-                        return {it, moveStr + 3 + (moveStr[3] == '+' || moveStr[3] == '#')};
+                        return {MoveStrFind::Result::FOUND, move, 3 + (moveStr[3] == '+' || moveStr[3] == '#')};
                     }
                 }
-                return {end, moveStr + 3};
+                return {MoveStrFind::Result::NOT_FOUND, Move(), 3};
             }
             else
             {
                 if (moveStr[4] != 'O')
-                    return {nullptr, moveStr};
-                for (const Move* it = begin; it != end; it++)
+                    return {MoveStrFind::Result::INVALID, Move(), 0};
+                for (size_t i = 0; i < legalMoves.size(); i++)
                 {
-                    if (it->type() == MoveType::CASTLE && it->dstPos() < it->srcPos())
+                    Move move = legalMoves[i];
+                    if (move.type() == MoveType::CASTLE && move.dstPos() < move.srcPos())
                     {
-                        return {it, moveStr + 5 + (moveStr[5] == '+' || moveStr[5] == '#')};
+                        return {MoveStrFind::Result::FOUND, move, 5 + (moveStr[5] == '+' || moveStr[5] == '#')};
                     }
                 }
-                return {end, moveStr + 5};
+                return {MoveStrFind::Result::NOT_FOUND, Move(), 5};
             }
         default:
-            return {nullptr, moveStr};
+            return {MoveStrFind::Result::INVALID, Move(), 0};
     }
 
     if (isCapture)
     {
         if (moveStr[2] < 'a' || moveStr[2] > 'h' || moveStr[3] < '1' || moveStr[3] > '8')
-            return {nullptr, moveStr};
+            return {MoveStrFind::Result::INVALID, Move(), 0};
         toFile = moveStr[2] - 'a';
         toRank = moveStr[3] - '1';
         int i = 4;
@@ -170,7 +173,7 @@ MoveStrFind findMoveFromSAN(const Board& board, const Move* begin, const Move* e
     else
     {
         if (moveStr[1] < '1' || moveStr[1] > '8')
-            return {nullptr, moveStr};
+            return {MoveStrFind::Result::INVALID, Move(), 0};
         toRank = moveStr[1] - '1';
         int i = 2;
         if (moveStr[i] == '=')
@@ -200,14 +203,14 @@ MoveStrFind findMoveFromSAN(const Board& board, const Move* begin, const Move* e
     goto search_moves;
 piece_moves:
     if (moveStr[1] == '\0')
-        return {nullptr, moveStr};
+        return {MoveStrFind::Result::INVALID, Move(), 0};
     if (moveStr[2] == '\0')
-        return {nullptr, moveStr};
+        return {MoveStrFind::Result::INVALID, Move(), 0};
     if (moveStr[1] == 'x')
     {
         isCapture = true;
         if (moveStr[2] < 'a' || moveStr[2] > 'h' || moveStr[3] < '1' || moveStr[3] > '8')
-            return {nullptr, moveStr};
+            return {MoveStrFind::Result::INVALID, Move(), 0};
         toFile = moveStr[2] - 'a';
         toRank = moveStr[3] - '1';
         moveLen = 4;
@@ -238,10 +241,10 @@ piece_moves:
                 fromRank = moveStr[1] - '1';
                 break;
             default:
-                return {nullptr, moveStr};
+                return {MoveStrFind::Result::INVALID, Move(), 0};
         }
         if (moveStr[3] < 'a' || moveStr[3] > 'h' || moveStr[4] < '1' || moveStr[4] > '8')
-            return {nullptr, moveStr};
+            return {MoveStrFind::Result::INVALID, Move(), 0};
         toFile = moveStr[3] - 'a';
         toRank = moveStr[4] - '1';
         moveLen = 5;
@@ -249,7 +252,7 @@ piece_moves:
     else if (moveStr[3] == 'x')
     {
         if (moveStr[4] < 'a' || moveStr[4] > 'h' || moveStr[5] < '1' || moveStr[5] > '8')
-            return {nullptr, moveStr};
+            return {MoveStrFind::Result::INVALID, Move(), 0};
 
         isCapture = true;
         fromFile = moveStr[1] - 'a';
@@ -286,7 +289,7 @@ piece_moves:
                 rank1 = moveStr[1] - '1';
                 break;
             default:
-                return {nullptr, moveStr};
+                return {MoveStrFind::Result::INVALID, Move(), 0};
         }
 
         if (file1 != -1)
@@ -314,13 +317,13 @@ piece_moves:
                     rank1 = moveStr[2] - '1';
                     break;
                 default:
-                    return {nullptr, moveStr};
+                    return {MoveStrFind::Result::INVALID, Move(), 0};
             }
 
             if (toFile != -1)
             {
                 if (moveStr[3] < '1' || moveStr[3] > '8')
-                    return {nullptr, moveStr};
+                    return {MoveStrFind::Result::INVALID, Move(), 0};
                 fromFile = file1;
                 toRank = moveStr[3] - '1';
                 moveLen = 4;
@@ -330,7 +333,7 @@ piece_moves:
                 if (moveStr[3] >= 'a' && moveStr[3] <= 'h')
                 {
                     if (moveStr[4] < '1' || moveStr[4] > '8')
-                        return {nullptr, moveStr};
+                        return {MoveStrFind::Result::INVALID, Move(), 0};
                     fromFile = file1;
                     fromRank = rank1;
 
@@ -350,7 +353,7 @@ piece_moves:
         {
             fromRank = rank1;
             if (moveStr[2] < 'a' || moveStr[2] > 'h' || moveStr[3] < '1' || moveStr[3] > '8')
-                return {nullptr, moveStr};
+                return {MoveStrFind::Result::INVALID, Move(), 0};
             toFile = moveStr[2] - 'a';
             toRank = moveStr[3] - '1';
             moveLen = 4;
@@ -365,13 +368,13 @@ search_moves:
     
     if (!isCapture && board.getPieceAt(toSquare) != PIECE_NONE)
     {
-        return {end, moveStr + moveLen};
+        return {MoveStrFind::Result::NOT_FOUND, Move(), moveLen};
     }
 
     int pawnOffset = (board.sideToMove() == Color::WHITE) ? -8 : 8;
 
     const Move* match = nullptr;
-    for (const Move* it = begin; it != end; it++)
+    for (const Move* it = legalMoves.data(); it != legalMoves.data() + legalMoves.size(); it++)
     {
         switch (it->type())
         {
@@ -406,14 +409,14 @@ search_moves:
             continue;
 
         if (match)
-            return {end + 1, moveStr + moveLen};
+            return {MoveStrFind::Result::AMBIGUOUS, Move(), moveLen};
         match = it;
     }
 
     if (match)
-        return {match, moveStr + moveLen};
+        return {MoveStrFind::Result::FOUND, *match, moveLen};
     else
-        return {end, moveStr + moveLen};
+        return {MoveStrFind::Result::NOT_FOUND, Move(), moveLen};
 }
 
 
@@ -431,10 +434,10 @@ std::string convMoveToPCN(Move move)
     return str;
 }
 
-bool isAmbiguous(const Board& board, const Move* begin, const Move* end, PieceType piece, int toSquare, int fromFile, int fromRank)
+bool isAmbiguous(const Board& board, const MoveList& legalMoves, PieceType piece, int toSquare, int fromFile, int fromRank)
 {
     const Move* match = nullptr;
-    for (const Move* it = begin; it != end; it++)
+    for (const Move* it = legalMoves.data(); it != legalMoves.data() + legalMoves.size(); it++)
     {
         int srcPos = it->srcPos();
         int dstPos = it->dstPos();
@@ -459,7 +462,7 @@ bool isAmbiguous(const Board& board, const Move* begin, const Move* end, PieceTy
     return false;
 }
 
-std::string convMoveToSAN(const Board& board, const Move* begin, const Move* end, Move move)
+std::string convMoveToSAN(const Board& board, const MoveList& legalMoves, Move move)
 {
     if (move.type() == MoveType::CASTLE)
     {
@@ -505,7 +508,7 @@ std::string convMoveToSAN(const Board& board, const Move* begin, const Move* end
         int srcPos = move.srcPos();
         int dstPos = move.dstPos();
 
-        if (!isAmbiguous(board, begin, end, piece, dstPos, -1, -1))
+        if (!isAmbiguous(board, legalMoves, piece, dstPos, -1, -1))
         {
             std::string str(3 + isCapture, ' ');
             str[0] = pceChar;
@@ -518,7 +521,7 @@ std::string convMoveToSAN(const Board& board, const Move* begin, const Move* end
             return str;
         }
 
-        if (!isAmbiguous(board, begin, end, piece, dstPos, srcPos & 7, -1))
+        if (!isAmbiguous(board, legalMoves, piece, dstPos, srcPos & 7, -1))
         {
             std::string str(4 + isCapture, ' ');
             str[0] = pceChar;
@@ -532,7 +535,7 @@ std::string convMoveToSAN(const Board& board, const Move* begin, const Move* end
             return str;
         }
 
-        if (!isAmbiguous(board, begin, end, piece, dstPos, srcPos >> 3, -1))
+        if (!isAmbiguous(board, legalMoves, piece, dstPos, srcPos >> 3, -1))
         {
             std::string str(4 + isCapture, ' ');
             str[0] = pceChar;

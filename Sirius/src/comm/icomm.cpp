@@ -1,5 +1,4 @@
 #include "icomm.h"
-#include "../movegen.h"
 
 namespace comm
 {
@@ -41,8 +40,8 @@ void IComm::unmakeMove()
 
 void IComm::calcLegalMoves()
 {
-    Move* end = genMoves<MoveGenType::LEGAL>(m_Board, m_LegalMoves);
-    m_MoveCount = static_cast<uint32_t>(end - m_LegalMoves);
+    m_LegalMoves.clear();
+    genMoves<MoveGenType::LEGAL>(m_Board, m_LegalMoves);
 }
 
 std::unique_lock<std::mutex> IComm::lockStdout() const

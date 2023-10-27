@@ -13,39 +13,38 @@ void Book::loadFromPGN(const char* pgn)
     BoardState rootState;
     Board board(rootState);
 
-    Move moves[256];
-    Move* end;
     std::deque<BoardState> prevStates;
     while (true)
     {
         while (*currChar != '*')
         {
-            end = genMoves<MoveGenType::LEGAL>(board, moves);
+            MoveList moves;
+            genMoves<MoveGenType::LEGAL>(board, moves);
 
-            comm::MoveStrFind find = comm::findMoveFromSAN(board, moves, end, currChar);
-            if (!find.move)
+            comm::MoveStrFind find = comm::findMoveFromSAN(board, moves, currChar);
+            if (find.result == comm::MoveStrFind::Result::INVALID)
                 throw std::runtime_error("Invalid");
-            if (find.move == end)
+            if (find.result == comm::MoveStrFind::Result::NOT_FOUND)
                 throw std::runtime_error("Not found");
-            if (find.move == end + 1)
+            if (find.result == comm::MoveStrFind::Result::AMBIGUOUS)
                 throw std::runtime_error("Ambiguous");
 
             auto it = m_Entries.find(board.zkey().value);
 
             if (it != m_Entries.end())
             {
-                if (std::find(it->second.begin(), it->second.end(), BookEntry{*find.move}) == it->second.end())
-                    it->second.push_back({*find.move});
+                if (std::find(it->second.begin(), it->second.end(), BookEntry{find.move}) == it->second.end())
+                    it->second.push_back({find.move});
             }
             else
             {
-                m_Entries.insert({board.zkey().value, {{*find.move}}});
+                m_Entries.insert({board.zkey().value, {{find.move}}});
             }
 
             prevStates.push_back({});
-            board.makeMove(*find.move, prevStates.back());
+            board.makeMove(find.move, prevStates.back());
 
-            currChar = find.end;
+            currChar += find.len;
 
             while (isdigit(*currChar) || isspace(*currChar) || *currChar == '.' || *currChar == '+')
                 currChar++;

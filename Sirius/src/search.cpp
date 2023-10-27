@@ -26,7 +26,7 @@ void updateHistory(int& history, int bonus)
 
 }
 
-int lmrTable[64][64];
+std::array<std::array<int, 64>, 64> lmrTable;
 
 void init()
 {
@@ -48,7 +48,7 @@ SearchThread::SearchThread(uint32_t id, std::thread&& thread)
 
 void SearchThread::reset()
 {
-    memset(history, 0, sizeof(history));
+    history = {};
     nodes = 0;
     rootPly = 0;
     checkCounter = TIME_CHECK_INTERVAL;
@@ -233,7 +233,7 @@ void Search::threadLoop(SearchThread& thread)
 int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
 {
     int maxDepth = std::min(thread.limits.maxDepth, MAX_PLY - 1);
-    Move pv[MAX_PLY + 1] = {};
+    std::array<Move, MAX_PLY + 1> pv = {};
     int score = 0;
 
     thread.reset();
@@ -243,11 +243,10 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
 
     for (int depth = 1; depth <= maxDepth; depth++)
     {
-        thread.plies[0].pv = pv;
+        thread.plies[0].pv = pv.data();
         int searchScore = aspWindows(thread, depth, score);
         if (m_ShouldStop)
             break;
-        memcpy(thread.pv, thread.plies[0].pv, thread.plies[0].pvLength * sizeof(Move));
         score = searchScore;
         if (report)
         {
@@ -255,8 +254,8 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
             info.nodes = thread.nodes;
             info.depth = depth;
             info.time = m_TimeMan.elapsed();
-            info.pvBegin = pv;
-            info.pvEnd = pv + thread.plies[0].pvLength;
+            info.pvBegin = pv.data();
+            info.pvEnd = pv.data() + thread.plies[0].pvLength;
             info.score = searchScore;
             if (report)
             {
@@ -346,7 +345,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     beta = std::min(beta, SCORE_MATE - rootPly);
     if (alpha >= beta)
         return alpha;
-    
+
     searchPly->pvLength = 0;
 
     bool root = rootPly == 0;
@@ -361,12 +360,22 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     if (depth <= 0)
         return qsearch(thread, searchPly, alpha, beta);
 
-    int hashScore = INT_MIN;
-    Move hashMove = Move();
-    TTBucket* bucket = m_TT.probe(board.zkey(), depth, rootPly, alpha, beta, hashScore, hashMove);
+    int ttScore;
+    Move ttMove = Move();
+    int ttDepth;
+    TTEntry::Bound ttBound;
+    bool ttHit;
+    TTBucket* bucket = m_TT.probe(board.zkey(), ttHit, rootPly, ttScore, ttMove, ttDepth, ttBound);
 
-    if (hashScore != INT_MIN && !isPV)
-        return hashScore;
+    if (ttHit)
+    {
+        if (!isPV && ttDepth >= depth && (
+            ttBound == TTEntry::Bound::EXACT ||
+            (ttBound == TTEntry::Bound::LOWER_BOUND && ttScore >= beta) ||
+            (ttBound == TTEntry::Bound::UPPER_BOUND && ttScore <= alpha)
+        ))
+            return ttScore;
+    }
 
     int staticEval = eval::evaluate(board);
     BoardState state;
@@ -395,10 +404,10 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
         }
     }
 
-    Move moves[256];
-    Move* end = genMoves<MoveGenType::LEGAL>(board, moves);
+    MoveList moves;
+    genMoves<MoveGenType::LEGAL>(board, moves);
 
-    if (moves == end)
+    if (moves.size() == 0)
     {
         if (inCheck)
             return -SCORE_MATE + rootPly;
@@ -407,25 +416,23 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     MoveOrdering ordering(
         board,
         moves,
-        end,
-        hashMove,
+        ttMove,
         searchPly->killers,
         thread.history[static_cast<int>(board.sideToMove())]
     );
 
-    Move childPV[MAX_PLY + 1];
-    searchPly[1].pv = childPV;
+    std::array<Move, MAX_PLY + 1> childPV;
+    searchPly[1].pv = childPV.data();
 
     searchPly->bestMove = Move();
 
     TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
 
-    Move quietsTried[256];
-    int numQuietsTried = 0;
+    MoveList quietsTried;
 
     int bestScore = -SCORE_MAX;
 
-    for (int movesPlayed = 0; movesPlayed < end - moves; movesPlayed++)
+    for (int movesPlayed = 0; movesPlayed < static_cast<int>(moves.size()); movesPlayed++)
     {
         auto [move, moveScore] = ordering.selectMove(static_cast<uint32_t>(movesPlayed));
         bool isCapture = board.getPieceAt(move.dstPos()) != PIECE_NONE;
@@ -459,7 +466,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
         board.makeMove(move, state);
         bool givesCheck = board.checkers() != 0;
         if (!isPromotion && !isCapture)
-            quietsTried[numQuietsTried++] = move;
+            quietsTried.push_back(move);
         rootPly++;
 
         int reduction = 0;
@@ -506,7 +513,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
                     // formula from akimbo
                     int historyBonus = std::min(16 * depth * depth, 1200);
                     updateHistory(history[static_cast<int>(board.sideToMove())][move.fromTo()], historyBonus);
-                    for (int j = 0; j < numQuietsTried - 1; j++)
+                    for (int j = 0; j < static_cast<int>(quietsTried.size() - 1); j++)
                     {
                         updateHistory(history[static_cast<int>(board.sideToMove())][quietsTried[j].fromTo()], -historyBonus);
                     }
@@ -543,13 +550,22 @@ int Search::qsearch(SearchThread& thread, SearchPly* searchPly, int alpha, int b
     if (eval::isImmediateDraw(board))
         return SCORE_DRAW;
 
-    int hashScore = INT_MIN;
-    Move hashMove = Move();
+    int ttScore;
+    Move ttMove = Move();
+    int ttDepth;
+    TTEntry::Bound ttBound;
+    bool ttHit;
     // qsearch is always depth 0
-    TTBucket* bucket = m_TT.probe(board.zkey(), 0, rootPly, alpha, beta, hashScore, hashMove);
+    TTBucket* bucket = m_TT.probe(board.zkey(), ttHit, rootPly, ttScore, ttMove, ttDepth, ttBound);
 
-    if (hashScore != INT_MIN)
-        return hashScore;
+    if (ttHit)
+    {
+        if (ttBound == TTEntry::Bound::EXACT ||
+            (ttBound == TTEntry::Bound::LOWER_BOUND && ttScore >= beta) ||
+            (ttBound == TTEntry::Bound::UPPER_BOUND && ttScore <= alpha)
+        )
+            return ttScore;
+    }
 
     int eval = eval::evaluate(board);
 
@@ -563,18 +579,18 @@ int Search::qsearch(SearchThread& thread, SearchPly* searchPly, int alpha, int b
     if (rootPly >= MAX_PLY)
         return alpha;
 
-    Move childPV[MAX_PLY + 1];
-    searchPly[1].pv = childPV;
+    std::array<Move, MAX_PLY + 1> childPV;
+    searchPly[1].pv = childPV.data();
 
-    Move captures[256];
-    Move* end = genMoves<MoveGenType::CAPTURES>(board, captures);
+    MoveList captures;
+    genMoves<MoveGenType::CAPTURES>(board, captures);
 
-    MoveOrdering ordering(board, captures, end, hashMove);
+    MoveOrdering ordering(board, captures, ttMove);
 
     BoardState state;
     TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
     searchPly->bestMove = Move();
-    for (uint32_t movesPlayed = 0; movesPlayed < end - captures; movesPlayed++)
+    for (uint32_t movesPlayed = 0; movesPlayed < captures.size(); movesPlayed++)
     {
         auto [move, moveScore] = ordering.selectMove(movesPlayed);
         if (!board.see_margin(move, 0))

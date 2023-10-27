@@ -4,6 +4,9 @@
 #include "defs.h"
 
 #include <cstring>
+#include <vector>
+#include <array>
+#include <algorithm>
 
 struct TTEntry
 {
@@ -44,7 +47,7 @@ static constexpr int ENTRY_COUNT = 4;
 
 struct alignas(32) TTBucket
 {
-    TTEntry entries[ENTRY_COUNT];
+    std::array<TTEntry, ENTRY_COUNT> entries;
 };
 
 class TT
@@ -53,16 +56,17 @@ public:
     static constexpr int GEN_CYCLE_LENGTH = 1 << 6;
 
     TT(size_t size);
-    ~TT();
+    ~TT() = default;
 
     void resize(int mb);
 
     TT(const TT&) = delete;
     TT& operator=(const TT&) = delete;
 
-    TTBucket* probe(ZKey key, int depth, int ply, int alpha, int beta, int& score, Move& move);
+    TTBucket* probe(ZKey key, bool& found, int ply, int& score, Move& move, int& depth, TTEntry::Bound& bound);
     void store(TTBucket* bucket, ZKey key, int depth, int ply, int score, Move move, TTEntry::Bound type);
     int quality(int age, int depth) const;
+    uint32_t index(uint64_t key) const;
 
     void incAge()
     {
@@ -71,11 +75,10 @@ public:
 
     void reset()
     {
-        memset(m_Buckets, 0, m_Size * sizeof(TTBucket));
+        std::fill(m_Buckets.begin(), m_Buckets.end(), TTBucket{});
         m_CurrAge = 0;
     }
 private:
-    TTBucket* m_Buckets;
-    size_t m_Size;
+    std::vector<TTBucket> m_Buckets;
     int m_CurrAge;
 };
