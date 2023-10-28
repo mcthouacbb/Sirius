@@ -392,7 +392,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
             BitBoard nonPawns = board.getColor(board.sideToMove()) ^ board.getPieces(board.sideToMove(), PieceType::PAWN);
             if ((nonPawns & (nonPawns - 1)) && depth >= NMP_MIN_DEPTH)
             {
-                int r = NMP_BASE_REDUCTION;
+                int r = NMP_BASE_REDUCTION + depth / NMP_DEPTH_REDUCTION;
                 board.makeNullMove(state);
                 rootPly++;
                 int nullScore = -search(thread, depth - r, searchPly + 1, -beta, -beta + 1, false);
