@@ -9,7 +9,7 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
 
 | Version | Release Date | [CCRL Blitz](https://ccrl.chessdom.com/ccrl/404/) | [CCRL 40/15](https://ccrl.chessdom.com/ccrl/4040/) |
 | --- | --- | --- | --- |
-| 5.0 | N/A | N/A | N/A |
+| 5.0 | 2023-10-27 | N/A | N/A |
 
 
 ## Features
