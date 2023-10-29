@@ -493,7 +493,10 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
         {
             score = -search(thread, newDepth - reduction, searchPly + 1, -(alpha + 1), -alpha, false);
 
-            if (score > alpha && (isPV || reduction > 0))
+            if (score > alpha && reduction > 0)
+                score = -search(thread, newDepth, searchPly + 1, -(alpha + 1), -alpha, false);
+
+            if (score > alpha && isPV)
                 score = -search(thread, newDepth, searchPly + 1, -beta, -alpha, true);
         }
         rootPly--;
