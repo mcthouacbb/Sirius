@@ -10,6 +10,8 @@ struct ExtMove
     int score;
 };
 
+bool moveIsQuiet(const Board& board, Move move);
+
 class MoveOrdering
 {
 public:
