@@ -376,6 +376,8 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
         ))
             return ttScore;
     }
+    else if (depth >= MIN_IIR_DEPTH)
+        depth--;
 
     int staticEval = eval::evaluate(board);
     BoardState state;
