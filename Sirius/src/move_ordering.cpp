@@ -8,7 +8,10 @@ namespace
 int mvvLva(const Board& board, Move move)
 {
     int srcPiece = static_cast<int>(getPieceType(board.getPieceAt(move.srcPos())));
-    int dstPiece = static_cast<int>(getPieceType(board.getPieceAt(move.dstPos())));
+    int dstPiece = static_cast<int>(move.type() == MoveType::ENPASSANT ?
+        PieceType::PAWN :
+        getPieceType(board.getPieceAt(move.dstPos()))
+    );
     return 10 * dstPiece - srcPiece + 6;
 }
 
@@ -26,6 +29,12 @@ bool moveIsQuiet(const Board& board, Move move)
 		board.getPieceAt(move.dstPos()) == PIECE_NONE;
 }
 
+bool moveIsCapture(const Board& board, Move move)
+{
+    return move.type() == MoveType::ENPASSANT ||
+        board.getPieceAt(move.dstPos()) != PIECE_NONE;
+}
+
 MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove)
     : m_Moves(moves)
 {
@@ -40,7 +49,7 @@ MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove)
             continue;
         }
 
-        bool isCapture = static_cast<bool>(board.getPieceAt(move.dstPos()));
+        bool isCapture = moveIsCapture(board, move);
         bool isPromotion = move.type() == MoveType::PROMOTION;
 
         if (isCapture)
@@ -66,7 +75,7 @@ MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, s
             continue;
         }
 
-        bool isCapture = static_cast<bool>(board.getPieceAt(move.dstPos()));
+        bool isCapture = moveIsCapture(board, move);
         bool isPromotion = move.type() == MoveType::PROMOTION;
 
         if (isCapture)

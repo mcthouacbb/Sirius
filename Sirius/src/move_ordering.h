@@ -11,6 +11,7 @@ struct ExtMove
 };
 
 bool moveIsQuiet(const Board& board, Move move);
+bool moveIsCapture(const Board& board, Move move);
 
 class MoveOrdering
 {
