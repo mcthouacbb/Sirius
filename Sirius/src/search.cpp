@@ -437,8 +437,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     for (int movesPlayed = 0; movesPlayed < static_cast<int>(moves.size()); movesPlayed++)
     {
         auto [move, moveScore] = ordering.selectMove(static_cast<uint32_t>(movesPlayed));
-        bool isCapture = board.getPieceAt(move.dstPos()) != PIECE_NONE;
-        bool isPromotion = move.type() == MoveType::PROMOTION;
+		bool quiet = moveIsQuiet(board, move);
         bool quietLosing = moveScore < MoveOrdering::KILLER_SCORE;
 
         int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
@@ -467,7 +466,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
         }
         board.makeMove(move, state);
         bool givesCheck = board.checkers() != 0;
-        if (!isPromotion && !isCapture)
+        if (quiet)
             quietsTried.push_back(move);
         rootPly++;
 
@@ -511,7 +510,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 
             if (bestScore >= beta)
             {
-                if (!isPromotion && !isCapture)
+                if (quiet)
                 {
                     storeKiller(searchPly, move);
 
