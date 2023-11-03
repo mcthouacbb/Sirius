@@ -245,7 +245,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
     {
         thread.plies[0].pv = pv.data();
         int searchScore = aspWindows(thread, depth, score);
-        if (m_ShouldStop)
+        if (m_ShouldStop || m_TimeMan.stopSoft(thread.limits))
             break;
         score = searchScore;
         if (report)
@@ -324,7 +324,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     if (--thread.checkCounter == 0)
     {
         thread.checkCounter = TIME_CHECK_INTERVAL;
-        if (m_TimeMan.shouldStop(thread.limits))
+        if (m_TimeMan.stopHard(thread.limits))
         {
             m_ShouldStop = true;
             return alpha;
