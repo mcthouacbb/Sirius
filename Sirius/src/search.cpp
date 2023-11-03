@@ -433,10 +433,11 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     MoveList quietsTried;
 
     int bestScore = -SCORE_MAX;
+    int movesPlayed = 0;
 
-    for (int movesPlayed = 0; movesPlayed < static_cast<int>(moves.size()); movesPlayed++)
+    for (int moveIdx = 0; moveIdx < static_cast<int>(moves.size()); moveIdx++)
     {
-        auto [move, moveScore] = ordering.selectMove(static_cast<uint32_t>(movesPlayed));
+        auto [move, moveScore] = ordering.selectMove(static_cast<uint32_t>(moveIdx));
 		bool quiet = moveIsQuiet(board, move);
         bool quietLosing = moveScore < MoveOrdering::KILLER_SCORE;
 
@@ -484,9 +485,11 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
             reduction = std::clamp(reduction, 0, depth - 2);
         }
 
+        movesPlayed++;
+
         int newDepth = depth + givesCheck - 1;
         int score;
-        if (movesPlayed == 0)
+        if (movesPlayed == 1)
             score = -search(thread, newDepth, searchPly + 1, -beta, -alpha, isPV);
         else
         {
@@ -594,9 +597,9 @@ int Search::qsearch(SearchThread& thread, SearchPly* searchPly, int alpha, int b
     BoardState state;
     TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
     searchPly->bestMove = Move();
-    for (uint32_t movesPlayed = 0; movesPlayed < captures.size(); movesPlayed++)
+    for (int moveIdx = 0; moveIdx < static_cast<int>(captures.size()); moveIdx++)
     {
-        auto [move, moveScore] = ordering.selectMove(movesPlayed);
+        auto [move, moveScore] = ordering.selectMove(moveIdx);
         if (!board.see_margin(move, 0))
             continue;
         board.makeMove(move, state);
