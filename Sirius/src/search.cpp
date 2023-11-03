@@ -245,7 +245,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
     {
         thread.plies[0].pv = pv.data();
         int searchScore = aspWindows(thread, depth, score);
-        if (m_ShouldStop || m_TimeMan.stopSoft(thread.limits))
+        if (m_ShouldStop)
             break;
         score = searchScore;
         if (report)
@@ -262,6 +262,9 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
                 comm::currComm->reportSearchInfo(info);
             }
         }
+
+        if (m_TimeMan.stopSoft(thread.limits))
+            break;
     }
 
     if (report)
