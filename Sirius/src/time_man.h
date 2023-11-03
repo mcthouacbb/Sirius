@@ -29,8 +29,10 @@ public:
     Duration elapsed() const;
 
     void startSearch();
-    bool shouldStop(const SearchLimits& searchLimits) const;
+    bool stopHard(const SearchLimits& searchLimits) const;
+    bool stopSoft(const SearchLimits& searchLimits) const;
 private:
     TimePoint m_StartTime;
-    Duration m_AllocatedTime;
+    Duration m_HardBound;
+    Duration m_SoftBound;
 };
