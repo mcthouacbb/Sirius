@@ -465,9 +465,10 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 
             if (!isPV &&
                 depth <= MAX_SEE_PRUNE_DEPTH &&
-                !board.see_margin(move, depth * SEE_PRUNE_MARGIN))
+                !board.see_margin(move, depth * (quiet ? SEE_PRUNE_MARGIN_QUIET : SEE_PRUNE_MARGIN_NOISY)))
                 continue;
         }
+
         board.makeMove(move, state);
         bool givesCheck = board.checkers() != 0;
         if (quiet)
