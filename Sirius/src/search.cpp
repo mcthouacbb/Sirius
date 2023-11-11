@@ -382,7 +382,8 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     else if (depth >= MIN_IIR_DEPTH)
         depth--;
 
-    int staticEval = eval::evaluate(board);
+    int staticEval = searchPly->staticEval = eval::evaluate(board);
+    bool improving = rootPly > 1 && searchPly->staticEval > searchPly[-2].staticEval;
     BoardState state;
 
     if (!isPV && !inCheck)
@@ -460,7 +461,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
             if (!isPV &&
                 !inCheck &&
                 depth <= LMP_MAX_DEPTH &&
-                movesPlayed >= LMP_MIN_MOVES_BASE + depth * depth)
+                movesPlayed >= LMP_MIN_MOVES_BASE + depth * depth / (improving ? 1 : 2))
                 break;
 
             if (!isPV &&
