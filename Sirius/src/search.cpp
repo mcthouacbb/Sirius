@@ -383,7 +383,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
         depth--;
 
     int staticEval = searchPly->staticEval = eval::evaluate(board);
-    bool improving = rootPly > 1 && searchPly->staticEval > searchPly[-2].staticEval;
+    bool improving = !inCheck && rootPly > 1 && searchPly->staticEval > searchPly[-2].staticEval;
     BoardState state;
 
     if (!isPV && !inCheck)
