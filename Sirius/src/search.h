@@ -17,8 +17,11 @@ struct SearchPly
 {
     Move* pv;
     int pvLength;
+
     Move bestMove;
     std::array<Move, 2> killers;
+
+    int staticEval;
 };
 
 struct SearchInfo
