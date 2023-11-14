@@ -8,7 +8,8 @@ constexpr int ASP_INIT_DELTA = 25;
 constexpr int MIN_IIR_DEPTH = 4;
 
 constexpr int RFP_MAX_DEPTH = 8;
-constexpr int RFP_MARGIN = 75;
+constexpr int RFP_IMPROVING_FACTOR = 30;
+constexpr int RFP_MARGIN = 80;
 
 constexpr int NMP_MIN_DEPTH = 2;
 constexpr int NMP_BASE_REDUCTION = 3;

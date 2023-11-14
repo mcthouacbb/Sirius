@@ -389,7 +389,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     if (!isPV && !inCheck)
     {
         // reverse futility pruning
-        if (depth <= RFP_MAX_DEPTH && staticEval >= beta + RFP_MARGIN * depth)
+        if (depth <= RFP_MAX_DEPTH && staticEval >= beta + (RFP_MARGIN - RFP_IMPROVING_FACTOR * improving) * depth)
             return staticEval;
 
         // null move pruning
