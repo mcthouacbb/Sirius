@@ -111,7 +111,7 @@ private:
     void threadLoop(SearchThread& thread);
 
     int iterDeep(SearchThread& thread, bool report, bool normalSearch);
-    int aspWindows(SearchThread& thread, int depth, int prevScore);
+    int aspWindows(SearchThread& thread, int depth, Move& bestMove, int prevScore);
 
     void storeKiller(SearchPly* ply, Move killer);
     int search(SearchThread& thread, int depth, SearchPly* searchPly, int alpha, int beta, bool isPV);

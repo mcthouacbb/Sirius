@@ -233,8 +233,8 @@ void Search::threadLoop(SearchThread& thread)
 int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
 {
     int maxDepth = std::min(thread.limits.maxDepth, MAX_PLY - 1);
-    std::array<Move, MAX_PLY + 1> pv = {};
     int score = 0;
+    Move bestMove = {};
 
     thread.reset();
     thread.checkCounter = TIME_CHECK_INTERVAL;
@@ -243,8 +243,8 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
 
     for (int depth = 1; depth <= maxDepth; depth++)
     {
-        thread.plies[0].pv = pv.data();
-        int searchScore = aspWindows(thread, depth, score);
+        thread.plies[0].pv = thread.pv.data();
+        int searchScore = aspWindows(thread, depth, bestMove, score);
         if (m_ShouldStop)
             break;
         score = searchScore;
@@ -254,28 +254,27 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
             info.nodes = thread.nodes;
             info.depth = depth;
             info.time = m_TimeMan.elapsed();
-            info.pvBegin = pv.data();
-            info.pvEnd = pv.data() + thread.plies[0].pvLength;
+            info.pvBegin = thread.pv.data();
+            info.pvEnd = thread.pv.data() + thread.plies[0].pvLength;
             info.score = searchScore;
             if (report)
             {
                 comm::currComm->reportSearchInfo(info);
             }
         }
-
         if (m_TimeMan.stopSoft(thread.limits))
             break;
     }
 
     if (report)
     {
-        comm::currComm->reportBestMove(pv[0]);
+        comm::currComm->reportBestMove(bestMove);
     }
 
     return score;
 }
 
-int Search::aspWindows(SearchThread& thread, int depth, int prevScore)
+int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prevScore)
 {
     int delta = ASP_INIT_DELTA;
     int alpha = prevScore - delta;
@@ -292,10 +291,14 @@ int Search::aspWindows(SearchThread& thread, int depth, int prevScore)
             beta = (alpha + beta) / 2;
             alpha -= delta;
         }
-        else if (searchScore >= beta)
-            beta += delta;
         else
-            return searchScore;
+        {
+            bestMove = thread.pv[0];
+            if (searchScore >= beta)
+                beta += delta;
+            else
+                return searchScore;
+        }
         delta *= 2;
     }
 }
