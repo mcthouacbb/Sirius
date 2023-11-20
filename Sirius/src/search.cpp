@@ -516,6 +516,19 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
         {
             bestScore = score;
 
+            if (bestScore > alpha)
+            {
+                bound = TTEntry::Bound::EXACT;
+                alpha = bestScore;
+                searchPly->bestMove = move;
+                if (isPV)
+                {
+                    searchPly->pv[0] = move;
+                    searchPly->pvLength = searchPly[1].pvLength + 1;
+                    memcpy(searchPly->pv + 1, searchPly[1].pv, searchPly[1].pvLength * sizeof(Move));
+                }
+            }
+
             if (bestScore >= beta)
             {
                 if (quiet)
@@ -532,19 +545,6 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
                 }
                 m_TT.store(bucket, board.zkey(), depth, rootPly, bestScore, move, TTEntry::Bound::LOWER_BOUND);
                 return bestScore;
-            }
-
-            if (bestScore > alpha)
-            {
-                bound = TTEntry::Bound::EXACT;
-                alpha = bestScore;
-                searchPly->bestMove = move;
-                if (isPV)
-                {
-                    searchPly->pv[0] = move;
-                    searchPly->pvLength = searchPly[1].pvLength + 1;
-                    memcpy(searchPly->pv + 1, searchPly[1].pv, searchPly[1].pvLength * sizeof(Move));
-                }
             }
         }
     }
