@@ -61,7 +61,7 @@ MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove)
     }
 }
 
-MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, std::array<Move, 2>& killers, std::array<int, 4096>& history)
+MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, const std::array<Move, 2>& killers, const History& history)
     : m_Moves(moves)
 {
     for (uint32_t i = 0; i < m_Moves.size(); i++)
@@ -89,12 +89,12 @@ MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, s
         else if (move == killers[0] || move == killers[1])
             score = KILLER_SCORE;
         else
-            score = history[move.fromTo()];
+            score = history.getQuietStats(ExtMove::from(board, move));
         m_MoveScores[i] = score;
     }
 }
 
-ExtMove MoveOrdering::selectMove(uint32_t index)
+HistoryMove MoveOrdering::selectMove(uint32_t index)
 {
     int bestScore = INT_MIN;
     uint32_t bestIndex = index;
@@ -110,5 +110,8 @@ ExtMove MoveOrdering::selectMove(uint32_t index)
     std::swap(m_Moves[bestIndex], m_Moves[index]);
     std::swap(m_MoveScores[bestIndex], m_MoveScores[index]);
 
-    return {m_Moves[index], m_MoveScores[index]};
+    if (m_MoveScores[index] < HISTORY_MAX && m_MoveScores[index] > -HISTORY_MAX)
+        return {m_Moves[index], m_MoveScores[index]};
+    else
+        return {m_Moves[index], HistoryMove::NO_HISTORY};
 }

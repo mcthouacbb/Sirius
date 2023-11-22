@@ -9,6 +9,8 @@ set(SRCS
     "src/board.cpp"
     "src/board.h"
     "src/defs.h"
+    "src/history.cpp"
+    "src/history.h"
     "src/main.cpp"
     "src/misc.cpp"
     "src/misc.h"
