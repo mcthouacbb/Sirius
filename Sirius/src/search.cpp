@@ -14,18 +14,6 @@
 namespace search
 {
 
-namespace
-{
-
-void updateHistory(int& history, int bonus)
-{
-    history -= history * std::abs(bonus) / MoveOrdering::HISTORY_MAX;
-    history += bonus;
-}
-
-
-}
-
 std::array<std::array<int, 64>, 64> lmrTable;
 
 void init()
@@ -48,7 +36,7 @@ SearchThread::SearchThread(uint32_t id, std::thread&& thread)
 
 void SearchThread::reset()
 {
-    history = {};
+    history.clear();
     nodes = 0;
     rootPly = 0;
     checkCounter = TIME_CHECK_INTERVAL;
@@ -427,7 +415,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
         moves,
         ttMove,
         searchPly->killers,
-        thread.history[static_cast<int>(board.sideToMove())]
+        thread.history
     );
 
     std::array<Move, MAX_PLY + 1> childPV;
@@ -540,10 +528,10 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 
                     // formula from akimbo
                     int historyBonus = std::min(16 * depth * depth, 1200);
-                    updateHistory(history[static_cast<int>(board.sideToMove())][move.fromTo()], historyBonus);
+                    history.updateQuietStats(ExtMove::from(board, move), historyBonus);
                     for (int j = 0; j < static_cast<int>(quietsTried.size() - 1); j++)
                     {
-                        updateHistory(history[static_cast<int>(board.sideToMove())][quietsTried[j].fromTo()], -historyBonus);
+                        history.updateQuietStats(ExtMove::from(board, quietsTried[j]), -historyBonus);
                     }
                 }
                 m_TT.store(bucket, board.zkey(), depth, rootPly, bestScore, move, TTEntry::Bound::LOWER_BOUND);

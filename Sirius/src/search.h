@@ -4,6 +4,7 @@
 #include "defs.h"
 #include "tt.h"
 #include "time_man.h"
+#include "history.h"
 
 #include <array>
 #include <deque>
@@ -84,8 +85,8 @@ struct SearchThread
     uint32_t checkCounter = 0;
     int rootPly = 0;
     std::array<Move, MAX_PLY + 1> pv;
-    std::array<std::array<int, 4096>, 2> history;
     std::array<SearchPly, MAX_PLY + 1> plies;
+    History history;
 };
 
 class Search
