@@ -94,7 +94,7 @@ MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, c
     }
 }
 
-HistoryMove MoveOrdering::selectMove(uint32_t index)
+ScoredMove MoveOrdering::selectMove(uint32_t index)
 {
     int bestScore = INT_MIN;
     uint32_t bestIndex = index;
@@ -110,8 +110,5 @@ HistoryMove MoveOrdering::selectMove(uint32_t index)
     std::swap(m_Moves[bestIndex], m_Moves[index]);
     std::swap(m_MoveScores[bestIndex], m_MoveScores[index]);
 
-    if (m_MoveScores[index] < HISTORY_MAX && m_MoveScores[index] > -HISTORY_MAX)
-        return {m_Moves[index], m_MoveScores[index]};
-    else
-        return {m_Moves[index], HistoryMove::NO_HISTORY};
+    return {m_Moves[index], m_MoveScores[index]};
 }
