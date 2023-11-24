@@ -43,7 +43,7 @@ bool TimeManager::stopHard(const SearchLimits& searchLimits) const
 bool TimeManager::stopSoft(Move bestMove, uint64_t totalNodes, const SearchLimits& searchLimits) const
 {
     double bmNodes = static_cast<double>(m_NodeCounts[bestMove.fromTo()]) / static_cast<double>(totalNodes);
-    double nodeScale = 2.5 - 2 * bmNodes;
+    double nodeScale = 2.4 - 1.5 * bmNodes;
     if (searchLimits.clock.enabled && elapsed() > m_SoftBound * nodeScale)
         return true;
     return false;
