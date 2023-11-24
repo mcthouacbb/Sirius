@@ -29,7 +29,7 @@ void init()
 
 // initialize wakeFlag to search to allow for waiting on search thread at init
 SearchThread::SearchThread(uint32_t id, std::thread&& thread)
-    : id(id), thread(std::move(thread)), wakeFlag(WakeFlag::SEARCH), limits(), pv(), history(), plies()
+    : id(id), thread(std::move(thread)), wakeFlag(WakeFlag::SEARCH), limits(), pv(), plies(), history()
 {
 
 }
@@ -527,11 +527,11 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
                     storeKiller(searchPly, move);
 
                     // formula from akimbo
-                    int historyBonus = std::min(16 * depth * depth, 1200);
-                    history.updateQuietStats(ExtMove::from(board, move), historyBonus);
+                    int bonus = historyBonus(depth);
+                    history.updateQuietStats(ExtMove::from(board, move), bonus);
                     for (int j = 0; j < static_cast<int>(quietsTried.size() - 1); j++)
                     {
-                        history.updateQuietStats(ExtMove::from(board, quietsTried[j]), -historyBonus);
+                        history.updateQuietStats(ExtMove::from(board, quietsTried[j]), -bonus);
                     }
                 }
                 m_TT.store(bucket, board.zkey(), depth, rootPly, bestScore, move, TTEntry::Bound::LOWER_BOUND);
