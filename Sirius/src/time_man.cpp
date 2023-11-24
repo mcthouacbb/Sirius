@@ -22,7 +22,13 @@ Duration TimeManager::elapsed() const
 
 void TimeManager::startSearch()
 {
+    std::fill(m_NodeCounts.begin(), m_NodeCounts.end(), 0);
     m_StartTime = std::chrono::steady_clock::now();
+}
+
+void TimeManager::updateNodes(Move move, uint64_t nodes)
+{
+    m_NodeCounts[move.fromTo()] += nodes;
 }
 
 bool TimeManager::stopHard(const SearchLimits& searchLimits) const
@@ -34,9 +40,11 @@ bool TimeManager::stopHard(const SearchLimits& searchLimits) const
     return false;
 }
 
-bool TimeManager::stopSoft(const SearchLimits& searchLimits) const
+bool TimeManager::stopSoft(Move bestMove, uint64_t totalNodes, const SearchLimits& searchLimits) const
 {
-    if (searchLimits.clock.enabled && elapsed() > m_SoftBound)
+    double bmNodes = static_cast<double>(m_NodeCounts[bestMove.fromTo()]) / static_cast<double>(totalNodes);
+    double nodeScale = 2.5 - 2 * bmNodes;
+    if (searchLimits.clock.enabled && elapsed() > m_SoftBound * nodeScale)
         return true;
     return false;
 }
