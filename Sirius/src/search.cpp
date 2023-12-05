@@ -36,7 +36,6 @@ SearchThread::SearchThread(uint32_t id, std::thread&& thread)
 
 void SearchThread::reset()
 {
-    history.clear();
     nodes = 0;
     rootPly = 0;
     checkCounter = TIME_CHECK_INTERVAL;
@@ -102,6 +101,7 @@ void Search::newGame()
     for (auto& thread : m_Threads)
     {
         thread->reset();
+        thread->history.clear();
     }
     m_TT.reset();
 }
