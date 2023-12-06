@@ -22,7 +22,8 @@ void fillHistTable(std::array<T, N>& arr, int value)
 
 int historyBonus(int depth)
 {
-    return std::min(16 * depth * depth, 1200);
+    // formula from berserk
+    return std::min(1896, 4 * depth * depth + 120 * depth - 120);
 }
 
 
