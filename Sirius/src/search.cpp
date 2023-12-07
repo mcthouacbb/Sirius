@@ -526,7 +526,6 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
                 {
                     storeKiller(searchPly, move);
 
-                    // formula from akimbo
                     int bonus = historyBonus(depth);
                     history.updateQuietStats(ExtMove::from(board, move), bonus);
                     for (int j = 0; j < static_cast<int>(quietsTried.size() - 1); j++)

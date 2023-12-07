@@ -89,7 +89,7 @@ inline void HistoryEntry<MAX_VAL>::update(int bonus)
     m_Value += bonus - m_Value * std::abs(bonus) / MAX_VAL;
 }
 
-static constexpr int HISTORY_MAX = 65536;
+static constexpr int HISTORY_MAX = 16384;
 
 using MainHist = std::array<std::array<HistoryEntry<HISTORY_MAX>, 4096>, 2>;
 
