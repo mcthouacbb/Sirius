@@ -9,8 +9,10 @@ void TimeManager::setLimits(const SearchLimits& limits, Color us)
         Duration time = limits.clock.timeLeft[static_cast<int>(us)];
         Duration inc = limits.clock.increments[static_cast<int>(us)];
 
+        Duration base = (time / 20 + inc * 3 / 4);
+
         // formulas from stormphrax
-        m_SoftBound = std::chrono::duration_cast<Duration>(0.6 * (time / 20 + inc * 3 / 4));
+        m_SoftBound = std::chrono::duration_cast<Duration>(0.6 * base);
         m_HardBound = time / 2;
     }
 }
@@ -43,7 +45,7 @@ bool TimeManager::stopHard(const SearchLimits& searchLimits) const
 bool TimeManager::stopSoft(Move bestMove, uint64_t totalNodes, const SearchLimits& searchLimits) const
 {
     double bmNodes = static_cast<double>(m_NodeCounts[bestMove.fromTo()]) / static_cast<double>(totalNodes);
-    double nodeScale = 2.0 - 1.35 * bmNodes;
+    double nodeScale = 2.3 - 1.5 * bmNodes;
     if (searchLimits.clock.enabled && elapsed() > m_SoftBound * nodeScale)
         return true;
     return false;
