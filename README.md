@@ -9,7 +9,7 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
 
 | Version | Release Date | [CCRL Blitz](https://ccrl.chessdom.com/ccrl/404/) | [CCRL 40/15](https://ccrl.chessdom.com/ccrl/4040/) |
 | --- | --- | --- | --- |
-| 5.0 | 2023-10-27 | N/A | N/A |
+| 5.0 | 2023-10-27 | N/A | 2677 |
 
 
 ## Features
@@ -75,13 +75,22 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
 | Threads          | integer |       1       |         [1, 1]            | Number of threads used to search (currently does nothing).                           |
 
 ## Building
-- It's just CMake lol
-- C++20 required
+- C++20, CMake, and decent C++ compiler required
+- If you have ninja and clang, you can build the release builds by running the following commands
+  ```
+  cmake --preset ninja-clang-x86-64-v<version>
+  cmake --build build/x86-64-<version>
+  ```
+  where `<version>` is 1-4.
+  You can also use the other presets, though they are mainly a convenience feature.
+- If you would like to build with your own settings, feel free to do so.
+    - On their own, the CMake files only define what is absolutely necessary to build Sirius(With the exception of a flag that links msvc std lib statically), so you don't have to change the build files to build Sirius yourself
 
 ## Credits/Thanks
 - [The Chess Programming Wiki](https://www.chessprogramming.org/), a bit outdated but nonetheless an excellent resource
 - [Stockfish](https://github.com/official-stockfish/Stockfish)
 - [Ethereal](https://github.com/AndyGrant/Ethereal), one of the best references for chess programming
+- [Berserk](https://github.com/jhonnold/berserk), another good reference engine
 - Crafty
 - Zurichess
 - The Engine Programming Discord Server, and the people in it
