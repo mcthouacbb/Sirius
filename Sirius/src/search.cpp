@@ -45,6 +45,7 @@ void SearchThread::reset()
         plies[i].killers[0] = plies[i].killers[1] = Move();
         plies[i].pv = nullptr;
         plies[i].pvLength = 0;
+        plies[i].contHistEntry = nullptr;
     }
 }
 
@@ -410,11 +411,17 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
             return -SCORE_MATE + rootPly;
         return SCORE_DRAW;
     }
+
+    std::array<CHEntry*, 1> contHistEntries = {
+        rootPly > 0 ? searchPly[-1].contHistEntry : nullptr
+    };
+
     MoveOrdering ordering(
         board,
         moves,
         ttMove,
         searchPly->killers,
+        contHistEntries,
         thread.history
     );
 
@@ -463,6 +470,8 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
                 continue;
         }
 
+        searchPly->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
+
         board.makeMove(move, state);
         bool givesCheck = board.checkers() != 0;
         if (quiet)
@@ -502,6 +511,8 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
         rootPly--;
         board.unmakeMove(move);
 
+        searchPly->contHistEntry = nullptr;
+
         if (m_ShouldStop)
             return alpha;
 
@@ -529,10 +540,10 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
                     storeKiller(searchPly, move);
 
                     int bonus = historyBonus(depth);
-                    history.updateQuietStats(ExtMove::from(board, move), bonus);
+                    history.updateQuietStats(ExtMove::from(board, move), contHistEntries, bonus);
                     for (int j = 0; j < static_cast<int>(quietsTried.size() - 1); j++)
                     {
-                        history.updateQuietStats(ExtMove::from(board, quietsTried[j]), -bonus);
+                        history.updateQuietStats(ExtMove::from(board, quietsTried[j]), contHistEntries, -bonus);
                     }
                 }
                 m_TT.store(bucket, board.zkey(), depth, rootPly, bestScore, move, TTEntry::Bound::LOWER_BOUND);

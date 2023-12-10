@@ -22,6 +22,8 @@ struct SearchPly
     Move bestMove;
     std::array<Move, 2> killers;
 
+    CHEntry* contHistEntry;
+
     int staticEval;
 };
 
