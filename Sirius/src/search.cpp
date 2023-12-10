@@ -412,8 +412,9 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
         return SCORE_DRAW;
     }
 
-    std::array<CHEntry*, 1> contHistEntries = {
-        rootPly > 0 ? searchPly[-1].contHistEntry : nullptr
+    std::array<CHEntry*, 2> contHistEntries = {
+        rootPly > 0 ? searchPly[-1].contHistEntry : nullptr,
+        rootPly > 1 ? searchPly[-2].contHistEntry : nullptr
     };
 
     MoveOrdering ordering(
