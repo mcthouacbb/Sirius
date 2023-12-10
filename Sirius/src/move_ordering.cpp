@@ -61,7 +61,7 @@ MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove)
     }
 }
 
-MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, const std::array<Move, 2>& killers, const History& history)
+MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, const std::array<Move, 2>& killers, std::span<const CHEntry* const> contHistEntries, const History& history)
     : m_Moves(moves)
 {
     for (uint32_t i = 0; i < m_Moves.size(); i++)
@@ -89,7 +89,7 @@ MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, c
         else if (move == killers[0] || move == killers[1])
             score = KILLER_SCORE;
         else
-            score = history.getQuietStats(ExtMove::from(board, move));
+            score = history.getQuietStats(ExtMove::from(board, move), contHistEntries);
         m_MoveScores[i] = score;
     }
 }

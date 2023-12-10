@@ -92,6 +92,8 @@ inline void HistoryEntry<MAX_VAL>::update(int bonus)
 static constexpr int HISTORY_MAX = 16384;
 
 using MainHist = std::array<std::array<HistoryEntry<HISTORY_MAX>, 4096>, 2>;
+using CHEntry = std::array<std::array<HistoryEntry<HISTORY_MAX>, 64>, 16>;
+using ContHist = std::array<std::array<CHEntry, 64>, 16>;
 
 int historyBonus(int depth);
 
@@ -100,14 +102,27 @@ class History
 public:
     History() = default;
 
-    int getQuietStats(ExtMove move) const;
+    CHEntry& contHistEntry(ExtMove move)
+    {
+        return m_ContHist[static_cast<int>(move.movingPiece())][move.dstPos()];
+    }
+
+    const CHEntry& contHistEntry(ExtMove move) const
+    {
+        return m_ContHist[static_cast<int>(move.movingPiece())][move.dstPos()];
+    }
+
+    int getQuietStats(ExtMove move, std::span<const CHEntry* const> contHistEntries) const;
 
     void clear();
-    void updateQuietStats(ExtMove move, int bonus);
+    void updateQuietStats(ExtMove move, std::span<CHEntry*> contHistEntries, int bonus);
 private:
     int getMainHist(ExtMove move) const;
+    int getContHist(const CHEntry* entry, ExtMove move) const;
 
     void updateMainHist(ExtMove move, int bonus);
+    void updateContHist(CHEntry* entry, ExtMove move, int bonus);
 
     MainHist m_MainHist;
+    ContHist m_ContHist;
 };

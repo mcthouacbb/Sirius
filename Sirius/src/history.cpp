@@ -30,17 +30,24 @@ int historyBonus(int depth)
 void History::clear()
 {
     fillHistTable(m_MainHist, 0);
+    fillHistTable(m_ContHist, 0);
 }
 
-int History::getQuietStats(ExtMove move) const
+int History::getQuietStats(ExtMove move, std::span<const CHEntry* const> contHistEntries) const
 {
     int score = getMainHist(move);
+    for (auto entry : contHistEntries)
+        if (entry)
+            score += getContHist(entry, move);
     return score;
 }
 
-void History::updateQuietStats(ExtMove move, int bonus)
+void History::updateQuietStats(ExtMove move, std::span<CHEntry*> contHistEntries, int bonus)
 {
     updateMainHist(move, bonus);
+    for (auto entry : contHistEntries)
+        if (entry)
+            updateContHist(entry, move, bonus);
 }
 
 int History::getMainHist(ExtMove move) const
@@ -48,7 +55,17 @@ int History::getMainHist(ExtMove move) const
     return m_MainHist[static_cast<int>(getPieceColor(move.movingPiece()))][move.fromTo()];
 }
 
+int History::getContHist(const CHEntry* entry, ExtMove move) const
+{
+    return (*entry)[static_cast<int>(move.movingPiece())][move.dstPos()];
+}
+
 void History::updateMainHist(ExtMove move, int bonus)
 {
     m_MainHist[static_cast<int>(getPieceColor(move.movingPiece()))][move.fromTo()].update(bonus);
+}
+
+void History::updateContHist(CHEntry* entry, ExtMove move, int bonus)
+{
+    (*entry)[static_cast<int>(move.movingPiece())][move.dstPos()].update(bonus);
 }
