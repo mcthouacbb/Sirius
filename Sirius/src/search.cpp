@@ -440,15 +440,13 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 
     for (int moveIdx = 0; moveIdx < static_cast<int>(moves.size()); moveIdx++)
     {
-        auto [move, moveScore] = ordering.selectMove(static_cast<uint32_t>(moveIdx));
+        auto [move, moveScore, moveHistory] = ordering.selectMove(static_cast<uint32_t>(moveIdx));
         bool quiet = moveIsQuiet(board, move);
         bool quietLosing = moveScore < MoveOrdering::KILLER_SCORE;
 
         int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
-        // note: this affects the lmr of killer moves, but since killer moves
-        // currently are not reduced, it doesn't affect search
         if (quiet)
-            baseLMR -= moveScore / 8192;
+            baseLMR -= moveHistory / 8192;
 
         if (!root && quietLosing && bestScore > -SCORE_WIN)
         {
@@ -610,7 +608,7 @@ int Search::qsearch(SearchThread& thread, SearchPly* searchPly, int alpha, int b
     searchPly->bestMove = Move();
     for (int moveIdx = 0; moveIdx < static_cast<int>(captures.size()); moveIdx++)
     {
-        auto [move, moveScore] = ordering.selectMove(moveIdx);
+        auto [move, moveScore, moveHistory] = ordering.selectMove(moveIdx);
         if (!board.see_margin(move, 0))
             continue;
         board.makeMove(move, state);
