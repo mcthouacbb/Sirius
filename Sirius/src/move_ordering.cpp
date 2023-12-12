@@ -36,7 +36,7 @@ bool moveIsCapture(const Board& board, Move move)
 }
 
 MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove)
-    : m_Moves(moves)
+    : m_Board(board), m_Moves(moves)
 {
     for (uint32_t i = 0; i < m_Moves.size(); i++)
     {
@@ -62,7 +62,7 @@ MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove)
 }
 
 MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, const std::array<Move, 2>& killers, std::span<const CHEntry* const> contHistEntries, const History& history)
-    : m_Moves(moves)
+    : m_Board(board), m_Moves(moves)
 {
     for (uint32_t i = 0; i < m_Moves.size(); i++)
     {
@@ -110,5 +110,11 @@ ScoredMove MoveOrdering::selectMove(uint32_t index)
     std::swap(m_Moves[bestIndex], m_Moves[index]);
     std::swap(m_MoveScores[bestIndex], m_MoveScores[index]);
 
-    return {m_Moves[index], m_MoveScores[index]};
+    Move move = m_Moves[index];
+    int score = m_MoveScores[index];
+    int history = 0;
+    if (moveIsQuiet(m_Board, move) && score < KILLER_SCORE)
+        history = score;
+    
+    return {move, score, history};
 }

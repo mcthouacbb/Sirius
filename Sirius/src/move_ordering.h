@@ -9,6 +9,7 @@ struct ScoredMove
 {
     Move move;
     int score;
+    int history;
 };
 
 bool moveIsQuiet(const Board& board, Move move);
@@ -26,6 +27,7 @@ public:
 
     ScoredMove selectMove(uint32_t index);
 private:
+    const Board& m_Board;
     MoveList& m_Moves;
     std::array<int, 256> m_MoveScores;
 };
