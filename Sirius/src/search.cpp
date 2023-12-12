@@ -444,6 +444,8 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
         bool quietLosing = moveScore < MoveOrdering::KILLER_SCORE;
 
         int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
+        // note: this affects the lmr of killer moves, but since killer moves
+        // currently are not reduced, it doesn't affect search
         if (quiet)
             baseLMR -= moveScore / 8192;
 
