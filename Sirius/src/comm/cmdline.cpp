@@ -276,6 +276,13 @@ void CmdLine::searchCommand(std::istringstream& stream)
     {
 
     }
+    else if (tok == "clock")
+    {
+        uint32_t time;
+        stream >> time;
+        limits.clock.enabled = true;
+        limits.clock.timeLeft[static_cast<int>(m_Board.sideToMove())] = Duration(time);
+    }
     else if (tok == "depth")
     {
         uint32_t depth;
