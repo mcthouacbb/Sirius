@@ -329,8 +329,6 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     if (m_ShouldStop.load(std::memory_order_relaxed))
         return alpha;
 
-    thread.nodes++;
-
     auto& rootPly = thread.rootPly;
     auto& board = thread.board;
     auto& history = thread.history;
@@ -474,6 +472,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
         searchPly->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
 
         board.makeMove(move, state);
+        thread.nodes++;
         bool givesCheck = board.checkers() != 0;
         if (quiet)
             quietsTried.push_back(move);
@@ -585,8 +584,6 @@ int Search::qsearch(SearchThread& thread, SearchPly* searchPly, int alpha, int b
 
     int eval = eval::evaluate(board);
 
-    thread.nodes++;
-
     if (eval >= beta)
         return eval;
     if (eval > alpha)
@@ -612,6 +609,7 @@ int Search::qsearch(SearchThread& thread, SearchPly* searchPly, int alpha, int b
         if (!board.see_margin(move, 0))
             continue;
         board.makeMove(move, state);
+        thread.nodes++;
         rootPly++;
         int score = -qsearch(thread, searchPly + 1, -beta, -alpha);
         board.unmakeMove(move);
