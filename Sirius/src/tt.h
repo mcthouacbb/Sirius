@@ -70,7 +70,7 @@ public:
 
     void incAge()
     {
-        m_CurrAge = (m_CurrAge + 1) & (GEN_CYCLE_LENGTH);
+        m_CurrAge = (m_CurrAge + 1) % GEN_CYCLE_LENGTH;
     }
 
     void reset()
