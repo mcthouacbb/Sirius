@@ -251,7 +251,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
                 comm::currComm->reportSearchInfo(info);
             }
         }
-        if (m_TimeMan.stopSoft(thread.limits))
+        if (m_TimeMan.stopSoft(bestMove, thread.nodes, thread.limits))
             break;
     }
 
@@ -471,6 +471,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 
         searchPly->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
 
+        uint64_t nodesBefore = thread.nodes;
         board.makeMove(move, state);
         thread.nodes++;
         bool givesCheck = board.checkers() != 0;
@@ -510,6 +511,8 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
         }
         rootPly--;
         board.unmakeMove(move);
+        if (root && thread.isMainThread())
+            m_TimeMan.updateNodes(move, thread.nodes - nodesBefore);
 
         searchPly->contHistEntry = nullptr;
 
