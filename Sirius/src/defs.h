@@ -36,9 +36,9 @@ inline constexpr Color flip()
     return static_cast<Color>(static_cast<int>(c) ^ 1);
 }
 
-enum class Piece : uint8_t {};
-
-constexpr Piece PIECE_NONE = Piece(0);
+enum class Piece : uint8_t {
+    NONE
+};
 
 inline Piece makePiece(PieceType type, Color color)
 {

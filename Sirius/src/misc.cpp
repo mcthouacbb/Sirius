@@ -113,7 +113,7 @@ void testQuiescence(Board& board, int depth)
 
         for (Move move : captures)
         {
-            if (move.type() != MoveType::ENPASSANT && board.getPieceAt(move.dstPos()) == PIECE_NONE)
+            if (move.type() != MoveType::ENPASSANT && board.getPieceAt(move.dstPos()) == Piece::NONE)
             {
                 throw std::runtime_error("Not capture");
             }

@@ -27,7 +27,7 @@ inline ExtMove ExtMove::from(const Board& board, Move move)
         move.type() == MoveType::ENPASSANT ?
         makePiece(PieceType::PAWN, flip(board.sideToMove())) :
         board.getPieceAt(move.dstPos());
-    Piece promotion = move.type() == MoveType::PROMOTION ? promotionPiece(board.sideToMove(), move.promotion()) : PIECE_NONE;
+    Piece promotion = move.type() == MoveType::PROMOTION ? promotionPiece(board.sideToMove(), move.promotion()) : Piece::NONE;
     return ExtMove(move, moving, captured, promotion);
 }
 
