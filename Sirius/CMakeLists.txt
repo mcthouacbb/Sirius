@@ -28,7 +28,6 @@ set(SRCS
     "src/zobrist.cpp"
     "src/zobrist.h"
 
-    "src/eval/combined_psqt.cpp"
     "src/eval/combined_psqt.h"
     "src/eval/draw.cpp"
     "src/eval/draw.h"
