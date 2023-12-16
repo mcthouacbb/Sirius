@@ -107,23 +107,27 @@ inline BitBoard shiftSouthWest(BitBoard bb)
 
 inline uint32_t getLSB(BitBoard bb)
 {
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
     return __builtin_ctzll(bb);
 #elif defined(_MSC_VER)
     unsigned long idx;
     _BitScanForward64(&idx, bb);
     return idx;
+#else
+    return std::countl_zero(bb);
 #endif
 }
 
 inline uint32_t getMSB(BitBoard bb)
 {
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
     return 63 - __builtin_clzll(bb);
 #elif defined(_MSC_VER)
     unsigned long idx;
     _BitScanReverse64(&idx, bb);
     return idx;
+#else
+    return 63 - std::countr_zero(bb);
 #endif
 }
 
