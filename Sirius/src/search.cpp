@@ -401,7 +401,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     }
 
     MoveList moves;
-    genMoves<MoveGenType::LEGAL>(board, moves);
+    genMoves<MoveGenType::NOISY_QUIET>(board, moves);
 
     if (moves.size() == 0)
     {
@@ -439,6 +439,8 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     for (int moveIdx = 0; moveIdx < static_cast<int>(moves.size()); moveIdx++)
     {
         auto [move, moveScore, moveHistory] = ordering.selectMove(static_cast<uint32_t>(moveIdx));
+        if (!board.isLegal(move))
+            continue;
         bool quiet = moveIsQuiet(board, move);
         bool quietLosing = moveScore < MoveOrdering::KILLER_SCORE;
 
@@ -599,7 +601,7 @@ int Search::qsearch(SearchThread& thread, SearchPly* searchPly, int alpha, int b
     searchPly[1].pv = childPV.data();
 
     MoveList captures;
-    genMoves<MoveGenType::CAPTURES>(board, captures);
+    genMoves<MoveGenType::NOISY>(board, captures);
 
     MoveOrdering ordering(board, captures, ttMove);
 
@@ -609,6 +611,8 @@ int Search::qsearch(SearchThread& thread, SearchPly* searchPly, int alpha, int b
     for (int moveIdx = 0; moveIdx < static_cast<int>(captures.size()); moveIdx++)
     {
         auto [move, moveScore, moveHistory] = ordering.selectMove(moveIdx);
+        if (!board.isLegal(move))
+            continue;
         if (!board.see_margin(move, 0))
             continue;
         board.makeMove(move, state);

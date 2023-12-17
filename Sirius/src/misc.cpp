@@ -109,7 +109,7 @@ void testQuiescence(Board& board, int depth)
     if (depth == 0)
     {
         MoveList captures;
-        genMoves<MoveGenType::CAPTURES>(board, captures);
+        genMoves<MoveGenType::NOISY>(board, captures);
 
         for (Move move : captures)
         {
@@ -147,7 +147,7 @@ void testSEE()
         board.setToEpd(std::string_view(line).substr(0, sep1));
 
         int moveStart = sep1 + 2;
-        
+
         MoveList moves;
         genMoves<MoveGenType::LEGAL>(board, moves);
 
