@@ -31,6 +31,7 @@ public:
         std::fill(begin(), end(), value);
     }
 
+
     size_t size() const
     {
         return m_Size;
@@ -76,6 +77,11 @@ public:
     {
         assert(pos < m_Size);
         return m_Data[pos];
+    }
+
+    void resize(size_t size)
+    {
+        m_Size = size;
     }
 private:
     std::array<T, Capacity> m_Data;

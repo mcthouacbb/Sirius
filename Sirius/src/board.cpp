@@ -27,7 +27,7 @@ void Board::setToFen(const std::string_view& fen)
     m_Squares = {};
     m_Pieces = {};
     m_Colors = {};
-    
+
     m_EvalState.init();
     m_State->zkey.value = 0;
     m_State->pawnKey.value = 0;
@@ -178,7 +178,7 @@ void Board::setToEpd(const std::string_view& epd)
     m_Squares = {};
     m_Pieces = {};
     m_Colors = {};
-    
+
     m_EvalState.init();
     m_State->zkey.value = 0;
     m_State->pawnKey.value = 0;
@@ -337,7 +337,7 @@ constexpr std::array<char, 16> pieceChars = {
 
 std::string Board::stringRep() const
 {
-    
+
     std::string result;
     const char* between = "+---+---+---+---+---+---+---+---+\n";
 
@@ -903,12 +903,41 @@ bool Board::see_margin(Move move, int margin) const
     return us;
 }
 
+bool Board::isLegal(Move move) const
+{
+    uint32_t kingIdx = getLSB(getPieces(m_SideToMove, PieceType::KING));
+    int from = move.srcPos();
+    int to = move.dstPos();
+
+    if (move.type() == MoveType::ENPASSANT)
+    {
+        int captureSq = to + (m_SideToMove == Color::WHITE ? -8 : 8);
+        BitBoard piecesAfter = (1ull << to) | (getAllPieces() ^ (1ull << from) ^ (1ull << captureSq));
+        return !(attacks::getRookAttacks(kingIdx, piecesAfter) & (getPieces(flip(m_SideToMove), PieceType::ROOK) | getPieces(flip(m_SideToMove), PieceType::QUEEN))) &&
+            !(attacks::getBishopAttacks(kingIdx, piecesAfter) & (getPieces(flip(m_SideToMove), PieceType::BISHOP) | getPieces(flip(m_SideToMove), PieceType::QUEEN)));
+    }
+
+    if (getPieceType(m_Squares[from]) == PieceType::KING)
+    {
+        if (move.type() == MoveType::CASTLE && squareAttacked(flip(m_SideToMove), (move.srcPos() + move.dstPos()) / 2))
+            return false;
+        return !squareAttacked(flip(m_SideToMove), move.dstPos(), getAllPieces() ^ (1ull << from));
+    }
+
+    // pinned pieces
+    return !(
+        (checkBlockers(m_SideToMove) & (1ull << move.srcPos())) &&
+        !(attacks::pinRayBB(kingIdx, move.srcPos()) & (1ull << move.dstPos()))
+    );
+}
+
 void Board::updateCheckInfo()
 {
     uint32_t whiteKingIdx = getLSB(getPieces(Color::WHITE, PieceType::KING));
     uint32_t blackKingIdx = getLSB(getPieces(Color::BLACK, PieceType::KING));
+    uint32_t kingIdx = m_SideToMove == Color::WHITE ? whiteKingIdx : blackKingIdx;
 
-    m_State->checkInfo.checkers = attackersTo(flip(m_SideToMove), m_SideToMove == Color::WHITE ? whiteKingIdx : blackKingIdx);
+    m_State->checkInfo.checkers = attackersTo(flip(m_SideToMove), kingIdx);
     m_State->checkInfo.blockers[static_cast<int>(Color::WHITE)] =
         pinnersBlockers(whiteKingIdx, getColor(Color::BLACK), m_State->checkInfo.pinners[static_cast<int>(Color::WHITE)]);
     m_State->checkInfo.blockers[static_cast<int>(Color::BLACK)] =

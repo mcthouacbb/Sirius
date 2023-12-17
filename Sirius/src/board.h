@@ -14,6 +14,7 @@ struct CheckInfo
     BitBoard checkers;
     std::array<BitBoard, 2> pinners;
     std::array<BitBoard, 2> blockers;
+
 };
 
 struct BoardState
@@ -55,8 +56,6 @@ public:
     std::string fenStr() const;
     std::string epdStr() const;
 
-    void printDbg() const;
-
     void makeMove(Move move, BoardState& state);
     void unmakeMove(Move move);
     void makeNullMove(BoardState& state);
@@ -91,13 +90,15 @@ public:
     BitBoard pinnersBlockers(uint32_t square, BitBoard attackers, BitBoard& pinners) const;
 
     BitBoard checkers() const;
-    BitBoard pinners(Color color) const;
     BitBoard checkBlockers(Color color) const;
 
     bool see_margin(Move move, int margin) const;
+    bool isLegal(Move move) const;
 
     const eval::EvalState& evalState() const;
 private:
+    BitBoard pinners(Color color) const;
+
     void updateCheckInfo();
     void calcRepetitions();
     void addPiece(int pos, Color color, PieceType piece);
