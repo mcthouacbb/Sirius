@@ -403,13 +403,6 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     MoveList moves;
     genMoves<MoveGenType::NOISY_QUIET>(board, moves);
 
-    if (moves.size() == 0)
-    {
-        if (inCheck)
-            return -SCORE_MATE + rootPly;
-        return SCORE_DRAW;
-    }
-
     std::array<CHEntry*, 2> contHistEntries = {
         rootPly > 0 ? searchPly[-1].contHistEntry : nullptr,
         rootPly > 1 ? searchPly[-2].contHistEntry : nullptr
@@ -555,6 +548,13 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
                 return bestScore;
             }
         }
+    }
+
+    if (movesPlayed == 0)
+    {
+        if (inCheck)
+            return -SCORE_MATE + rootPly;
+        return SCORE_DRAW;
     }
 
     m_TT.store(bucket, board.zkey(), depth, rootPly, bestScore, searchPly->bestMove, bound);
