@@ -61,10 +61,10 @@ void genMoves(const Board& board, MoveList& moves)
     if ((checkers & (checkers - 1)) == 0)
     {
         uint32_t kingIdx = getLSB(board.getPieces(color, PieceType::KING));
-        BitBoard moveMask = ~board.getColor(board.sideToMove()) & (checkers ? attacks::moveMaskBB(kingIdx, getLSB(checkers)) : ~0ull);
+        BitBoard moveMask = ~board.getColor(color) & (checkers ? attacks::moveMaskBB(kingIdx, getLSB(checkers)) : ~0ull);
+        genPawnMoves<type, color>(board, moves, moveMask);
         if constexpr (type == MoveGenType::NOISY)
             moveMask &= board.getColor(flip<color>());
-        genPawnMoves<type, color>(board, moves, moveMask);
         genKnightMoves<type, color>(board, moves, moveMask);
         genBishopMoves<type, color>(board, moves, moveMask);
         genRookMoves<type, color>(board, moves, moveMask);
