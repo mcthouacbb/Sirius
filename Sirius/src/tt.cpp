@@ -3,8 +3,6 @@
 
 #include <climits>
 
-#include <iostream>
-
 TT::TT(size_t size)
     : m_Buckets(size)
 {
@@ -39,7 +37,7 @@ inline int storeScore(int score, int ply)
 
 TTBucket* TT::probe(ZKey key, bool& found, int ply, int& score, Move& move, int& depth, TTEntry::Bound& bound)
 {
-    TTBucket& bucket = m_Buckets[key.value % m_Buckets.size()];
+    TTBucket& bucket = m_Buckets[index(key.value)];
     TTEntry* entry = nullptr;
     uint16_t key16 = key.value >> 48;
     for (int i = 0; i < ENTRY_COUNT; i++)

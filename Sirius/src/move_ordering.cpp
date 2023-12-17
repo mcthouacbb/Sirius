@@ -26,13 +26,13 @@ bool moveIsQuiet(const Board& board, Move move)
 {
 	return move.type() != MoveType::PROMOTION &&
 		move.type() != MoveType::ENPASSANT &&
-		board.getPieceAt(move.dstPos()) == PIECE_NONE;
+		board.getPieceAt(move.dstPos()) == Piece::NONE;
 }
 
 bool moveIsCapture(const Board& board, Move move)
 {
     return move.type() == MoveType::ENPASSANT ||
-        board.getPieceAt(move.dstPos()) != PIECE_NONE;
+        board.getPieceAt(move.dstPos()) != Piece::NONE;
 }
 
 MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove)

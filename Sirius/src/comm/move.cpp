@@ -366,7 +366,7 @@ search_moves:
         moveLen++;
     int toSquare = toFile | (toRank << 3);
     
-    if (!isCapture && board.getPieceAt(toSquare) != PIECE_NONE)
+    if (!isCapture && board.getPieceAt(toSquare) != Piece::NONE)
     {
         return {MoveStrFind::Result::NOT_FOUND, Move(), moveLen};
     }
@@ -379,11 +379,11 @@ search_moves:
         switch (it->type())
         {
             case MoveType::ENPASSANT:
-                if (isCapture && (toRank == 2 || toRank == 5) && board.getPieceAt(toSquare + pawnOffset) == PIECE_NONE)
+                if (isCapture && (toRank == 2 || toRank == 5) && board.getPieceAt(toSquare + pawnOffset) == Piece::NONE)
                     continue;
                 break;
             default:
-                if (isCapture && board.getPieceAt(toSquare) == PIECE_NONE)
+                if (isCapture && board.getPieceAt(toSquare) == Piece::NONE)
                     continue;
                 break;
         }

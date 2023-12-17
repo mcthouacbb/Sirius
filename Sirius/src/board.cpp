@@ -367,7 +367,7 @@ std::string Board::fenStr() const
         for (int i = j; i < j + 8; i++)
         {
             Piece piece = m_Squares[i];
-            if (piece != PIECE_NONE)
+            if (piece != Piece::NONE)
             {
                 int diff = i - j - lastFile;
                 if (diff > 1)
@@ -429,7 +429,7 @@ std::string Board::epdStr() const
         for (int i = j; i < j + 8; i++)
         {
             Piece piece = m_Squares[i];
-            if (piece != PIECE_NONE)
+            if (piece != Piece::NONE)
             {
                 int diff = i - j - lastFile;
                 if (diff > 1)
@@ -488,7 +488,7 @@ void Board::makeMove(Move move, BoardState& state)
     m_State->castlingRights = prev->castlingRights;
     m_State->zkey = prev->zkey;
     m_State->pawnKey = prev->pawnKey;
-    m_State->capturedPiece = PIECE_NONE;
+    m_State->capturedPiece = Piece::NONE;
 
     m_GamePly++;
 
@@ -508,7 +508,7 @@ void Board::makeMove(Move move, BoardState& state)
             Piece dstPiece = m_Squares[move.dstPos()];
             m_State->capturedPiece = dstPiece;
 
-            if (dstPiece != PIECE_NONE)
+            if (dstPiece != Piece::NONE)
             {
                 m_State->halfMoveClock = 0;
                 removePiece(move.dstPos());
@@ -538,7 +538,7 @@ void Board::makeMove(Move move, BoardState& state)
             Piece dstPiece = m_Squares[move.dstPos()];
             m_State->capturedPiece = dstPiece;
 
-            if (dstPiece != PIECE_NONE)
+            if (dstPiece != Piece::NONE)
             {
                 removePiece(move.dstPos());
                 m_State->zkey.removePiece(getPieceType(dstPiece), getPieceColor(dstPiece), move.dstPos());
@@ -622,14 +622,14 @@ void Board::unmakeMove(Move move)
         case MoveType::NONE:
         {
             movePiece(move.dstPos(), move.srcPos());
-            if (m_State->capturedPiece != PIECE_NONE)
+            if (m_State->capturedPiece != Piece::NONE)
                 addPiece(move.dstPos(), m_State->capturedPiece);
             break;
         }
         case MoveType::PROMOTION:
         {
             removePiece(move.dstPos());
-            if (m_State->capturedPiece != PIECE_NONE)
+            if (m_State->capturedPiece != Piece::NONE)
                 addPiece(move.dstPos(), m_State->capturedPiece);
             addPiece(move.srcPos(), m_SideToMove, PieceType::PAWN);
             break;
@@ -677,7 +677,7 @@ void Board::makeNullMove(BoardState& state)
     m_State->repetitions = 0;
     m_State->lastRepetition = 0;
 
-    m_State->capturedPiece = PIECE_NONE;
+    m_State->capturedPiece = Piece::NONE;
 
     m_GamePly++;
 
@@ -960,7 +960,7 @@ void Board::removePiece(int pos)
     BitBoard posBB = 1ull << pos;
     PieceType pieceType = getPieceType(m_Squares[pos]);
     Color color = getPieceColor(m_Squares[pos]);
-    m_Squares[pos] = PIECE_NONE;
+    m_Squares[pos] = Piece::NONE;
     m_Pieces[static_cast<int>(pieceType)] ^= posBB;
     m_Colors[static_cast<int>(color)] ^= posBB;
     m_Pieces[static_cast<int>(PieceType::ALL)] ^= posBB;
@@ -978,7 +978,7 @@ void Board::movePiece(int src, int dst)
 
 
     m_Squares[dst] = m_Squares[src];
-    m_Squares[src] = PIECE_NONE;
+    m_Squares[src] = Piece::NONE;
     m_Pieces[static_cast<int>(pieceType)] ^= moveBB;
     m_Colors[static_cast<int>(color)] ^= moveBB;
     m_Pieces[static_cast<int>(PieceType::ALL)] ^= moveBB;

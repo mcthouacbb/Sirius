@@ -444,7 +444,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 
         int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
         if (quiet)
-            baseLMR -= moveHistory / 8192;
+            baseLMR -= moveHistory / LMR_HIST_DIVISOR;
 
         if (!root && quietLosing && bestScore > -SCORE_WIN)
         {
