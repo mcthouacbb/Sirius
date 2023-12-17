@@ -938,7 +938,6 @@ void Board::updateCheckInfo()
     uint32_t kingIdx = m_SideToMove == Color::WHITE ? whiteKingIdx : blackKingIdx;
 
     m_State->checkInfo.checkers = attackersTo(flip(m_SideToMove), kingIdx);
-    m_State->checkInfo.targetMask = checkers() ? attacks::moveMaskBB(kingIdx, getLSB(checkers())) : ~0ull;
     m_State->checkInfo.blockers[static_cast<int>(Color::WHITE)] =
         pinnersBlockers(whiteKingIdx, getColor(Color::BLACK), m_State->checkInfo.pinners[static_cast<int>(Color::WHITE)]);
     m_State->checkInfo.blockers[static_cast<int>(Color::BLACK)] =

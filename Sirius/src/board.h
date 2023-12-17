@@ -12,7 +12,6 @@
 struct CheckInfo
 {
     BitBoard checkers;
-    BitBoard targetMask;
     std::array<BitBoard, 2> pinners;
     std::array<BitBoard, 2> blockers;
 
