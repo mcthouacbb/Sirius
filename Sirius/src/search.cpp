@@ -482,6 +482,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
         {
             reduction = baseLMR;
 
+            reduction += !improving;
             reduction -= isPV;
             reduction -= givesCheck;
 
