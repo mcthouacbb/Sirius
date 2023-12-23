@@ -26,6 +26,9 @@ constexpr int MAX_SEE_PRUNE_DEPTH = 8;
 constexpr int SEE_PRUNE_MARGIN_NOISY = -100;
 constexpr int SEE_PRUNE_MARGIN_QUIET = -60;
 
+constexpr int MAX_HIST_PRUNING_DEPTH = 4;
+constexpr int HIST_PRUNING_MARGIN = 1536;
+
 constexpr int LMR_MIN_DEPTH = 3;
 constexpr int LMR_MIN_MOVES_NON_PV = 3;
 constexpr int LMR_MIN_MOVES_PV = 5;

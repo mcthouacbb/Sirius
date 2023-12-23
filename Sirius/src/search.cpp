@@ -465,8 +465,8 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 
             if (!isPV &&
                 quiet &&
-                depth < 5 &&
-                moveHistory < -1536 * depth)
+                depth <= MAX_HIST_PRUNING_DEPTH &&
+                moveHistory < -HIST_PRUNING_MARGIN * depth)
                 break;
         }
 
