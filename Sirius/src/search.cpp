@@ -420,6 +420,8 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     std::array<Move, MAX_PLY + 1> childPV;
     searchPly[1].pv = childPV.data();
 
+    searchPly[1].failHighCount = 0;
+
     searchPly->bestMove = Move();
 
     TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
@@ -492,6 +494,8 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
             reduction -= isPV;
             reduction -= givesCheck;
 
+            reduction += searchPly[1].failHighCount > 3;
+
             reduction = std::clamp(reduction, 0, depth - 2);
         }
 
@@ -540,6 +544,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
 
             if (bestScore >= beta)
             {
+                searchPly->failHighCount++;
                 if (quiet)
                 {
                     storeKiller(searchPly, move);

@@ -25,6 +25,8 @@ struct SearchPly
     CHEntry* contHistEntry;
 
     int staticEval;
+
+    uint32_t failHighCount;
 };
 
 struct SearchInfo
