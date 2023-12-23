@@ -462,6 +462,12 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
                 depth <= MAX_SEE_PRUNE_DEPTH &&
                 !board.see_margin(move, depth * (quiet ? SEE_PRUNE_MARGIN_QUIET : SEE_PRUNE_MARGIN_NOISY)))
                 continue;
+
+            if (!isPV &&
+                quiet &&
+                depth <= MAX_HIST_PRUNING_DEPTH &&
+                moveHistory < -HIST_PRUNING_MARGIN * depth)
+                break;
         }
 
         searchPly->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
