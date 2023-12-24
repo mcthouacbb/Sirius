@@ -32,6 +32,7 @@ constexpr int HIST_PRUNING_MARGIN = 1536;
 constexpr int LMR_MIN_DEPTH = 3;
 constexpr int LMR_MIN_MOVES_NON_PV = 3;
 constexpr int LMR_MIN_MOVES_PV = 5;
+constexpr int LMR_FAIL_HIGH_COUNT_MARGIN = 4;
 
 constexpr double LMR_BASE = 0.77;
 constexpr double LMR_DIVISOR = 2.36;
