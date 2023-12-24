@@ -494,7 +494,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
             reduction -= isPV;
             reduction -= givesCheck;
 
-            reduction += searchPly[1].failHighCount > 3;
+            reduction += searchPly[1].failHighCount >= LMR_FAIL_HIGH_COUNT_MARGIN;
 
             reduction = std::clamp(reduction, 0, depth - 2);
         }
