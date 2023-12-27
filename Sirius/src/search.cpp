@@ -372,18 +372,27 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
     else if (depth >= MIN_IIR_DEPTH)
         depth--;
 
-    int staticEval = searchPly->staticEval = eval::evaluate(board);
-    bool improving = !inCheck && rootPly > 1 && searchPly->staticEval > searchPly[-2].staticEval;
+    int staticEval = searchPly->staticEval = inCheck ? SCORE_NONE : eval::evaluate(board);
+    bool improving = !inCheck && rootPly > 1 && staticEval > searchPly[-2].staticEval;
+
+    int eval = staticEval;
+    if (!inCheck && ttHit && (
+        ttBound == TTEntry::Bound::EXACT ||
+        (ttBound == TTEntry::Bound::LOWER_BOUND && ttScore >= eval) ||
+        (ttBound == TTEntry::Bound::UPPER_BOUND && ttScore <= eval)
+    ))
+        eval = ttScore;
+
     BoardState state;
 
     if (!isPV && !inCheck)
     {
         // reverse futility pruning
-        if (depth <= RFP_MAX_DEPTH && staticEval >= beta + (RFP_MARGIN - RFP_IMPROVING_FACTOR * improving) * depth)
-            return staticEval;
+        if (depth <= RFP_MAX_DEPTH && eval >= beta + (RFP_MARGIN - RFP_IMPROVING_FACTOR * improving) * depth)
+            return eval;
 
         // null move pruning
-        if (board.pliesFromNull() > 0 && staticEval >= beta)
+        if (board.pliesFromNull() > 0 && eval >= beta)
         {
             BitBoard nonPawns = board.getColor(board.sideToMove()) ^ board.getPieces(board.sideToMove(), PieceType::PAWN);
             if ((nonPawns & (nonPawns - 1)) && depth >= NMP_MIN_DEPTH)
@@ -449,7 +458,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* searchPly, int al
             if (lmrDepth <= FP_MAX_DEPTH &&
                 !inCheck &&
                 alpha < SCORE_WIN &&
-                staticEval + FP_BASE_MARGIN + FP_DEPTH_MARGIN * lmrDepth <= alpha)
+                eval + FP_BASE_MARGIN + FP_DEPTH_MARGIN * lmrDepth <= alpha)
             {
                 continue;
             }
@@ -599,12 +608,23 @@ int Search::qsearch(SearchThread& thread, SearchPly* searchPly, int alpha, int b
             return ttScore;
     }
 
-    int eval = eval::evaluate(board);
+    bool inCheck = board.checkers() != 0;
+    int staticEval = inCheck ? SCORE_NONE : eval::evaluate(board);
+
+    int eval = staticEval;
+    if (!inCheck && ttHit && (
+        ttBound == TTEntry::Bound::EXACT ||
+        (ttBound == TTEntry::Bound::LOWER_BOUND && ttScore >= eval) ||
+        (ttBound == TTEntry::Bound::UPPER_BOUND && ttScore <= eval)
+    ))
+        eval = ttScore;
 
     if (eval >= beta)
         return eval;
     if (eval > alpha)
         alpha = eval;
+
+    int bestScore = eval;
 
     if (rootPly >= MAX_PLY)
         return alpha;
@@ -634,17 +654,17 @@ int Search::qsearch(SearchThread& thread, SearchPly* searchPly, int alpha, int b
         board.unmakeMove(move);
         rootPly--;
 
-        if (score > eval)
+        if (score > bestScore)
         {
-            eval = score;
+            bestScore = score;
 
-            if (eval >= beta)
+            if (bestScore >= beta)
             {
-                m_TT.store(bucket, board.zkey(), 0, rootPly, eval, move, TTEntry::Bound::LOWER_BOUND);
-                return eval;
+                m_TT.store(bucket, board.zkey(), 0, rootPly, bestScore, move, TTEntry::Bound::LOWER_BOUND);
+                return bestScore;
             }
 
-            if (eval > alpha)
+            if (bestScore > alpha)
             {
                 searchPly->bestMove = move;
 
@@ -652,13 +672,13 @@ int Search::qsearch(SearchThread& thread, SearchPly* searchPly, int alpha, int b
                 searchPly->pv[0] = move;
                 memcpy(searchPly->pv + 1, searchPly[1].pv, searchPly[1].pvLength * sizeof(Move));
 
-                alpha = eval;
+                alpha = bestScore;
                 bound = TTEntry::Bound::EXACT;
             }
         }
     }
 
-    m_TT.store(bucket, board.zkey(), 0, rootPly, eval, searchPly->bestMove, bound);
+    m_TT.store(bucket, board.zkey(), 0, rootPly, bestScore, searchPly->bestMove, bound);
 
 
     return eval;
