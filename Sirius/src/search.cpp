@@ -624,7 +624,7 @@ int Search::qsearch(SearchThread& thread, SearchPly* searchPly, int alpha, int b
     if (eval > alpha)
         alpha = eval;
 
-    int bestScore = eval;
+    int bestScore = inCheck ? -SCORE_MATE : eval;
 
     if (rootPly >= MAX_PLY)
         return alpha;
