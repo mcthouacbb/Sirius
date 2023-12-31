@@ -23,8 +23,10 @@ struct SearchPly
     std::array<Move, 2> killers;
 
     CHEntry* contHistEntry;
+    Move excludedMove;
 
     int staticEval;
+    int eval;
 
     uint32_t failHighCount;
 };
