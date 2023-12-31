@@ -29,7 +29,7 @@ void init()
 
 // initialize wakeFlag to search to allow for waiting on search thread at init
 SearchThread::SearchThread(uint32_t id, std::thread&& thread)
-    : id(id), thread(std::move(thread)), wakeFlag(WakeFlag::SEARCH), limits(), pv(), plies(), history()
+    : id(id), thread(std::move(thread)), wakeFlag(WakeFlag::SEARCH), limits(), stack(), history()
 {
 
 }
@@ -42,10 +42,10 @@ void SearchThread::reset()
 
     for (int i = 0; i <= MAX_PLY; i++)
     {
-        plies[i].killers[0] = plies[i].killers[1] = Move();
-        plies[i].pv = nullptr;
-        plies[i].pvLength = 0;
-        plies[i].contHistEntry = nullptr;
+        stack[i].killers[0] = stack[i].killers[1] = Move();
+        stack[i].pv = {};
+        stack[i].pvLength = 0;
+        stack[i].contHistEntry = nullptr;
     }
 }
 
@@ -232,7 +232,6 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
 
     for (int depth = 1; depth <= maxDepth; depth++)
     {
-        thread.plies[0].pv = thread.pv.data();
         int searchScore = aspWindows(thread, depth, bestMove, score);
         if (m_ShouldStop)
             break;
@@ -243,8 +242,8 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
             info.nodes = thread.nodes;
             info.depth = depth;
             info.time = m_TimeMan.elapsed();
-            info.pvBegin = thread.pv.data();
-            info.pvEnd = thread.pv.data() + thread.plies[0].pvLength;
+            info.pvBegin = thread.stack[0].pv.data();
+            info.pvEnd = thread.stack[0].pv.data() + thread.stack[0].pvLength;
             info.score = searchScore;
             if (report)
             {
@@ -271,7 +270,7 @@ int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prev
 
     while (true)
     {
-        int searchScore = search(thread, depth, &thread.plies[0], alpha, beta, true);
+        int searchScore = search(thread, depth, &thread.stack[0], alpha, beta, true);
         if (m_ShouldStop)
             return searchScore;
 
@@ -282,7 +281,7 @@ int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prev
         }
         else
         {
-            bestMove = thread.pv[0];
+            bestMove = thread.stack[0].pv[0];
             if (searchScore >= beta)
                 beta += delta;
             else
@@ -426,9 +425,6 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
         thread.history
     );
 
-    std::array<Move, MAX_PLY + 1> childPV;
-    stack[1].pv = childPV.data();
-
     stack[1].failHighCount = 0;
 
     stack->bestMove = Move();
@@ -547,7 +543,8 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
                 {
                     stack->pv[0] = move;
                     stack->pvLength = stack[1].pvLength + 1;
-                    memcpy(stack->pv + 1, stack[1].pv, stack[1].pvLength * sizeof(Move));
+                    for (size_t i = 0; i < stack[1].pvLength; i++)
+                        stack->pv[i + 1] = stack[1].pv[i];
                 }
             }
 
@@ -629,9 +626,6 @@ int Search::qsearch(SearchThread& thread, SearchPly* stack, int alpha, int beta)
     if (rootPly >= MAX_PLY)
         return alpha;
 
-    std::array<Move, MAX_PLY + 1> childPV;
-    stack[1].pv = childPV.data();
-
     MoveList captures;
     genMoves<MoveGenType::NOISY>(board, captures);
 
@@ -670,7 +664,8 @@ int Search::qsearch(SearchThread& thread, SearchPly* stack, int alpha, int beta)
 
                 stack->pvLength = stack[1].pvLength + 1;
                 stack->pv[0] = move;
-                memcpy(stack->pv + 1, stack[1].pv, stack[1].pvLength * sizeof(Move));
+                for (size_t i = 0; i < stack[1].pvLength; i++)
+                    stack->pv[i + 1] = stack[1].pv[i];
 
                 alpha = bestScore;
                 bound = TTEntry::Bound::EXACT;
