@@ -38,5 +38,9 @@ constexpr double LMR_BASE = 0.77;
 constexpr double LMR_DIVISOR = 2.36;
 constexpr int LMR_HIST_DIVISOR = 8192;
 
+constexpr int MIN_SE_DEPTH = 8;
+constexpr int SE_TT_DEPTH_MARGIN = 3;
+constexpr int SE_BETA_DEPTH_SCALE = 12;
+
 
 }
