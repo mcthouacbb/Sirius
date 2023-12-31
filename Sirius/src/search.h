@@ -16,7 +16,7 @@
 
 struct SearchPly
 {
-    Move* pv;
+    std::array<Move, MAX_PLY + 1> pv;
     int pvLength;
 
     Move bestMove;
@@ -88,8 +88,7 @@ struct SearchThread
 
     uint32_t checkCounter = 0;
     int rootPly = 0;
-    std::array<Move, MAX_PLY + 1> pv;
-    std::array<SearchPly, MAX_PLY + 1> plies;
+    std::array<SearchPly, MAX_PLY + 1> stack;
     History history;
 };
 
