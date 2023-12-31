@@ -94,7 +94,7 @@ SEARCH_PARAM(lmrHistDivisor, 8192, 4096, 16384, 512);
 
 constexpr int MIN_SE_DEPTH = 8;
 constexpr int SE_TT_DEPTH_MARGIN = 3;
-constexpr int SE_BETA_DEPTH_SCALE = 12;
+constexpr int SE_BETA_DEPTH_SCALE = 32;
 
 
 }
