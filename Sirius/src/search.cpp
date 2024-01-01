@@ -265,8 +265,14 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
 int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prevScore)
 {
     int delta = ASP_INIT_DELTA;
-    int alpha = prevScore - delta;
-    int beta = prevScore + delta;
+    int alpha = -SCORE_MAX;
+    int beta = SCORE_MAX;
+
+    if (depth >= MIN_ASP_DEPTH)
+    {
+        alpha = prevScore - delta;
+        beta = prevScore + delta;
+    }
 
     while (true)
     {
@@ -287,7 +293,7 @@ int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prev
             else
                 return searchScore;
         }
-        delta *= 2;
+        delta += delta / 2;
     }
 }
 
