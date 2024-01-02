@@ -3,7 +3,8 @@ namespace search
 
 constexpr uint32_t TIME_CHECK_INTERVAL = 2048;
 
-constexpr int ASP_INIT_DELTA = 25;
+constexpr int ASP_INIT_DELTA = 15;
+constexpr int MIN_ASP_DEPTH = 5;
 
 constexpr int MIN_IIR_DEPTH = 4;
 
