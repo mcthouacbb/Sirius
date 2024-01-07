@@ -15,6 +15,8 @@ constexpr int RFP_MARGIN = 80;
 constexpr int NMP_MIN_DEPTH = 2;
 constexpr int NMP_BASE_REDUCTION = 3;
 constexpr int NMP_DEPTH_REDUCTION = 3;
+constexpr int NMP_EVAL_REDUCTION = 200;
+constexpr int NMP_MAX_EVAL_REDUCTION = 3;
 
 constexpr int FP_BASE_MARGIN = 120;
 constexpr int FP_DEPTH_MARGIN = 75;
