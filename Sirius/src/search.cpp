@@ -476,8 +476,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
                 !board.see_margin(move, depth * (quiet ? SEE_PRUNE_MARGIN_QUIET : SEE_PRUNE_MARGIN_NOISY)))
                 continue;
 
-            if (!isPV &&
-                quiet &&
+            if (quiet &&
                 depth <= MAX_HIST_PRUNING_DEPTH &&
                 moveHistory < -HIST_PRUNING_MARGIN * depth)
                 break;
