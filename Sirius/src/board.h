@@ -12,9 +12,9 @@
 struct CheckInfo
 {
     BitBoard checkers;
+    BitBoard threats;
     std::array<BitBoard, 2> pinners;
     std::array<BitBoard, 2> blockers;
-
 };
 
 struct BoardState
@@ -91,6 +91,7 @@ public:
 
     BitBoard checkers() const;
     BitBoard checkBlockers(Color color) const;
+    BitBoard threats() const;
 
     bool see_margin(Move move, int margin) const;
     bool isLegal(Move move) const;
@@ -98,6 +99,7 @@ public:
     const eval::EvalState& evalState() const;
 private:
     BitBoard pinners(Color color) const;
+    BitBoard calcThreats() const;
 
     void updateCheckInfo();
     void calcRepetitions();
@@ -239,6 +241,11 @@ inline BitBoard Board::pinners(Color color) const
 inline BitBoard Board::checkBlockers(Color color) const
 {
     return m_State->checkInfo.blockers[static_cast<int>(color)];
+}
+
+inline BitBoard Board::threats() const
+{
+    return m_State->checkInfo.threats;
 }
 
 inline int Board::seePieceValue(PieceType type) const

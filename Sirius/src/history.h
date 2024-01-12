@@ -91,7 +91,7 @@ inline void HistoryEntry<MAX_VAL>::update(int bonus)
 
 static constexpr int HISTORY_MAX = 16384;
 
-using MainHist = std::array<std::array<HistoryEntry<HISTORY_MAX>, 4096>, 2>;
+using MainHist = std::array<std::array<std::array<HistoryEntry<HISTORY_MAX>, 4>, 4096>, 2>;
 using CHEntry = std::array<std::array<HistoryEntry<HISTORY_MAX>, 64>, 16>;
 using ContHist = std::array<std::array<CHEntry, 64>, 16>;
 
@@ -112,15 +112,15 @@ public:
         return m_ContHist[static_cast<int>(move.movingPiece())][move.dstPos()];
     }
 
-    int getQuietStats(ExtMove move, std::span<const CHEntry* const> contHistEntries) const;
+    int getQuietStats(ExtMove move, std::span<const CHEntry* const> contHistEntries, BitBoard threats) const;
 
     void clear();
-    void updateQuietStats(ExtMove move, std::span<CHEntry*> contHistEntries, int bonus);
+    void updateQuietStats(ExtMove move, std::span<CHEntry*> contHistEntries, BitBoard threats, int bonus);
 private:
-    int getMainHist(ExtMove move) const;
+    int getMainHist(ExtMove move, BitBoard threats) const;
     int getContHist(const CHEntry* entry, ExtMove move) const;
 
-    void updateMainHist(ExtMove move, int bonus);
+    void updateMainHist(ExtMove move, BitBoard threats, int bonus);
     void updateContHist(CHEntry* entry, ExtMove move, int bonus);
 
     MainHist m_MainHist;

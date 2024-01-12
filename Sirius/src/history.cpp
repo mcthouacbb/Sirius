@@ -26,6 +26,13 @@ int historyBonus(int depth)
     return std::min(1896, 4 * depth * depth + 120 * depth - 120);
 }
 
+uint32_t threatIndex(ExtMove move, BitBoard threats)
+{
+    bool srcThreat = (threats & (1ull << move.srcPos())) != 0;
+    bool dstThreat = (threats & (1ull << move.dstPos())) != 0;
+    return srcThreat * 2 + dstThreat;
+}
+
 
 void History::clear()
 {
@@ -33,26 +40,26 @@ void History::clear()
     fillHistTable(m_ContHist, 0);
 }
 
-int History::getQuietStats(ExtMove move, std::span<const CHEntry* const> contHistEntries) const
+int History::getQuietStats(ExtMove move, std::span<const CHEntry* const> contHistEntries, BitBoard threats) const
 {
-    int score = getMainHist(move);
+    int score = getMainHist(move, threats);
     for (auto entry : contHistEntries)
         if (entry)
             score += getContHist(entry, move);
     return score;
 }
 
-void History::updateQuietStats(ExtMove move, std::span<CHEntry*> contHistEntries, int bonus)
+void History::updateQuietStats(ExtMove move, std::span<CHEntry*> contHistEntries, BitBoard threats, int bonus)
 {
-    updateMainHist(move, bonus);
+    updateMainHist(move, threats, bonus);
     for (auto entry : contHistEntries)
         if (entry)
             updateContHist(entry, move, bonus);
 }
 
-int History::getMainHist(ExtMove move) const
+int History::getMainHist(ExtMove move, BitBoard threats) const
 {
-    return m_MainHist[static_cast<int>(getPieceColor(move.movingPiece()))][move.fromTo()];
+    return m_MainHist[static_cast<int>(getPieceColor(move.movingPiece()))][move.fromTo()][threatIndex(move, threats)];
 }
 
 int History::getContHist(const CHEntry* entry, ExtMove move) const
@@ -60,9 +67,9 @@ int History::getContHist(const CHEntry* entry, ExtMove move) const
     return (*entry)[static_cast<int>(move.movingPiece())][move.dstPos()];
 }
 
-void History::updateMainHist(ExtMove move, int bonus)
+void History::updateMainHist(ExtMove move, BitBoard threats, int bonus)
 {
-    m_MainHist[static_cast<int>(getPieceColor(move.movingPiece()))][move.fromTo()].update(bonus);
+    m_MainHist[static_cast<int>(getPieceColor(move.movingPiece()))][move.fromTo()][threatIndex(move, threats)].update(bonus);
 }
 
 void History::updateContHist(CHEntry* entry, ExtMove move, int bonus)

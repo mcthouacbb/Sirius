@@ -561,10 +561,10 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
                     storeKiller(stack, move);
 
                     int bonus = historyBonus(depth);
-                    history.updateQuietStats(ExtMove::from(board, move), contHistEntries, bonus);
+                    history.updateQuietStats(ExtMove::from(board, move), contHistEntries, board.threats(), bonus);
                     for (int j = 0; j < static_cast<int>(quietsTried.size() - 1); j++)
                     {
-                        history.updateQuietStats(ExtMove::from(board, quietsTried[j]), contHistEntries, -bonus);
+                        history.updateQuietStats(ExtMove::from(board, quietsTried[j]), contHistEntries, board.threats(), -bonus);
                     }
                 }
                 m_TT.store(bucket, board.zkey(), depth, rootPly, bestScore, move, TTEntry::Bound::LOWER_BOUND);

@@ -942,6 +942,49 @@ void Board::updateCheckInfo()
         pinnersBlockers(whiteKingIdx, getColor(Color::BLACK), m_State->checkInfo.pinners[static_cast<int>(Color::WHITE)]);
     m_State->checkInfo.blockers[static_cast<int>(Color::BLACK)] =
         pinnersBlockers(blackKingIdx, getColor(Color::WHITE), m_State->checkInfo.pinners[static_cast<int>(Color::BLACK)]);
+    m_State->checkInfo.threats = calcThreats();
+}
+
+BitBoard Board::calcThreats() const
+{
+    Color color = flip(m_SideToMove);
+    BitBoard threats = 0;
+    BitBoard occupied = getAllPieces();
+
+    BitBoard queens = getPieces(color, PieceType::QUEEN);
+    BitBoard rooks = getPieces(color, PieceType::ROOK);
+    BitBoard bishops = getPieces(color, PieceType::BISHOP);
+    BitBoard knights = getPieces(color, PieceType::KNIGHT);
+    BitBoard pawns = getPieces(color, PieceType::PAWN);
+    uint32_t kingIdx = getLSB(getPieces(color, PieceType::KING));
+
+    rooks |= queens;
+    while (rooks)
+    {
+        uint32_t rook = popLSB(rooks);
+        threats |= attacks::getRookAttacks(rook, occupied);
+    }
+
+    bishops |= queens;
+    while (bishops)
+    {
+        uint32_t bishop = popLSB(bishops);
+        threats |= attacks::getBishopAttacks(bishop, occupied);
+    }
+
+    while (knights)
+    {
+        uint32_t knight = popLSB(knights);
+        threats |= attacks::getKnightAttacks(knight);
+    }
+
+    if (color == Color::WHITE)
+        threats |= attacks::getPawnBBAttacks<Color::WHITE>(pawns);
+    else
+        threats |= attacks::getPawnBBAttacks<Color::BLACK>(pawns);
+
+    threats |= attacks::getKingAttacks(kingIdx);
+    return threats;
 }
 
 void Board::calcRepetitions()
