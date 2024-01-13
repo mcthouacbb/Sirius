@@ -417,9 +417,10 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
     MoveList moves;
     genMoves<MoveGenType::NOISY_QUIET>(board, moves);
 
-    std::array<CHEntry*, 2> contHistEntries = {
+    std::array<CHEntry*, 3> contHistEntries = {
         rootPly > 0 ? stack[-1].contHistEntry : nullptr,
-        rootPly > 1 ? stack[-2].contHistEntry : nullptr
+        rootPly > 1 ? stack[-2].contHistEntry : nullptr,
+        rootPly > 3 ? stack[-4].contHistEntry : nullptr
     };
 
     MoveOrdering ordering(
