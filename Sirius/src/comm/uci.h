@@ -1,11 +1,15 @@
 #pragma once
 
 #include "icomm.h"
+#include "uci_option.h"
 
 #include <sstream>
+#include <unordered_map>
 
 namespace comm
 {
+
+void addUCIOption(const UCIOption& option);
 
 class UCI : public IComm
 {
@@ -43,6 +47,8 @@ private:
     void goCommand(std::istringstream& stream);
     void setOptionCommand(std::istringstream& stream);
     void benchCommand();
+
+    std::unordered_map<std::string, UCIOption> m_Options;
 };
 
 

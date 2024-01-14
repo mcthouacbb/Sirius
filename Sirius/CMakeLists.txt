@@ -50,6 +50,7 @@ set(SRCS
     "src/comm/move.h"
     "src/comm/uci.cpp"
     "src/comm/uci.h"
+    "src/comm/uci_option.h"
 
     "src/util/static_vector.h"
     "src/util/prng.h"

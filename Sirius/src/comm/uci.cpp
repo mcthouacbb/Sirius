@@ -11,9 +11,27 @@
 namespace comm
 {
 
+std::unordered_map<std::string, UCIOption> uciOptions;
+
+void addUCIOption(const UCIOption& option)
+{
+    uciOptions.insert(std::make_pair(option.name(), option));
+}
+
 UCI::UCI()
 {
-
+    const auto& hashCallback = [this](const UCIOption& option)
+    {
+        m_Search.setTTSize(static_cast<int>(option.intValue()));
+    };
+    m_Options = {
+        {"Hash", UCIOption("Hash", {64, 64, 1, 65536}, hashCallback)},
+        {"Threats", UCIOption("Threads", {1, 1, 1, 1})}
+    };
+    for (const auto& option : uciOptions)
+    {
+        m_Options.insert(option);
+    }
 }
 
 void UCI::run()
@@ -301,15 +319,16 @@ void UCI::setOptionCommand(std::istringstream& stream)
     if (tok != "value")
         return;
 
-    if (name == "Hash")
+    auto& option = m_Options[name];
+    switch (option.type())
     {
-        int mb;
-        stream >> mb;
-        m_Search.setTTSize(mb);
-    }
-    else if (name == "Threads")
-    {
-        // lol
+        case UCIOption::Type::INT:
+        {
+            int value;
+            stream >> value;
+            option = value;
+            break;
+        }
     }
 }
 
