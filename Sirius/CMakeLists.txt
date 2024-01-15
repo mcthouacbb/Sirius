@@ -20,6 +20,7 @@ set(SRCS
     "src/movegen.h"
     "src/search.cpp"
     "src/search.h"
+    "src/search_params.cpp"
     "src/search_params.h"
     "src/time_man.cpp"
     "src/time_man.h"

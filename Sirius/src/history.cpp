@@ -1,4 +1,5 @@
 #include "history.h"
+#include "search_params.h"
 
 namespace
 {
@@ -23,7 +24,7 @@ void fillHistTable(std::array<T, N>& arr, int value)
 int historyBonus(int depth)
 {
     // formula from berserk
-    return std::min(1896, 4 * depth * depth + 120 * depth - 120);
+    return std::min(search::maxHistBonus, search::histScaleQuadratic * depth * depth + search::histScaleLinear * depth - search::histBonusOffset);
 }
 
 
