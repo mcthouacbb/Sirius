@@ -22,7 +22,7 @@ void init()
     {
         for (int i = 1; i < 64; i++)
         {
-            lmrTable[d][i] = static_cast<int>(LMR_BASE + std::log(static_cast<double>(d)) * std::log(static_cast<double>(i)) / LMR_DIVISOR);
+            lmrTable[d][i] = static_cast<int>(lmrBase / 100.0 + std::log(static_cast<double>(d)) * std::log(static_cast<double>(i)) / (lmrDivisor / 100.0));
         }
     }
 }
@@ -264,11 +264,11 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
 
 int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prevScore)
 {
-    int delta = ASP_INIT_DELTA;
+    int delta = aspInitDelta;
     int alpha = -SCORE_MAX;
     int beta = SCORE_MAX;
 
-    if (depth >= MIN_ASP_DEPTH)
+    if (depth >= minAspDepth)
     {
         alpha = prevScore - delta;
         beta = prevScore + delta;
@@ -374,7 +374,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
         ))
             return ttScore;
     }
-    else if (depth >= MIN_IIR_DEPTH)
+    else if (depth >= minIIRDepth)
         depth--;
 
     stack->staticEval = inCheck ? SCORE_NONE : eval::evaluate(board);
@@ -393,16 +393,16 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
     if (!isPV && !inCheck)
     {
         // reverse futility pruning
-        if (depth <= RFP_MAX_DEPTH && posEval >= beta + (RFP_MARGIN - RFP_IMPROVING_FACTOR * improving) * depth)
+        if (depth <= rfpMaxDepth && posEval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth)
             return posEval;
 
         // null move pruning
         if (board.pliesFromNull() > 0 && posEval >= beta)
         {
             BitBoard nonPawns = board.getColor(board.sideToMove()) ^ board.getPieces(board.sideToMove(), PieceType::PAWN);
-            if ((nonPawns & (nonPawns - 1)) && depth >= NMP_MIN_DEPTH)
+            if ((nonPawns & (nonPawns - 1)) && depth >= nmpMinDepth)
             {
-                int r = NMP_BASE_REDUCTION + depth / NMP_DEPTH_REDUCTION + std::min((posEval - beta) / NMP_EVAL_REDUCTION, NMP_MAX_EVAL_REDUCTION);
+                int r = nmpBaseReduction + depth / nmpDepthReductionScale + std::min((posEval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
                 board.makeNullMove(state);
                 rootPly++;
                 int nullScore = -search(thread, depth - r, stack + 1, -beta, -beta + 1, false);
@@ -453,33 +453,33 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
 
         int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
         if (quiet)
-            baseLMR -= moveHistory / LMR_HIST_DIVISOR;
+            baseLMR -= moveHistory / lmrHistDivisor;
 
         if (!root && quietLosing && bestScore > -SCORE_WIN)
         {
             int lmrDepth = std::max(depth - baseLMR, 0);
-            if (lmrDepth <= FP_MAX_DEPTH &&
+            if (lmrDepth <= fpMaxDepth &&
                 !inCheck &&
                 alpha < SCORE_WIN &&
-                posEval + FP_BASE_MARGIN + FP_DEPTH_MARGIN * lmrDepth <= alpha)
+                posEval + fpBaseMargin + fpDepthMargin * lmrDepth <= alpha)
             {
                 continue;
             }
 
             if (!isPV &&
                 !inCheck &&
-                depth <= LMP_MAX_DEPTH &&
-                movesPlayed >= LMP_MIN_MOVES_BASE + depth * depth / (improving ? 1 : 2))
+                depth <= lmpMaxDepth &&
+                movesPlayed >= lmpMinMovesBase + depth * depth / (improving ? 1 : 2))
                 break;
 
             if (!isPV &&
-                depth <= MAX_SEE_PRUNE_DEPTH &&
-                !board.see_margin(move, depth * (quiet ? SEE_PRUNE_MARGIN_QUIET : SEE_PRUNE_MARGIN_NOISY)))
+                depth <= maxSeePruneDepth &&
+                !board.see_margin(move, depth * (quiet ? seePruneMarginQuiet : seePruneMarginNoisy)))
                 continue;
 
             if (quiet &&
-                depth <= MAX_HIST_PRUNING_DEPTH &&
-                moveHistory < -HIST_PRUNING_MARGIN * depth)
+                depth <= maxHistPruningDepth &&
+                moveHistory < -histPruningMargin * depth)
                 break;
         }
 
@@ -494,8 +494,8 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
         rootPly++;
 
         int reduction = 0;
-        if (movesPlayed >= (isPV ? LMR_MIN_MOVES_PV : LMR_MIN_MOVES_NON_PV) &&
-            depth >= LMR_MIN_DEPTH &&
+        if (movesPlayed >= (isPV ? lmrMinMovesPv : lmrMinMovesNonPv) &&
+            depth >= lmrMinDepth &&
             quietLosing &&
             !inCheck)
         {
@@ -505,7 +505,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
             reduction -= isPV;
             reduction -= givesCheck;
 
-            reduction += stack[1].failHighCount >= LMR_FAIL_HIGH_COUNT_MARGIN;
+            reduction += stack[1].failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin);
 
             reduction = std::clamp(reduction, 0, depth - 2);
         }

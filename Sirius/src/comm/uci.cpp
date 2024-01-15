@@ -8,6 +8,8 @@
 #include "../misc.h"
 #include "../bench.h"
 
+#include "../search_params.h"
+
 namespace comm
 {
 
@@ -21,6 +23,17 @@ UCI::UCI()
         {"Hash", UCIOption("Hash", {64, 64, 1, 65536}, hashCallback)},
         {"Threats", UCIOption("Threads", {1, 1, 1, 1})}
     };
+#ifdef EXTERNAL_TUNE
+    for (auto& param : search::searchParams())
+    {
+        m_Options.insert({param.name, UCIOption(param.name, {param.value, param.defaultValue, param.min, param.max}, [&param](const UCIOption& option)
+        {
+            param.value = static_cast<int>(option.intValue());
+            if (param.callback)
+                param.callback();
+        })});
+    }
+#endif
 }
 
 void UCI::run()
