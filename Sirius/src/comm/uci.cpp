@@ -11,13 +11,6 @@
 namespace comm
 {
 
-std::unordered_map<std::string, UCIOption> uciOptions;
-
-void addUCIOption(const UCIOption& option)
-{
-    uciOptions.insert(std::make_pair(option.name(), option));
-}
-
 UCI::UCI()
 {
     const auto& hashCallback = [this](const UCIOption& option)
@@ -28,10 +21,6 @@ UCI::UCI()
         {"Hash", UCIOption("Hash", {64, 64, 1, 65536}, hashCallback)},
         {"Threats", UCIOption("Threads", {1, 1, 1, 1})}
     };
-    for (const auto& option : uciOptions)
-    {
-        m_Options.insert(option);
-    }
 }
 
 void UCI::run()
@@ -174,6 +163,21 @@ void UCI::uciCommand() const
     auto lock = lockStdout();
     std::cout << "id name Sirius " << SIRIUS_VERSION_STRING << std::endl;
     std::cout << "id author AspectOfTheNoob" << std::endl;
+    for (const auto& option : m_Options)
+    {
+        std::cout << "option name " << option.first << " type ";
+        switch (option.second.type())
+        {
+            case UCIOption::Type::INT:
+            {
+                std::cout << "spin default " << option.second.intData().defaultValue
+                    << " min " << option.second.intData().minValue
+                    << " max " << option.second.intData().maxValue
+                    << std::endl;
+                break;
+            }
+        }
+    }
     std::cout << "option name Hash type spin default 64 min 1 max 2048" << std::endl;
     // lol
     std::cout << "option name Threads type spin default 1 min 1 max 1" << std::endl;

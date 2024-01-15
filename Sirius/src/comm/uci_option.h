@@ -32,6 +32,7 @@ public:
 
     Type type() const;
     int64_t intValue() const;
+    const IntData& intData() const;
     const std::string& name() const;
 private:
     Type m_Type;
@@ -70,6 +71,12 @@ inline int64_t UCIOption::intValue() const
 {
     assert(m_Type == Type::INT);
     return std::get<IntData>(m_Data).value;
+}
+
+inline const UCIOption::IntData& UCIOption::intData() const
+{
+    assert(m_Type == Type::INT);
+    return std::get<IntData>(m_Data);
 }
 
 inline const std::string& UCIOption::name() const
