@@ -293,7 +293,7 @@ int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prev
             else
                 return searchScore;
         }
-        delta += delta / 2;
+        delta += delta * aspWideningFactor / 16;
     }
 }
 
