@@ -13,7 +13,14 @@ namespace comm
 
 UCI::UCI()
 {
-
+    const auto& hashCallback = [this](const UCIOption& option)
+    {
+        m_Search.setTTSize(static_cast<int>(option.intValue()));
+    };
+    m_Options = {
+        {"Hash", UCIOption("Hash", {64, 64, 1, 65536}, hashCallback)},
+        {"Threats", UCIOption("Threads", {1, 1, 1, 1})}
+    };
 }
 
 void UCI::run()
@@ -156,9 +163,21 @@ void UCI::uciCommand() const
     auto lock = lockStdout();
     std::cout << "id name Sirius " << SIRIUS_VERSION_STRING << std::endl;
     std::cout << "id author AspectOfTheNoob" << std::endl;
-    std::cout << "option name Hash type spin default 64 min 1 max 2048" << std::endl;
-    // lol
-    std::cout << "option name Threads type spin default 1 min 1 max 1" << std::endl;
+    for (const auto& option : m_Options)
+    {
+        std::cout << "option name " << option.first << " type ";
+        switch (option.second.type())
+        {
+            case UCIOption::Type::INT:
+            {
+                std::cout << "spin default " << option.second.intData().defaultValue
+                    << " min " << option.second.intData().minValue
+                    << " max " << option.second.intData().maxValue
+                    << std::endl;
+                break;
+            }
+        }
+    }
     std::cout << "uciok" << std::endl;
 }
 
@@ -301,15 +320,16 @@ void UCI::setOptionCommand(std::istringstream& stream)
     if (tok != "value")
         return;
 
-    if (name == "Hash")
+    auto& option = m_Options[name];
+    switch (option.type())
     {
-        int mb;
-        stream >> mb;
-        m_Search.setTTSize(mb);
-    }
-    else if (name == "Threads")
-    {
-        // lol
+        case UCIOption::Type::INT:
+        {
+            int value;
+            stream >> value;
+            option = value;
+            break;
+        }
     }
 }
 

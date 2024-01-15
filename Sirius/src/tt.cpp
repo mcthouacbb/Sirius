@@ -12,7 +12,7 @@ TT::TT(size_t size)
 // I'll change this later
 void TT::resize(int mb)
 {
-    size_t size = mb * 1024 * 1024 / sizeof(TTBucket);
+    size_t size = static_cast<uint64_t>(mb) * 1024 * 1024 / sizeof(TTBucket);
     m_Buckets.resize(size, {});
     m_CurrAge = 0;
 }
