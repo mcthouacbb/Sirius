@@ -26,6 +26,7 @@ struct SearchParam
 
 std::deque<SearchParam>& searchParams();
 SearchParam& addSearchParam(std::string name, int value, int min, int max, int step, std::function<void()> callback = std::function<void()>());
+void printWeatherFactoryConfig();
 void updateLmrTable();
 
 #define SEARCH_PARAM(name, val, min, max, step) \

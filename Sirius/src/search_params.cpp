@@ -25,6 +25,26 @@ SearchParam& addSearchParam(std::string name, int value, int min, int max, int s
     SearchParam& param = searchParams().back();
     return param;
 }
+
+void printWeatherFactoryConfig()
+{
+    std::cout << "{\n";
+    for (auto& param : searchParams())
+    {
+        std::cout << "    \"" << param.name << "\": {\n";
+        std::cout << "        \"value\": " << param.defaultValue << ",\n";
+        std::cout << "        \"min_value\": " << param.min << ",\n";
+        std::cout << "        \"max_value\": " << param.max << ",\n";
+        std::cout << "        \"step\": " << param.step << "\n";
+        std::cout << "    }";
+        // terrible
+        if (&param != &searchParams().back())
+            std::cout << ",";
+        std::cout << "\n";
+    }
+    std::cout << "}";
+}
+
 #endif
 
 extern std::array<std::array<int, 64>, 64> lmrTable;
