@@ -178,9 +178,6 @@ void UCI::uciCommand() const
             }
         }
     }
-    std::cout << "option name Hash type spin default 64 min 1 max 2048" << std::endl;
-    // lol
-    std::cout << "option name Threads type spin default 1 min 1 max 1" << std::endl;
     std::cout << "uciok" << std::endl;
 }
 
