@@ -499,12 +499,13 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
 
         int extension = 0;
         if (!root &&
-            depth >= MIN_SE_DEPTH &&
+            !singularSearch &&
+            depth >= seMinDepth &&
             move == ttMove &&
-            ttDepth >= depth - SE_TT_DEPTH_MARGIN &&
+            ttDepth >= depth - seTTDepthMargin &&
             ttBound != TTEntry::Bound::UPPER_BOUND)
         {
-            int sBeta = std::max(-SCORE_MATE, ttScore - depth * SE_BETA_DEPTH_SCALE / 16);
+            int sBeta = std::max(-SCORE_MATE, ttScore - depth * seBetaDepthScale / 16);
             int sDepth = (depth - 1) / 2;
 
             stack->excludedMove = move;
