@@ -7,6 +7,7 @@
 #include "comm/cmdline.h"
 #include "comm/uci.h"
 #include "eval/eval.h"
+#include "search_params.h"
 
 int main()
 {
@@ -29,6 +30,12 @@ int main()
         comm::currComm = &uci;
         uci.run();
     }
+#ifdef EXTERNAL_TUNE
+    else if (mode == "wfconfig")
+    {
+        search::printWeatherFactoryConfig();
+    }
+#endif
     else
     {
         std::cout << "Unrecognized mode" << std::endl;
