@@ -94,7 +94,7 @@ SEARCH_PARAM(lmrHistDivisor, 8192, 4096, 16384, 512);
 
 SEARCH_PARAM(seMinDepth, 8, 4, 12, 1);
 SEARCH_PARAM(seTTDepthMargin, 3, 0, 6, 1);
-SEARCH_PARAM(seBetaDepthScale, 80, 8, 80, 6);
+SEARCH_PARAM(seBetaDepthScale, 64, 8, 80, 6);
 
 
 }
