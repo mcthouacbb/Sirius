@@ -506,7 +506,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
             ttBound != TTEntry::Bound::UPPER_BOUND)
         {
             int sBeta = std::max(-SCORE_MATE, ttScore - depth * seBetaDepthScale / 16);
-            int sDepth = (depth - 1) / 2;
+            int sDepth = (depth + 1) / 2;
 
             stack->excludedMove = move;
 
