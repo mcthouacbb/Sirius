@@ -87,7 +87,7 @@ MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, c
             score = PROMOTION_SCORE + promotionBonus(move);
         }
         else if (move == killers[0] || move == killers[1])
-            score = KILLER_SCORE;
+            score = KILLER_SCORE + (move == killers[0]);
         else
             score = history.getQuietStats(ExtMove::from(board, move), contHistEntries);
         m_MoveScores[i] = score;
@@ -115,6 +115,6 @@ ScoredMove MoveOrdering::selectMove(uint32_t index)
     int history = 0;
     if (moveIsQuiet(m_Board, move) && score < KILLER_SCORE)
         history = score;
-    
+
     return {move, score, history};
 }
