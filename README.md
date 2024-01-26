@@ -2,20 +2,20 @@
 
 A chess engine written in c++.
 Sirius does not come with a gui. To play against it, you should download a chess GUI that supports the Universal Chess Interface(UCI) protocol
-Optionally, you can also play from the command line, though it is a bit cumbersome
+Optionally, you can also play from the command line
 
 ## Strength
 See [Releases](https://github.com/mcthouacbb/Sirius/releases)
 
 | Version | Release Date | [CCRL Blitz](https://ccrl.chessdom.com/ccrl/404/) | [CCRL 40/15](https://ccrl.chessdom.com/ccrl/4040/) |
 | --- | --- | --- | --- |
-| 5.0 | 2023-10-27 | N/A | 2677 |
+| 5.0 | 2023-10-27 | N/A | 2680 |
 
 
 ## Features
 - Board representation
     - BitBoards
-    - Mailbox 0x88
+    - Mailbox 8x8
     - Zobrist hashing
     - Packed 16 bit Move Representation
     - Static Exchange Evaluation
@@ -38,23 +38,26 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
         - SEE Move Ordering
         - Killer Moves Heuristic
         - History Heuristic
-            - History Malus
-            - History Gravity
+        - Continuation History
     - Quiescence Search
         - SEE Pruning
     - Transposition Table
-        - Stockfish/Ethereal replacement scheme
-        - Cutoffs
     - Selectivity
         - Check Extension
         - Principal Variation Search(PVS)
-            - 2 Fold LMR
+            - 3 Fold LMR
         - Reverse Futility Pruning
         - Null Move Pruning
         - Futility Pruning
         - Late Move Pruning
-        - SEE pruning
+        - History Pruning
+        - SEE Pruning
         - Late Move Reductions
+        - Internal Iterative Reductions
+        - 
+    - Miscellaneous
+      	- Improving Heuristic
+      	- Node count time management
 
 ## CLI Usage
 - Type "uci" for the UCI protocol(not recommended for direct use, usually used by a chess GUI)
@@ -65,13 +68,13 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
 ## Non-standard UCI commands
 - `"d"`
     - Prints a string representation of the board from white's perspective
-- `"bench" <depth>`
-    - Runs an <depth> depth search on a set of internal benchmark positions and prints out the number of nodes and the time token.
+- `"bench"`
+    - Runs an depth 15 search on a set of internal benchmark positions and prints out the number of nodes and the time token.
 
 ## UCI options
 | Name             |  Type   | Default value |       Valid values        | Description                                                                          |
 |:-----------------|:-------:|:-------------:|:-------------------------:|:-------------------------------------------------------------------------------------|
-| Hash             | integer |      64       |        [1, 2048]          | Size of the transposition table in Megabytes.                                        |
+| Hash             | integer |      64       |        [1, 65536]          | Size of the transposition table in Megabytes.                                        |
 | Threads          | integer |       1       |         [1, 1]            | Number of threads used to search (currently does nothing).                           |
 
 ## Building
