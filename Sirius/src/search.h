@@ -27,6 +27,8 @@ struct SearchPly
     int staticEval;
 
     uint32_t failHighCount;
+
+    Move excludedMove;
 };
 
 struct SearchInfo
