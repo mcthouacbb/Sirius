@@ -506,7 +506,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
             ttBound != TTEntry::Bound::UPPER_BOUND)
         {
             int sBeta = std::max(-SCORE_MATE, ttScore - depth * seBetaDepthScale / 16);
-            int sDepth = (depth + 1) / 2;
+            int sDepth = depth / 2 + 1;
 
             stack->excludedMove = move;
 
@@ -528,8 +528,8 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
             quietsTried.push_back(move);
         rootPly++;
 
-        if (extension == 0)
-            extension = givesCheck;
+        if (givesCheck)
+            extension = std::max(extension, 1);
 
         int reduction = 0;
         if (movesPlayed >= (isPV ? lmrMinMovesPv : lmrMinMovesNonPv) &&
