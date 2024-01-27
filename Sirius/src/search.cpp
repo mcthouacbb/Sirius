@@ -388,6 +388,8 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
     ))
         posEval = ttScore;
 
+    stack[1].killers = {};
+
     BoardState state;
 
     if (!isPV && !inCheck)
