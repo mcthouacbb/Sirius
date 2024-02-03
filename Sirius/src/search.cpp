@@ -245,10 +245,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
             info.pvBegin = thread.stack[0].pv.data();
             info.pvEnd = thread.stack[0].pv.data() + thread.stack[0].pvLength;
             info.score = searchScore;
-            if (report)
-            {
-                comm::currComm->reportSearchInfo(info);
-            }
+            comm::currComm->reportSearchInfo(info);
         }
         if (m_TimeMan.stopSoft(bestMove, thread.nodes, thread.limits))
             break;
