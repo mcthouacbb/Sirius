@@ -403,7 +403,6 @@ void init()
                 {
                     BitBoard dstRay = getRay(dst, oppDir(dir));
                     attackData.inBetweenSquares[src][dst] = srcRay & dstRay;
-                    attackData.pinRays[src][dst] = srcRay;
                     attackData.moveMasks[src][dst] |= (srcRay & dstRay);
                     attackData.alignedSquares[src][dst] = srcRay | dstRay;
                 }

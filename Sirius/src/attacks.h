@@ -4,6 +4,7 @@
 #include "bitboard.h"
 
 #include <array>
+#include <utility>
 
 namespace attacks
 {
@@ -119,11 +120,6 @@ inline BitBoard inBetweenSquares(uint32_t src, uint32_t dst)
     return attackData.inBetweenSquares[src][dst];
 }
 
-inline BitBoard pinRay(uint32_t king, uint32_t pinned)
-{
-    return attackData.pinRays[king][pinned];
-}
-
 inline BitBoard moveMask(uint32_t king, uint32_t checker)
 {
     return attackData.moveMasks[king][checker];
@@ -171,7 +167,12 @@ inline BitBoard queenAttacks(uint32_t square, BitBoard blockers)
 template<PieceType pce>
 inline BitBoard pieceAttacks(uint32_t square, BitBoard blockers)
 {
-    static_assert(pce != PieceType::PAWN, "Cannot use pieceAttacks for pawns");
+    static_assert(
+        pce == PieceType::KNIGHT ||
+        pce == PieceType::BISHOP ||
+        pce == PieceType::ROOK ||
+        pce == PieceType::QUEEN ||
+        pce == PieceType::KING, "invalid piece type for attacks::pieceAttacks");
     switch (pce)
     {
         case PieceType::KNIGHT: return knightAttacks(square);
@@ -179,6 +180,8 @@ inline BitBoard pieceAttacks(uint32_t square, BitBoard blockers)
         case PieceType::ROOK: return rookAttacks(square, blockers);
         case PieceType::QUEEN: return queenAttacks(square, blockers);
         case PieceType::KING: return kingAttacks(square);
+        // unreachable
+        default: return 0;
     }
 }
 

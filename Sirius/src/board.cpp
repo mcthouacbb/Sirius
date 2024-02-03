@@ -925,10 +925,9 @@ bool Board::isLegal(Move move) const
     }
 
     // pinned pieces
-    return !(
-        (checkBlockers(m_SideToMove) & (1ull << move.srcPos())) &&
-        !(attacks::pinRay(kingIdx, move.srcPos()) & (1ull << move.dstPos()))
-    );
+    return
+        !(checkBlockers(m_SideToMove) & (1ull << move.srcPos())) ||
+        attacks::aligned(kingIdx, move.srcPos(), move.dstPos());
 }
 
 void Board::updateCheckInfo()
