@@ -3,6 +3,13 @@
 #include "defs.h"
 #include "bitboard.h"
 
+#include <array>
+
+namespace attacks
+{
+
+void init();
+
 enum class Direction
 {
     NORTH,
@@ -15,71 +22,67 @@ enum class Direction
     SOUTH_WEST
 };
 
-namespace attacks
+struct AttackData
 {
+    struct Magic
+    {
+        BitBoard* attackData;
+        BitBoard mask;
+        uint64_t magic;
+        uint32_t shift;
+    };
 
-extern BitBoard inBetweenSquares[64][64];
-extern BitBoard pinRays[64][64];
-extern BitBoard moveMasks[64][64];
-extern BitBoard alignedSquares[64][64];
+    std::array<std::array<BitBoard, 64>, 64> inBetweenSquares;
+    std::array<std::array<BitBoard, 64>, 64> pinRays;
+    std::array<std::array<BitBoard, 64>, 64> moveMasks;
+    std::array<std::array<BitBoard, 64>, 64> alignedSquares;
 
-extern int castleMasks[64];
+    std::array<std::array<BitBoard, 64>, 2> pawnAttacks;
+    std::array<BitBoard, 64> kingAttacks;
+    std::array<BitBoard, 64> knightAttacks;
 
-void init();
+    std::array<int, 64> castleRightsMasks;
 
-BitBoard getRay(uint32_t pos, Direction dir);
+    Magic bishopTable[64];
+    Magic rookTable[64];
 
-BitBoard getPawnAttacks(Color color, uint32_t pos);
-BitBoard getKingAttacks(uint32_t pos);
-BitBoard getKnightAttacks(uint32_t pos);
+    std::array<BitBoard, 102400> rookAttacks;
+    std::array<BitBoard, 5248> bishopAttacks;
+};
 
-BitBoard getBishopAttacks(uint32_t pos, BitBoard blockers);
-BitBoard getRookAttacks(uint32_t pos, BitBoard blockers);
-BitBoard getQueenAttacks(uint32_t pos, BitBoard blockers);
+extern AttackData attackData;
 
 template<Color c>
-inline BitBoard getPawnBBEastAttacks(BitBoard pawns)
+inline BitBoard pawnEastAttacks(BitBoard pawns)
 {
     if constexpr (c == Color::WHITE)
-    {
         return shiftNorthEast(pawns);
-    }
     else
-    {
         return shiftSouthEast(pawns);
-    }
 }
 
 template<Color c>
-inline BitBoard getPawnBBWestAttacks(BitBoard pawns)
+inline BitBoard pawnWestAttacks(BitBoard pawns)
 {
     if constexpr (c == Color::WHITE)
-    {
         return shiftNorthWest(pawns);
-    }
     else
-    {
         return shiftSouthWest(pawns);
-    }
 }
 
 template<Color c>
-inline BitBoard getPawnBBAttacks(BitBoard pawns)
+inline BitBoard pawnAttacks(BitBoard pawns)
 {
-    return getPawnBBWestAttacks<c>(pawns) | getPawnBBEastAttacks<c>(pawns);
+    return pawnWestAttacks<c>(pawns) | pawnEastAttacks<c>(pawns);
 }
 
 template<Color c>
-inline BitBoard getPawnBBPushes(BitBoard pawns)
+inline BitBoard pawnPushes(BitBoard pawns)
 {
     if constexpr (c == Color::WHITE)
-    {
         return shiftNorth(pawns);
-    }
     else
-    {
         return shiftSouth(pawns);
-    }
 }
 
 template<Color c>
@@ -89,92 +92,95 @@ inline constexpr int pawnPushOffset()
 }
 
 template<Color c>
-inline constexpr Direction pawnEastCaptureDir()
-{
-    return c == Color::WHITE ? Direction::NORTH_EAST : Direction::SOUTH_EAST;
-}
-
-template<Color c>
-inline constexpr Direction pawnWestCaptureDir()
-{
-    return c == Color::WHITE ? Direction::NORTH_WEST : Direction::SOUTH_WEST;
-}
-
-template<Color c>
-inline constexpr BitBoard kscCheckSquares()
-{
-    if constexpr (c == Color::WHITE)
-    {
-        return 0x70;
-    }
-    else
-    {
-        return 0x7000000000000000;
-    }
-}
-
-template<Color c>
-inline constexpr BitBoard qscCheckSquares()
-{
-    if constexpr (c == Color::WHITE)
-    {
-        return 0x1C;
-    }
-    else
-    {
-        return 0x1C00000000000000;
-    }
-}
-
-template<Color c>
 inline constexpr BitBoard kscBlockSquares()
 {
     if constexpr (c == Color::WHITE)
-    {
         return 0x60;
-    }
     else
-    {
         return 0x6000000000000000;
-    }
 }
 
 template<Color c>
 inline constexpr BitBoard qscBlockSquares()
 {
     if constexpr (c == Color::WHITE)
-    {
         return 0xE;
-    }
     else
-    {
         return 0xE00000000000000;
-    }
 }
 
 inline bool aligned(uint32_t a, uint32_t b, uint32_t c)
 {
-    return alignedSquares[a][b] & (1ull << c);
+    return attackData.alignedSquares[a][b] & (1ull << c);
 }
 
-inline BitBoard inBetweenBB(uint32_t src, uint32_t dst)
+inline BitBoard inBetweenSquares(uint32_t src, uint32_t dst)
 {
-    return inBetweenSquares[src][dst];
+    return attackData.inBetweenSquares[src][dst];
 }
 
-inline BitBoard pinRayBB(uint32_t king, uint32_t pinned)
+inline BitBoard pinRay(uint32_t king, uint32_t pinned)
 {
-    return pinRays[king][pinned];
+    return attackData.pinRays[king][pinned];
 }
 
-inline BitBoard moveMaskBB(uint32_t king, uint32_t checker)
+inline BitBoard moveMask(uint32_t king, uint32_t checker)
 {
-    return moveMasks[king][checker];
+    return attackData.moveMasks[king][checker];
 }
 
-inline int getCastleMask(uint32_t pos)
+inline int castleRightsMask(uint32_t square)
 {
-    return castleMasks[pos];
+    return attackData.castleRightsMasks[square];
 }
+
+inline BitBoard pawnAttacks(Color color, uint32_t square)
+{
+    return attackData.pawnAttacks[static_cast<int>(color)][square];
+}
+
+inline BitBoard kingAttacks(uint32_t square)
+{
+    return attackData.kingAttacks[square];
+}
+
+inline BitBoard knightAttacks(uint32_t square)
+{
+    return attackData.knightAttacks[square];
+}
+
+inline BitBoard bishopAttacks(uint32_t square, BitBoard blockers)
+{
+    blockers &= attackData.bishopTable[square].mask;
+    uint64_t index = blockers * attackData.bishopTable[square].magic;
+    return attackData.bishopTable[square].attackData[index >> attackData.bishopTable[square].shift];
+}
+
+inline BitBoard rookAttacks(uint32_t square, BitBoard blockers)
+{
+    blockers &= attackData.rookTable[square].mask;
+    uint64_t index = blockers * attackData.rookTable[square].magic;
+    return attackData.rookTable[square].attackData[index >> attackData.rookTable[square].shift];
+}
+
+inline BitBoard queenAttacks(uint32_t square, BitBoard blockers)
+{
+    return bishopAttacks(square, blockers) | rookAttacks(square, blockers);
+}
+
+template<PieceType pce>
+inline BitBoard pieceAttacks(uint32_t square, BitBoard blockers)
+{
+    static_assert(pce != PieceType::PAWN, "Cannot use pieceAttacks for pawns");
+    switch (pce)
+    {
+        case PieceType::KNIGHT: return knightAttacks(square);
+        case PieceType::BISHOP: return bishopAttacks(square, blockers);
+        case PieceType::ROOK: return rookAttacks(square, blockers);
+        case PieceType::QUEEN: return queenAttacks(square, blockers);
+        case PieceType::KING: return kingAttacks(square);
+    }
+}
+
 
 }

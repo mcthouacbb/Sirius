@@ -588,8 +588,8 @@ void Board::makeMove(Move move, BoardState& state)
 
     m_State->zkey.updateCastlingRights(m_State->castlingRights);
 
-    m_State->castlingRights &= attacks::getCastleMask(move.srcPos());
-    m_State->castlingRights &= attacks::getCastleMask(move.dstPos());
+    m_State->castlingRights &= attacks::castleRightsMask(move.srcPos());
+    m_State->castlingRights &= attacks::castleRightsMask(move.dstPos());
 
     m_State->zkey.updateCastlingRights(m_State->castlingRights);
 
@@ -709,12 +709,12 @@ bool Board::squareAttacked(Color color, uint32_t square, BitBoard blockers) cons
 BitBoard Board::attackersTo(Color color, uint32_t square, BitBoard blockers) const
 {
     BitBoard queens = getPieces(PieceType::QUEEN);
-    BitBoard pawns = (getPieces(color, PieceType::PAWN) & attacks::getPawnAttacks(flip(color), square));
+    BitBoard pawns = (getPieces(color, PieceType::PAWN) & attacks::pawnAttacks(flip(color), square));
     BitBoard nonPawns =
-        (getPieces(PieceType::KNIGHT) & attacks::getKnightAttacks(square)) |
-        (getPieces(PieceType::KING) & attacks::getKingAttacks(square)) |
-        ((getPieces(PieceType::BISHOP) | queens) & attacks::getBishopAttacks(square, blockers)) |
-        ((getPieces(PieceType::ROOK) | queens) & attacks::getRookAttacks(square, blockers));
+        (getPieces(PieceType::KNIGHT) & attacks::knightAttacks(square)) |
+        (getPieces(PieceType::KING) & attacks::kingAttacks(square)) |
+        ((getPieces(PieceType::BISHOP) | queens) & attacks::bishopAttacks(square, blockers)) |
+        ((getPieces(PieceType::ROOK) | queens) & attacks::rookAttacks(square, blockers));
     return pawns | (nonPawns & getColor(color));
 }
 
@@ -722,14 +722,14 @@ BitBoard Board::attackersTo(uint32_t square, BitBoard blockers) const
 {
     BitBoard queens = getPieces(PieceType::QUEEN);
     BitBoard pawns =
-        (getPieces(Color::WHITE, PieceType::PAWN) & attacks::getPawnAttacks(Color::BLACK, square)) |
-        (getPieces(Color::BLACK, PieceType::PAWN) & attacks::getPawnAttacks(Color::WHITE, square));
+        (getPieces(Color::WHITE, PieceType::PAWN) & attacks::pawnAttacks(Color::BLACK, square)) |
+        (getPieces(Color::BLACK, PieceType::PAWN) & attacks::pawnAttacks(Color::WHITE, square));
 
     BitBoard nonPawns =
-        (getPieces(PieceType::KNIGHT) & attacks::getKnightAttacks(square)) |
-        (getPieces(PieceType::KING) & attacks::getKingAttacks(square)) |
-        ((getPieces(PieceType::BISHOP) | queens) & attacks::getBishopAttacks(square, blockers)) |
-        ((getPieces(PieceType::ROOK) | queens) & attacks::getRookAttacks(square, blockers));
+        (getPieces(PieceType::KNIGHT) & attacks::knightAttacks(square)) |
+        (getPieces(PieceType::KING) & attacks::kingAttacks(square)) |
+        ((getPieces(PieceType::BISHOP) | queens) & attacks::bishopAttacks(square, blockers)) |
+        ((getPieces(PieceType::ROOK) | queens) & attacks::rookAttacks(square, blockers));
     return pawns | nonPawns;
 }
 
@@ -737,8 +737,8 @@ BitBoard Board::pinnersBlockers(uint32_t square, BitBoard attackers, BitBoard& p
 {
     BitBoard queens = getPieces(PieceType::QUEEN);
     attackers &=
-        (attacks::getRookAttacks(square, 0) & (getPieces(PieceType::ROOK) | queens)) |
-        (attacks::getBishopAttacks(square, 0) & (getPieces(PieceType::BISHOP) | queens));
+        (attacks::rookAttacks(square, 0) & (getPieces(PieceType::ROOK) | queens)) |
+        (attacks::bishopAttacks(square, 0) & (getPieces(PieceType::BISHOP) | queens));
 
     BitBoard blockers = 0;
 
@@ -750,7 +750,7 @@ BitBoard Board::pinnersBlockers(uint32_t square, BitBoard attackers, BitBoard& p
     {
         uint32_t attacker = popLSB(attackers);
 
-        BitBoard between = attacks::inBetweenBB(square, attacker) & blockMask;
+        BitBoard between = attacks::inBetweenSquares(square, attacker) & blockMask;
 
         if (between && (between & (between - 1)) == 0)
         {
@@ -834,7 +834,7 @@ bool Board::see_margin(Move move, int margin) const
             BitBoard pawn = extractLSB(pawns);
             allPieces ^= pawn;
             attackers ^= pawn;
-            attackers |= (attacks::getBishopAttacks(dst, allPieces) & allPieces & diagPieces);
+            attackers |= (attacks::bishopAttacks(dst, allPieces) & allPieces & diagPieces);
 
             value = seePieceValue(PieceType::PAWN) - value;
             if (value < static_cast<int>(us))
@@ -855,7 +855,7 @@ bool Board::see_margin(Move move, int margin) const
             BitBoard bishop = extractLSB(bishops);
             allPieces ^= bishop;
             attackers ^= bishop;
-            attackers |= (attacks::getBishopAttacks(dst, allPieces) & allPieces & diagPieces);
+            attackers |= (attacks::bishopAttacks(dst, allPieces) & allPieces & diagPieces);
 
             value = seePieceValue(PieceType::BISHOP) - value;
             if (value < static_cast<int>(us))
@@ -866,7 +866,7 @@ bool Board::see_margin(Move move, int margin) const
             BitBoard rook = extractLSB(rooks);
             allPieces ^= rook;
             attackers ^= rook;
-            attackers |= (attacks::getRookAttacks(dst, allPieces) & allPieces & straightPieces);
+            attackers |= (attacks::rookAttacks(dst, allPieces) & allPieces & straightPieces);
 
             value = seePieceValue(PieceType::ROOK) - value;
             if (value < static_cast<int>(us))
@@ -878,8 +878,8 @@ bool Board::see_margin(Move move, int margin) const
             allPieces ^= queen;
             attackers ^= queen;
             attackers |=
-                (attacks::getBishopAttacks(dst, allPieces) & allPieces & diagPieces) |
-                (attacks::getRookAttacks(dst, allPieces) & allPieces & straightPieces);
+                (attacks::bishopAttacks(dst, allPieces) & allPieces & diagPieces) |
+                (attacks::rookAttacks(dst, allPieces) & allPieces & straightPieces);
 
             value = seePieceValue(PieceType::QUEEN) - value;
             if (value < static_cast<int>(us))
@@ -913,8 +913,8 @@ bool Board::isLegal(Move move) const
     {
         int captureSq = to + (m_SideToMove == Color::WHITE ? -8 : 8);
         BitBoard piecesAfter = (1ull << to) | (getAllPieces() ^ (1ull << from) ^ (1ull << captureSq));
-        return !(attacks::getRookAttacks(kingIdx, piecesAfter) & (getPieces(flip(m_SideToMove), PieceType::ROOK) | getPieces(flip(m_SideToMove), PieceType::QUEEN))) &&
-            !(attacks::getBishopAttacks(kingIdx, piecesAfter) & (getPieces(flip(m_SideToMove), PieceType::BISHOP) | getPieces(flip(m_SideToMove), PieceType::QUEEN)));
+        return !(attacks::rookAttacks(kingIdx, piecesAfter) & (getPieces(flip(m_SideToMove), PieceType::ROOK) | getPieces(flip(m_SideToMove), PieceType::QUEEN))) &&
+            !(attacks::bishopAttacks(kingIdx, piecesAfter) & (getPieces(flip(m_SideToMove), PieceType::BISHOP) | getPieces(flip(m_SideToMove), PieceType::QUEEN)));
     }
 
     if (getPieceType(m_Squares[from]) == PieceType::KING)
@@ -927,7 +927,7 @@ bool Board::isLegal(Move move) const
     // pinned pieces
     return !(
         (checkBlockers(m_SideToMove) & (1ull << move.srcPos())) &&
-        !(attacks::pinRayBB(kingIdx, move.srcPos()) & (1ull << move.dstPos()))
+        !(attacks::pinRay(kingIdx, move.srcPos()) & (1ull << move.dstPos()))
     );
 }
 
