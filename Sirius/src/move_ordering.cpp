@@ -80,7 +80,7 @@ MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, c
 
         if (isCapture)
         {
-            score = CAPTURE_SCORE * board.see_margin(move, 0) + mvvLva(board, move);
+            score = CAPTURE_SCORE * board.see(move, 0) + mvvLva(board, move);
         }
         else if (isPromotion)
         {

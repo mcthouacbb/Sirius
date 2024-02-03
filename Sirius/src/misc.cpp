@@ -178,8 +178,8 @@ void testSEE()
             return;
         }
 
-        bool fail = board.see_margin(move, value + 1);
-        bool pass = board.see_margin(move, value);
+        bool fail = board.see(move, value + 1);
+        bool pass = board.see(move, value);
         bool failed = false;
         if (fail)
         {

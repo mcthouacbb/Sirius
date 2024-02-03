@@ -92,7 +92,7 @@ public:
     BitBoard checkers() const;
     BitBoard checkBlockers(Color color) const;
 
-    bool see_margin(Move move, int margin) const;
+    bool see(Move move, int margin) const;
     bool isLegal(Move move) const;
 
     const eval::EvalState& evalState() const;

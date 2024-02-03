@@ -473,7 +473,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
 
             if (!isPV &&
                 depth <= maxSeePruneDepth &&
-                !board.see_margin(move, depth * (quiet ? seePruneMarginQuiet : seePruneMarginNoisy)))
+                !board.see(move, depth * (quiet ? seePruneMarginQuiet : seePruneMarginNoisy)))
                 continue;
 
             if (quiet &&
@@ -644,7 +644,7 @@ int Search::qsearch(SearchThread& thread, SearchPly* stack, int alpha, int beta)
         auto [move, moveScore, moveHistory] = ordering.selectMove(moveIdx);
         if (!board.isLegal(move))
             continue;
-        if (!board.see_margin(move, 0))
+        if (!board.see(move, 0))
             continue;
         board.makeMove(move, state);
         thread.nodes++;

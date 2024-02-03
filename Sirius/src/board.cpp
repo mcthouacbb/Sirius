@@ -763,7 +763,7 @@ BitBoard Board::pinnersBlockers(uint32_t square, BitBoard attackers, BitBoard& p
 }
 
 // mostly from stockfish
-bool Board::see_margin(Move move, int margin) const
+bool Board::see(Move move, int margin) const
 {
     int src = move.srcPos();
     int dst = move.dstPos();
