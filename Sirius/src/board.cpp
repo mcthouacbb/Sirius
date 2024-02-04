@@ -905,7 +905,7 @@ bool Board::see(Move move, int margin) const
 
 bool Board::isLegal(Move move) const
 {
-    uint32_t kingIdx = getPieces(m_SideToMove, PieceType::KING).lsb();
+    int kingSq = kingSquare(m_SideToMove);
     int from = move.srcPos();
     int to = move.dstPos();
 
@@ -913,11 +913,11 @@ bool Board::isLegal(Move move) const
     {
         int captureSq = to + (m_SideToMove == Color::WHITE ? -8 : 8);
         Bitboard piecesAfter = Bitboard::fromSquare(to) | (getAllPieces() ^ Bitboard::fromSquare(from) ^ Bitboard::fromSquare(captureSq));
-        return !(attacks::rookAttacks(kingIdx, piecesAfter) & (getPieces(~m_SideToMove, PieceType::ROOK) | getPieces(~m_SideToMove, PieceType::QUEEN))) &&
-            !(attacks::bishopAttacks(kingIdx, piecesAfter) & (getPieces(~m_SideToMove, PieceType::BISHOP) | getPieces(~m_SideToMove, PieceType::QUEEN)));
+        return !(attacks::rookAttacks(kingSq, piecesAfter) & (getPieces(~m_SideToMove, PieceType::ROOK) | getPieces(~m_SideToMove, PieceType::QUEEN))) &&
+            !(attacks::bishopAttacks(kingSq, piecesAfter) & (getPieces(~m_SideToMove, PieceType::BISHOP) | getPieces(~m_SideToMove, PieceType::QUEEN)));
     }
 
-    if (getPieceType(m_Squares[from]) == PieceType::KING)
+    if (from == kingSq)
     {
         if (move.type() == MoveType::CASTLE && squareAttacked(~m_SideToMove, (move.srcPos() + move.dstPos()) / 2))
             return false;
@@ -927,13 +927,13 @@ bool Board::isLegal(Move move) const
     // pinned pieces
     return
         !(checkBlockers(m_SideToMove) & Bitboard::fromSquare(move.srcPos())) ||
-        attacks::aligned(kingIdx, move.srcPos(), move.dstPos());
+        attacks::aligned(kingSq, move.srcPos(), move.dstPos());
 }
 
 void Board::updateCheckInfo()
 {
-    uint32_t whiteKingIdx = getPieces(Color::WHITE, PieceType::KING).lsb();
-    uint32_t blackKingIdx = getPieces(Color::BLACK, PieceType::KING).lsb();
+    uint32_t whiteKingIdx = kingSquare(Color::WHITE);
+    uint32_t blackKingIdx = kingSquare(Color::BLACK);
     uint32_t kingIdx = m_SideToMove == Color::WHITE ? whiteKingIdx : blackKingIdx;
 
     m_State->checkInfo.checkers = attackersTo(~m_SideToMove, kingIdx);
