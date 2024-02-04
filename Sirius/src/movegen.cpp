@@ -38,24 +38,24 @@ template<MoveGenType type, Color color>
 void genKingMoves(const Board& board, MoveList& moves);
 
 template<MoveGenType type, Color color, PieceType piece>
-void genPieceMoves(const Board& board, MoveList& moves, BitBoard moveMask);
+void genPieceMoves(const Board& board, MoveList& moves, Bitboard moveMask);
 
 template<MoveGenType type, Color color>
-void genPawnMoves(const Board& board, MoveList& moves, BitBoard moveMask);
+void genPawnMoves(const Board& board, MoveList& moves, Bitboard moveMask);
 
 
 
 template<MoveGenType type, Color color>
 void genMoves(const Board& board, MoveList& moves)
 {
-    BitBoard checkers = board.checkers();
-    if ((checkers & (checkers - 1)) == 0)
+    Bitboard checkers = board.checkers();
+    if (!checkers.multiple())
     {
-        uint32_t kingIdx = getLSB(board.getPieces(color, PieceType::KING));
-        BitBoard moveMask = ~board.getColor(color) & (checkers ? attacks::moveMask(kingIdx, getLSB(checkers)) : ~0ull);
+        uint32_t kingIdx = board.getPieces(color, PieceType::KING).lsb();
+        Bitboard moveMask = ~board.getColor(color) & (checkers ? attacks::moveMask(kingIdx, checkers.lsb()) : Bitboard(~0ull));
         genPawnMoves<type, color>(board, moves, moveMask);
         if constexpr (type == MoveGenType::NOISY)
-            moveMask &= board.getColor(flip<color>());
+            moveMask &= board.getColor(~color);
         genPieceMoves<type, color, PieceType::KNIGHT>(board, moves, moveMask);
         genPieceMoves<type, color, PieceType::BISHOP>(board, moves, moveMask);
         genPieceMoves<type, color, PieceType::ROOK>(board, moves, moveMask);
@@ -67,18 +67,18 @@ void genMoves(const Board& board, MoveList& moves)
 template<MoveGenType type, Color color>
 void genKingMoves(const Board& board, MoveList& moves)
 {
-    BitBoard usBB = board.getColor(color);
-    BitBoard oppBB = board.getColor(flip<color>());
-    BitBoard kingBB = board.getPieces(color, PieceType::KING);
-    uint32_t kingIdx = getLSB(kingBB);
+    Bitboard usBB = board.getColor(color);
+    Bitboard oppBB = board.getColor(~color);
+    Bitboard kingBB = board.getPieces(color, PieceType::KING);
+    uint32_t kingIdx = kingBB.lsb();
 
-    BitBoard kingAttacks = attacks::kingAttacks(kingIdx);
+    Bitboard kingAttacks = attacks::kingAttacks(kingIdx);
     kingAttacks &= ~usBB;
     if constexpr (type == MoveGenType::NOISY)
         kingAttacks &= oppBB;
     while (kingAttacks)
     {
-        uint32_t dst = popLSB(kingAttacks);
+        uint32_t dst = kingAttacks.poplsb();
         moves.push_back(Move(kingIdx, dst, MoveType::NONE));
     }
 
@@ -103,60 +103,60 @@ void genKingMoves(const Board& board, MoveList& moves)
 }
 
 template<MoveGenType type, Color color, PieceType piece>
-void genPieceMoves(const Board& board, MoveList& moves, BitBoard moveMask)
+void genPieceMoves(const Board& board, MoveList& moves, Bitboard moveMask)
 {
-    BitBoard pieceBB = board.getPieces(color, piece);
-    BitBoard allPieces = board.getAllPieces();
+    Bitboard pieceBB = board.getPieces(color, piece);
+    Bitboard allPieces = board.getAllPieces();
 
     while (pieceBB)
     {
-        uint32_t from = popLSB(pieceBB);
-        BitBoard attacks = attacks::pieceAttacks<piece>(from, allPieces) & moveMask;
+        uint32_t from = pieceBB.poplsb();
+        Bitboard attacks = attacks::pieceAttacks<piece>(from, allPieces) & moveMask;
         while (attacks)
         {
-            uint32_t to = popLSB(attacks);
+            uint32_t to = attacks.poplsb();
             moves.push_back(Move(from, to, MoveType::NONE));
         }
     }
 }
 
 template<MoveGenType type, Color color>
-void genPawnMoves(const Board& board, MoveList& moves, BitBoard moveMask)
+void genPawnMoves(const Board& board, MoveList& moves, Bitboard moveMask)
 {
-    BitBoard pawns = board.getPieces(color, PieceType::PAWN);
-    BitBoard allPieces = board.getAllPieces();
-    BitBoard oppBB = board.getColor(flip<color>());
+    Bitboard pawns = board.getPieces(color, PieceType::PAWN);
+    Bitboard allPieces = board.getAllPieces();
+    Bitboard oppBB = board.getColor(~color);
 
-    if constexpr (type == MoveGenType::LEGAL || type == MoveGenType::NOISY_QUIET)
+    if constexpr (type == MoveGenType::NOISY_QUIET)
     {
-        BitBoard pawnPushes = attacks::pawnPushes<color>(pawns);
+        Bitboard pawnPushes = attacks::pawnPushes<color>(pawns);
         pawnPushes &= ~allPieces;
 
-        BitBoard doublePushes = attacks::pawnPushes<color>(pawnPushes & nthRank<color, 2>());
+        Bitboard doublePushes = attacks::pawnPushes<color>(pawnPushes & Bitboard::nthRank<color, 2>());
         doublePushes &= ~allPieces;
         doublePushes &= moveMask;
 
         pawnPushes &= moveMask;
 
-        BitBoard promotions = pawnPushes & nthRank<color, 7>();
+        Bitboard promotions = pawnPushes & Bitboard::nthRank<color, 7>();
 
         pawnPushes ^= promotions;
 
         while (pawnPushes)
         {
-            uint32_t push = popLSB(pawnPushes);
+            uint32_t push = pawnPushes.poplsb();
             moves.push_back(Move(push - attacks::pawnPushOffset<color>(), push, MoveType::NONE));
         }
 
         while (doublePushes)
         {
-            uint32_t dPush = popLSB(doublePushes);
+            uint32_t dPush = doublePushes.poplsb();
             moves.push_back(Move(dPush - 2 * attacks::pawnPushOffset<color>(), dPush, MoveType::NONE));
         }
 
         while (promotions)
         {
-            uint32_t promotion = popLSB(promotions);
+            uint32_t promotion = promotions.poplsb();
             moves.push_back(Move(promotion - attacks::pawnPushOffset<color>(), promotion, MoveType::PROMOTION, Promotion::QUEEN));
             moves.push_back(Move(promotion - attacks::pawnPushOffset<color>(), promotion, MoveType::PROMOTION, Promotion::ROOK));
             moves.push_back(Move(promotion - attacks::pawnPushOffset<color>(), promotion, MoveType::PROMOTION, Promotion::BISHOP));
@@ -165,15 +165,15 @@ void genPawnMoves(const Board& board, MoveList& moves, BitBoard moveMask)
     }
     else if constexpr (type == MoveGenType::NOISY)
     {
-        BitBoard pawnPushes = attacks::pawnPushes<color>(pawns);
+        Bitboard pawnPushes = attacks::pawnPushes<color>(pawns);
         pawnPushes &= ~allPieces;
         pawnPushes &= moveMask;
 
-        BitBoard promotions = pawnPushes & nthRank<color, 7>();
+        Bitboard promotions = pawnPushes & Bitboard::nthRank<color, 7>();
 
         while (promotions)
         {
-            uint32_t promotion = popLSB(promotions);
+            uint32_t promotion = promotions.poplsb();
             moves.push_back(Move(promotion - attacks::pawnPushOffset<color>(), promotion, MoveType::PROMOTION, Promotion::QUEEN));
             moves.push_back(Move(promotion - attacks::pawnPushOffset<color>(), promotion, MoveType::PROMOTION, Promotion::ROOK));
             moves.push_back(Move(promotion - attacks::pawnPushOffset<color>(), promotion, MoveType::PROMOTION, Promotion::BISHOP));
@@ -183,25 +183,25 @@ void genPawnMoves(const Board& board, MoveList& moves, BitBoard moveMask)
 
 
 
-    BitBoard eastCaptures = attacks::pawnEastAttacks<color>(pawns);
-    if (board.epSquare() != -1 && (eastCaptures & (1ull << board.epSquare())) && ((1ull << (board.epSquare() - attacks::pawnPushOffset<color>())) & moveMask))
+    Bitboard eastCaptures = attacks::pawnEastAttacks<color>(pawns);
+    if (board.epSquare() != -1 && (eastCaptures & Bitboard::fromSquare(board.epSquare())) && (Bitboard::fromSquare(board.epSquare() - attacks::pawnPushOffset<color>()) & moveMask))
         moves.push_back(Move(board.epSquare() - attacks::pawnPushOffset<color>() - 1, board.epSquare(), MoveType::ENPASSANT));
 
     eastCaptures &= oppBB;
     eastCaptures &= moveMask;
 
-    BitBoard promotions = eastCaptures & nthRank<color, 7>();
+    Bitboard promotions = eastCaptures & Bitboard::nthRank<color, 7>();
     eastCaptures ^= promotions;
 
     while (eastCaptures)
     {
-        uint32_t capture = popLSB(eastCaptures);
+        uint32_t capture = eastCaptures.poplsb();
         moves.push_back(Move(capture - attacks::pawnPushOffset<color>() - 1, capture, MoveType::NONE));
     }
 
     while (promotions)
     {
-        uint32_t promotion = popLSB(promotions);
+        uint32_t promotion = promotions.poplsb();
         moves.push_back(Move(promotion - attacks::pawnPushOffset<color>() - 1, promotion, MoveType::PROMOTION, Promotion::QUEEN));
         moves.push_back(Move(promotion - attacks::pawnPushOffset<color>() - 1, promotion, MoveType::PROMOTION, Promotion::ROOK));
         moves.push_back(Move(promotion - attacks::pawnPushOffset<color>() - 1, promotion, MoveType::PROMOTION, Promotion::BISHOP));
@@ -209,25 +209,25 @@ void genPawnMoves(const Board& board, MoveList& moves, BitBoard moveMask)
     }
 
 
-    BitBoard westCaptures = attacks::pawnWestAttacks<color>(pawns);
-    if (board.epSquare() != -1 && (westCaptures & (1ull << board.epSquare())) && ((1ull << (board.epSquare() - attacks::pawnPushOffset<color>())) & moveMask))
+    Bitboard westCaptures = attacks::pawnWestAttacks<color>(pawns);
+    if (board.epSquare() != -1 && (westCaptures & Bitboard::fromSquare(board.epSquare())) && (Bitboard::fromSquare(board.epSquare() - attacks::pawnPushOffset<color>()) & moveMask))
         moves.push_back(Move(board.epSquare() - attacks::pawnPushOffset<color>() + 1, board.epSquare(), MoveType::ENPASSANT));
 
     westCaptures &= oppBB;
     westCaptures &= moveMask;
 
-    promotions = westCaptures & nthRank<color, 7>();
+    promotions = westCaptures & Bitboard::nthRank<color, 7>();
     westCaptures ^= promotions;
 
     while (westCaptures)
     {
-        uint32_t capture = popLSB(westCaptures);
+        uint32_t capture = westCaptures.poplsb();
         moves.push_back(Move(capture - attacks::pawnPushOffset<color>() + 1, capture, MoveType::NONE));
     }
 
     while (promotions)
     {
-        uint32_t promotion = popLSB(promotions);
+        uint32_t promotion = promotions.poplsb();
         moves.push_back(Move(promotion - attacks::pawnPushOffset<color>() + 1, promotion, MoveType::PROMOTION, Promotion::QUEEN));
         moves.push_back(Move(promotion - attacks::pawnPushOffset<color>() + 1, promotion, MoveType::PROMOTION, Promotion::ROOK));
         moves.push_back(Move(promotion - attacks::pawnPushOffset<color>() + 1, promotion, MoveType::PROMOTION, Promotion::BISHOP));

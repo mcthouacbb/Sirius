@@ -11,9 +11,9 @@
 
 struct CheckInfo
 {
-    BitBoard checkers;
-    std::array<BitBoard, 2> pinners;
-    std::array<BitBoard, 2> blockers;
+    Bitboard checkers;
+    std::array<Bitboard, 2> pinners;
+    std::array<Bitboard, 2> blockers;
 
 };
 
@@ -75,29 +75,29 @@ public:
     bool is50MoveDraw();
 
     Piece getPieceAt(uint32_t square) const;
-    BitBoard getPieces(PieceType type) const;
-    BitBoard getPieces(Color color, PieceType type) const;
-    BitBoard getColor(Color color) const;
-    BitBoard getAllPieces() const;
+    Bitboard getPieces(PieceType type) const;
+    Bitboard getPieces(Color color, PieceType type) const;
+    Bitboard getColor(Color color) const;
+    Bitboard getAllPieces() const;
 
     bool squareAttacked(Color color, uint32_t square) const;
-    bool squareAttacked(Color color, uint32_t square, BitBoard blockers) const;
-    BitBoard attackersTo(Color color, uint32_t square) const;
-    BitBoard attackersTo(Color color, uint32_t square, BitBoard blockers) const;
-    BitBoard attackersTo(uint32_t square) const;
-    BitBoard attackersTo(uint32_t square, BitBoard blockers) const;
+    bool squareAttacked(Color color, uint32_t square, Bitboard blockers) const;
+    Bitboard attackersTo(Color color, uint32_t square) const;
+    Bitboard attackersTo(Color color, uint32_t square, Bitboard blockers) const;
+    Bitboard attackersTo(uint32_t square) const;
+    Bitboard attackersTo(uint32_t square, Bitboard blockers) const;
 
-    BitBoard pinnersBlockers(uint32_t square, BitBoard attackers, BitBoard& pinners) const;
+    Bitboard pinnersBlockers(uint32_t square, Bitboard attackers, Bitboard& pinners) const;
 
-    BitBoard checkers() const;
-    BitBoard checkBlockers(Color color) const;
+    Bitboard checkers() const;
+    Bitboard checkBlockers(Color color) const;
 
-    bool see_margin(Move move, int margin) const;
+    bool see(Move move, int margin) const;
     bool isLegal(Move move) const;
 
     const eval::EvalState& evalState() const;
 private:
-    BitBoard pinners(Color color) const;
+    Bitboard pinners(Color color) const;
 
     void updateCheckInfo();
     void calcRepetitions();
@@ -113,8 +113,8 @@ private:
     };
 
     std::array<Piece, 64> m_Squares;
-    std::array<BitBoard, 7> m_Pieces;
-    std::array<BitBoard, 2> m_Colors;
+    std::array<Bitboard, 7> m_Pieces;
+    std::array<Bitboard, 2> m_Colors;
 
     Color m_SideToMove;
 
@@ -186,22 +186,22 @@ inline Piece Board::getPieceAt(uint32_t square) const
     return m_Squares[square];
 }
 
-inline BitBoard Board::getPieces(PieceType type) const
+inline Bitboard Board::getPieces(PieceType type) const
 {
     return m_Pieces[static_cast<int>(type)];
 }
 
-inline BitBoard Board::getPieces(Color color, PieceType type) const
+inline Bitboard Board::getPieces(Color color, PieceType type) const
 {
     return getPieces(type) & getColor(color);
 }
 
-inline BitBoard Board::getColor(Color color) const
+inline Bitboard Board::getColor(Color color) const
 {
     return m_Colors[static_cast<int>(color)];
 }
 
-inline BitBoard Board::getAllPieces() const
+inline Bitboard Board::getAllPieces() const
 {
     return m_Pieces[0];
 }
@@ -211,12 +211,12 @@ inline bool Board::squareAttacked(Color color, uint32_t square) const
     return squareAttacked(color, square, getAllPieces());
 }
 
-inline BitBoard Board::attackersTo(Color color, uint32_t square) const
+inline Bitboard Board::attackersTo(Color color, uint32_t square) const
 {
     return attackersTo(color, square, getAllPieces());
 }
 
-inline BitBoard Board::attackersTo(uint32_t square) const
+inline Bitboard Board::attackersTo(uint32_t square) const
 {
     return attackersTo(square, getAllPieces());
 }
@@ -226,17 +226,17 @@ inline const eval::EvalState& Board::evalState() const
     return m_EvalState;
 }
 
-inline BitBoard Board::checkers() const
+inline Bitboard Board::checkers() const
 {
     return m_State->checkInfo.checkers;
 }
 
-inline BitBoard Board::pinners(Color color) const
+inline Bitboard Board::pinners(Color color) const
 {
     return m_State->checkInfo.pinners[static_cast<int>(color)];
 }
 
-inline BitBoard Board::checkBlockers(Color color) const
+inline Bitboard Board::checkBlockers(Color color) const
 {
     return m_State->checkInfo.blockers[static_cast<int>(color)];
 }

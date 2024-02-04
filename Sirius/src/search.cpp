@@ -245,10 +245,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
             info.pvBegin = thread.stack[0].pv.data();
             info.pvEnd = thread.stack[0].pv.data() + thread.stack[0].pvLength;
             info.score = searchScore;
-            if (report)
-            {
-                comm::currComm->reportSearchInfo(info);
-            }
+            comm::currComm->reportSearchInfo(info);
         }
         if (m_TimeMan.stopSoft(bestMove, thread.nodes, thread.limits))
             break;
@@ -347,7 +344,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
     stack->pvLength = 0;
 
     bool root = rootPly == 0;
-    bool inCheck = board.checkers() != 0;
+    bool inCheck = board.checkers().any();
 
     if (eval::isImmediateDraw(board) || board.isDraw(rootPly))
         return SCORE_DRAW;
@@ -401,8 +398,8 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
         // null move pruning
         if (board.pliesFromNull() > 0 && posEval >= beta)
         {
-            BitBoard nonPawns = board.getColor(board.sideToMove()) ^ board.getPieces(board.sideToMove(), PieceType::PAWN);
-            if ((nonPawns & (nonPawns - 1)) && depth >= nmpMinDepth)
+            Bitboard nonPawns = board.getColor(board.sideToMove()) ^ board.getPieces(board.sideToMove(), PieceType::PAWN);
+            if (nonPawns.multiple() && depth >= nmpMinDepth)
             {
                 int r = nmpBaseReduction + depth / nmpDepthReductionScale + std::min((posEval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
                 board.makeNullMove(state);
@@ -476,7 +473,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
 
             if (!isPV &&
                 depth <= maxSeePruneDepth &&
-                !board.see_margin(move, depth * (quiet ? seePruneMarginQuiet : seePruneMarginNoisy)))
+                !board.see(move, depth * (quiet ? seePruneMarginQuiet : seePruneMarginNoisy)))
                 continue;
 
             if (quiet &&
@@ -490,7 +487,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
         uint64_t nodesBefore = thread.nodes;
         board.makeMove(move, state);
         thread.nodes++;
-        bool givesCheck = board.checkers() != 0;
+        bool givesCheck = board.checkers().any();
         if (quiet)
             quietsTried.push_back(move);
         rootPly++;
@@ -613,7 +610,7 @@ int Search::qsearch(SearchThread& thread, SearchPly* stack, int alpha, int beta)
             return ttScore;
     }
 
-    bool inCheck = board.checkers() != 0;
+    bool inCheck = board.checkers().any();
     int staticEval = inCheck ? SCORE_NONE : eval::evaluate(board);
 
     int posEval = staticEval;
@@ -647,7 +644,7 @@ int Search::qsearch(SearchThread& thread, SearchPly* stack, int alpha, int beta)
         auto [move, moveScore, moveHistory] = ordering.selectMove(moveIdx);
         if (!board.isLegal(move))
             continue;
-        if (!board.see_margin(move, 0))
+        if (!board.see(move, 0))
             continue;
         board.makeMove(move, state);
         thread.nodes++;

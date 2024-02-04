@@ -25,13 +25,7 @@ enum class Color
     BLACK
 };
 
-inline Color flip(Color c)
-{
-    return static_cast<Color>(static_cast<int>(c) ^ 1);
-}
-
-template<Color c>
-inline constexpr Color flip()
+constexpr Color operator~(const Color& c)
 {
     return static_cast<Color>(static_cast<int>(c) ^ 1);
 }

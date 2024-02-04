@@ -575,10 +575,10 @@ void Board::makeMove(Move move, BoardState& state)
             m_State->halfMoveClock = 0;
 
             int offset = m_SideToMove == Color::WHITE ? -8 : 8;
-            m_State->capturedPiece = makePiece(PieceType::PAWN, flip(m_SideToMove));
+            m_State->capturedPiece = makePiece(PieceType::PAWN, ~m_SideToMove);
             removePiece(move.dstPos() + offset);
-            m_State->zkey.removePiece(PieceType::PAWN, flip(m_SideToMove), move.dstPos() + offset);
-            m_State->pawnKey.removePiece(PieceType::PAWN, flip(m_SideToMove), move.dstPos() + offset);
+            m_State->zkey.removePiece(PieceType::PAWN, ~m_SideToMove, move.dstPos() + offset);
+            m_State->pawnKey.removePiece(PieceType::PAWN, ~m_SideToMove, move.dstPos() + offset);
             movePiece(move.srcPos(), move.dstPos());
             m_State->zkey.movePiece(PieceType::PAWN, m_SideToMove, move.srcPos(), move.dstPos());
             m_State->pawnKey.movePiece(PieceType::PAWN, m_SideToMove, move.srcPos(), move.dstPos());
@@ -605,7 +605,7 @@ void Board::makeMove(Move move, BoardState& state)
         m_State->zkey.updateEP(m_State->epSquare & 7);
     }
 
-    m_SideToMove = flip(m_SideToMove);
+    m_SideToMove = ~m_SideToMove;
 
     updateCheckInfo();
     calcRepetitions();
@@ -615,7 +615,7 @@ void Board::unmakeMove(Move move)
 {
     m_GamePly--;
 
-    m_SideToMove = flip(m_SideToMove);
+    m_SideToMove = ~m_SideToMove;
 
     switch (move.type())
     {
@@ -687,7 +687,7 @@ void Board::makeNullMove(BoardState& state)
     }
 
     m_State->zkey.flipSideToMove();
-    m_SideToMove = flip(m_SideToMove);
+    m_SideToMove = ~m_SideToMove;
 
     updateCheckInfo();
 }
@@ -698,19 +698,19 @@ void Board::unmakeNullMove()
 
     m_State = m_State->prev;
 
-    m_SideToMove = flip(m_SideToMove);
+    m_SideToMove = ~m_SideToMove;
 }
 
-bool Board::squareAttacked(Color color, uint32_t square, BitBoard blockers) const
+bool Board::squareAttacked(Color color, uint32_t square, Bitboard blockers) const
 {
-    return attackersTo(color, square, blockers) != 0;
+    return attackersTo(color, square, blockers).any();
 }
 
-BitBoard Board::attackersTo(Color color, uint32_t square, BitBoard blockers) const
+Bitboard Board::attackersTo(Color color, uint32_t square, Bitboard blockers) const
 {
-    BitBoard queens = getPieces(PieceType::QUEEN);
-    BitBoard pawns = (getPieces(color, PieceType::PAWN) & attacks::pawnAttacks(flip(color), square));
-    BitBoard nonPawns =
+    Bitboard queens = getPieces(PieceType::QUEEN);
+    Bitboard pawns = (getPieces(color, PieceType::PAWN) & attacks::pawnAttacks(~color, square));
+    Bitboard nonPawns =
         (getPieces(PieceType::KNIGHT) & attacks::knightAttacks(square)) |
         (getPieces(PieceType::KING) & attacks::kingAttacks(square)) |
         ((getPieces(PieceType::BISHOP) | queens) & attacks::bishopAttacks(square, blockers)) |
@@ -718,14 +718,14 @@ BitBoard Board::attackersTo(Color color, uint32_t square, BitBoard blockers) con
     return pawns | (nonPawns & getColor(color));
 }
 
-BitBoard Board::attackersTo(uint32_t square, BitBoard blockers) const
+Bitboard Board::attackersTo(uint32_t square, Bitboard blockers) const
 {
-    BitBoard queens = getPieces(PieceType::QUEEN);
-    BitBoard pawns =
+    Bitboard queens = getPieces(PieceType::QUEEN);
+    Bitboard pawns =
         (getPieces(Color::WHITE, PieceType::PAWN) & attacks::pawnAttacks(Color::BLACK, square)) |
         (getPieces(Color::BLACK, PieceType::PAWN) & attacks::pawnAttacks(Color::WHITE, square));
 
-    BitBoard nonPawns =
+    Bitboard nonPawns =
         (getPieces(PieceType::KNIGHT) & attacks::knightAttacks(square)) |
         (getPieces(PieceType::KING) & attacks::kingAttacks(square)) |
         ((getPieces(PieceType::BISHOP) | queens) & attacks::bishopAttacks(square, blockers)) |
@@ -733,43 +733,43 @@ BitBoard Board::attackersTo(uint32_t square, BitBoard blockers) const
     return pawns | nonPawns;
 }
 
-BitBoard Board::pinnersBlockers(uint32_t square, BitBoard attackers, BitBoard& pinners) const
+Bitboard Board::pinnersBlockers(uint32_t square, Bitboard attackers, Bitboard& pinners) const
 {
-    BitBoard queens = getPieces(PieceType::QUEEN);
+    Bitboard queens = getPieces(PieceType::QUEEN);
     attackers &=
         (attacks::rookAttacks(square, 0) & (getPieces(PieceType::ROOK) | queens)) |
         (attacks::bishopAttacks(square, 0) & (getPieces(PieceType::BISHOP) | queens));
 
-    BitBoard blockers = 0;
+    Bitboard blockers = 0;
 
-    BitBoard blockMask = getAllPieces() ^ attackers;
+    Bitboard blockMask = getAllPieces() ^ attackers;
 
-    BitBoard sameColor = getColor(getPieceColor(m_Squares[square]));
+    Bitboard sameColor = getColor(getPieceColor(m_Squares[square]));
 
     while (attackers)
     {
-        uint32_t attacker = popLSB(attackers);
+        uint32_t attacker = attackers.poplsb();
 
-        BitBoard between = attacks::inBetweenSquares(square, attacker) & blockMask;
+        Bitboard between = attacks::inBetweenSquares(square, attacker) & blockMask;
 
-        if (between && (between & (between - 1)) == 0)
+        if (between.one())
         {
             blockers |= between;
             if (between & sameColor)
-                pinners |= 1ull << attacker;
+                pinners |= Bitboard::fromSquare(attacker);
         }
     }
     return blockers;
 }
 
 // mostly from stockfish
-bool Board::see_margin(Move move, int margin) const
+bool Board::see(Move move, int margin) const
 {
     int src = move.srcPos();
     int dst = move.dstPos();
 
-    BitBoard allPieces = getAllPieces() ^ (1ull << src);
-    BitBoard attackers = attackersTo(dst, allPieces) ^ (1ull << src);
+    Bitboard allPieces = getAllPieces() ^ Bitboard::fromSquare(src);
+    Bitboard attackers = attackersTo(dst, allPieces) ^ Bitboard::fromSquare(src);
 
     int value = 0;
     switch (move.type())
@@ -817,21 +817,21 @@ bool Board::see_margin(Move move, int margin) const
 
     Color sideToMove = m_SideToMove;
 
-    BitBoard diagPieces = getPieces(PieceType::BISHOP) | getPieces(PieceType::QUEEN);
-    BitBoard straightPieces = getPieces(PieceType::ROOK) | getPieces(PieceType::QUEEN);
+    Bitboard diagPieces = getPieces(PieceType::BISHOP) | getPieces(PieceType::QUEEN);
+    Bitboard straightPieces = getPieces(PieceType::ROOK) | getPieces(PieceType::QUEEN);
 
     bool us = false;
 
     while (true)
     {
-        sideToMove = flip(sideToMove);
-        BitBoard stmAttackers = attackers & getColor(sideToMove);
+        sideToMove = ~sideToMove;
+        Bitboard stmAttackers = attackers & getColor(sideToMove);
         if (!stmAttackers)
             return !us;
 
-        if (BitBoard pawns = (stmAttackers & getPieces(PieceType::PAWN)))
+        if (Bitboard pawns = (stmAttackers & getPieces(PieceType::PAWN)))
         {
-            BitBoard pawn = extractLSB(pawns);
+            Bitboard pawn = pawns.lsbBB();
             allPieces ^= pawn;
             attackers ^= pawn;
             attackers |= (attacks::bishopAttacks(dst, allPieces) & allPieces & diagPieces);
@@ -840,9 +840,9 @@ bool Board::see_margin(Move move, int margin) const
             if (value < static_cast<int>(us))
                 return us;
         }
-        else if (BitBoard knights = (stmAttackers & getPieces(PieceType::KNIGHT)))
+        else if (Bitboard knights = (stmAttackers & getPieces(PieceType::KNIGHT)))
         {
-            BitBoard knight = extractLSB(knights);
+            Bitboard knight = knights.lsbBB();
             allPieces ^= knight;
             attackers ^= knight;
 
@@ -850,9 +850,9 @@ bool Board::see_margin(Move move, int margin) const
             if (value < static_cast<int>(us))
                 return us;
         }
-        else if (BitBoard bishops = (stmAttackers & getPieces(PieceType::BISHOP)))
+        else if (Bitboard bishops = (stmAttackers & getPieces(PieceType::BISHOP)))
         {
-            BitBoard bishop = extractLSB(bishops);
+            Bitboard bishop = bishops.lsbBB();
             allPieces ^= bishop;
             attackers ^= bishop;
             attackers |= (attacks::bishopAttacks(dst, allPieces) & allPieces & diagPieces);
@@ -861,9 +861,9 @@ bool Board::see_margin(Move move, int margin) const
             if (value < static_cast<int>(us))
                 return us;
         }
-        else if (BitBoard rooks = (stmAttackers & getPieces(PieceType::ROOK)))
+        else if (Bitboard rooks = (stmAttackers & getPieces(PieceType::ROOK)))
         {
-            BitBoard rook = extractLSB(rooks);
+            Bitboard rook = rooks.lsbBB();
             allPieces ^= rook;
             attackers ^= rook;
             attackers |= (attacks::rookAttacks(dst, allPieces) & allPieces & straightPieces);
@@ -872,9 +872,9 @@ bool Board::see_margin(Move move, int margin) const
             if (value < static_cast<int>(us))
                 return us;
         }
-        else if (BitBoard queens = (stmAttackers & getPieces(PieceType::QUEEN)))
+        else if (Bitboard queens = (stmAttackers & getPieces(PieceType::QUEEN)))
         {
-            BitBoard queen = extractLSB(queens);
+            Bitboard queen = queens.lsbBB();
             allPieces ^= queen;
             attackers ^= queen;
             attackers |=
@@ -887,7 +887,7 @@ bool Board::see_margin(Move move, int margin) const
         }
         else if (stmAttackers & getPieces(PieceType::KING))
         {
-            if (attackers & getColor(flip(sideToMove)))
+            if (attackers & getColor(~sideToMove))
             {
                 return !us;
             }
@@ -905,38 +905,38 @@ bool Board::see_margin(Move move, int margin) const
 
 bool Board::isLegal(Move move) const
 {
-    uint32_t kingIdx = getLSB(getPieces(m_SideToMove, PieceType::KING));
+    uint32_t kingIdx = getPieces(m_SideToMove, PieceType::KING).lsb();
     int from = move.srcPos();
     int to = move.dstPos();
 
     if (move.type() == MoveType::ENPASSANT)
     {
         int captureSq = to + (m_SideToMove == Color::WHITE ? -8 : 8);
-        BitBoard piecesAfter = (1ull << to) | (getAllPieces() ^ (1ull << from) ^ (1ull << captureSq));
-        return !(attacks::rookAttacks(kingIdx, piecesAfter) & (getPieces(flip(m_SideToMove), PieceType::ROOK) | getPieces(flip(m_SideToMove), PieceType::QUEEN))) &&
-            !(attacks::bishopAttacks(kingIdx, piecesAfter) & (getPieces(flip(m_SideToMove), PieceType::BISHOP) | getPieces(flip(m_SideToMove), PieceType::QUEEN)));
+        Bitboard piecesAfter = Bitboard::fromSquare(to) | (getAllPieces() ^ Bitboard::fromSquare(from) ^ Bitboard::fromSquare(captureSq));
+        return !(attacks::rookAttacks(kingIdx, piecesAfter) & (getPieces(~m_SideToMove, PieceType::ROOK) | getPieces(~m_SideToMove, PieceType::QUEEN))) &&
+            !(attacks::bishopAttacks(kingIdx, piecesAfter) & (getPieces(~m_SideToMove, PieceType::BISHOP) | getPieces(~m_SideToMove, PieceType::QUEEN)));
     }
 
     if (getPieceType(m_Squares[from]) == PieceType::KING)
     {
-        if (move.type() == MoveType::CASTLE && squareAttacked(flip(m_SideToMove), (move.srcPos() + move.dstPos()) / 2))
+        if (move.type() == MoveType::CASTLE && squareAttacked(~m_SideToMove, (move.srcPos() + move.dstPos()) / 2))
             return false;
-        return !squareAttacked(flip(m_SideToMove), move.dstPos(), getAllPieces() ^ (1ull << from));
+        return !squareAttacked(~m_SideToMove, move.dstPos(), getAllPieces() ^ Bitboard::fromSquare(from));
     }
 
     // pinned pieces
     return
-        !(checkBlockers(m_SideToMove) & (1ull << move.srcPos())) ||
+        !(checkBlockers(m_SideToMove) & Bitboard::fromSquare(move.srcPos())) ||
         attacks::aligned(kingIdx, move.srcPos(), move.dstPos());
 }
 
 void Board::updateCheckInfo()
 {
-    uint32_t whiteKingIdx = getLSB(getPieces(Color::WHITE, PieceType::KING));
-    uint32_t blackKingIdx = getLSB(getPieces(Color::BLACK, PieceType::KING));
+    uint32_t whiteKingIdx = getPieces(Color::WHITE, PieceType::KING).lsb();
+    uint32_t blackKingIdx = getPieces(Color::BLACK, PieceType::KING).lsb();
     uint32_t kingIdx = m_SideToMove == Color::WHITE ? whiteKingIdx : blackKingIdx;
 
-    m_State->checkInfo.checkers = attackersTo(flip(m_SideToMove), kingIdx);
+    m_State->checkInfo.checkers = attackersTo(~m_SideToMove, kingIdx);
     m_State->checkInfo.blockers[static_cast<int>(Color::WHITE)] =
         pinnersBlockers(whiteKingIdx, getColor(Color::BLACK), m_State->checkInfo.pinners[static_cast<int>(Color::WHITE)]);
     m_State->checkInfo.blockers[static_cast<int>(Color::BLACK)] =
@@ -964,7 +964,7 @@ void Board::addPiece(int pos, Color color, PieceType piece)
 {
     m_Squares[pos] = makePiece(piece, color);
 
-    BitBoard posBB = 1ull << pos;
+    Bitboard posBB = Bitboard::fromSquare(pos);
     m_Pieces[static_cast<int>(piece)] |= posBB;
     m_Colors[static_cast<int>(color)] |= posBB;
     m_Pieces[static_cast<int>(PieceType::ALL)] |= posBB;
@@ -975,7 +975,7 @@ void Board::addPiece(int pos, Color color, PieceType piece)
 void Board::addPiece(int pos, Piece piece)
 {
     m_Squares[pos] = piece;
-    BitBoard posBB = 1ull << pos;
+    Bitboard posBB = Bitboard::fromSquare(pos);
     m_Pieces[static_cast<int>(getPieceType(piece))] |= posBB;
     m_Colors[static_cast<int>(getPieceColor(piece))] |= posBB;
     m_Pieces[static_cast<int>(PieceType::ALL)] |= posBB;
@@ -985,7 +985,7 @@ void Board::addPiece(int pos, Piece piece)
 
 void Board::removePiece(int pos)
 {
-    BitBoard posBB = 1ull << pos;
+    Bitboard posBB = Bitboard::fromSquare(pos);
     PieceType pieceType = getPieceType(m_Squares[pos]);
     Color color = getPieceColor(m_Squares[pos]);
     m_Squares[pos] = Piece::NONE;
@@ -998,9 +998,9 @@ void Board::removePiece(int pos)
 
 void Board::movePiece(int src, int dst)
 {
-    BitBoard srcBB = 1ull << src;
-    BitBoard dstBB = 1ull << dst;
-    BitBoard moveBB = srcBB | dstBB;
+    Bitboard srcBB = Bitboard::fromSquare(src);
+    Bitboard dstBB = Bitboard::fromSquare(dst);
+    Bitboard moveBB = srcBB | dstBB;
     PieceType pieceType = getPieceType(m_Squares[src]);
     Color color = getPieceColor(m_Squares[src]);
 

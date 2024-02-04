@@ -5,15 +5,15 @@ namespace eval
 
 bool isImmediateDraw(const Board& board)
 {
-    BitBoard nonMinorPcs =
+    Bitboard nonMinorPcs =
         board.getPieces(PieceType::QUEEN) |
         board.getPieces(PieceType::ROOK) |
         board.getPieces(PieceType::PAWN);
 
-    if (nonMinorPcs != 0)
+    if (nonMinorPcs.any())
         return false;
 
-    switch (getPopcnt(board.getAllPieces()))
+    switch (board.getAllPieces().popcount())
     {
         case 2:
             return true;
@@ -21,8 +21,8 @@ bool isImmediateDraw(const Board& board)
             return true;
         case 4:
         {
-            BitBoard bishops = board.getPieces(PieceType::BISHOP);
-            if (getPopcnt(bishops) == 2 && (getPopcnt(bishops & LIGHT_SQUARES) == 2 || (bishops & LIGHT_SQUARES) == 0))
+            Bitboard bishops = board.getPieces(PieceType::BISHOP);
+            if (bishops.popcount() == 2 && ((bishops & LIGHT_SQUARES).popcount() == 2 || (bishops & LIGHT_SQUARES).empty()))
                 return true;
             return false;
         }
@@ -33,24 +33,24 @@ bool isImmediateDraw(const Board& board)
 
 bool canForceMate(const Board& board)
 {
-    BitBoard nonMinorPcs =
+    Bitboard nonMinorPcs =
         board.getPieces(PieceType::QUEEN) |
         board.getPieces(PieceType::ROOK) |
         board.getPieces(PieceType::PAWN);
 
-    if (nonMinorPcs != 0)
+    if (nonMinorPcs.any())
         return true;
 
-    BitBoard bishops = board.getPieces(PieceType::BISHOP);
-    BitBoard knights = board.getPieces(PieceType::KNIGHT);
+    Bitboard bishops = board.getPieces(PieceType::BISHOP);
+    Bitboard knights = board.getPieces(PieceType::KNIGHT);
 
-    BitBoard white = board.getColor(Color::WHITE);
-    BitBoard black = board.getColor(Color::BLACK);
+    Bitboard white = board.getColor(Color::WHITE);
+    Bitboard black = board.getColor(Color::BLACK);
 
-    BitBoard blackBishops = black & bishops;
-    BitBoard blackKnights = black & knights;
-    BitBoard whiteBishops = white & bishops;
-    BitBoard whiteKnights = white & knights;
+    Bitboard blackBishops = black & bishops;
+    Bitboard blackKnights = black & knights;
+    Bitboard whiteBishops = white & bishops;
+    Bitboard whiteKnights = white & knights;
 
     if ((whiteBishops & LIGHT_SQUARES) && (whiteBishops & DARK_SQUARES))
         return true;
@@ -64,7 +64,7 @@ bool canForceMate(const Board& board)
     if (blackBishops && blackKnights)
         return true;
 
-    if (getPopcnt(whiteKnights) > 2 || getPopcnt(blackKnights) > 2)
+    if ((whiteKnights).popcount() > 2 || (blackKnights).popcount() > 2)
         return true;
 
     return false;
