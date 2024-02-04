@@ -27,63 +27,63 @@ struct AttackData
 {
     struct Magic
     {
-        BitBoard* attackData;
-        BitBoard mask;
+        Bitboard* attackData;
+        Bitboard mask;
         uint64_t magic;
         uint32_t shift;
     };
 
-    std::array<std::array<BitBoard, 64>, 64> inBetweenSquares;
-    std::array<std::array<BitBoard, 64>, 64> pinRays;
-    std::array<std::array<BitBoard, 64>, 64> moveMasks;
-    std::array<std::array<BitBoard, 64>, 64> alignedSquares;
+    std::array<std::array<Bitboard, 64>, 64> inBetweenSquares;
+    std::array<std::array<Bitboard, 64>, 64> pinRays;
+    std::array<std::array<Bitboard, 64>, 64> moveMasks;
+    std::array<std::array<Bitboard, 64>, 64> alignedSquares;
 
-    std::array<std::array<BitBoard, 64>, 2> pawnAttacks;
-    std::array<BitBoard, 64> kingAttacks;
-    std::array<BitBoard, 64> knightAttacks;
+    std::array<std::array<Bitboard, 64>, 2> pawnAttacks;
+    std::array<Bitboard, 64> kingAttacks;
+    std::array<Bitboard, 64> knightAttacks;
 
     std::array<int, 64> castleRightsMasks;
 
     Magic bishopTable[64];
     Magic rookTable[64];
 
-    std::array<BitBoard, 102400> rookAttacks;
-    std::array<BitBoard, 5248> bishopAttacks;
+    std::array<Bitboard, 102400> rookAttacks;
+    std::array<Bitboard, 5248> bishopAttacks;
 };
 
 extern AttackData attackData;
 
 template<Color c>
-inline BitBoard pawnEastAttacks(BitBoard pawns)
+inline Bitboard pawnEastAttacks(Bitboard pawns)
 {
     if constexpr (c == Color::WHITE)
-        return shiftNorthEast(pawns);
+        return pawns.northEast();
     else
-        return shiftSouthEast(pawns);
+        return pawns.southEast();
 }
 
 template<Color c>
-inline BitBoard pawnWestAttacks(BitBoard pawns)
+inline Bitboard pawnWestAttacks(Bitboard pawns)
 {
     if constexpr (c == Color::WHITE)
-        return shiftNorthWest(pawns);
+        return pawns.northWest();
     else
-        return shiftSouthWest(pawns);
+        return pawns.southWest();
 }
 
 template<Color c>
-inline BitBoard pawnAttacks(BitBoard pawns)
+inline Bitboard pawnAttacks(Bitboard pawns)
 {
     return pawnWestAttacks<c>(pawns) | pawnEastAttacks<c>(pawns);
 }
 
 template<Color c>
-inline BitBoard pawnPushes(BitBoard pawns)
+inline Bitboard pawnPushes(Bitboard pawns)
 {
     if constexpr (c == Color::WHITE)
-        return shiftNorth(pawns);
+        return pawns.north();
     else
-        return shiftSouth(pawns);
+        return pawns.south();
 }
 
 template<Color c>
@@ -93,7 +93,7 @@ inline constexpr int pawnPushOffset()
 }
 
 template<Color c>
-inline constexpr BitBoard kscBlockSquares()
+inline constexpr Bitboard kscBlockSquares()
 {
     if constexpr (c == Color::WHITE)
         return 0x60;
@@ -102,7 +102,7 @@ inline constexpr BitBoard kscBlockSquares()
 }
 
 template<Color c>
-inline constexpr BitBoard qscBlockSquares()
+inline constexpr Bitboard qscBlockSquares()
 {
     if constexpr (c == Color::WHITE)
         return 0xE;
@@ -112,15 +112,15 @@ inline constexpr BitBoard qscBlockSquares()
 
 inline bool aligned(uint32_t a, uint32_t b, uint32_t c)
 {
-    return attackData.alignedSquares[a][b] & (1ull << c);
+    return static_cast<bool>(attackData.alignedSquares[a][b] & Bitboard::fromSquare(c));
 }
 
-inline BitBoard inBetweenSquares(uint32_t src, uint32_t dst)
+inline Bitboard inBetweenSquares(uint32_t src, uint32_t dst)
 {
     return attackData.inBetweenSquares[src][dst];
 }
 
-inline BitBoard moveMask(uint32_t king, uint32_t checker)
+inline Bitboard moveMask(uint32_t king, uint32_t checker)
 {
     return attackData.moveMasks[king][checker];
 }
@@ -130,42 +130,42 @@ inline int castleRightsMask(uint32_t square)
     return attackData.castleRightsMasks[square];
 }
 
-inline BitBoard pawnAttacks(Color color, uint32_t square)
+inline Bitboard pawnAttacks(Color color, uint32_t square)
 {
     return attackData.pawnAttacks[static_cast<int>(color)][square];
 }
 
-inline BitBoard kingAttacks(uint32_t square)
+inline Bitboard kingAttacks(uint32_t square)
 {
     return attackData.kingAttacks[square];
 }
 
-inline BitBoard knightAttacks(uint32_t square)
+inline Bitboard knightAttacks(uint32_t square)
 {
     return attackData.knightAttacks[square];
 }
 
-inline BitBoard bishopAttacks(uint32_t square, BitBoard blockers)
+inline Bitboard bishopAttacks(uint32_t square, Bitboard blockers)
 {
     blockers &= attackData.bishopTable[square].mask;
-    uint64_t index = blockers * attackData.bishopTable[square].magic;
+    uint64_t index = blockers.value() * attackData.bishopTable[square].magic;
     return attackData.bishopTable[square].attackData[index >> attackData.bishopTable[square].shift];
 }
 
-inline BitBoard rookAttacks(uint32_t square, BitBoard blockers)
+inline Bitboard rookAttacks(uint32_t square, Bitboard blockers)
 {
     blockers &= attackData.rookTable[square].mask;
-    uint64_t index = blockers * attackData.rookTable[square].magic;
+    uint64_t index = blockers.value() * attackData.rookTable[square].magic;
     return attackData.rookTable[square].attackData[index >> attackData.rookTable[square].shift];
 }
 
-inline BitBoard queenAttacks(uint32_t square, BitBoard blockers)
+inline Bitboard queenAttacks(uint32_t square, Bitboard blockers)
 {
     return bishopAttacks(square, blockers) | rookAttacks(square, blockers);
 }
 
 template<PieceType pce>
-inline BitBoard pieceAttacks(uint32_t square, BitBoard blockers)
+inline Bitboard pieceAttacks(uint32_t square, Bitboard blockers)
 {
     static_assert(
         pce == PieceType::KNIGHT ||

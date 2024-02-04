@@ -398,8 +398,8 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
         // null move pruning
         if (board.pliesFromNull() > 0 && posEval >= beta)
         {
-            BitBoard nonPawns = board.getColor(board.sideToMove()) ^ board.getPieces(board.sideToMove(), PieceType::PAWN);
-            if ((nonPawns & (nonPawns - 1)) && depth >= nmpMinDepth)
+            Bitboard nonPawns = board.getColor(board.sideToMove()) ^ board.getPieces(board.sideToMove(), PieceType::PAWN);
+            if (nonPawns.multiple() && depth >= nmpMinDepth)
             {
                 int r = nmpBaseReduction + depth / nmpDepthReductionScale + std::min((posEval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
                 board.makeNullMove(state);
