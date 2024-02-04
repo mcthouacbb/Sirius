@@ -174,7 +174,7 @@ inline Bitboard& rayFrom(uint32_t idx, Direction dir)
 Bitboard getMaskBlockerIdx(Bitboard mask, uint32_t idx)
 {
     Bitboard blockers = 0;
-    while (mask)
+    while (mask.any())
     {
         uint32_t lsb = mask.poplsb();
         if (idx & 1)
@@ -192,7 +192,7 @@ void initRays()
 
         Bitboard tmp = bb;
         Bitboard result = 0;
-        while (tmp)
+        while (tmp.any())
         {
             tmp = tmp.north();
             result |= tmp;
@@ -201,7 +201,7 @@ void initRays()
 
         tmp = bb;
         result = 0;
-        while (tmp)
+        while (tmp.any())
         {
             tmp = tmp.south();
             result |= tmp;
@@ -210,7 +210,7 @@ void initRays()
 
         tmp = bb;
         result = 0;
-        while (tmp)
+        while (tmp.any())
         {
             tmp = tmp.east();
             result |= tmp;
@@ -219,7 +219,7 @@ void initRays()
 
         tmp = bb;
         result = 0;
-        while (tmp)
+        while (tmp.any())
         {
             tmp = tmp.west();
             result |= tmp;
@@ -228,7 +228,7 @@ void initRays()
 
         tmp = bb;
         result = 0;
-        while (tmp)
+        while (tmp.any())
         {
             tmp = tmp.northEast();
             result |= tmp;
@@ -237,7 +237,7 @@ void initRays()
 
         tmp = bb;
         result = 0;
-        while (tmp)
+        while (tmp.any())
         {
             tmp = tmp.northWest();
             result |= tmp;
@@ -246,7 +246,7 @@ void initRays()
 
         tmp = bb;
         result = 0;
-        while (tmp)
+        while (tmp.any())
         {
             tmp = tmp.southEast();
             result |= tmp;
@@ -255,7 +255,7 @@ void initRays()
 
         tmp = bb;
         result = 0;
-        while (tmp)
+        while (tmp.any())
         {
             tmp = tmp.southWest();
             result |= tmp;
@@ -268,22 +268,22 @@ Bitboard getRookAttacksSlow(uint32_t square, Bitboard blockers)
 {
     Bitboard ray = getRay(square, Direction::NORTH);
     Bitboard attacks = ray;
-    if (Bitboard rayBlockers = ray & blockers)
+    if (Bitboard rayBlockers = ray & blockers; rayBlockers.any())
         attacks ^= getRay(rayBlockers.lsb(), Direction::NORTH);
 
     ray = getRay(square, Direction::SOUTH);
     attacks |= ray;
-    if (Bitboard rayBlockers = ray & blockers)
+    if (Bitboard rayBlockers = ray & blockers; rayBlockers.any())
         attacks ^= getRay(rayBlockers.msb(), Direction::SOUTH);
 
     ray = getRay(square, Direction::EAST);
     attacks |= ray;
-    if (Bitboard rayBlockers = ray & blockers)
+    if (Bitboard rayBlockers = ray & blockers; rayBlockers.any())
         attacks ^= getRay(rayBlockers.lsb(), Direction::EAST);
 
     ray = getRay(square, Direction::WEST);
     attacks |= ray;
-    if (Bitboard rayBlockers = ray & blockers)
+    if (Bitboard rayBlockers = ray & blockers; rayBlockers.any())
         attacks ^= getRay(rayBlockers.msb(), Direction::WEST);
     return attacks;
 }
@@ -292,22 +292,22 @@ Bitboard getBishopAttacksSlow(uint32_t square, Bitboard blockers)
 {
     Bitboard ray = getRay(square, Direction::NORTH_EAST);
     Bitboard attacks = ray;
-    if (Bitboard rayBlockers = ray & blockers)
+    if (Bitboard rayBlockers = ray & blockers; rayBlockers.any())
         attacks ^= getRay(rayBlockers.lsb(), Direction::NORTH_EAST);
 
     ray = getRay(square, Direction::NORTH_WEST);
     attacks |= ray;
-    if (Bitboard rayBlockers = ray & blockers)
+    if (Bitboard rayBlockers = ray & blockers; rayBlockers.any())
         attacks ^= getRay(rayBlockers.lsb(), Direction::NORTH_WEST);
 
     ray = getRay(square, Direction::SOUTH_EAST);
     attacks |= ray;
-    if (Bitboard rayBlockers = ray & blockers)
+    if (Bitboard rayBlockers = ray & blockers; rayBlockers.any())
         attacks ^= getRay(rayBlockers.msb(), Direction::SOUTH_EAST);
 
     ray = getRay(square, Direction::SOUTH_WEST);
     attacks |= ray;
-    if (Bitboard rayBlockers = ray & blockers)
+    if (Bitboard rayBlockers = ray & blockers; rayBlockers.any())
         attacks ^= getRay(rayBlockers.msb(), Direction::SOUTH_WEST);
     return attacks;
 }
@@ -399,7 +399,7 @@ void init()
             for (Direction dir : allDirs)
             {
                 Bitboard srcRay = getRay(src, dir);
-                if (srcRay & dstBB)
+                if ((srcRay & dstBB).any())
                 {
                     Bitboard dstRay = getRay(dst, oppDir(dir));
                     attackData.inBetweenSquares[src][dst] = srcRay & dstRay;

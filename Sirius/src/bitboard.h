@@ -34,8 +34,6 @@ public:
     constexpr bool operator==(const Bitboard& other) const = default;
     constexpr bool operator!=(const Bitboard& other) const = default;
 
-    constexpr explicit operator bool() const;
-
     constexpr Bitboard north() const;
     constexpr Bitboard south() const;
     constexpr Bitboard west() const;
@@ -156,11 +154,6 @@ constexpr Bitboard& Bitboard::operator^=(const Bitboard& other)
 {
     m_Value ^= other.m_Value;
     return *this;
-}
-
-constexpr Bitboard::operator bool() const
-{
-    return static_cast<bool>(m_Value);
 }
 
 

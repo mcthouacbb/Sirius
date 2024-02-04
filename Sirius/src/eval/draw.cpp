@@ -52,16 +52,16 @@ bool canForceMate(const Board& board)
     Bitboard whiteBishops = white & bishops;
     Bitboard whiteKnights = white & knights;
 
-    if ((whiteBishops & LIGHT_SQUARES) && (whiteBishops & DARK_SQUARES))
+    if ((whiteBishops & LIGHT_SQUARES).any() && (whiteBishops & DARK_SQUARES).any())
         return true;
 
-    if ((blackBishops & LIGHT_SQUARES) && (whiteBishops & DARK_SQUARES))
+    if ((blackBishops & LIGHT_SQUARES).any() && (whiteBishops & DARK_SQUARES).any())
         return true;
 
-    if (whiteBishops && whiteKnights)
+    if (whiteBishops.any() && whiteKnights.any())
         return true;
 
-    if (blackBishops && blackKnights)
+    if (blackBishops.any() && blackKnights.any())
         return true;
 
     if ((whiteKnights).popcount() > 2 || (blackKnights).popcount() > 2)
