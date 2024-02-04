@@ -17,7 +17,7 @@ CmdLine::CmdLine()
     std::cout << "Sirius " << SIRIUS_VERSION_STRING << std::endl;
 
     std::ifstream openings("res/gaviota_trim.pgn");
-    if (openings.is_open())
+    if constexpr (false && openings.is_open())
     {
         std::ostringstream sstr;
         sstr << openings.rdbuf();
