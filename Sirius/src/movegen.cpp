@@ -52,10 +52,10 @@ void genMoves(const Board& board, MoveList& moves)
     if (!checkers.multiple())
     {
         uint32_t kingIdx = board.getPieces(color, PieceType::KING).lsb();
-        Bitboard moveMask = ~board.getColor(color) & (checkers ? attacks::moveMask(kingIdx, checkers.lsb()) : ~0ull);
+        Bitboard moveMask = ~board.getColor(color) & (checkers ? attacks::moveMask(kingIdx, checkers.lsb()) : Bitboard(~0ull));
         genPawnMoves<type, color>(board, moves, moveMask);
         if constexpr (type == MoveGenType::NOISY)
-            moveMask &= board.getColor(flip<color>());
+            moveMask &= board.getColor(~color);
         genPieceMoves<type, color, PieceType::KNIGHT>(board, moves, moveMask);
         genPieceMoves<type, color, PieceType::BISHOP>(board, moves, moveMask);
         genPieceMoves<type, color, PieceType::ROOK>(board, moves, moveMask);
@@ -68,7 +68,7 @@ template<MoveGenType type, Color color>
 void genKingMoves(const Board& board, MoveList& moves)
 {
     Bitboard usBB = board.getColor(color);
-    Bitboard oppBB = board.getColor(flip<color>());
+    Bitboard oppBB = board.getColor(~color);
     Bitboard kingBB = board.getPieces(color, PieceType::KING);
     uint32_t kingIdx = kingBB.lsb();
 
@@ -125,7 +125,7 @@ void genPawnMoves(const Board& board, MoveList& moves, Bitboard moveMask)
 {
     Bitboard pawns = board.getPieces(color, PieceType::PAWN);
     Bitboard allPieces = board.getAllPieces();
-    Bitboard oppBB = board.getColor(flip<color>());
+    Bitboard oppBB = board.getColor(~color);
 
     if constexpr (type == MoveGenType::NOISY_QUIET)
     {

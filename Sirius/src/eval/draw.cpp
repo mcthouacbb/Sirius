@@ -10,7 +10,7 @@ bool isImmediateDraw(const Board& board)
         board.getPieces(PieceType::ROOK) |
         board.getPieces(PieceType::PAWN);
 
-    if (nonMinorPcs != 0)
+    if (nonMinorPcs.any())
         return false;
 
     switch (board.getAllPieces().popcount())
@@ -38,7 +38,7 @@ bool canForceMate(const Board& board)
         board.getPieces(PieceType::ROOK) |
         board.getPieces(PieceType::PAWN);
 
-    if (nonMinorPcs != 0)
+    if (nonMinorPcs.any())
         return true;
 
     Bitboard bishops = board.getPieces(PieceType::BISHOP);

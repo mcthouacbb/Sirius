@@ -344,7 +344,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
     stack->pvLength = 0;
 
     bool root = rootPly == 0;
-    bool inCheck = board.checkers() != 0;
+    bool inCheck = board.checkers().any();
 
     if (eval::isImmediateDraw(board) || board.isDraw(rootPly))
         return SCORE_DRAW;
@@ -487,7 +487,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
         uint64_t nodesBefore = thread.nodes;
         board.makeMove(move, state);
         thread.nodes++;
-        bool givesCheck = board.checkers() != 0;
+        bool givesCheck = board.checkers().any();
         if (quiet)
             quietsTried.push_back(move);
         rootPly++;
@@ -610,7 +610,7 @@ int Search::qsearch(SearchThread& thread, SearchPly* stack, int alpha, int beta)
             return ttScore;
     }
 
-    bool inCheck = board.checkers() != 0;
+    bool inCheck = board.checkers().any();
     int staticEval = inCheck ? SCORE_NONE : eval::evaluate(board);
 
     int posEval = staticEval;

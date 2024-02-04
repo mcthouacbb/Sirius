@@ -34,7 +34,7 @@ public:
     constexpr bool operator==(const Bitboard& other) const = default;
     constexpr bool operator!=(const Bitboard& other) const = default;
 
-    constexpr operator bool() const;
+    constexpr explicit operator bool() const;
 
     constexpr Bitboard north() const;
     constexpr Bitboard south() const;
@@ -52,6 +52,7 @@ public:
     uint32_t msb() const;
     uint32_t popcount() const;
     uint32_t poplsb();
+    constexpr bool any() const;
     constexpr bool empty() const;
     constexpr bool multiple() const;
     constexpr bool one() const;
@@ -267,6 +268,11 @@ inline uint32_t Bitboard::poplsb()
     uint32_t b = lsb();
     m_Value &= m_Value - 1;
     return b;
+}
+
+constexpr bool Bitboard::any() const
+{
+    return m_Value != 0;
 }
 
 constexpr bool Bitboard::empty() const
