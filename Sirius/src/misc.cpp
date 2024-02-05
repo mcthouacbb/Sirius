@@ -108,7 +108,6 @@ void testSAN(Board& board, int depth)
 
 void testNoisyGen(Board& board, int depth)
 {
-
     if (depth == 0)
     {
         MoveList moves;
@@ -147,7 +146,6 @@ void testNoisyGen(Board& board, int depth)
 
 void testQuietGen(Board& board, int depth)
 {
-
     if (depth == 0)
     {
         MoveList moves;
@@ -249,6 +247,71 @@ void testSEE()
     std::cout << "Passed: " << passCount << "/" << (failCount + passCount) << std::endl;
 }
 
+void testIsPseudoLegal(Board& board, int depth)
+{
+    if (depth == 0)
+    {
+        MoveList moves;
+        genMoves<MoveGenType::NOISY_QUIET>(board, moves);
+
+        for (Move move : moves)
+        {
+            if (!board.isPseudoLegal(move))
+            {
+                std::cout << board.fenStr() << std::endl;
+                std::cout << comm::convMoveToPCN(move) << std::endl;
+                throw std::runtime_error("bruh");
+            }
+        }
+
+        for (int from = 0; from < 64; from++)
+        {
+            for (int to = 0; to < 64; to++)
+            {
+                Move move(from, to, MoveType::NONE);
+                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                    throw std::runtime_error("bruh2");
+                
+                move = Move(from, to, MoveType::ENPASSANT);
+                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                    throw std::runtime_error("bruh2");
+                
+                move = Move(from, to, MoveType::CASTLE);
+                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                    throw std::runtime_error("bruh2");
+                
+                move = Move(from, to, MoveType::PROMOTION, Promotion::KNIGHT);
+                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                    throw std::runtime_error("bruh2");
+                
+                move = Move(from, to, MoveType::PROMOTION, Promotion::BISHOP);
+                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                    throw std::runtime_error("bruh2");
+                
+                move = Move(from, to, MoveType::PROMOTION, Promotion::ROOK);
+                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                    throw std::runtime_error("bruh2");
+                
+                move = Move(from, to, MoveType::PROMOTION, Promotion::QUEEN);
+                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                    throw std::runtime_error("bruh2");
+            }
+        }
+        return;
+    }
+
+    MoveList moves;
+    genMoves<MoveGenType::LEGAL>(board, moves);
+
+    BoardState state;
+    for (Move move : moves)
+    {
+        board.makeMove(move, state);
+        testIsPseudoLegal(board, depth - 1);
+        board.unmakeMove(move);
+    }
+}
+
 struct PerftTest
 {
     std::string fen;
@@ -293,6 +356,7 @@ void runTests(Board& board, bool fast)
     uint32_t failCount = 0;
     uint64_t totalNodes = 0;
 
+    fast = true;
     auto t1 = std::chrono::steady_clock::now();
     for (size_t i = 0; i < tests.size(); i++)
     {
@@ -303,12 +367,14 @@ void runTests(Board& board, bool fast)
         {
             if (test.results[j] == UINT64_MAX)
                 continue;
-            if (fast && test.results[j] > 100000000)
+            if (fast && test.results[j] > 5000000)
             {
                 std::cout << "\tSkipped: depth " << j + 1 << std::endl;
                 continue;
             }
-            uint64_t nodes = perft<false>(board, j + 1);
+            testIsPseudoLegal(board, j + 1);
+            uint64_t nodes = 0;
+            // uint64_t nodes = perft<false>(board, j + 1);
             totalNodes += nodes;
             if (nodes == test.results[j])
             {
