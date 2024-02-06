@@ -495,9 +495,7 @@ void Board::makeMove(Move move, BoardState& state)
     m_State->zkey.flipSideToMove();
 
     if (m_State->epSquare != -1)
-    {
         m_State->zkey.updateEP(m_State->epSquare & 7);
-    }
 
     switch (move.type())
     {
@@ -524,10 +522,8 @@ void Board::makeMove(Move move, BoardState& state)
             {
                 m_State->pawnKey.movePiece(getPieceType(srcPiece), getPieceColor(srcPiece), move.srcPos(), move.dstPos());
                 m_State->halfMoveClock = 0;
-                if (abs(move.srcPos() - move.dstPos()) == 16)
-                {
+                if (std::abs(move.srcPos() - move.dstPos()) == 16)
                     m_State->epSquare = (move.srcPos() + move.dstPos()) / 2;
-                }
             }
             break;
         }
@@ -596,14 +592,10 @@ void Board::makeMove(Move move, BoardState& state)
 
 
     if (m_State->epSquare == prev->epSquare)
-    {
         m_State->epSquare = -1;
-    }
 
     if (m_State->epSquare != -1)
-    {
         m_State->zkey.updateEP(m_State->epSquare & 7);
-    }
 
     m_SideToMove = ~m_SideToMove;
 
@@ -682,9 +674,7 @@ void Board::makeNullMove(BoardState& state)
     m_GamePly++;
 
     if (prev->epSquare != -1)
-    {
         m_State->zkey.updateEP(prev->epSquare & 7);
-    }
 
     m_State->zkey.flipSideToMove();
     m_SideToMove = ~m_SideToMove;
@@ -928,6 +918,88 @@ bool Board::isLegal(Move move) const
     return
         !(checkBlockers(m_SideToMove) & Bitboard::fromSquare(move.srcPos())) ||
         attacks::aligned(kingIdx, move.srcPos(), move.dstPos());
+}
+
+ZKey Board::keyAfter(Move move) const
+{
+    ZKey keyAfter = m_State->zkey;
+    int epSquare = m_State->epSquare;
+
+    keyAfter.flipSideToMove();
+
+    if (epSquare != -1)
+        keyAfter.updateEP(epSquare & 7);
+
+    switch (move.type())
+    {
+        case MoveType::NONE:
+        {
+            Piece srcPiece = m_Squares[move.srcPos()];
+            Piece dstPiece = m_Squares[move.dstPos()];
+
+            if (dstPiece != Piece::NONE)
+                keyAfter.removePiece(getPieceType(dstPiece), getPieceColor(dstPiece), move.dstPos());
+
+            keyAfter.movePiece(getPieceType(srcPiece), getPieceColor(srcPiece), move.srcPos(), move.dstPos());
+
+            if (getPieceType(srcPiece) == PieceType::PAWN && std::abs(move.srcPos() - move.dstPos()) == 16)
+                epSquare = (move.srcPos() + move.dstPos()) / 2;
+            break;
+        }
+        case MoveType::PROMOTION:
+        {
+            Piece dstPiece = m_Squares[move.dstPos()];
+
+            if (dstPiece != Piece::NONE)
+                keyAfter.removePiece(getPieceType(dstPiece), getPieceColor(dstPiece), move.dstPos());
+
+            keyAfter.removePiece(PieceType::PAWN, m_SideToMove, move.srcPos());
+            keyAfter.addPiece(promoPiece(move.promotion()), m_SideToMove, move.dstPos());
+            break;
+        }
+        case MoveType::CASTLE:
+        {
+            if (move.srcPos() > move.dstPos())
+            {
+                // queen side
+                keyAfter.movePiece(PieceType::KING, m_SideToMove, move.srcPos(), move.dstPos());
+                keyAfter.movePiece(PieceType::ROOK, m_SideToMove, move.dstPos() - 2, move.srcPos() - 1);
+            }
+            else
+            {
+                // king side
+                keyAfter.movePiece(PieceType::KING, m_SideToMove, move.srcPos(), move.dstPos());
+                keyAfter.movePiece(PieceType::ROOK, m_SideToMove, move.dstPos() + 1, move.srcPos() + 1);
+            }
+            break;
+        }
+        case MoveType::ENPASSANT:
+        {
+            int offset = m_SideToMove == Color::WHITE ? -8 : 8;
+            keyAfter.removePiece(PieceType::PAWN, ~m_SideToMove, move.dstPos() + offset);
+            keyAfter.movePiece(PieceType::PAWN, m_SideToMove, move.srcPos(), move.dstPos());
+            break;
+        }
+    }
+
+    keyAfter.updateCastlingRights(m_State->castlingRights);
+
+    int newCastlingRights =
+        m_State->castlingRights &
+        attacks::castleRightsMask(move.srcPos()) &
+        attacks::castleRightsMask(move.dstPos());
+
+    keyAfter.updateCastlingRights(newCastlingRights);
+
+
+
+    if (epSquare == m_State->epSquare)
+        epSquare = -1;
+
+    if (epSquare != -1)
+        keyAfter.updateEP(epSquare & 7);
+
+    return keyAfter;
 }
 
 void Board::updateCheckInfo()

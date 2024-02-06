@@ -104,6 +104,26 @@ void testSAN(Board& board, int depth)
     }
 }
 
+void testKeyAfter(Board& board, int depth)
+{
+    if (depth == 0)
+        return;
+
+    MoveList moves;
+    genMoves<MoveGenType::LEGAL>(board, moves);
+
+    BoardState state;
+    for (Move move : moves)
+    {
+        ZKey keyAfter = board.keyAfter(move);
+        board.makeMove(move, state);
+        if (keyAfter != board.zkey())
+            throw std::runtime_error("key does not match");
+        testKeyAfter(board, depth - 1);
+        board.unmakeMove(move);
+    }
+}
+
 void testQuiescence(Board& board, int depth)
 {
     if (depth == 0)
