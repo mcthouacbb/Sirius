@@ -94,6 +94,7 @@ public:
 
     bool see(Move move, int margin) const;
     bool isLegal(Move move) const;
+    ZKey keyAfter(Move move) const;
 
     const eval::EvalState& evalState() const;
 private:
