@@ -9,15 +9,37 @@ void prefetchAddr(const void* addr)
 {
     return _mm_prefetch(static_cast<const char*>(addr), _MM_HINT_T0);
 }
+
+uint64_t mulhi64(uint64_t a, uint64_t b)
+{
+    return __umulh(a, b);
+}
 #elif defined(_GNU_C) || defined(__clang__)
 void prefetchAddr(const void* addr)
 {
     return __builtin_prefetch(addr);
 }
+
+uint64_t mulhi64(uint64_t a, uint64_t b)
+{
+    unsigned __int128 result = static_cast<unsigned __int128>(a) * static_cast<unsigned __int128>(b);
+    return result >> 64;
+}
 #else
 void prefetchAddr(const void* addr)
 {
     // fallback
+}
+
+// taken from stockfish https://github.com/official-stockfish/Stockfish/blob/master/src/misc.h#L158
+uint64_t mulhi64(uint64_t a, uint64_t b)
+{
+    uint64_t aL = static_cast<uint32_t>(a), aH = a >> 32;
+    uint64_t bL = static_cast<uint32_t>(b), bH = b >> 32;
+    uint64_t c1 = (aL * bL) >> 32;
+    uint64_t c2 = aH * bL + c1;
+    uint64_t c3 = aL * bH + static_cast<uint32_t>(c2);
+    return aH * bH + (c2 >> 32) + (c3 >> 32);
 }
 #endif
 
@@ -58,7 +80,7 @@ TTBucket* TT::probe(ZKey key, bool& found, int ply, int& score, Move& move, int&
 {
     TTBucket& bucket = m_Buckets[index(key.value)];
     TTEntry* entry = nullptr;
-    uint16_t key16 = key.value >> 48;
+    uint16_t key16 = key.value & 0xFFFF;
     for (int i = 0; i < ENTRY_COUNT; i++)
     {
         if (bucket.entries[i].key16 == key16)
@@ -87,7 +109,7 @@ void TT::store(TTBucket* bucket, ZKey key, int depth, int ply, int score, Move m
 {
     // 16 bit keys to save space
     // idea from JW
-    uint16_t key16 = key.value >> 48;
+    uint16_t key16 = key.value & 0xFFFF;
 
     int currQuality = INT_MAX;
     TTEntry* replace = nullptr;
@@ -142,5 +164,5 @@ void TT::prefetch(ZKey key) const
 
 uint32_t TT::index(uint64_t key) const
 {
-    return static_cast<uint32_t>(key % m_Buckets.size());
+    return static_cast<uint32_t>(mulhi64(key, m_Buckets.size()));
 }
