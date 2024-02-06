@@ -482,7 +482,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
                 break;
         }
 
-        //m_TT.prefetch(board.keyAfter(move));
+        m_TT.prefetch(board.keyAfter(move));
         stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
 
         uint64_t nodesBefore = thread.nodes;
