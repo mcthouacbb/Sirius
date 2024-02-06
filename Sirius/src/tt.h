@@ -66,7 +66,7 @@ public:
     TTBucket* probe(ZKey key, bool& found, int ply, int& score, Move& move, int& depth, TTEntry::Bound& bound);
     void store(TTBucket* bucket, ZKey key, int depth, int ply, int score, Move move, TTEntry::Bound type);
     int quality(int age, int depth) const;
-    uint32_t index(uint64_t key) const;
+    void prefetch(ZKey key) const;
 
     void incAge()
     {
@@ -79,6 +79,8 @@ public:
         m_CurrAge = 0;
     }
 private:
+    uint32_t index(uint64_t key) const;
+
     std::vector<TTBucket> m_Buckets;
     int m_CurrAge;
 };

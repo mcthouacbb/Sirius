@@ -3,6 +3,25 @@
 
 #include <climits>
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#include <mmintrin.h>
+void prefetchAddr(const void* addr)
+{
+    return _mm_prefetch(static_cast<const char*>(addr), _MM_HINT_T0);
+}
+#elif defined(_GNU_C) || defined(__clang__)
+void prefetchAddr(const void* addr)
+{
+    return __builtin_prefetch(addr);
+}
+#else
+void prefetchAddr(const void* addr)
+{
+    // fallback
+}
+#endif
+
+
 TT::TT(size_t size)
     : m_Buckets(size)
 {
@@ -114,6 +133,11 @@ int TT::quality(int age, int depth) const
         ageDiff += GEN_CYCLE_LENGTH;
     }
     return depth - 2 * ageDiff;
+}
+
+void TT::prefetch(ZKey key) const
+{
+    prefetchAddr(static_cast<const void*>(& m_Buckets[index(key.value)]));
 }
 
 uint32_t TT::index(uint64_t key) const
