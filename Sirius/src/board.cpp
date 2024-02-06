@@ -930,6 +930,156 @@ bool Board::isLegal(Move move) const
         attacks::aligned(kingSq, move.srcPos(), move.dstPos());
 }
 
+// move generation handles double check and check evasions, so this function also handles them
+bool Board::isPseudoLegal(Move move) const
+{
+    if (move.srcPos() == move.dstPos())
+        return false;
+
+    Piece srcPiece = getPieceAt(move.srcPos());
+    if (srcPiece == Piece::NONE || getPieceColor(srcPiece) != m_SideToMove)
+        return false;
+
+    Piece dstPiece = getPieceAt(move.dstPos());
+    if (dstPiece != Piece::NONE && (getPieceColor(dstPiece) == m_SideToMove || getPieceType(dstPiece) == PieceType::KING))
+        return false;
+
+    PieceType srcPieceType = getPieceType(srcPiece);
+    PieceType dstPieceType = getPieceType(dstPiece);
+
+    if (move.type() == MoveType::CASTLE)
+    {
+        if (srcPieceType != PieceType::KING || checkers().any())
+            return false;
+
+        Bitboard firstRank = m_SideToMove == Color::WHITE ? Bitboard::nthRank<Color::WHITE, 0>() : Bitboard::nthRank<Color::BLACK, 0>();
+        if ((Bitboard::fromSquare(move.srcPos()) & firstRank).empty() || (Bitboard::fromSquare(move.dstPos()) & firstRank).empty())
+            return false;
+
+        if (move.srcPos() > move.dstPos())
+        {
+            if (move.dstPos() != move.srcPos() - 2)
+                return false;
+            // queen side
+            if ((castlingRights() & (2 << 2 * static_cast<int>(m_SideToMove))) == 0)
+                return false;
+            if (m_SideToMove == Color::WHITE)
+                return (attacks::qscBlockSquares<Color::WHITE>() & getAllPieces()).empty();
+            else
+                return (attacks::qscBlockSquares<Color::BLACK>() & getAllPieces()).empty();
+        }
+        else
+        {
+            if (move.dstPos() != move.srcPos() + 2)
+                return false;
+            // king side
+            if ((castlingRights() & (1 << 2 * static_cast<int>(m_SideToMove))) == 0)
+                return false;
+            if (m_SideToMove == Color::WHITE)
+                return (attacks::kscBlockSquares<Color::WHITE>() & getAllPieces()).empty();
+            else
+                return (attacks::kscBlockSquares<Color::BLACK>() & getAllPieces()).empty();
+        }
+    }
+
+    if (srcPieceType != PieceType::KING && checkers().multiple())
+        return false;
+
+    if (move.type() == MoveType::CASTLE)
+        return false;
+
+    Bitboard moveMask = checkers().any() && srcPieceType != PieceType::KING ? attacks::moveMask(kingSquare(m_SideToMove), checkers().lsb()) : Bitboard(~0ull);
+
+    if (move.type() != MoveType::ENPASSANT && (Bitboard::fromSquare(move.dstPos()) & moveMask).empty())
+        return false;
+
+    if (srcPieceType == PieceType::PAWN)
+    {
+        int pushOffset = m_SideToMove == Color::WHITE ? attacks::pawnPushOffset<Color::WHITE>() : attacks::pawnPushOffset<Color::BLACK>();
+        if (move.type() == MoveType::ENPASSANT)
+        {
+            if (move.dstPos() != epSquare())
+                return false;
+            if ((attacks::pawnAttacks(m_SideToMove, move.srcPos()) & Bitboard::fromSquare(move.dstPos())).empty())
+                return false;
+            return checkers().empty() || (moveMask & Bitboard::fromSquare(epSquare() - pushOffset)).any();
+        }
+
+        if (dstPieceType == PieceType::NONE)
+        {
+            // must be a push
+            if (move.dstPos() - move.srcPos() == pushOffset)
+            {
+                // single
+                Bitboard seventhRank = m_SideToMove == Color::WHITE ? Bitboard::nthRank<Color::WHITE, 6>() : Bitboard::nthRank<Color::BLACK, 6>();
+
+                if (move.type() == MoveType::PROMOTION)
+                {
+                    return (Bitboard::fromSquare(move.srcPos()) & seventhRank).any();
+                }
+                else
+                {
+                    return move.srcPos() >= 8 && move.srcPos() < 56 && (Bitboard::fromSquare(move.srcPos()) & seventhRank).empty();
+                }
+            }
+            else if (move.dstPos() - move.srcPos() == pushOffset * 2)
+            {
+                if (move.type() != MoveType::NONE)
+                    return false;
+                if (getPieceAt(move.srcPos() + pushOffset) != Piece::NONE)
+                    return false;
+                // double
+                Bitboard secondRank = m_SideToMove == Color::WHITE ? Bitboard::nthRank<Color::WHITE, 1>() : Bitboard::nthRank<Color::BLACK, 1>();
+                return (Bitboard::fromSquare(move.srcPos()) & secondRank).any();
+            }
+            else
+                return false;
+        }
+        else
+        {
+            // must be a capture
+            if ((attacks::pawnAttacks(m_SideToMove, move.srcPos()) & Bitboard::fromSquare(move.dstPos())).empty())
+                return false;
+
+            Bitboard seventhRank = m_SideToMove == Color::WHITE ? Bitboard::nthRank<Color::WHITE, 6>() : Bitboard::nthRank<Color::BLACK, 6>();
+
+            if (move.type() == MoveType::PROMOTION)
+            {
+                return (Bitboard::fromSquare(move.srcPos()) & seventhRank).any();
+            }
+            else
+            {
+                return move.srcPos() >= 8 && move.srcPos() < 56 && (Bitboard::fromSquare(move.srcPos()) & seventhRank).empty();
+            }
+        }
+    }
+
+    if (move.type() != MoveType::NONE)
+        return false;
+
+    Bitboard pieceAttacks = 0;
+    switch (srcPieceType)
+    {
+        case PieceType::KNIGHT:
+            pieceAttacks = attacks::knightAttacks(move.srcPos());
+            break;
+        case PieceType::BISHOP:
+            pieceAttacks = attacks::bishopAttacks(move.srcPos(), getAllPieces());
+            break;
+        case PieceType::ROOK:
+            pieceAttacks = attacks::rookAttacks(move.srcPos(), getAllPieces());
+            break;
+        case PieceType::QUEEN:
+            pieceAttacks = attacks::queenAttacks(move.srcPos(), getAllPieces());
+            break;
+        case PieceType::KING:
+            pieceAttacks = attacks::kingAttacks(move.srcPos());
+            break;
+    }
+
+    return (pieceAttacks & Bitboard::fromSquare(move.dstPos())).any();
+}
+
 void Board::updateCheckInfo()
 {
     uint32_t whiteKingIdx = kingSquare(Color::WHITE);

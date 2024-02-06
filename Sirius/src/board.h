@@ -95,6 +95,7 @@ public:
 
     bool see(Move move, int margin) const;
     bool isLegal(Move move) const;
+    bool isPseudoLegal(Move move) const;
 
     const eval::EvalState& evalState() const;
 private:
