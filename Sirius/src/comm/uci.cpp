@@ -189,6 +189,8 @@ void UCI::uciCommand() const
                     << std::endl;
                 break;
             }
+            default:
+                break;
         }
     }
     std::cout << "uciok" << std::endl;
@@ -343,6 +345,8 @@ void UCI::setOptionCommand(std::istringstream& stream)
             option = value;
             break;
         }
+        default:
+            break;
     }
 }
 
