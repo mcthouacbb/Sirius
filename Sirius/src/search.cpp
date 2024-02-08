@@ -549,7 +549,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
                 {
                     stack->pv[0] = move;
                     stack->pvLength = stack[1].pvLength + 1;
-                    for (size_t i = 0; i < stack[1].pvLength; i++)
+                    for (int i = 0; i < stack[1].pvLength; i++)
                         stack->pv[i + 1] = stack[1].pv[i];
                 }
             }
@@ -670,7 +670,7 @@ int Search::qsearch(SearchThread& thread, SearchPly* stack, int alpha, int beta)
 
                 stack->pvLength = stack[1].pvLength + 1;
                 stack->pv[0] = move;
-                for (size_t i = 0; i < stack[1].pvLength; i++)
+                for (int i = 0; i < stack[1].pvLength; i++)
                     stack->pv[i + 1] = stack[1].pv[i];
 
                 alpha = bestScore;
