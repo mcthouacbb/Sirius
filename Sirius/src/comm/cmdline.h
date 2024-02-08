@@ -20,7 +20,6 @@ public:
         UNDO_MOVE,
         PRINT_BOARD,
         STATIC_EVAL,
-        QUIESCENCE_EVAL,
         SEARCH,
         RUN_TESTS,
         PERFT,
@@ -41,7 +40,6 @@ private:
     void undoMoveCommand();
     void printBoardCommand();
     void staticEvalCommand();
-    void quiescenceEvalCommand();
     void searchCommand(std::istringstream& stream);
     void runTestsCommand();
     void runPerftCommand(std::istringstream& stream);
