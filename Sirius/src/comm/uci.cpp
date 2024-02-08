@@ -175,7 +175,7 @@ void UCI::uciCommand() const
 {
     auto lock = lockStdout();
     std::cout << "id name Sirius " << SIRIUS_VERSION_STRING << std::endl;
-    std::cout << "id author AspectOfTheNoob" << std::endl;
+    std::cout << "id author mcthouacbb" << std::endl;
     for (const auto& option : m_Options)
     {
         std::cout << "option name " << option.first << " type ";
