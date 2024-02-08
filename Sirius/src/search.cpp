@@ -88,15 +88,6 @@ Search::~Search()
     joinThreads();
 }
 
-void Search::storeKiller(SearchPly* ply, Move killer)
-{
-    if (ply->killers[0] != killer)
-    {
-        ply->killers[1] = ply->killers[0];
-        ply->killers[0] = killer;
-    }
-}
-
 void Search::newGame()
 {
     for (auto& thread : m_Threads)
@@ -316,7 +307,7 @@ BenchData Search::benchSearch(int depth, const Board& board, BoardState& state)
     return data;
 }
 
-int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha, int beta, bool isPV)
+int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta, bool isPV)
 {
     if (--thread.checkCounter == 0)
     {
@@ -559,7 +550,11 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
                 stack->failHighCount++;
                 if (quiet)
                 {
-                    storeKiller(stack, move);
+                    if (stack->killers[0] != move)
+                    {
+                        stack->killers[1] = stack->killers[0];
+                        stack->killers[0] = move;
+                    }
 
                     int bonus = historyBonus(depth);
                     history.updateQuietStats(ExtMove::from(board, move), contHistEntries, bonus);
@@ -586,7 +581,7 @@ int Search::search(SearchThread& thread, int depth, SearchPly* stack, int alpha,
     return bestScore;
 }
 
-int Search::qsearch(SearchThread& thread, SearchPly* stack, int alpha, int beta)
+int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int beta)
 {
     auto& rootPly = thread.rootPly;
     auto& board = thread.board;

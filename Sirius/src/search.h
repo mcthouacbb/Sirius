@@ -14,7 +14,7 @@
 #include <atomic>
 #include <vector>
 
-struct SearchPly
+struct SearchStack
 {
     std::array<Move, MAX_PLY + 1> pv;
     int pvLength;
@@ -88,7 +88,7 @@ struct SearchThread
 
     uint32_t checkCounter = 0;
     int rootPly = 0;
-    std::array<SearchPly, MAX_PLY + 1> stack;
+    std::array<SearchStack, MAX_PLY + 1> stack;
     History history;
 };
 
@@ -117,9 +117,8 @@ private:
     int iterDeep(SearchThread& thread, bool report, bool normalSearch);
     int aspWindows(SearchThread& thread, int depth, Move& bestMove, int prevScore);
 
-    void storeKiller(SearchPly* ply, Move killer);
-    int search(SearchThread& thread, int depth, SearchPly* searchPly, int alpha, int beta, bool isPV);
-    int qsearch(SearchThread& thread, SearchPly* searchPly, int alpha, int beta);
+    int search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta, bool isPV);
+    int qsearch(SearchThread& thread, SearchStack* stack, int alpha, int beta);
 
     Board& m_Board;
     std::atomic<bool> m_ShouldStop;
