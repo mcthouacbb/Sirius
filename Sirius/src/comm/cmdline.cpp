@@ -157,8 +157,6 @@ CmdLine::Command CmdLine::getCommand(const std::string& command) const
         return Command::PRINT_BOARD;
     else if (command == "eval")
         return Command::STATIC_EVAL;
-    else if (command == "qeval")
-        return Command::QUIESCENCE_EVAL;
     else if (command == "search")
         return Command::SEARCH;
     else if (command == "tests")
@@ -255,14 +253,6 @@ void CmdLine::staticEvalCommand()
     std::cout << "Eval: " << eval::evaluate(m_Board) << std::endl;
     std::cout << "Phase: " << m_Board.evalState().phase << std::endl;
     std::cout << "Piece Square Tables: " << m_Board.evalState().materialPsqt.mg() << ' ' << m_Board.evalState().materialPsqt.eg() << std::endl;
-}
-
-void CmdLine::quiescenceEvalCommand()
-{
-    auto lock = lockStdout();
-    std::cout << "Quiescence eval currently not working" << std::endl;
-    //int eval = m_Search.qsearch();
-    //std::cout << "Quiescence eval: " << eval << std::endl;
 }
 
 void CmdLine::searchCommand(std::istringstream& stream)
