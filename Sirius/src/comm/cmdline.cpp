@@ -118,9 +118,6 @@ bool CmdLine::execCommand(const std::string& command)
         case Command::STATIC_EVAL:
             staticEvalCommand();
             break;
-        case Command::QUIESCENCE_EVAL:
-            quiescenceEvalCommand();
-            break;
         case Command::SEARCH:
             searchCommand(stream);
             break;
