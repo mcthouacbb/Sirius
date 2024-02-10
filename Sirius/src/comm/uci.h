@@ -9,8 +9,6 @@
 namespace comm
 {
 
-void addUCIOption(const UCIOption& option);
-
 class UCI : public IComm
 {
 public:
