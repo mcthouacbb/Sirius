@@ -7,6 +7,7 @@
 #include <vector>
 #include <array>
 #include <algorithm>
+#include <atomic>
 
 struct TTEntry
 {
@@ -47,7 +48,23 @@ static constexpr int ENTRY_COUNT = 4;
 
 struct alignas(32) TTBucket
 {
-    std::array<TTEntry, ENTRY_COUNT> entries;
+    std::array<std::atomic_uint64_t, ENTRY_COUNT> entries;
+
+    TTBucket() = default;
+
+    TTBucket(const TTBucket& other)
+    {
+        *this = other;
+    }
+
+    TTBucket& operator=(const TTBucket& other)
+    {
+        for (int i = 0; i < ENTRY_COUNT; i++)
+        {
+            entries[i].store(other.entries[i].load(std::memory_order_relaxed), std::memory_order_relaxed);
+        }
+        return *this;
+    }
 };
 
 class TT
@@ -63,8 +80,8 @@ public:
     TT(const TT&) = delete;
     TT& operator=(const TT&) = delete;
 
-    TTBucket* probe(ZKey key, bool& found, int ply, int& score, Move& move, int& depth, TTEntry::Bound& bound);
-    void store(TTBucket* bucket, ZKey key, int depth, int ply, int score, Move move, TTEntry::Bound type);
+    size_t probe(ZKey key, bool& found, int ply, int& score, Move& move, int& depth, TTEntry::Bound& bound);
+    void store(size_t idx, ZKey key, int depth, int ply, int score, Move move, TTEntry::Bound type);
     int quality(int age, int depth) const;
     void prefetch(ZKey key) const;
 
