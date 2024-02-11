@@ -238,7 +238,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
             info.score = searchScore;
             comm::currComm->reportSearchInfo(info);
         }
-        if (m_TimeMan.stopSoft(bestMove, thread.nodes, thread.limits))
+        if (thread.isMainThread() && m_TimeMan.stopSoft(bestMove, thread.nodes, thread.limits))
             break;
     }
 

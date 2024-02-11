@@ -19,9 +19,13 @@ UCI::UCI()
     {
         m_Search.setTTSize(static_cast<int>(option.intValue()));
     };
+    const auto& threadsCallback = [this](const UCIOption& option)
+    {
+        m_Search.setThreads(static_cast<int>(option.intValue()));
+    };
     m_Options = {
         {"Hash", UCIOption("Hash", {64, 64, 1, 65536}, hashCallback)},
-        {"Threats", UCIOption("Threads", {1, 1, 1, 1})}
+        {"Threads", UCIOption("Threads", {1, 1, 1, 256}, threadsCallback)}
     };
 #ifdef EXTERNAL_TUNE
     for (auto& param : search::searchParams())
