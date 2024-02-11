@@ -239,7 +239,10 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
             comm::currComm->reportSearchInfo(info);
         }
         if (thread.isMainThread() && m_TimeMan.stopSoft(bestMove, thread.nodes, thread.limits))
+        {
+            m_ShouldStop.store(true, std::memory_order_relaxed);
             break;
+        }
     }
 
     if (report)
