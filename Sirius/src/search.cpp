@@ -238,8 +238,11 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
             info.score = searchScore;
             comm::currComm->reportSearchInfo(info);
         }
-        if (m_TimeMan.stopSoft(bestMove, thread.nodes, thread.limits))
+        if (thread.isMainThread() && m_TimeMan.stopSoft(bestMove, thread.nodes, thread.limits))
+        {
+            m_ShouldStop.store(true, std::memory_order_relaxed);
             break;
+        }
     }
 
     if (report)
@@ -351,7 +354,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     int ttDepth;
     TTEntry::Bound ttBound;
     bool ttHit;
-    TTBucket* bucket = m_TT.probe(board.zkey(), ttHit, rootPly, ttScore, ttMove, ttDepth, ttBound);
+    size_t ttIdx = m_TT.probe(board.zkey(), ttHit, rootPly, ttScore, ttMove, ttDepth, ttBound);
 
     if (ttHit)
     {
@@ -563,7 +566,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                         history.updateQuietStats(ExtMove::from(board, quietsTried[j]), contHistEntries, -bonus);
                     }
                 }
-                m_TT.store(bucket, board.zkey(), depth, rootPly, bestScore, move, TTEntry::Bound::LOWER_BOUND);
+                m_TT.store(ttIdx, board.zkey(), depth, rootPly, bestScore, move, TTEntry::Bound::LOWER_BOUND);
                 return bestScore;
             }
         }
@@ -576,7 +579,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         return SCORE_DRAW;
     }
 
-    m_TT.store(bucket, board.zkey(), depth, rootPly, bestScore, stack->bestMove, bound);
+    m_TT.store(ttIdx, board.zkey(), depth, rootPly, bestScore, stack->bestMove, bound);
 
     return bestScore;
 }
@@ -595,7 +598,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     TTEntry::Bound ttBound;
     bool ttHit;
     // qsearch is always depth 0
-    TTBucket* bucket = m_TT.probe(board.zkey(), ttHit, rootPly, ttScore, ttMove, ttDepth, ttBound);
+    size_t ttIdx = m_TT.probe(board.zkey(), ttHit, rootPly, ttScore, ttMove, ttDepth, ttBound);
 
     if (ttHit)
     {
@@ -655,7 +658,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
 
             if (bestScore >= beta)
             {
-                m_TT.store(bucket, board.zkey(), 0, rootPly, bestScore, move, TTEntry::Bound::LOWER_BOUND);
+                m_TT.store(ttIdx, board.zkey(), 0, rootPly, bestScore, move, TTEntry::Bound::LOWER_BOUND);
                 return bestScore;
             }
 
@@ -674,7 +677,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         }
     }
 
-    m_TT.store(bucket, board.zkey(), 0, rootPly, bestScore, stack->bestMove, bound);
+    m_TT.store(ttIdx, board.zkey(), 0, rootPly, bestScore, stack->bestMove, bound);
 
 
     return bestScore;
