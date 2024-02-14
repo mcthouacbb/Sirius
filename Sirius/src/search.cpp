@@ -230,7 +230,9 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
         if (report)
         {
             SearchInfo info;
-            info.nodes = thread.nodes;
+            info.nodes = 0;
+            for (auto& thread : m_Threads)
+                info.nodes += thread->nodes.load(std::memory_order_relaxed);
             info.depth = depth;
             info.time = m_TimeMan.elapsed();
             info.pvBegin = thread.stack[0].pv.data();
@@ -481,7 +483,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         uint64_t nodesBefore = thread.nodes;
         board.makeMove(move, state);
-        thread.nodes++;
+        thread.nodes.fetch_add(1, std::memory_order_relaxed);
         bool givesCheck = board.checkers().any();
         if (quiet)
             quietsTried.push_back(move);
@@ -646,7 +648,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         if (!board.see(move, 0))
             continue;
         board.makeMove(move, state);
-        thread.nodes++;
+        thread.nodes.fetch_add(1, std::memory_order_relaxed);
         rootPly++;
         int score = -qsearch(thread, stack + 1, -beta, -alpha);
         board.unmakeMove(move);
