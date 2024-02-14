@@ -57,6 +57,7 @@ void UCI::reportSearchInfo(const SearchInfo& info) const
 {
     auto lock = lockStdout();
     std::cout << "info depth " << info.depth;
+    std::cout << " seldepth " << info.selDepth;
     std::cout << " time " << info.time.count();
     std::cout << " nodes " << info.nodes;
     uint64_t nps = info.nodes * 1000ULL / (info.time.count() < 1 ? 1 : info.time.count());

@@ -32,6 +32,7 @@ struct SearchStack
 struct SearchInfo
 {
     int depth;
+    int selDepth;
     uint64_t nodes;
     Duration time;
     const Move* pvBegin, * pvEnd;
@@ -88,6 +89,7 @@ struct SearchThread
 
     uint32_t checkCounter = 0;
     int rootPly = 0;
+    int selDepth = 0;
     std::array<SearchStack, MAX_PLY + 1> stack;
     History history;
 };

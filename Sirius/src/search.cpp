@@ -223,6 +223,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
 
     for (int depth = 1; depth <= maxDepth; depth++)
     {
+        thread.selDepth = 0;
         int searchScore = aspWindows(thread, depth, bestMove, score);
         if (m_ShouldStop)
             break;
@@ -232,6 +233,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
             SearchInfo info;
             info.nodes = thread.nodes;
             info.depth = depth;
+            info.selDepth = thread.selDepth;
             info.time = m_TimeMan.elapsed();
             info.pvBegin = thread.stack[0].pv.data();
             info.pvEnd = thread.stack[0].pv.data() + thread.stack[0].pvLength;
@@ -329,6 +331,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     auto& board = thread.board;
     auto& history = thread.history;
 
+    if (rootPly > thread.selDepth)
+        thread.selDepth = rootPly;
 
     alpha = std::max(alpha, -SCORE_MATE + rootPly);
     beta = std::min(beta, SCORE_MATE - rootPly);
@@ -591,6 +595,9 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     stack->pvLength = 0;
     if (eval::isImmediateDraw(board))
         return SCORE_DRAW;
+
+    if (rootPly > thread.selDepth)
+        thread.selDepth = rootPly;
 
     int ttScore;
     Move ttMove = Move();
