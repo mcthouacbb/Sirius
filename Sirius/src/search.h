@@ -82,7 +82,7 @@ struct SearchThread
 
     Board board;
 
-    uint64_t nodes = 0;
+    std::atomic_uint64_t nodes = 0;
 
     SearchLimits limits;
 
@@ -121,7 +121,7 @@ private:
     int qsearch(SearchThread& thread, SearchStack* stack, int alpha, int beta);
 
     Board& m_Board;
-    std::atomic<bool> m_ShouldStop;
+    std::atomic_bool m_ShouldStop;
     TT m_TT;
     TimeManager m_TimeMan;
     std::deque<BoardState> m_States;
