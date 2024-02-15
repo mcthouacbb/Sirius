@@ -102,6 +102,7 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
     - [@JW](https://github.com/jw1912), developer of [Akimbo](https://github.com/jw1912/akimbo), helped me a ton with developing and testing the engine
     - [@Ciekce](https://github.com/ciekce/), developer of [Stormphrax](https://github.com/ciekce/Stormphrax), who, along with JW, taught me many things about Chess Programming, and is an excellent c++ programmer
     - [@Alex2262](https://github.com/Alex2262), developer of [Altaire](https://github.com/Alex2262/AltairChessEngine)
+    - [@Cj5716](https://github.com/cj5716/), general contributor to many engines
 - The Stockfish Discord Server
 - The [Sebastian Lague Chess-Challenge](https://github.com/seblague/Chess-challenge) Discord Server
 	- Not a direct resource, but led to me finding many of the above mentioned resources
