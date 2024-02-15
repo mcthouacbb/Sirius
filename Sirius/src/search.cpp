@@ -396,20 +396,17 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             return posEval;
 
         // null move pruning
-        if (board.pliesFromNull() > 0 && posEval >= beta)
+        Bitboard nonPawns = board.getColor(board.sideToMove()) ^ board.getPieces(board.sideToMove(), PieceType::PAWN);
+        if (board.pliesFromNull() > 0 &&  depth >= nmpMinDepth && posEval >= beta && nonPawns.multiple())
         {
-            Bitboard nonPawns = board.getColor(board.sideToMove()) ^ board.getPieces(board.sideToMove(), PieceType::PAWN);
-            if (nonPawns.multiple() && depth >= nmpMinDepth)
-            {
-                int r = nmpBaseReduction + depth / nmpDepthReductionScale + std::min((posEval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
-                board.makeNullMove(state);
-                rootPly++;
-                int nullScore = -search(thread, depth - r, stack + 1, -beta, -beta + 1, false);
-                rootPly--;
-                board.unmakeNullMove();
-                if (nullScore >= beta)
-                    return nullScore;
-            }
+            int r = nmpBaseReduction + depth / nmpDepthReductionScale + std::min((posEval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
+            board.makeNullMove(state);
+            rootPly++;
+            int nullScore = -search(thread, depth - r, stack + 1, -beta, -beta + 1, false);
+            rootPly--;
+            board.unmakeNullMove();
+            if (nullScore >= beta)
+                return nullScore;
         }
     }
 
