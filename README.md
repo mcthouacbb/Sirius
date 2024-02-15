@@ -19,7 +19,7 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
     - Zobrist hashing
 - Move Generation
     - Magic Bitboards for sliding pieces
-    - Legal move generation
+    - hybrid pseudo-legal/legal move generation
 - Evaluation
     - Tapered Evaluation
     - Material
@@ -56,6 +56,7 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
       	- Improving Heuristic
       	- Node count time management
       	- tt score adjustment
+        - Lazy SMP
 
 ## CLI Usage
 - Type "uci" for the UCI protocol(not recommended for direct use, usually used by a chess GUI)
@@ -94,6 +95,7 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
 - [Stockfish](https://github.com/official-stockfish/Stockfish)
 - [Ethereal](https://github.com/AndyGrant/Ethereal), one of the best references for chess programming
 - [Berserk](https://github.com/jhonnold/berserk), another good reference engine
+- [Weiss](https://github.com/TerjeKir/Weiss)
 - Crafty
 - Zurichess
 - The Engine Programming Discord Server, and the people in it
