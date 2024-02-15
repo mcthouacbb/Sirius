@@ -1,6 +1,6 @@
 # Sirius
 
-A chess engine written in c++.
+A UCI chess engine written in c++.
 Sirius does not come with a gui. To play against it, you should download a chess GUI that supports the Universal Chess Interface(UCI) protocol
 Optionally, you can also play from the command line
 
@@ -9,7 +9,7 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
 
 | Version | Release Date | [CCRL Blitz](https://ccrl.chessdom.com/ccrl/404/) | [CCRL 40/15](https://ccrl.chessdom.com/ccrl/4040/) |
 | --- | --- | --- | --- |
-| 5.0 | 2023-10-27 | N/A | 2680 |
+| 5.0 | 2023-10-27 | N/A | 2679 |
 
 
 ## Features
@@ -17,11 +17,9 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
     - BitBoards
     - Mailbox 8x8
     - Zobrist hashing
-    - Packed 16 bit Move Representation
-    - Static Exchange Evaluation
 - Move Generation
     - Magic Bitboards for sliding pieces
-    - Legal move generation
+    - hybrid pseudo-legal/legal move generation
 - Evaluation
     - Tapered Evaluation
     - Material
@@ -54,10 +52,11 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
         - SEE Pruning
         - Late Move Reductions
         - Internal Iterative Reductions
-        - 
     - Miscellaneous
       	- Improving Heuristic
       	- Node count time management
+      	- tt score adjustment
+        - Lazy SMP
 
 ## CLI Usage
 - Type "uci" for the UCI protocol(not recommended for direct use, usually used by a chess GUI)
@@ -68,14 +67,15 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
 ## Non-standard UCI commands
 - `"d"`
     - Prints a string representation of the board from white's perspective
+    - Prints out various statistics about the board
 - `"bench"`
-    - Runs an depth 15 search on a set of internal benchmark positions and prints out the number of nodes and the time token.
+    - Runs an depth 15 search on a set of internal benchmark positions and prints out the number of nodes and number of nodes searched per second.
 
 ## UCI options
 | Name             |  Type   | Default value |       Valid values        | Description                                                                          |
-|:-----------------|:-------:|:-------------:|:-------------------------:|:-------------------------------------------------------------------------------------|
-| Hash             | integer |      64       |        [1, 65536]          | Size of the transposition table in Megabytes.                                        |
-| Threads          | integer |       1       |         [1, 1]            | Number of threads used to search (currently does nothing).                           |
+|:-----------------|:-------:|:-------------:|:-------------------------:|:------------------------------------------------------------------------------------:|
+| Hash             | integer |      64       |        [1, 65536]         | Size of the transposition table in Megabytes.                                        |
+| Threads          | integer |       1       |         [1, 256]          | Number of threads used to search.                                                    |
 
 ## Building
 - C++20, CMake, and decent C++ compiler required
@@ -90,10 +90,12 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
     - On their own, the CMake files only define what is absolutely necessary to build Sirius(With the exception of a flag that links msvc std lib statically), so you don't have to change the build files to build Sirius yourself
 
 ## Credits/Thanks
+- [Sebastian Lague](https://www.youtube.com/@SebastianLague), for getting me into the chess programming
 - [The Chess Programming Wiki](https://www.chessprogramming.org/), a bit outdated but nonetheless an excellent resource
 - [Stockfish](https://github.com/official-stockfish/Stockfish)
 - [Ethereal](https://github.com/AndyGrant/Ethereal), one of the best references for chess programming
 - [Berserk](https://github.com/jhonnold/berserk), another good reference engine
+- [Weiss](https://github.com/TerjeKir/Weiss)
 - Crafty
 - Zurichess
 - The Engine Programming Discord Server, and the people in it
