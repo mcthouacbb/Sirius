@@ -1,6 +1,6 @@
 #pragma once
 
-#define SIRIUS_VERSION_MAJOR 5
+#define SIRIUS_VERSION_MAJOR 6
 #define SIRIUS_VERSION_MINOR 0
 
 #define STRINGIFY2(x) #x
