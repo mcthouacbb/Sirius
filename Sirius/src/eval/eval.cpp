@@ -13,8 +13,12 @@ int evaluate(const Board& board)
 int rawEval(const Board& board)
 {
     Color color = board.sideToMove();
-    PackedScore matPsqt = board.evalState().materialPsqt;
-    return (color == Color::WHITE ? 1 : -1) * eval::getFullEval(matPsqt.mg(), matPsqt.eg(), board.evalState().phase);
+    PackedScore eval = board.evalState().materialPsqt;
+    if (board.getPieces(Color::WHITE, PieceType::BISHOP).popcount() >= 2)
+        eval += BISHOP_PAIR;
+    if (board.getPieces(Color::BLACK, PieceType::BISHOP).popcount() >= 2)
+        eval -= BISHOP_PAIR;
+    return (color == Color::WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg(), board.evalState().phase);
 }
 
 
