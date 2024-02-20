@@ -232,8 +232,8 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
         {
             SearchInfo info;
             info.nodes = 0;
-            for (auto& thread : m_Threads)
-                info.nodes += thread->nodes.load(std::memory_order_relaxed);
+            for (auto& searchThread : m_Threads)
+                info.nodes += searchThread->nodes.load(std::memory_order_relaxed);
             info.depth = depth;
             info.selDepth = thread.selDepth;
             info.time = m_TimeMan.elapsed();
