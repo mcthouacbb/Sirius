@@ -77,7 +77,8 @@ constexpr PackedScore PSQT[7][64] = {
 
 constexpr PackedScore BISHOP_PAIR = S(20, 64);
 
-constexpr PackedScore OPEN_ROOK[2] = {S(40, 13), S(16, 9)};
+constexpr PackedScore ROOK_OPEN = S(40, 13);
+constexpr PackedScore ROOK_SEMI_OPEN = S(16, 9);
 
 #undef S
 
