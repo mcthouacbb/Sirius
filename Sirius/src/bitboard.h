@@ -61,6 +61,8 @@ public:
 
     template<Color c, int r>
     static constexpr Bitboard nthRank();
+
+    static constexpr Bitboard fileBB(int file);
 private:
     uint64_t m_Value;
 };
@@ -296,4 +298,9 @@ constexpr Bitboard Bitboard::nthRank()
         return RANK_1 << (8 * r);
     else
         return RANK_8 >> (8 * r);
+}
+
+constexpr Bitboard Bitboard::fileBB(int file)
+{
+    return FILE_A << file;
 }

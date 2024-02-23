@@ -220,3 +220,8 @@ inline constexpr PackedScore operator-(const PackedScore& p)
 {
     return PackedScore(-p.m_Value);
 }
+
+inline int fileOf(int square)
+{
+    return square % 8;
+}

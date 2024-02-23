@@ -3,21 +3,43 @@
 namespace eval
 {
 
+template<Color color, PieceType piece>
+PackedScore evaluatePieces(const Board& board)
+{
+    Bitboard ourPawns = board.getPieces(color, PieceType::PAWN);
+    Bitboard theirPawns = board.getPieces(~color, PieceType::PAWN);
+
+    PackedScore eval{0, 0};
+    Bitboard pieces = board.getPieces(color, piece);
+    if constexpr (piece == PieceType::BISHOP)
+        if (pieces.multiple())
+            eval += BISHOP_PAIR;
+
+    while (pieces)
+    {
+        uint32_t sq = pieces.poplsb();
+        Bitboard fileBB = Bitboard::fileBB(fileOf(sq));
+
+        if constexpr (piece == PieceType::ROOK)
+        {
+            if ((ourPawns & fileBB).empty())
+                eval += (theirPawns & fileBB).any() ? ROOK_SEMI_OPEN : ROOK_OPEN;
+        }
+    }
+
+    return eval;
+}
+
 int evaluate(const Board& board)
 {
     if (!eval::canForceMate(board))
         return SCORE_DRAW;
-    return rawEval(board);
-}
 
-int rawEval(const Board& board)
-{
     Color color = board.sideToMove();
     PackedScore eval = board.evalState().materialPsqt;
-    if (board.getPieces(Color::WHITE, PieceType::BISHOP).popcount() >= 2)
-        eval += BISHOP_PAIR;
-    if (board.getPieces(Color::BLACK, PieceType::BISHOP).popcount() >= 2)
-        eval -= BISHOP_PAIR;
+
+    eval += evaluatePieces<Color::WHITE, PieceType::ROOK>(board) - evaluatePieces<Color::BLACK, PieceType::ROOK>(board);
+    eval += evaluatePieces<Color::WHITE, PieceType::BISHOP>(board) - evaluatePieces<Color::BLACK, PieceType::BISHOP>(board);
     return (color == Color::WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg(), board.evalState().phase);
 }
 

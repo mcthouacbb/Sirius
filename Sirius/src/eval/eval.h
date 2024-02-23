@@ -8,6 +8,5 @@ namespace eval
 {
 
 int evaluate(const Board& board);
-int rawEval(const Board& board);
 
 }
