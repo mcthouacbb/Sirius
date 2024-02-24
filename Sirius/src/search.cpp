@@ -38,7 +38,6 @@ void SearchThread::reset()
 {
     nodes = 0;
     rootPly = 0;
-    checkCounter = TIME_CHECK_INTERVAL;
 
     for (int i = 0; i <= MAX_PLY; i++)
     {
@@ -217,7 +216,6 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
     Move bestMove = {};
 
     thread.reset();
-    thread.checkCounter = TIME_CHECK_INTERVAL;
 
     report = report && normalSearch;
 
@@ -316,14 +314,10 @@ BenchData Search::benchSearch(int depth, const Board& board, BoardState& state)
 
 int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta, bool isPV)
 {
-    if (--thread.checkCounter == 0)
+    if (m_TimeMan.stopHard(thread.limits, thread.nodes))
     {
-        thread.checkCounter = TIME_CHECK_INTERVAL;
-        if (m_TimeMan.stopHard(thread.limits))
-        {
-            m_ShouldStop = true;
-            return alpha;
-        }
+        m_ShouldStop = true;
+        return alpha;
     }
 
     if (m_ShouldStop.load(std::memory_order_relaxed))

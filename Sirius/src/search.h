@@ -87,7 +87,6 @@ struct SearchThread
 
     SearchLimits limits;
 
-    uint32_t checkCounter = 0;
     int rootPly = 0;
     int selDepth = 0;
     std::array<SearchStack, MAX_PLY + 1> stack;
