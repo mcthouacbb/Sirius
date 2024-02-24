@@ -11,6 +11,7 @@ struct SearchLimits
 {
     int maxDepth;
     Duration maxTime;
+    uint64_t maxNodes;
 
     struct
     {
@@ -30,12 +31,16 @@ public:
 
     void startSearch();
     void updateNodes(Move move, uint64_t nodes);
-    bool stopHard(const SearchLimits& searchLimits) const;
+    bool stopHard(const SearchLimits& searchLimits, uint64_t nodes);
     bool stopSoft(Move bestMove, uint64_t totalNodes, const SearchLimits& searchLimits) const;
 private:
+    static constexpr uint32_t TIME_CHECK_INTERVAL = 2048;
+
     TimePoint m_StartTime;
     Duration m_HardBound;
     Duration m_SoftBound;
+
+    uint32_t checkCounter;
 
     std::array<uint64_t, 4096> m_NodeCounts;
 };

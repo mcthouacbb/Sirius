@@ -8,8 +8,6 @@
 namespace search
 {
 
-constexpr uint32_t TIME_CHECK_INTERVAL = 2048;
-
 #ifdef EXTERNAL_TUNE
 
 

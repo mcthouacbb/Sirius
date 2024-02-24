@@ -308,7 +308,9 @@ void UCI::goCommand(std::istringstream& stream)
         }
         else if (tok == "nodes")
         {
-            // todo
+            int nodes;
+            stream >> nodes;
+            limits.maxNodes = nodes;
         }
         else if (tok == "mate")
         {

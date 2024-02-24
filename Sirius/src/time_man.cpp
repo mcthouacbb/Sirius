@@ -5,7 +5,6 @@
 
 void TimeManager::setLimits(const SearchLimits& limits, Color us)
 {
-
     if (limits.clock.enabled)
     {
         Duration time = limits.clock.timeLeft[static_cast<int>(us)];
@@ -24,6 +23,7 @@ Duration TimeManager::elapsed() const
 
 void TimeManager::startSearch()
 {
+    checkCounter = TIME_CHECK_INTERVAL;
     std::fill(m_NodeCounts.begin(), m_NodeCounts.end(), 0);
     m_StartTime = std::chrono::steady_clock::now();
 }
@@ -33,12 +33,18 @@ void TimeManager::updateNodes(Move move, uint64_t nodes)
     m_NodeCounts[move.fromTo()] += nodes;
 }
 
-bool TimeManager::stopHard(const SearchLimits& searchLimits) const
+bool TimeManager::stopHard(const SearchLimits& searchLimits, uint64_t nodes)
 {
-    if (searchLimits.maxTime > Duration(0) && elapsed() > searchLimits.maxTime)
+    if (searchLimits.maxNodes > 0 && nodes > searchLimits.maxNodes)
         return true;
-    if (searchLimits.clock.enabled && elapsed() > m_HardBound)
-        return true;
+    if (--checkCounter == 0)
+    {
+        checkCounter = TIME_CHECK_INTERVAL;
+        if (searchLimits.maxTime > Duration(0) && elapsed() > searchLimits.maxTime)
+            return true;
+        if (searchLimits.clock.enabled && elapsed() > m_HardBound)
+            return true;
+    }
     return false;
 }
 
