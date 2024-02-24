@@ -225,3 +225,16 @@ inline int fileOf(int square)
 {
     return square % 8;
 }
+
+inline int rankOf(int square)
+{
+    return square / 8;
+}
+
+template<Color c>
+inline int relativeRankOf(int square)
+{
+    if constexpr (c == Color::BLACK)
+        square ^= 56;
+    return rankOf(square);
+}

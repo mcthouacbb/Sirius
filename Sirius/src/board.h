@@ -87,6 +87,8 @@ public:
     Bitboard attackersTo(uint32_t square) const;
     Bitboard attackersTo(uint32_t square, Bitboard blockers) const;
 
+    bool isPassedPawn(uint32_t square) const;
+
     Bitboard pinnersBlockers(uint32_t square, Bitboard attackers, Bitboard& pinners) const;
 
     Bitboard checkers() const;
