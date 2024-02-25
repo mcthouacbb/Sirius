@@ -730,6 +730,13 @@ bool Board::isPassedPawn(uint32_t square) const
     return (mask & getPieces(~getPieceColor(pce), PieceType::PAWN)).empty();
 }
 
+bool Board::isIsolatedPawn(uint32_t square) const
+{
+    Piece pce = getPieceAt(square);
+    Bitboard mask = attacks::isolatedPawnMask(square);
+    return (mask & getPieces(getPieceColor(pce), PieceType::PAWN)).empty();
+}
+
 Bitboard Board::pinnersBlockers(uint32_t square, Bitboard attackers, Bitboard& pinners) const
 {
     Bitboard queens = getPieces(PieceType::QUEEN);

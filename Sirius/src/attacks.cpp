@@ -423,6 +423,9 @@ void init()
         black |= black >> 16;
         black |= black >> 32;
         attackData.passedPawnMasks[static_cast<int>(Color::BLACK)][i] = black | black.west() | black.east();
+
+        Bitboard file = white | black | Bitboard::fromSquare(i);
+        attackData.isolatedPawnMasks[i] = file.west() | file.east();
     }
 
     constexpr Bitboard EDGE_SQUARES = FILE_A | FILE_H | RANK_1 | RANK_8;
