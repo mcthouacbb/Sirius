@@ -36,6 +36,23 @@ PackedScore evaluatePieces(const Board& board)
     return eval;
 }
 
+template<Color color>
+PackedScore evaluatePawns(const Board& board)
+{
+    Bitboard ourPawns = board.getPieces(color, PieceType::PAWN);
+    Bitboard theirPawns = board.getPieces(~color, PieceType::PAWN);
+
+    PackedScore eval{0, 0};
+    Bitboard pawns = ourPawns;
+    while (pawns)
+    {
+        uint32_t sq = pawns.poplsb();
+        if (board.isPassedPawn(sq))
+            eval += PASSED_PAWN[relativeRankOf<color>(sq)];
+    }
+    return eval;
+}
+
 int evaluate(const Board& board)
 {
     if (!eval::canForceMate(board))
@@ -48,6 +65,8 @@ int evaluate(const Board& board)
     eval += evaluatePieces<Color::WHITE, PieceType::BISHOP>(board) - evaluatePieces<Color::BLACK, PieceType::BISHOP>(board);
     eval += evaluatePieces<Color::WHITE, PieceType::ROOK>(board) - evaluatePieces<Color::BLACK, PieceType::ROOK>(board);
     eval += evaluatePieces<Color::WHITE, PieceType::QUEEN>(board) - evaluatePieces<Color::BLACK, PieceType::QUEEN>(board);
+
+    eval += evaluatePawns<Color::WHITE>(board) - evaluatePawns<Color::BLACK>(board);
 
     return (color == Color::WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg(), board.evalState().phase);
 }

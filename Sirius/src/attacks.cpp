@@ -410,6 +410,21 @@ void init()
         }
     }
 
+    for (int i = 0; i < 64; i++)
+    {
+        Bitboard white = Bitboard::fromSquare(i) << 8;
+        white |= white << 8;
+        white |= white << 16;
+        white |= white << 32;
+        attackData.passedPawnMasks[static_cast<int>(Color::WHITE)][i] = white | white.west() | white.east();
+
+        Bitboard black = Bitboard::fromSquare(i) >> 8;
+        black |= black >> 8;
+        black |= black >> 16;
+        black |= black >> 32;
+        attackData.passedPawnMasks[static_cast<int>(Color::BLACK)][i] = black | black.west() | black.east();
+    }
+
     constexpr Bitboard EDGE_SQUARES = FILE_A | FILE_H | RANK_1 | RANK_8;
     Bitboard* currRook = attackData.rookAttacks.data();
     Bitboard* currBishop = attackData.bishopAttacks.data();

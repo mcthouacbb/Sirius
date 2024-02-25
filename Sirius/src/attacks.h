@@ -38,6 +38,8 @@ struct AttackData
     std::array<std::array<Bitboard, 64>, 64> moveMasks;
     std::array<std::array<Bitboard, 64>, 64> alignedSquares;
 
+    std::array<std::array<Bitboard, 64>, 2> passedPawnMasks;
+
     std::array<std::array<Bitboard, 64>, 2> pawnAttacks;
     std::array<Bitboard, 64> kingAttacks;
     std::array<Bitboard, 64> knightAttacks;
@@ -128,6 +130,11 @@ inline Bitboard moveMask(uint32_t king, uint32_t checker)
 inline int castleRightsMask(uint32_t square)
 {
     return attackData.castleRightsMasks[square];
+}
+
+inline Bitboard passedPawnMask(Color color, uint32_t square)
+{
+    return attackData.passedPawnMasks[static_cast<int>(color)][square];
 }
 
 inline Bitboard pawnAttacks(Color color, uint32_t square)
