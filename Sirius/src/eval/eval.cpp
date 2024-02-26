@@ -40,7 +40,6 @@ template<Color color>
 PackedScore evaluatePawns(const Board& board)
 {
     Bitboard ourPawns = board.getPieces(color, PieceType::PAWN);
-    Bitboard theirPawns = board.getPieces(~color, PieceType::PAWN);
 
     PackedScore eval{0, 0};
     Bitboard pawns = ourPawns;
