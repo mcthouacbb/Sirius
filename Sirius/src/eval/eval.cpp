@@ -40,7 +40,6 @@ template<Color color>
 PackedScore evaluatePawns(const Board& board)
 {
     Bitboard ourPawns = board.getPieces(color, PieceType::PAWN);
-    Bitboard theirPawns = board.getPieces(~color, PieceType::PAWN);
 
     PackedScore eval{0, 0};
     Bitboard pawns = ourPawns;
@@ -49,6 +48,8 @@ PackedScore evaluatePawns(const Board& board)
         uint32_t sq = pawns.poplsb();
         if (board.isPassedPawn(sq))
             eval += PASSED_PAWN[relativeRankOf<color>(sq)];
+        if (board.isIsolatedPawn(sq))
+            eval += ISOLATED_PAWN[fileOf(sq)];
     }
     return eval;
 }
