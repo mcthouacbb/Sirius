@@ -9,10 +9,10 @@
 namespace eval
 {
 
-constexpr inline auto init()
+constexpr auto init()
 {
-    std::array<std::array<std::array<PackedScore, 64>, 7>, 2> combined = {};
-    for (int piece = 1; piece < 7; piece++)
+    std::array<std::array<std::array<PackedScore, 64>, 6>, 2> combined = {};
+    for (int piece = 0; piece < 6; piece++)
         for (int sq = 0; sq < 64; sq++)
         {
             combined[0][piece][sq] = (MATERIAL[piece] + PSQT[piece][sq ^ 0b111000]);
@@ -25,7 +25,7 @@ constexpr auto combinedPsqt = init();
 
 inline PackedScore combinedPsqtScore(Color color, PieceType piece, int square)
 {
-    return combinedPsqt[static_cast<int>(color)][static_cast<int>(piece)][square];
+    return combinedPsqt[static_cast<int>(color)][static_cast<int>(piece) - static_cast<int>(PieceType::PAWN)][square];
 }
 
 
