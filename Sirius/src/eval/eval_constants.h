@@ -7,12 +7,11 @@ namespace eval
 
 #define S(mg, eg) PackedScore(mg, eg)
 
-constexpr PackedScore MATERIAL[7] = {
-    S(0, 0), S(64, 99), S(272, 339), S(280, 352), S(366, 628), S(791, 1193), S(0, 0)
+constexpr PackedScore MATERIAL[6] = {
+    S(64, 99), S(272, 339), S(280, 352), S(366, 628), S(791, 1193), S(0, 0)
 };
 
-constexpr PackedScore PSQT[7][64] = {
-    {},
+constexpr PackedScore PSQT[6][64] = {
     {
 		S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0),
 		S(  34,  110), S(  39,   98), S(  22,  101), S(  58,   49), S(  32,   48), S(  14,   57), S( -57,  100), S( -51,  116),
