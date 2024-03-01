@@ -76,7 +76,7 @@ void UCI::reportSearchInfo(const SearchInfo& info) const
     }
     else
     {
-        std::cout << " cp " << info.score;
+        std::cout << "cp " << info.score;
     }
 
     std::cout << " pv ";
