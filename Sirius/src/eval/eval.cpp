@@ -24,12 +24,16 @@ PackedScore evaluatePieces(const Board& board)
         Bitboard attacksBB = attacks::pieceAttacks<piece>(sq, board.getAllPieces());
         eval += MOBILITY[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)][(attacksBB & mobilityArea).popcount()];
 
+        Bitboard threats = attacksBB & board.getColor(~color);
+        while (threats)
+            eval += THREATS[static_cast<int>(piece) - static_cast<int>(PieceType::PAWN)][static_cast<int>(getPieceType(board.getPieceAt(threats.poplsb()))) - static_cast<int>(PieceType::PAWN)];
+
         Bitboard fileBB = Bitboard::fileBB(fileOf(sq));
 
         if constexpr (piece == PieceType::ROOK)
         {
             if ((ourPawns & fileBB).empty())
-                eval += (theirPawns & fileBB).any() ? ROOK_SEMI_OPEN : ROOK_OPEN;
+                eval += (theirPawns & fileBB).any() ? ROOK_OPEN[1] : ROOK_OPEN[0];
         }
     }
 
@@ -40,8 +44,14 @@ template<Color color>
 PackedScore evaluatePawns(const Board& board)
 {
     Bitboard ourPawns = board.getPieces(color, PieceType::PAWN);
+    Bitboard attacks = attacks::pawnAttacks<color>(ourPawns);
+    Bitboard threats = attacks & board.getColor(~color);
 
     PackedScore eval{0, 0};
+
+    while (threats)
+        eval += THREATS[static_cast<int>(PieceType::PAWN) - static_cast<int>(PieceType::PAWN)][static_cast<int>(getPieceType(board.getPieceAt(threats.poplsb()))) - static_cast<int>(PieceType::PAWN)];
+
     Bitboard pawns = ourPawns;
     while (pawns)
     {
