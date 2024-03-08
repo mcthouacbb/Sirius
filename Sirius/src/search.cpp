@@ -93,6 +93,7 @@ void Search::newGame()
     {
         thread->reset();
         thread->history.clear();
+        thread->pawnTable.clear();
     }
     m_TT.reset();
 }
@@ -344,7 +345,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         return SCORE_DRAW;
 
     if (rootPly >= MAX_PLY)
-        return eval::evaluate(board);
+        return eval::evaluate(board, &thread);
 
     if (depth <= 0)
         return qsearch(thread, stack, alpha, beta);
@@ -610,7 +611,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     }
 
     bool inCheck = board.checkers().any();
-    int staticEval = inCheck ? SCORE_NONE : eval::evaluate(board);
+    int staticEval = inCheck ? SCORE_NONE : eval::evaluate(board, &thread);
 
     int posEval = staticEval;
     if (!inCheck && ttHit && (
