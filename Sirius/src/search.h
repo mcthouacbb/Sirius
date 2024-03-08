@@ -5,6 +5,7 @@
 #include "tt.h"
 #include "time_man.h"
 #include "history.h"
+#include "eval/pawn_table.h"
 
 #include <array>
 #include <deque>
@@ -91,6 +92,7 @@ struct SearchThread
     int selDepth = 0;
     std::array<SearchStack, MAX_PLY + 1> stack;
     History history;
+    PawnTable pawnTable;
 };
 
 class Search
