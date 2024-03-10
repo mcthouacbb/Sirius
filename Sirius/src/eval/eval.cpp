@@ -109,7 +109,7 @@ PackedScore evaluateKings(const Board& board)
 
         Bitboard filePawns = ourPawns & Bitboard::fileBB(file);
         int rankDist = filePawns ?
-            std::abs(rankOf(color == Color::WHITE ? filePawns.lsb() : filePawns.msb()) - rankOf(theirKing)) :
+            std::abs(rankOf(color == Color::WHITE ? filePawns.msb() : filePawns.lsb()) - rankOf(theirKing)) :
             7;
         eval += PAWN_STORM[idx][rankDist];
     }
