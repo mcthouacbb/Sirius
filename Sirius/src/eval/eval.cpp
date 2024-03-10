@@ -92,6 +92,31 @@ PackedScore evaluateThreats(const Board& board)
     return eval;
 }
 
+template<Color color>
+PackedScore evaluateKings(const Board& board)
+{
+    Bitboard ourPawns = board.getPieces(color, PieceType::PAWN);
+
+    uint32_t theirKing = board.getPieces(~color, PieceType::KING).lsb();
+
+    PackedScore eval{0, 0};
+
+    for (uint32_t file = 0; file < 8; file++)
+    {
+        uint32_t kingFile = fileOf(theirKing);
+        // 4 = e file
+        int idx = (kingFile == file) ? 1 : (kingFile >= 4) == (kingFile < file) ? 0 : 2;
+
+        Bitboard filePawns = ourPawns & Bitboard::fileBB(file);
+        int rankDist = filePawns ?
+            std::abs(rankOf(color == Color::WHITE ? filePawns.lsb() : filePawns.msb()) - rankOf(theirKing)) :
+            7;
+        eval += PAWN_STORM[idx][rankDist];
+    }
+
+    return eval;
+}
+
 int evaluate(const Board& board, search::SearchThread* thread)
 {
     if (!eval::canForceMate(board))
@@ -105,8 +130,11 @@ int evaluate(const Board& board, search::SearchThread* thread)
     eval += evaluatePieces<Color::WHITE, PieceType::ROOK>(board) - evaluatePieces<Color::BLACK, PieceType::ROOK>(board);
     eval += evaluatePieces<Color::WHITE, PieceType::QUEEN>(board) - evaluatePieces<Color::BLACK, PieceType::QUEEN>(board);
 
+    eval += evaluateKings<Color::WHITE>(board) - evaluateKings<Color::BLACK>(board);
+
     eval += evaluatePawns(board, thread ? &thread->pawnTable : nullptr);
     eval += evaluateThreats<Color::WHITE>(board) - evaluateThreats<Color::BLACK>(board);
+
 
     return (color == Color::WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg(), board.evalState().phase);
 }
