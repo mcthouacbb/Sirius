@@ -430,6 +430,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
 
     MoveList quietsTried;
+    MoveList noisiesTried;
 
     int bestScore = -SCORE_MAX;
     int movesPlayed = 0;
@@ -483,6 +484,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         bool givesCheck = board.checkers().any();
         if (quiet)
             quietsTried.push_back(move);
+        else
+            noisiesTried.push_back(move);
         rootPly++;
 
         int reduction = 0;
@@ -556,13 +559,27 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                         stack->killers[1] = stack->killers[0];
                         stack->killers[0] = move;
                     }
+                }
 
-                    int bonus = historyBonus(depth);
+                int bonus = historyBonus(depth);
+                if (quiet)
+                {
                     history.updateQuietStats(ExtMove::from(board, move), contHistEntries, bonus);
-                    for (int j = 0; j < static_cast<int>(quietsTried.size() - 1); j++)
+                    for (Move quietMove : quietsTried)
                     {
-                        history.updateQuietStats(ExtMove::from(board, quietsTried[j]), contHistEntries, -bonus);
+                        if (quietMove != move)
+                            history.updateQuietStats(ExtMove::from(board, quietMove), contHistEntries, -bonus);
                     }
+                }
+                else
+                {
+                    history.updateNoisyStats(ExtMove::from(board, move), bonus);
+                }
+
+                for (Move noisyMove : noisiesTried)
+                {
+                    if (noisyMove != move)
+                        history.updateNoisyStats(ExtMove::from(board, noisyMove), -bonus);
                 }
                 m_TT.store(ttIdx, board.zkey(), depth, rootPly, bestScore, move, TTEntry::Bound::LOWER_BOUND);
                 return bestScore;
@@ -634,7 +651,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     MoveList captures;
     genMoves<MoveGenType::NOISY>(board, captures);
 
-    MoveOrdering ordering(board, captures, ttMove);
+    MoveOrdering ordering(board, captures, ttMove, thread.history);
 
     BoardState state;
     TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;

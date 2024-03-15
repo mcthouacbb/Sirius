@@ -43,12 +43,22 @@ int History::getQuietStats(ExtMove move, std::span<const CHEntry* const> contHis
     return score;
 }
 
+int History::getNoisyStats(ExtMove move) const
+{
+    return getCaptHist(move);
+}
+
 void History::updateQuietStats(ExtMove move, std::span<CHEntry*> contHistEntries, int bonus)
 {
     updateMainHist(move, bonus);
     for (auto entry : contHistEntries)
         if (entry)
             updateContHist(entry, move, bonus);
+}
+
+void History::updateNoisyStats(ExtMove move, int bonus)
+{
+    updateCaptHist(move, bonus);
 }
 
 int History::getMainHist(ExtMove move) const
@@ -61,6 +71,11 @@ int History::getContHist(const CHEntry* entry, ExtMove move) const
     return (*entry)[static_cast<int>(move.movingPiece())][move.dstPos()];
 }
 
+int History::getCaptHist(ExtMove move) const
+{
+    return m_CaptHist[static_cast<int>(move.capturedPiece())][static_cast<int>(move.movingPiece())][move.dstPos()];
+}
+
 void History::updateMainHist(ExtMove move, int bonus)
 {
     m_MainHist[static_cast<int>(getPieceColor(move.movingPiece()))][move.fromTo()].update(bonus);
@@ -69,4 +84,9 @@ void History::updateMainHist(ExtMove move, int bonus)
 void History::updateContHist(CHEntry* entry, ExtMove move, int bonus)
 {
     (*entry)[static_cast<int>(move.movingPiece())][move.dstPos()].update(bonus);
+}
+
+void History::updateCaptHist(ExtMove move, int bonus)
+{
+    m_CaptHist[static_cast<int>(move.capturedPiece())][static_cast<int>(move.movingPiece())][move.dstPos()].update(bonus);
 }
