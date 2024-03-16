@@ -22,7 +22,7 @@ public:
     static constexpr int PROMOTION_SCORE = 400000;
     static constexpr int CAPTURE_SCORE = 500000;
 
-    MoveOrdering(const Board& board, MoveList& moves, Move hashMove);
+    MoveOrdering(const Board& board, MoveList& moves, Move hashMove, const History& history);
     MoveOrdering(const Board& board, MoveList& moves, Move hashMove, const std::array<Move, 2>& killers, std::span<const CHEntry* const> contHistEntries, const History& history);
 
     ScoredMove selectMove(uint32_t index);
