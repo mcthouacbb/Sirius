@@ -97,21 +97,33 @@ PackedScore evaluateKings(const Board& board)
 {
     Bitboard ourPawns = board.getPieces(color, PieceType::PAWN);
 
+    uint32_t ourKing = board.getPieces(color, PieceType::KING).lsb();
     uint32_t theirKing = board.getPieces(~color, PieceType::KING).lsb();
 
     PackedScore eval{0, 0};
 
     for (uint32_t file = 0; file < 8; file++)
     {
-        uint32_t kingFile = fileOf(theirKing);
-        // 4 = e file
-        int idx = (kingFile == file) ? 1 : (kingFile >= 4) == (kingFile < file) ? 0 : 2;
-
         Bitboard filePawns = ourPawns & Bitboard::fileBB(file);
-        int rankDist = filePawns ?
-            std::abs(rankOf(color == Color::WHITE ? filePawns.msb() : filePawns.lsb()) - rankOf(theirKing)) :
-            7;
-        eval += PAWN_STORM[idx][rankDist];
+        {
+            uint32_t kingFile = fileOf(theirKing);
+            // 4 = e file
+            int idx = (kingFile == file) ? 1 : (kingFile >= 4) == (kingFile < file) ? 0 : 2;
+
+            int rankDist = filePawns ?
+                std::abs(rankOf(color == Color::WHITE ? filePawns.msb() : filePawns.lsb()) - rankOf(theirKing)) :
+                7;
+            eval += PAWN_STORM[idx][rankDist];
+        }
+        {
+            uint32_t kingFile = fileOf(ourKing);
+            // 4 = e file
+            int idx = (kingFile == file) ? 1 : (kingFile >= 4) == (kingFile < file) ? 0 : 2;
+            int rankDist = filePawns ?
+                std::abs(rankOf(color == Color::WHITE ? filePawns.lsb() : filePawns.msb()) - rankOf(ourKing)) :
+                7;
+            eval += PAWN_SHIELD[idx][rankDist];
+        }
     }
 
     return eval;
