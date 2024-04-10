@@ -42,8 +42,6 @@ void SearchThread::reset()
     for (int i = 0; i <= MAX_PLY; i++)
     {
         stack[i].killers[0] = stack[i].killers[1] = Move();
-        stack[i].pv = {};
-        stack[i].pvLength = 0;
         stack[i].contHistEntry = nullptr;
     }
 }
@@ -336,8 +334,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     if (alpha >= beta)
         return alpha;
 
-    stack->pvLength = 0;
-
     bool root = rootPly == 0;
     bool inCheck = board.checkers().any();
 
@@ -540,13 +536,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 bound = TTEntry::Bound::EXACT;
                 alpha = bestScore;
                 stack->bestMove = move;
-                if (isPV)
-                {
-                    stack->pv[0] = move;
-                    stack->pvLength = stack[1].pvLength + 1;
-                    for (int i = 0; i < stack[1].pvLength; i++)
-                        stack->pv[i + 1] = stack[1].pv[i];
-                }
             }
 
             if (bestScore >= beta)
@@ -603,7 +592,6 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
 {
     auto& rootPly = thread.rootPly;
     auto& board = thread.board;
-    stack->pvLength = 0;
     if (eval::isImmediateDraw(board))
         return SCORE_DRAW;
 
@@ -684,13 +672,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
             {
                 stack->bestMove = move;
 
-                stack->pvLength = stack[1].pvLength + 1;
-                stack->pv[0] = move;
-                for (int i = 0; i < stack[1].pvLength; i++)
-                    stack->pv[i + 1] = stack[1].pv[i];
-
-                alpha = bestScore;
-                bound = TTEntry::Bound::EXACT;
+                
             }
         }
     }
