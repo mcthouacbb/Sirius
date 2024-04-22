@@ -437,15 +437,16 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     for (int moveIdx = 0; moveIdx < static_cast<int>(moves.size()); moveIdx++)
     {
-        auto [move, moveScore, moveHistory] = ordering.selectMove(static_cast<uint32_t>(moveIdx));
+        auto [move, moveScore] = ordering.selectMove(static_cast<uint32_t>(moveIdx));
         if (!board.isLegal(move))
             continue;
         bool quiet = moveIsQuiet(board, move);
         bool quietLosing = moveScore < MoveOrdering::KILLER_SCORE;
 
         int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
+        int histScore = quiet ? history.getQuietStats(ExtMove::from(board, move), contHistEntries) : history.getNoisyStats(ExtMove::from(board, move));
         if (quiet)
-            baseLMR -= moveHistory / lmrHistDivisor;
+            baseLMR -= histScore / lmrHistDivisor;
 
         if (!root && quietLosing && bestScore > -SCORE_WIN)
         {
@@ -471,7 +472,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
             if (quiet &&
                 depth <= maxHistPruningDepth &&
-                moveHistory < -histPruningMargin * depth)
+                histScore < -histPruningMargin * depth)
                 break;
         }
 
@@ -658,7 +659,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     stack->bestMove = Move();
     for (int moveIdx = 0; moveIdx < static_cast<int>(captures.size()); moveIdx++)
     {
-        auto [move, moveScore, moveHistory] = ordering.selectMove(moveIdx);
+        auto [move, moveScore] = ordering.selectMove(moveIdx);
         if (!board.isLegal(move))
             continue;
         if (!board.see(move, 0))
