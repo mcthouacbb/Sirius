@@ -60,6 +60,7 @@ SEARCH_PARAM(minIIRDepth, 4, 2, 9, 1);
 SEARCH_PARAM(rfpMaxDepth, 8, 4, 10, 1);
 SEARCH_PARAM(rfpImprovingMargin, 50, 30, 80, 5);
 SEARCH_PARAM(rfpMargin, 80, 50, 100, 5);
+SEARCH_PARAM(rfpHistDivisor, 400, 256, 512, 30);
 
 SEARCH_PARAM(nmpMinDepth, 2, 2, 5, 1);
 SEARCH_PARAM(nmpBaseReduction, 3, 2, 5, 1);

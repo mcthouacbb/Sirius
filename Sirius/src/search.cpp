@@ -387,7 +387,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     if (!isPV && !inCheck)
     {
         // reverse futility pruning
-        if (depth <= rfpMaxDepth && posEval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth)
+        if (depth <= rfpMaxDepth && posEval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth + stack[-1].histScore / rfpHistDivisor)
             return posEval;
 
         // null move pruning
@@ -478,6 +478,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         m_TT.prefetch(board.keyAfter(move));
         stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
+        stack->histScore = histScore;
 
         uint64_t nodesBefore = thread.nodes;
         board.makeMove(move, state);
@@ -528,6 +529,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             m_TimeMan.updateNodes(move, thread.nodes - nodesBefore);
 
         stack->contHistEntry = nullptr;
+        stack->histScore = 0;
 
         if (m_ShouldStop)
             return alpha;
