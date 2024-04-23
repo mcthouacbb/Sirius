@@ -9,7 +9,6 @@ struct ScoredMove
 {
     Move move;
     int score;
-    int history;
 };
 
 bool moveIsQuiet(const Board& board, Move move);
