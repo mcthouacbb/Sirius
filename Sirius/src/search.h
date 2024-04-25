@@ -121,7 +121,7 @@ private:
     int iterDeep(SearchThread& thread, bool report, bool normalSearch);
     int aspWindows(SearchThread& thread, int depth, Move& bestMove, int prevScore);
 
-    int search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta, bool isPV);
+    int search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta, bool isPV, bool cutnode);
     int qsearch(SearchThread& thread, SearchStack* stack, int alpha, int beta);
 
     Board& m_Board;

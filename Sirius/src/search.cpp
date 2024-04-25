@@ -270,7 +270,7 @@ int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prev
 
     while (true)
     {
-        int searchScore = search(thread, depth, &thread.stack[0], alpha, beta, true);
+        int searchScore = search(thread, depth, &thread.stack[0], alpha, beta, true, false);
         if (m_ShouldStop)
             return searchScore;
 
@@ -313,7 +313,7 @@ BenchData Search::benchSearch(int depth, const Board& board, BoardState& state)
     return data;
 }
 
-int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta, bool isPV)
+int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta, bool isPV, bool cutnode)
 {
     if (m_TimeMan.stopHard(thread.limits, thread.nodes))
     {
@@ -397,7 +397,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             int r = nmpBaseReduction + depth / nmpDepthReductionScale + std::min((posEval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
             board.makeNullMove(state);
             rootPly++;
-            int nullScore = -search(thread, depth - r, stack + 1, -beta, -beta + 1, false);
+            int nullScore = -search(thread, depth - r, stack + 1, -beta, -beta + 1, false, !cutnode);
             rootPly--;
             board.unmakeNullMove();
             if (nullScore >= beta)
@@ -501,6 +501,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             reduction += !improving;
             reduction -= isPV;
             reduction -= givesCheck;
+            reduction += cutnode;
 
             reduction += stack[1].failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin);
 
@@ -512,16 +513,16 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         int newDepth = depth + givesCheck - 1;
         int score;
         if (movesPlayed == 1)
-            score = -search(thread, newDepth, stack + 1, -beta, -alpha, isPV);
+            score = -search(thread, newDepth, stack + 1, -beta, -alpha, isPV, false);
         else
         {
-            score = -search(thread, newDepth - reduction, stack + 1, -(alpha + 1), -alpha, false);
+            score = -search(thread, newDepth - reduction, stack + 1, -(alpha + 1), -alpha, false, true);
 
             if (score > alpha && reduction > 0)
-                score = -search(thread, newDepth, stack + 1, -(alpha + 1), -alpha, false);
+                score = -search(thread, newDepth, stack + 1, -(alpha + 1), -alpha, false, !cutnode);
 
             if (score > alpha && isPV)
-                score = -search(thread, newDepth, stack + 1, -beta, -alpha, true);
+                score = -search(thread, newDepth, stack + 1, -beta, -alpha, true, false);
         }
         rootPly--;
         board.unmakeMove(move);
