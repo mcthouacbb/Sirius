@@ -30,7 +30,6 @@ protected:
     std::unique_lock<std::mutex> lockStdout() const;
 
     mutable std::mutex m_StdoutMutex;
-    std::deque<BoardState> m_BoardStates;
     std::vector<Move> m_PrevMoves;
     Board m_Board;
     MoveList m_LegalMoves;

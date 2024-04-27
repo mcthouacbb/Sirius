@@ -64,8 +64,7 @@ void CmdLine::reportSearchInfo(const SearchInfo& info) const
 
     std::cout << "PV: ";
 
-    BoardState root;
-    Board board(root);
+    Board board;
     board.setToFen(m_Board.fenStr());
 
     std::deque<BoardState> states;
@@ -76,7 +75,7 @@ void CmdLine::reportSearchInfo(const SearchInfo& info) const
         genMoves<MoveGenType::LEGAL>(board, moves);
         std::cout << comm::convMoveToSAN(board, moves, *move) << ' ';
         states.push_back({});
-        board.makeMove(*move, states.back());
+        board.makeMove(*move);
     }
 
     std::cout << std::endl;
@@ -288,7 +287,7 @@ void CmdLine::searchCommand(std::istringstream& stream)
         std::cout << "No search policy specified, defaulting to infinite" << std::endl;
     }
 
-    m_Search.run(limits, m_BoardStates);
+    m_Search.run(limits, m_Board);
 }
 
 void CmdLine::runTestsCommand()

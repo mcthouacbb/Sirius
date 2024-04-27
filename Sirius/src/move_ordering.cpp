@@ -12,7 +12,7 @@ int mvvLva(const Board& board, Move move)
         PieceType::PAWN :
         getPieceType(board.getPieceAt(move.dstPos()))
     );
-    return 10 * dstPiece - srcPiece + 6;
+    return 10 * dstPiece - srcPiece + 15;
 }
 
 int promotionBonus(Move move)

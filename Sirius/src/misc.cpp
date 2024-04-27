@@ -50,15 +50,15 @@ uint64_t perft(Board& board, int depth)
         return moves.size();
 
     uint64_t count = 0;
-    BoardState state;
+
     for (Move move : moves)
     {
-        board.makeMove(move, state);
+        board.makeMove(move);
         uint64_t sub = perft<false>(board, depth - 1);
         if (print)
             std::cout << comm::convMoveToPCN(move) << ": " << sub << std::endl;
         count += sub;
-        board.unmakeMove(move);
+        board.unmakeMove();
     }
     return count;
 }
@@ -95,12 +95,11 @@ void testSAN(Board& board, int depth)
     if (depth == 0)
         return;
 
-    BoardState state;
     for (Move move : moves)
     {
-        board.makeMove(move, state);
+        board.makeMove(move);
         testSAN(board, depth - 1);
-        board.unmakeMove(move);
+        board.unmakeMove();
     }
 }
 
@@ -112,15 +111,14 @@ void testKeyAfter(Board& board, int depth)
     MoveList moves;
     genMoves<MoveGenType::LEGAL>(board, moves);
 
-    BoardState state;
     for (Move move : moves)
     {
         ZKey keyAfter = board.keyAfter(move);
-        board.makeMove(move, state);
+        board.makeMove(move);
         if (keyAfter != board.zkey())
             throw std::runtime_error("key does not match");
         testKeyAfter(board, depth - 1);
-        board.unmakeMove(move);
+        board.unmakeMove();
     }
 }
 
@@ -143,12 +141,11 @@ void testQuiescence(Board& board, int depth)
     MoveList moves;
     genMoves<MoveGenType::LEGAL>(board, moves);
 
-    BoardState state;
     for (Move move : moves)
     {
-        board.makeMove(move, state);
+        board.makeMove(move);
         testQuiescence(board, depth - 1);
-        board.unmakeMove(move);
+        board.unmakeMove();
     }
 }
 
@@ -157,8 +154,7 @@ void testSEE()
     std::ifstream file("res/see_tests.epd");
 
     std::string line;
-    BoardState rootState;
-    Board board(rootState);
+    Board board;
     int failCount = 0;
     int passCount = 0;
     while (std::getline(file, line))

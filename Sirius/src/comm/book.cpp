@@ -10,10 +10,8 @@ void Book::loadFromPGN(const char* pgn)
     const char* currChar = pgn;
     while (isdigit(*currChar) || isspace(*currChar) || *currChar == '.')
         currChar++;
-    BoardState rootState;
-    Board board(rootState);
+    Board board;
 
-    std::deque<BoardState> prevStates;
     while (true)
     {
         while (*currChar != '*')
@@ -41,8 +39,7 @@ void Book::loadFromPGN(const char* pgn)
                 m_Entries.insert({board.zkey().value, {{find.move}}});
             }
 
-            prevStates.push_back({});
-            board.makeMove(find.move, prevStates.back());
+            board.makeMove(find.move);
 
             currChar += find.len;
 

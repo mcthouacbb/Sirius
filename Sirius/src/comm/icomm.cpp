@@ -2,18 +2,17 @@
 
 namespace comm
 {
-    
+
 IComm* currComm;
 
 IComm::IComm()
-    : m_BoardStates(1, BoardState{}), m_Board(m_BoardStates.front()), m_Search(m_Board)
+    : m_Board(), m_Search(m_Board)
 {
     calcLegalMoves();
 }
 
 void IComm::setToFen(const char* fen)
 {
-    m_BoardStates.resize(1);
     m_PrevMoves.clear();
 
     m_Board.setToFen(fen);
@@ -22,18 +21,16 @@ void IComm::setToFen(const char* fen)
 
 void IComm::makeMove(Move move)
 {
-    m_BoardStates.push_back({});
     m_PrevMoves.push_back(move);
 
-    m_Board.makeMove(move, m_BoardStates.back());
+    m_Board.makeMove(move);
     calcLegalMoves();
 }
 
 void IComm::unmakeMove()
 {
-    m_Board.unmakeMove(m_PrevMoves.back());
+    m_Board.unmakeMove();
 
-    m_BoardStates.pop_back();
     m_PrevMoves.pop_back();
     calcLegalMoves();
 }

@@ -44,17 +44,17 @@ inline void ZKey::flipSideToMove()
 
 inline void ZKey::addPiece(PieceType piece, Color color, uint32_t square)
 {
-    value ^= zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece) - 1][square];
+    value ^= zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][square];
 }
 
 inline void ZKey::removePiece(PieceType piece, Color color, uint32_t square)
 {
-    value ^= zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece) - 1][square];
+    value ^= zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][square];
 }
 
 inline void ZKey::movePiece(PieceType piece, Color color, uint32_t src, uint32_t dst)
 {
-    value ^= zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece) - 1][src] ^ zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece) - 1][dst];
+    value ^= zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][src] ^ zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][dst];
 }
 
 inline void ZKey::updateCastlingRights(uint32_t castlingRights)
