@@ -57,15 +57,15 @@ void runBench(search::Search& search, int depth)
 {
     uint64_t nodes = 0;
     auto t1 = std::chrono::steady_clock::now();
-    BoardState state;
-    Board board(state);
+
+    Board board;
     for (auto fen : fens)
     {
         board.setToFen(fen);
 
         search.newGame();
 
-        BenchData data = search.benchSearch(depth, board, state);
+        BenchData data = search.benchSearch(depth, board);
 
         nodes += data.nodes;
     }

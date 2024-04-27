@@ -104,11 +104,11 @@ public:
 
     void newGame();
 
-    void run(const SearchLimits& limits, const std::deque<BoardState>& states);
+    void run(const SearchLimits& limits, const Board& board);
     void stop();
     void setThreads(int count);
     bool searching() const;
-    BenchData benchSearch(int depth, const Board& board, BoardState& state);
+    BenchData benchSearch(int depth, const Board& board);
 
     void setTTSize(int mb)
     {

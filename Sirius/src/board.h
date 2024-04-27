@@ -8,6 +8,7 @@
 #include <string_view>
 #include <string>
 #include <array>
+#include <vector>
 
 struct CheckInfo
 {
@@ -19,6 +20,10 @@ struct CheckInfo
 
 struct BoardState
 {
+    std::array<Piece, 64> squares;
+    std::array<Bitboard, 6> pieces;
+    std::array<Bitboard, 2> colors;
+
     int halfMoveClock;
     int pliesFromNull;
     int epSquare;
@@ -28,10 +33,7 @@ struct BoardState
     ZKey zkey;
     ZKey pawnKey;
     CheckInfo checkInfo;
-
-    Piece capturedPiece;
-
-    BoardState* prev;
+    eval::EvalState evalState;
 };
 
 class Board
@@ -40,25 +42,17 @@ public:
     static constexpr const char* defaultFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     Board();
-    Board(BoardState& rootState);
-
-    Board(const Board&) = delete;
-    Board& operator=(const Board&) = delete;
-
-    Board(Board&&) = default;
-    Board& operator=(Board&&) = default;
 
     void setToFen(const std::string_view& fen);
     void setToEpd(const std::string_view& epd);
-    void setState(const Board& board, BoardState& currState, BoardState& rootState);
 
     std::string stringRep() const;
     std::string fenStr() const;
     std::string epdStr() const;
 
-    void makeMove(Move move, BoardState& state);
-    void unmakeMove(Move move);
-    void makeNullMove(BoardState& state);
+    void makeMove(Move move);
+    void unmakeMove();
+    void makeNullMove();
     void unmakeNullMove();
 
     Color sideToMove() const;
@@ -101,6 +95,8 @@ public:
 
     const eval::EvalState& evalState() const;
 private:
+    const BoardState& currState() const;
+    BoardState& currState();
     Bitboard pinners(Color color) const;
 
     void updateCheckInfo();
@@ -116,19 +112,22 @@ private:
         100, 450, 450, 675, 1300, 0
     };
 
-    std::array<Piece, 64> m_Squares;
-    std::array<Bitboard, 6> m_Pieces;
-    std::array<Bitboard, 2> m_Colors;
+    std::vector<BoardState> m_States;
 
     Color m_SideToMove;
 
-    eval::EvalState m_EvalState;
-
     int m_GamePly;
-
-    BoardState* m_State;
-    BoardState* m_RootState;
 };
+
+inline const BoardState& Board::currState() const
+{
+    return m_States.back();
+}
+
+inline BoardState& Board::currState()
+{
+    return m_States.back();
+}
 
 inline bool Board::isDraw(int searchPly)
 {
@@ -137,12 +136,12 @@ inline bool Board::isDraw(int searchPly)
 
 inline bool Board::is3FoldDraw(int searchPly)
 {
-    return m_State->repetitions > 1 || (m_State->repetitions == 1 && m_State->lastRepetition < searchPly);
+    return currState().repetitions > 1 || (currState().repetitions == 1 && currState().lastRepetition < searchPly);
 }
 
 inline bool Board::is50MoveDraw()
 {
-    return m_State->halfMoveClock >= 100;
+    return currState().halfMoveClock >= 100;
 }
 
 inline Color Board::sideToMove() const
@@ -152,7 +151,7 @@ inline Color Board::sideToMove() const
 
 inline int Board::epSquare() const
 {
-    return m_State->epSquare;
+    return currState().epSquare;
 }
 
 inline int Board::gamePly() const
@@ -162,37 +161,37 @@ inline int Board::gamePly() const
 
 inline int Board::halfMoveClock() const
 {
-    return m_State->halfMoveClock;
+    return currState().halfMoveClock;
 }
 
 inline int Board::pliesFromNull() const
 {
-    return m_State->pliesFromNull;
+    return currState().pliesFromNull;
 }
 
 inline int Board::castlingRights() const
 {
-    return m_State->castlingRights;
+    return currState().castlingRights;
 }
 
 inline ZKey Board::zkey() const
 {
-    return m_State->zkey;
+    return currState().zkey;
 }
 
 inline ZKey Board::pawnKey() const
 {
-    return m_State->pawnKey;
+    return currState().pawnKey;
 }
 
 inline Piece Board::getPieceAt(uint32_t square) const
 {
-    return m_Squares[square];
+    return currState().squares[square];
 }
 
 inline Bitboard Board::getPieces(PieceType type) const
 {
-    return m_Pieces[static_cast<int>(type)];
+    return currState().pieces[static_cast<int>(type)];
 }
 
 inline Bitboard Board::getPieces(Color color, PieceType type) const
@@ -202,12 +201,12 @@ inline Bitboard Board::getPieces(Color color, PieceType type) const
 
 inline Bitboard Board::getColor(Color color) const
 {
-    return m_Colors[static_cast<int>(color)];
+    return currState().colors[static_cast<int>(color)];
 }
 
 inline Bitboard Board::getAllPieces() const
 {
-    return m_Colors[0] | m_Colors[1];
+    return currState().colors[0] | currState().colors[1];
 }
 
 inline bool Board::squareAttacked(Color color, uint32_t square) const
@@ -227,22 +226,22 @@ inline Bitboard Board::attackersTo(uint32_t square) const
 
 inline const eval::EvalState& Board::evalState() const
 {
-    return m_EvalState;
+    return currState().evalState;
 }
 
 inline Bitboard Board::checkers() const
 {
-    return m_State->checkInfo.checkers;
+    return currState().checkInfo.checkers;
 }
 
 inline Bitboard Board::pinners(Color color) const
 {
-    return m_State->checkInfo.pinners[static_cast<int>(color)];
+    return currState().checkInfo.pinners[static_cast<int>(color)];
 }
 
 inline Bitboard Board::checkBlockers(Color color) const
 {
-    return m_State->checkInfo.blockers[static_cast<int>(color)];
+    return currState().checkInfo.blockers[static_cast<int>(color)];
 }
 
 inline int Board::seePieceValue(PieceType type) const

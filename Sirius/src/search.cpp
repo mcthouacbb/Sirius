@@ -98,7 +98,7 @@ void Search::newGame()
     m_TT.reset();
 }
 
-void Search::run(const SearchLimits& limits, const std::deque<BoardState>& states)
+void Search::run(const SearchLimits& limits, const Board& board)
 {
     // wait for all threads to finish before starting search
     for (auto& thread : m_Threads)
@@ -113,16 +113,9 @@ void Search::run(const SearchLimits& limits, const std::deque<BoardState>& state
     m_TimeMan.setLimits(limits, m_Board.sideToMove());
     m_TimeMan.startSearch();
 
-    m_States = states;
-    // loop through all states except for root
-    for (auto it = m_States.rbegin(); it != m_States.rend() - 1; it++)
-        // horrible abomination
-        it->prev = &(*(it + 1));
-
-
     for (auto& thread : m_Threads)
     {
-        thread->board.setState(m_Board, m_States.back(), m_States.front());
+        thread->board = board;
         thread->limits = limits;
 
         // wait for thread to finish loop if it hasn't yet
@@ -291,14 +284,14 @@ int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prev
     }
 }
 
-BenchData Search::benchSearch(int depth, const Board& board, BoardState& state)
+BenchData Search::benchSearch(int depth, const Board& board)
 {
     SearchLimits limits = {};
     limits.maxDepth = depth;
 
     std::unique_ptr<SearchThread> thread = std::make_unique<SearchThread>(0, std::thread());
     thread->limits = limits;
-    thread->board.setState(board, state, state);
+    thread->board = board;
 
     m_TimeMan.setLimits(limits, m_Board.sideToMove());
     m_TimeMan.startSearch();
@@ -382,8 +375,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     stack[1].killers = {};
 
-    BoardState state;
-
     if (!isPV && !inCheck)
     {
         // reverse futility pruning
@@ -395,7 +386,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         if (board.pliesFromNull() > 0 &&  depth >= nmpMinDepth && posEval >= beta && nonPawns.multiple())
         {
             int r = nmpBaseReduction + depth / nmpDepthReductionScale + std::min((posEval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
-            board.makeNullMove(state);
+            board.makeNullMove();
             rootPly++;
             int nullScore = -search(thread, depth - r, stack + 1, -beta, -beta + 1, false, !cutnode);
             rootPly--;
@@ -481,7 +472,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         stack->histScore = histScore;
 
         uint64_t nodesBefore = thread.nodes;
-        board.makeMove(move, state);
+        board.makeMove(move);
         thread.nodes.fetch_add(1, std::memory_order_relaxed);
         bool givesCheck = board.checkers().any();
         if (quiet)
@@ -525,7 +516,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 score = -search(thread, newDepth, stack + 1, -beta, -alpha, true, false);
         }
         rootPly--;
-        board.unmakeMove(move);
+        board.unmakeMove();
         if (root && thread.isMainThread())
             m_TimeMan.updateNodes(move, thread.nodes - nodesBefore);
 
@@ -657,7 +648,6 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
 
     MoveOrdering ordering(board, captures, ttMove, thread.history);
 
-    BoardState state;
     TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
     stack->bestMove = Move();
     for (int moveIdx = 0; moveIdx < static_cast<int>(captures.size()); moveIdx++)
@@ -667,11 +657,11 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
             continue;
         if (!board.see(move, 0))
             continue;
-        board.makeMove(move, state);
+        board.makeMove(move);
         thread.nodes.fetch_add(1, std::memory_order_relaxed);
         rootPly++;
         int score = -qsearch(thread, stack + 1, -beta, -alpha);
-        board.unmakeMove(move);
+        board.unmakeMove();
         rootPly--;
 
         if (score > bestScore)

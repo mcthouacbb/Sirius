@@ -328,7 +328,7 @@ void UCI::goCommand(std::istringstream& stream)
         }
     }
 
-    m_Search.run(limits, m_BoardStates);
+    m_Search.run(limits, m_Board);
 }
 
 void UCI::setOptionCommand(std::istringstream& stream)
