@@ -4,13 +4,18 @@
 namespace eval
 {
 
+struct EvalData
+{
+    Bitboard mobilityArea;
+    Bitboard attacked;
+    std::array<Bitboard, 6> attackedBy;
+};
+
 template<Color color, PieceType piece>
-PackedScore evaluatePieces(const Board& board)
+PackedScore evaluatePieces(const Board& board, EvalData& ourData)
 {
     Bitboard ourPawns = board.getPieces(color, PieceType::PAWN);
     Bitboard theirPawns = board.getPieces(~color, PieceType::PAWN);
-
-    Bitboard mobilityArea = ~attacks::pawnAttacks<~color>(theirPawns);
 
     PackedScore eval{0, 0};
     Bitboard pieces = board.getPieces(color, piece);
@@ -21,10 +26,11 @@ PackedScore evaluatePieces(const Board& board)
     while (pieces)
     {
         uint32_t sq = pieces.poplsb();
-        Bitboard attacksBB = attacks::pieceAttacks<piece>(sq, board.getAllPieces());
-        eval += MOBILITY[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)][(attacksBB & mobilityArea).popcount()];
+        Bitboard attacks = attacks::pieceAttacks<piece>(sq, board.getAllPieces());
+        ourData.attacked |= attacks;
+        eval += MOBILITY[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)][(attacks & ourData.mobilityArea).popcount()];
 
-        Bitboard threats = attacksBB & board.getColor(~color);
+        Bitboard threats = attacks & board.getColor(~color);
         while (threats)
             eval += THREATS[static_cast<int>(piece)][static_cast<int>(getPieceType(board.getPieceAt(threats.poplsb())))];
 
@@ -81,11 +87,9 @@ PackedScore evaluatePawns(const Board& board, PawnTable* pawnTable)
 
 // I'll figure out how to add the other pieces here later
 template<Color color>
-PackedScore evaluateThreats(const Board& board)
+PackedScore evaluateThreats(const Board& board, const EvalData& ourData)
 {
-    Bitboard ourPawns = board.getPieces(color, PieceType::PAWN);
-    Bitboard attacks = attacks::pawnAttacks<color>(ourPawns);
-    Bitboard threats = attacks & board.getColor(~color);
+    Bitboard threats = ourData.attackedBy[static_cast<int>(PieceType::PAWN)] & board.getColor(~color);
     PackedScore eval{0, 0};
     while (threats)
         eval += THREATS[static_cast<int>(PieceType::PAWN)][static_cast<int>(getPieceType(board.getPieceAt(threats.poplsb())))];
@@ -129,23 +133,39 @@ PackedScore evaluateKings(const Board& board)
     return eval;
 }
 
+void initEvalData(const Board& board, EvalData& white, EvalData& black)
+{
+    Bitboard whitePawns = board.getPieces(Color::WHITE, PieceType::PAWN);
+    Bitboard blackPawns = board.getPieces(Color::BLACK, PieceType::PAWN);
+    Bitboard whitePawnAttacks = attacks::pawnAttacks<Color::WHITE>(whitePawns);
+    Bitboard blackPawnAttacks = attacks::pawnAttacks<Color::BLACK>(blackPawns);
+
+    white.mobilityArea = ~blackPawnAttacks;
+    white.attacked = white.attackedBy[static_cast<int>(PieceType::PAWN)] = whitePawnAttacks;
+    black.mobilityArea = ~whitePawnAttacks;
+    black.attacked = black.attackedBy[static_cast<int>(PieceType::PAWN)] = blackPawnAttacks;
+}
+
 int evaluate(const Board& board, search::SearchThread* thread)
 {
+    EvalData whiteData = {}, blackData = {};
+    initEvalData(board, whiteData, blackData);
+
     if (!eval::canForceMate(board))
         return SCORE_DRAW;
 
     Color color = board.sideToMove();
     PackedScore eval = board.evalState().materialPsqt;
 
-    eval += evaluatePieces<Color::WHITE, PieceType::KNIGHT>(board) - evaluatePieces<Color::BLACK, PieceType::KNIGHT>(board);
-    eval += evaluatePieces<Color::WHITE, PieceType::BISHOP>(board) - evaluatePieces<Color::BLACK, PieceType::BISHOP>(board);
-    eval += evaluatePieces<Color::WHITE, PieceType::ROOK>(board) - evaluatePieces<Color::BLACK, PieceType::ROOK>(board);
-    eval += evaluatePieces<Color::WHITE, PieceType::QUEEN>(board) - evaluatePieces<Color::BLACK, PieceType::QUEEN>(board);
+    eval += evaluatePieces<Color::WHITE, PieceType::KNIGHT>(board, whiteData) - evaluatePieces<Color::BLACK, PieceType::KNIGHT>(board, blackData);
+    eval += evaluatePieces<Color::WHITE, PieceType::BISHOP>(board, whiteData) - evaluatePieces<Color::BLACK, PieceType::BISHOP>(board, blackData);
+    eval += evaluatePieces<Color::WHITE, PieceType::ROOK>(board, whiteData) - evaluatePieces<Color::BLACK, PieceType::ROOK>(board, blackData);
+    eval += evaluatePieces<Color::WHITE, PieceType::QUEEN>(board, whiteData) - evaluatePieces<Color::BLACK, PieceType::QUEEN>(board, blackData);
 
     eval += evaluateKings<Color::WHITE>(board) - evaluateKings<Color::BLACK>(board);
 
     eval += evaluatePawns(board, thread ? &thread->pawnTable : nullptr);
-    eval += evaluateThreats<Color::WHITE>(board) - evaluateThreats<Color::BLACK>(board);
+    eval += evaluateThreats<Color::WHITE>(board, whiteData) - evaluateThreats<Color::BLACK>(board, blackData);
 
 
     return (color == Color::WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg(), board.evalState().phase);
