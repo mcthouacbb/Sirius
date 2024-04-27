@@ -7,7 +7,7 @@
 Board::Board()
     : m_Squares(), m_Pieces(), m_Colors(), m_SideToMove(), m_EvalState(), m_GamePly(), m_State(nullptr), m_RootState(nullptr)
 {
-
+    m_Squares.fill(Piece::NONE);
 }
 
 Board::Board(BoardState& rootState)
@@ -24,7 +24,7 @@ void Board::setToFen(const std::string_view& fen)
     m_State->lastRepetition = 0;
 
 
-    m_Squares = {};
+    m_Squares.fill(Piece::NONE);
     m_Pieces = {};
     m_Colors = {};
 
@@ -175,7 +175,7 @@ void Board::setToEpd(const std::string_view& epd)
     m_State->repetitions = 0;
     m_State->lastRepetition = 0;
 
-    m_Squares = {};
+    m_Squares.fill(Piece::NONE);
     m_Pieces = {};
     m_Colors = {};
 
@@ -331,8 +331,8 @@ void Board::setState(const Board& other, BoardState& currState, BoardState& root
 }
 
 constexpr std::array<char, 16> pieceChars = {
-    ' ', 'P', 'N', 'B', 'R', 'Q', 'K', '#',
-    ' ', 'p', 'n', 'b', 'r', 'q', 'k', '&'
+    'P', 'N', 'B', 'R', 'Q', 'K', ' ', ' ',
+    'p', 'n', 'b', 'r', 'q', 'k', ' ', ' '
 };
 
 std::string Board::stringRep() const
@@ -1053,7 +1053,6 @@ void Board::addPiece(int pos, Color color, PieceType piece)
     Bitboard posBB = Bitboard::fromSquare(pos);
     m_Pieces[static_cast<int>(piece)] |= posBB;
     m_Colors[static_cast<int>(color)] |= posBB;
-    m_Pieces[static_cast<int>(PieceType::ALL)] |= posBB;
 
     m_EvalState.addPiece(color, piece, pos);
 }
@@ -1064,7 +1063,6 @@ void Board::addPiece(int pos, Piece piece)
     Bitboard posBB = Bitboard::fromSquare(pos);
     m_Pieces[static_cast<int>(getPieceType(piece))] |= posBB;
     m_Colors[static_cast<int>(getPieceColor(piece))] |= posBB;
-    m_Pieces[static_cast<int>(PieceType::ALL)] |= posBB;
 
     m_EvalState.addPiece(getPieceColor(piece), getPieceType(piece), pos);
 }
@@ -1077,7 +1075,6 @@ void Board::removePiece(int pos)
     m_Squares[pos] = Piece::NONE;
     m_Pieces[static_cast<int>(pieceType)] ^= posBB;
     m_Colors[static_cast<int>(color)] ^= posBB;
-    m_Pieces[static_cast<int>(PieceType::ALL)] ^= posBB;
 
     m_EvalState.removePiece(color, pieceType, pos);
 }
@@ -1095,7 +1092,6 @@ void Board::movePiece(int src, int dst)
     m_Squares[src] = Piece::NONE;
     m_Pieces[static_cast<int>(pieceType)] ^= moveBB;
     m_Colors[static_cast<int>(color)] ^= moveBB;
-    m_Pieces[static_cast<int>(PieceType::ALL)] ^= moveBB;
 
     m_EvalState.movePiece(color, pieceType, src, dst);
 }

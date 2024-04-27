@@ -25,7 +25,7 @@ constexpr auto combinedPsqt = init();
 
 inline PackedScore combinedPsqtScore(Color color, PieceType piece, int square)
 {
-    return combinedPsqt[static_cast<int>(color)][static_cast<int>(piece) - static_cast<int>(PieceType::PAWN)][square];
+    return combinedPsqt[static_cast<int>(color)][static_cast<int>(piece)][square];
 }
 
 

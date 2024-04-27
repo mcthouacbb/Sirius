@@ -4,8 +4,6 @@ namespace eval
 {
 
 constexpr int PHASE_WEIGHTS[] = {
-    // none
-    0,
     // pawn
     PAWN_PHASE,
     // knight

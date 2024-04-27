@@ -9,14 +9,13 @@
 
 enum class PieceType
 {
-    ALL = 0,
-    NONE = 0,
     PAWN,
     KNIGHT,
     BISHOP,
     ROOK,
     QUEEN,
-    KING
+    KING,
+    NONE
 };
 
 enum class Color
@@ -31,7 +30,7 @@ constexpr Color operator~(const Color& c)
 }
 
 enum class Piece : uint8_t {
-    NONE
+    NONE = static_cast<int>(PieceType::NONE)
 };
 
 inline Piece makePiece(PieceType type, Color color)

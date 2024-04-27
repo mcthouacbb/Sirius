@@ -26,7 +26,7 @@ PackedScore evaluatePieces(const Board& board)
 
         Bitboard threats = attacksBB & board.getColor(~color);
         while (threats)
-            eval += THREATS[static_cast<int>(piece) - static_cast<int>(PieceType::PAWN)][static_cast<int>(getPieceType(board.getPieceAt(threats.poplsb()))) - static_cast<int>(PieceType::PAWN)];
+            eval += THREATS[static_cast<int>(piece)][static_cast<int>(getPieceType(board.getPieceAt(threats.poplsb())))];
 
         Bitboard fileBB = Bitboard::fileBB(fileOf(sq));
 
@@ -88,7 +88,7 @@ PackedScore evaluateThreats(const Board& board)
     Bitboard threats = attacks & board.getColor(~color);
     PackedScore eval{0, 0};
     while (threats)
-        eval += THREATS[static_cast<int>(PieceType::PAWN) - static_cast<int>(PieceType::PAWN)][static_cast<int>(getPieceType(board.getPieceAt(threats.poplsb()))) - static_cast<int>(PieceType::PAWN)];
+        eval += THREATS[static_cast<int>(PieceType::PAWN)][static_cast<int>(getPieceType(board.getPieceAt(threats.poplsb())))];
     return eval;
 }
 

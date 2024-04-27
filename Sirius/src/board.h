@@ -117,7 +117,7 @@ private:
     };
 
     std::array<Piece, 64> m_Squares;
-    std::array<Bitboard, 7> m_Pieces;
+    std::array<Bitboard, 6> m_Pieces;
     std::array<Bitboard, 2> m_Colors;
 
     Color m_SideToMove;
@@ -207,7 +207,7 @@ inline Bitboard Board::getColor(Color color) const
 
 inline Bitboard Board::getAllPieces() const
 {
-    return m_Pieces[0];
+    return m_Colors[0] | m_Colors[1];
 }
 
 inline bool Board::squareAttacked(Color color, uint32_t square) const
@@ -247,5 +247,5 @@ inline Bitboard Board::checkBlockers(Color color) const
 
 inline int Board::seePieceValue(PieceType type) const
 {
-    return SEE_PIECE_VALUES[static_cast<int>(type) - 1];
+    return SEE_PIECE_VALUES[static_cast<int>(type)];
 }
