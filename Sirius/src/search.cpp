@@ -639,6 +639,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         alpha = posEval;
 
     int bestScore = inCheck ? -SCORE_MATE : posEval;
+    int futility = inCheck ? -SCORE_MATE : posEval + 60;
 
     if (rootPly >= MAX_PLY)
         return alpha;
@@ -657,6 +658,11 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
             continue;
         if (!board.see(move, 0))
             continue;
+        if (!inCheck && futility <= alpha && !board.see(move, 1))
+        {
+            bestScore = std::max(bestScore, futility);
+            continue;
+        }
         board.makeMove(move);
         thread.nodes.fetch_add(1, std::memory_order_relaxed);
         rootPly++;
