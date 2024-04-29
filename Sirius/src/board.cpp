@@ -464,8 +464,8 @@ std::string Board::epdStr() const
 
 void Board::makeMove(Move move)
 {
-    BoardState& prev = currState();
-    m_States.push_back(prev);
+    m_States.push_back(currState());
+    BoardState& prev = m_States[m_States.size() - 2];
 
     currState().halfMoveClock = prev.halfMoveClock + 1;
     currState().pliesFromNull = prev.pliesFromNull + 1;
@@ -595,9 +595,8 @@ void Board::unmakeMove()
 
 void Board::makeNullMove()
 {
-    BoardState& prev = currState();
-    m_States.push_back(prev);
-
+    m_States.push_back(currState());
+    BoardState& prev = m_States[m_States.size() - 2];
 
     currState().halfMoveClock = prev.halfMoveClock + 1;
     currState().pliesFromNull = 0;
