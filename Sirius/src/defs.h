@@ -168,6 +168,8 @@ public:
     friend constexpr PackedScore operator+(const PackedScore& a, const PackedScore& b);
     friend constexpr PackedScore operator-(const PackedScore& a, const PackedScore& b);
     friend constexpr PackedScore operator-(const PackedScore& p);
+    friend constexpr PackedScore operator*(int a, const PackedScore& b);
+    friend constexpr PackedScore operator*(const PackedScore& a, int b);
 private:
     constexpr PackedScore(int value)
         : m_Value(value)
@@ -218,6 +220,16 @@ constexpr PackedScore operator-(const PackedScore& a, const PackedScore& b)
 constexpr PackedScore operator-(const PackedScore& p)
 {
     return PackedScore(-p.m_Value);
+}
+
+constexpr PackedScore operator*(int a, const PackedScore& b)
+{
+    return PackedScore(a * b.m_Value);
+}
+
+constexpr PackedScore operator*(const PackedScore& a, int b)
+{
+    return PackedScore(a.m_Value * b);
 }
 
 inline int fileOf(int square)
