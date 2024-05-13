@@ -142,39 +142,45 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
 }
 
 template<Color us>
+PackedScore evalKingPawnFile(uint32_t file, Bitboard ourPawns, Bitboard theirPawns, uint32_t theirKing)
+{
+    PackedScore eval{0, 0};
+    uint32_t kingFile = fileOf(theirKing);
+    {
+        Bitboard filePawns = ourPawns & Bitboard::fileBB(file);
+        // 4 = e file
+        int idx = (kingFile == file) ? 1 : (kingFile >= 4) == (kingFile < file) ? 0 : 2;
+
+        int rankDist = filePawns ?
+            std::abs(rankOf(us == Color::WHITE ? filePawns.msb() : filePawns.lsb()) - rankOf(theirKing)) :
+            7;
+        eval += PAWN_STORM[idx][rankDist];
+    }
+    {
+        Bitboard filePawns = theirPawns & Bitboard::fileBB(file);
+        // 4 = e file
+        int idx = (kingFile == file) ? 1 : (kingFile >= 4) == (kingFile < file) ? 0 : 2;
+        int rankDist = filePawns ?
+            std::abs(rankOf(us == Color::WHITE ? filePawns.msb() : filePawns.lsb()) - rankOf(theirKing)) :
+            7;
+        eval += PAWN_SHIELD[idx][rankDist];
+    }
+    return eval;
+}
+
+template<Color us>
 PackedScore evaluateKings(const Board& board, const EvalData& evalData)
 {
     constexpr Color them = ~us;
     Bitboard ourPawns = board.getPieces(us, PieceType::PAWN);
+    Bitboard theirPawns = board.getPieces(them, PieceType::PAWN);
 
-    uint32_t ourKing = board.getPieces(us, PieceType::KING).lsb();
     uint32_t theirKing = board.getPieces(them, PieceType::KING).lsb();
 
     PackedScore eval{0, 0};
 
     for (uint32_t file = 0; file < 8; file++)
-    {
-        Bitboard filePawns = ourPawns & Bitboard::fileBB(file);
-        {
-            uint32_t kingFile = fileOf(theirKing);
-            // 4 = e file
-            int idx = (kingFile == file) ? 1 : (kingFile >= 4) == (kingFile < file) ? 0 : 2;
-
-            int rankDist = filePawns ?
-                std::abs(rankOf(us == Color::WHITE ? filePawns.msb() : filePawns.lsb()) - rankOf(theirKing)) :
-                7;
-            eval += PAWN_STORM[idx][rankDist];
-        }
-        {
-            uint32_t kingFile = fileOf(ourKing);
-            // 4 = e file
-            int idx = (kingFile == file) ? 1 : (kingFile >= 4) == (kingFile < file) ? 0 : 2;
-            int rankDist = filePawns ?
-                std::abs(rankOf(us == Color::WHITE ? filePawns.lsb() : filePawns.msb()) - rankOf(ourKing)) :
-                7;
-            eval += PAWN_SHIELD[idx][rankDist];
-        }
-    }
+        eval += evalKingPawnFile<us>(file, ourPawns, theirPawns, theirKing);
 
     Bitboard rookCheckSquares = attacks::rookAttacks(theirKing, board.getAllPieces());
     Bitboard bishopCheckSquares = attacks::rookAttacks(theirKing, board.getAllPieces());
