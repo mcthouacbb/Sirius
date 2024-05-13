@@ -99,6 +99,15 @@ PackedScore evaluatePawns(const Board& board)
         if (board.isIsolatedPawn(sq))
             eval += ISOLATED_PAWN[fileOf(sq)];
     }
+
+    Bitboard phalanx = ourPawns & ourPawns.west();
+    while (phalanx)
+        eval += PAWN_PHALANX[relativeRankOf<us>(phalanx.poplsb())];
+
+    Bitboard defended = ourPawns & attacks::pawnAttacks<us>(ourPawns);
+    while (defended)
+        eval += DEFENDED_PAWN[relativeRankOf<us>(defended.poplsb())];
+
     return eval;
 }
 
