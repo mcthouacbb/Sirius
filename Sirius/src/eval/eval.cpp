@@ -142,7 +142,7 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
 }
 
 template<Color us>
-PackedScore evaluateKings(const Board& board)
+PackedScore evaluateKings(const Board& board, const EvalData& evalData)
 {
     constexpr Color them = ~us;
     Bitboard ourPawns = board.getPieces(us, PieceType::PAWN);
@@ -176,6 +176,21 @@ PackedScore evaluateKings(const Board& board)
         }
     }
 
+    Bitboard rookCheckSquares = attacks::rookAttacks(theirKing, board.getAllPieces());
+    Bitboard bishopCheckSquares = attacks::rookAttacks(theirKing, board.getAllPieces());
+
+    Bitboard knightChecks = evalData.attackedBy[us][PieceType::KNIGHT] & attacks::knightAttacks(theirKing);
+    Bitboard bishopChecks = evalData.attackedBy[us][PieceType::BISHOP] & bishopCheckSquares;
+    Bitboard rookChecks = evalData.attackedBy[us][PieceType::ROOK] & rookCheckSquares;
+    Bitboard queenChecks = evalData.attackedBy[us][PieceType::QUEEN] & (bishopCheckSquares | rookCheckSquares);
+
+    Bitboard safe = ~evalData.attacked[them];
+
+    eval += SAFE_KNIGHT_CHECK * (knightChecks & safe).popcount();
+    eval += SAFE_BISHOP_CHECK * (bishopChecks & safe).popcount();
+    eval += SAFE_ROOK_CHECK * (rookChecks & safe).popcount();
+    eval += SAFE_QUEEN_CHECK * (queenChecks & safe).popcount();
+
     return eval;
 }
 
@@ -208,7 +223,7 @@ int evaluate(const Board& board, search::SearchThread* thread)
     eval += evaluatePieces<Color::WHITE, PieceType::ROOK>(board, evalData) - evaluatePieces<Color::BLACK, PieceType::ROOK>(board, evalData);
     eval += evaluatePieces<Color::WHITE, PieceType::QUEEN>(board, evalData) - evaluatePieces<Color::BLACK, PieceType::QUEEN>(board, evalData);
 
-    eval += evaluateKings<Color::WHITE>(board) - evaluateKings<Color::BLACK>(board);
+    eval += evaluateKings<Color::WHITE>(board, evalData) - evaluateKings<Color::BLACK>(board, evalData);
 
     eval += evaluatePawns(board, thread ? &thread->pawnTable : nullptr);
     eval += evaluateThreats<Color::WHITE>(board, evalData) - evaluateThreats<Color::BLACK>(board, evalData);
