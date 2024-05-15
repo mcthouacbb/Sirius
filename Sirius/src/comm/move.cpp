@@ -469,7 +469,7 @@ std::string convMoveToSAN(const Board& board, const MoveList& legalMoves, Move m
         return move.dstPos() > move.srcPos() ? "O-O" : "O-O-O";
     }
     PieceType piece = getPieceType(board.getPieceAt(move.srcPos()));
-    bool isCapture = static_cast<bool>(board.getPieceAt(move.dstPos()));
+    bool isCapture = board.getPieceAt(move.dstPos()) != Piece::NONE;
     if (piece == PieceType::PAWN)
     {
         int srcPos = move.srcPos();
