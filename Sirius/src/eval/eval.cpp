@@ -41,6 +41,7 @@ struct EvalData
     ColorArray<Bitboard> mobilityArea;
     ColorArray<Bitboard> attacked;
     ColorArray<PieceTypeArray<Bitboard>> attackedBy;
+    ColorArray<Bitboard> pawnAttackSpans;
 };
 
 template<Color us, PieceType piece>
@@ -55,6 +56,8 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
     if constexpr (piece == PieceType::BISHOP)
         if (pieces.multiple())
             eval += BISHOP_PAIR;
+
+    Bitboard outpostSquares = RANK_4 | RANK_5 | (us == Color::WHITE ? RANK_6 : RANK_3);
 
     while (pieces)
     {
@@ -75,6 +78,13 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
         {
             if ((ourPawns & fileBB).empty())
                 eval += (theirPawns & fileBB).any() ? ROOK_OPEN[1] : ROOK_OPEN[0];
+        }
+
+        if constexpr (piece == PieceType::KNIGHT)
+        {
+            Bitboard outposts = outpostSquares & ~evalData.pawnAttackSpans[them] & evalData.attackedBy[us][PieceType::PAWN];
+            if (Bitboard::fromSquare(sq) & outposts)
+                eval += KNIGHT_OUTPOST;
         }
     }
 
@@ -208,8 +218,11 @@ void initEvalData(const Board& board, EvalData& evalData)
     Bitboard blackPawnAttacks = attacks::pawnAttacks<Color::BLACK>(blackPawns);
 
     evalData.mobilityArea[Color::WHITE] = ~blackPawnAttacks;
+    evalData.pawnAttackSpans[Color::WHITE] = attacks::fillUp<Color::WHITE>(whitePawnAttacks);
     evalData.attacked[Color::WHITE] = evalData.attackedBy[Color::WHITE][PieceType::PAWN] = whitePawnAttacks;
+
     evalData.mobilityArea[Color::BLACK] = ~whitePawnAttacks;
+    evalData.pawnAttackSpans[Color::BLACK] = attacks::fillUp<Color::BLACK>(blackPawnAttacks);
     evalData.attacked[Color::BLACK] = evalData.attackedBy[Color::BLACK][PieceType::PAWN] = blackPawnAttacks;
 }
 
