@@ -503,7 +503,7 @@ std::string convMoveToSAN(const Board& board, const MoveList& legalMoves, Move m
     }
     else
     {
-        char pceChar = pieceChars[static_cast<int>(piece) - 2];
+        char pceChar = pieceChars[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)];
 
         int srcPos = move.srcPos();
         int dstPos = move.dstPos();
