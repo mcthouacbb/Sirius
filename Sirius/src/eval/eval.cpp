@@ -43,6 +43,9 @@ struct EvalData
     ColorArray<Bitboard> attackedBy2;
     ColorArray<PieceTypeArray<Bitboard>> attackedBy;
     ColorArray<Bitboard> pawnAttackSpans;
+    ColorArray<Bitboard> kingRing;
+    ColorArray<PackedScore> attackWeight;
+    ColorArray<int> attackCount;
 };
 
 template<Color us, PieceType piece>
@@ -73,6 +76,12 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
         Bitboard threats = attacks & board.getColor(them);
         while (threats)
             eval += THREATS[static_cast<int>(piece)][static_cast<int>(getPieceType(board.getPieceAt(threats.poplsb())))];
+
+        if (Bitboard kingRingAtks = evalData.kingRing[them] & attacks; kingRingAtks.any())
+        {
+            evalData.attackWeight[us] += KING_ATTACKER_WEIGHT[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)];
+            evalData.attackCount[us] += kingRingAtks.popcount();
+        }
 
         Bitboard fileBB = Bitboard::fileBB(fileOf(sq));
 
@@ -209,6 +218,10 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
     eval += SAFE_ROOK_CHECK * (rookChecks & safe).popcount();
     eval += SAFE_QUEEN_CHECK * (queenChecks & safe).popcount();
 
+    eval += evalData.attackWeight[us];
+    int attackCount = std::min(evalData.attackCount[us], 13);
+    eval += KING_ATTACKS[attackCount];
+
     return eval;
 }
 
@@ -225,17 +238,21 @@ void initEvalData(const Board& board, EvalData& evalData)
     evalData.pawnAttackSpans[Color::WHITE] = attacks::fillUp<Color::WHITE>(whitePawnAttacks);
     evalData.attacked[Color::WHITE] = evalData.attackedBy[Color::WHITE][PieceType::PAWN] = whitePawnAttacks;
 
-    evalData.attackedBy[Color::WHITE][PieceType::KING] = attacks::kingAttacks(whiteKing);
-    evalData.attackedBy2[Color::WHITE] = evalData.attacked[Color::WHITE] & evalData.attackedBy[Color::WHITE][PieceType::KING];
-    evalData.attacked[Color::WHITE] |= evalData.attackedBy[Color::WHITE][PieceType::KING];
+    Bitboard whiteKingAtks = attacks::kingAttacks(whiteKing);
+    evalData.attackedBy[Color::WHITE][PieceType::KING] = whiteKingAtks;
+    evalData.attackedBy2[Color::WHITE] = evalData.attacked[Color::WHITE] & whiteKingAtks;
+    evalData.attacked[Color::WHITE] |= whiteKingAtks;
+    evalData.kingRing[Color::WHITE] = (whiteKingAtks | whiteKingAtks.north()) & ~Bitboard::fromSquare(whiteKing);
 
     evalData.mobilityArea[Color::BLACK] = ~whitePawnAttacks;
     evalData.pawnAttackSpans[Color::BLACK] = attacks::fillUp<Color::BLACK>(blackPawnAttacks);
     evalData.attacked[Color::BLACK] = evalData.attackedBy[Color::BLACK][PieceType::PAWN] = blackPawnAttacks;
 
-    evalData.attackedBy[Color::BLACK][PieceType::KING] = attacks::kingAttacks(blackKing);
-    evalData.attackedBy2[Color::BLACK] = evalData.attacked[Color::BLACK] & evalData.attackedBy[Color::BLACK][PieceType::KING];
-    evalData.attacked[Color::BLACK] |= evalData.attackedBy[Color::BLACK][PieceType::KING];
+    Bitboard blackKingAtks = attacks::kingAttacks(blackKing);
+    evalData.attackedBy[Color::BLACK][PieceType::KING] = blackKingAtks;
+    evalData.attackedBy2[Color::BLACK] = evalData.attacked[Color::BLACK] & blackKingAtks;
+    evalData.attacked[Color::BLACK] |= blackKingAtks;
+    evalData.kingRing[Color::BLACK] = (blackKingAtks | blackKingAtks.south()) & ~Bitboard::fromSquare(blackKing);
 }
 
 int evaluate(const Board& board, search::SearchThread* thread)
