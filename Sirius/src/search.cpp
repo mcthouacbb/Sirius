@@ -479,42 +479,37 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             quietsTried.push_back(move);
         else
             noisiesTried.push_back(move);
-        rootPly++;
 
-        int reduction = 0;
+        rootPly++;
+        movesPlayed++;
+
+        int newDepth = depth + givesCheck - 1;
+        int score = 0;
+
         if (movesPlayed >= (isPV ? lmrMinMovesPv : lmrMinMovesNonPv) &&
             depth >= lmrMinDepth &&
             quietLosing &&
             !inCheck)
         {
-            reduction = baseLMR;
+            int reduction = baseLMR;
 
             reduction += !improving;
             reduction -= isPV;
             reduction -= givesCheck;
             reduction += cutnode;
-
             reduction += stack[1].failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin);
 
-            reduction = std::clamp(reduction, 0, depth - 2);
+            int reduced = std::min(std::max(newDepth - reduction, 1), newDepth);
+            score = -search(thread, reduced, stack + 1, -alpha - 1, -alpha, false, true);
+            if (score > alpha && reduced < newDepth)
+                score = -search(thread, newDepth, stack + 1, -alpha - 1, -alpha, false, !cutnode);
         }
+        else if (!isPV || movesPlayed > 1)
+            score = -search(thread, newDepth, stack + 1, -alpha - 1, -alpha, false, !cutnode);
 
-        movesPlayed++;
+        if (isPV && (movesPlayed == 1 || score > alpha))
+            score = -search(thread, newDepth, stack + 1, -beta, -alpha, true, false);
 
-        int newDepth = depth + givesCheck - 1;
-        int score;
-        if (movesPlayed == 1)
-            score = -search(thread, newDepth, stack + 1, -beta, -alpha, isPV, false);
-        else
-        {
-            score = -search(thread, newDepth - reduction, stack + 1, -(alpha + 1), -alpha, false, true);
-
-            if (score > alpha && reduction > 0)
-                score = -search(thread, newDepth, stack + 1, -(alpha + 1), -alpha, false, !cutnode);
-
-            if (score > alpha && isPV)
-                score = -search(thread, newDepth, stack + 1, -beta, -alpha, true, false);
-        }
         rootPly--;
         board.unmakeMove();
         if (root && thread.isMainThread())
