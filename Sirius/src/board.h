@@ -33,6 +33,7 @@ struct BoardState
     ZKey zkey;
     ZKey pawnKey;
     CheckInfo checkInfo;
+    Bitboard threats;
     eval::EvalState evalState;
 };
 
@@ -88,6 +89,7 @@ public:
 
     Bitboard checkers() const;
     Bitboard checkBlockers(Color color) const;
+    Bitboard threats() const;
 
     bool see(Move move, int margin) const;
     bool isLegal(Move move) const;
@@ -100,6 +102,7 @@ private:
     Bitboard pinners(Color color) const;
 
     void updateCheckInfo();
+    void calcThreats();
     void calcRepetitions();
     void addPiece(int pos, Color color, PieceType piece);
     void addPiece(int pos, Piece piece);
@@ -242,6 +245,11 @@ inline Bitboard Board::pinners(Color color) const
 inline Bitboard Board::checkBlockers(Color color) const
 {
     return currState().checkInfo.blockers[static_cast<int>(color)];
+}
+
+inline Bitboard Board::threats() const
+{
+    return currState().threats;
 }
 
 inline int Board::seePieceValue(PieceType type) const
