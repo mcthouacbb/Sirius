@@ -161,6 +161,7 @@ done:
     m_GamePly = 2 * m_GamePly - 1 - (m_SideToMove == Color::WHITE);
 
     updateCheckInfo();
+    calcThreats();
 }
 
 void Board::setToEpd(const std::string_view& epd)
@@ -314,6 +315,7 @@ done:
     m_GamePly = 0;
 
     updateCheckInfo();
+    calcThreats();
 }
 
 constexpr std::array<char, 16> pieceChars = {
@@ -582,6 +584,7 @@ void Board::makeMove(Move move)
     m_SideToMove = ~m_SideToMove;
 
     updateCheckInfo();
+    calcThreats();
     calcRepetitions();
 }
 
@@ -616,6 +619,7 @@ void Board::makeNullMove()
     m_SideToMove = ~m_SideToMove;
 
     updateCheckInfo();
+    calcThreats();
 }
 
 void Board::unmakeNullMove()
@@ -963,6 +967,49 @@ void Board::updateCheckInfo()
         pinnersBlockers(whiteKingIdx, getColor(Color::BLACK), currState().checkInfo.pinners[static_cast<int>(Color::WHITE)]);
     currState().checkInfo.blockers[static_cast<int>(Color::BLACK)] =
         pinnersBlockers(blackKingIdx, getColor(Color::WHITE), currState().checkInfo.pinners[static_cast<int>(Color::BLACK)]);
+}
+
+void Board::calcThreats()
+{
+    Color color = ~m_SideToMove;
+    Bitboard threats = 0;
+    Bitboard occupied = getAllPieces();
+
+    Bitboard queens = getPieces(color, PieceType::QUEEN);
+    Bitboard rooks = getPieces(color, PieceType::ROOK);
+    Bitboard bishops = getPieces(color, PieceType::BISHOP);
+    Bitboard knights = getPieces(color, PieceType::KNIGHT);
+    Bitboard pawns = getPieces(color, PieceType::PAWN);
+    uint32_t kingIdx = getPieces(color, PieceType::KING).lsb();
+
+    rooks |= queens;
+    while (rooks)
+    {
+        uint32_t rook = rooks.poplsb();
+        threats |= attacks::rookAttacks(rook, occupied);
+    }
+
+    bishops |= queens;
+    while (bishops)
+    {
+        uint32_t bishop = bishops.poplsb();
+        threats |= attacks::bishopAttacks(bishop, occupied);
+    }
+
+    while (knights)
+    {
+        uint32_t knight = knights.poplsb();
+        threats |= attacks::knightAttacks(knight);
+    }
+
+    if (color == Color::WHITE)
+        threats |= attacks::pawnAttacks<Color::WHITE>(pawns);
+    else
+        threats |= attacks::pawnAttacks<Color::BLACK>(pawns);
+
+    threats |= attacks::kingAttacks(kingIdx);
+
+    currState().threats = threats;
 }
 
 void Board::calcRepetitions()
