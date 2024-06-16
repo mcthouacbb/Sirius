@@ -1,5 +1,6 @@
 #include "history.h"
 #include "search_params.h"
+#include <algorithm>
 
 namespace
 {
@@ -49,6 +50,13 @@ int History::getNoisyStats(ExtMove move) const
     return getCaptHist(move);
 }
 
+int History::correctStaticEval(int staticEval, Color stm, ZKey pawnHash) const
+{
+    int bonus = m_CorrHist[static_cast<int>(stm)][pawnHash.value % CORR_HIST_ENTRIES];
+    int corrected = staticEval + bonus / CORR_HIST_SCALE;
+    return std::clamp(corrected, SCORE_MATE_IN_MAX, -SCORE_MATE_IN_MAX);
+}
+
 void History::updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus)
 {
     updateMainHist(threats, move, bonus);
@@ -60,6 +68,16 @@ void History::updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry
 void History::updateNoisyStats(ExtMove move, int bonus)
 {
     updateCaptHist(move, bonus);
+}
+
+void History::updateCorrHist(int bonus, int depth, Color stm, ZKey pawnHash)
+{
+    auto& entry = m_CorrHist[static_cast<int>(stm)][pawnHash.value % CORR_HIST_ENTRIES];
+    int scaledBonus = bonus * CORR_HIST_SCALE;
+    int weight = std::min(1 + depth, 16);
+
+    entry = (entry * (256 - weight) + scaledBonus * weight) / 256;
+    entry = std::clamp(entry, -MAX_CORR_HIST, MAX_CORR_HIST);
 }
 
 int History::getMainHist(Bitboard threats, ExtMove move) const
