@@ -586,9 +586,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         return SCORE_DRAW;
     }
 
-    if (!inCheck && moveIsQuiet(board, stack->bestMove) &&
-        !(bound == TTEntry::Bound::LOWER_BOUND && bestScore <= stack->staticEval) &&
-        !(bound == TTEntry::Bound::UPPER_BOUND && bestScore >= stack->staticEval))
+    if (!inCheck && (stack->bestMove == Move() || moveIsQuiet(board, stack->bestMove)) &&
+        !(bound == TTEntry::Bound::LOWER_BOUND && stack->staticEval >= bestScore) &&
+        !(bound == TTEntry::Bound::UPPER_BOUND && stack->staticEval <= bestScore))
         history.updateCorrHist(bestScore - stack->staticEval, depth, board.sideToMove(), board.pawnKey());
 
     m_TT.store(ttIdx, board.zkey(), depth, rootPly, bestScore, stack->bestMove, bound);

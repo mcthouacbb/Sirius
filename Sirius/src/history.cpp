@@ -54,7 +54,7 @@ int History::correctStaticEval(int staticEval, Color stm, ZKey pawnHash) const
 {
     int bonus = m_CorrHist[static_cast<int>(stm)][pawnHash.value % CORR_HIST_ENTRIES];
     int corrected = staticEval + bonus / CORR_HIST_SCALE;
-    return std::clamp(corrected, SCORE_MATE_IN_MAX, -SCORE_MATE_IN_MAX);
+    return std::clamp(corrected, -SCORE_MATE_IN_MAX, SCORE_MATE_IN_MAX);
 }
 
 void History::updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus)
