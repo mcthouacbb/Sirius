@@ -365,7 +365,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     stack->staticEval = inCheck ? SCORE_NONE : eval::evaluate(board);
     bool improving = !inCheck && rootPly > 1 && stack->staticEval > stack[-2].staticEval;
 
-    int posEval = stack->staticEval;
+    int posEval = history.correctStaticEval(stack->staticEval, board.sideToMove(), board.pawnKey());
     if (!inCheck && ttHit && (
         ttBound == TTEntry::Bound::EXACT ||
         (ttBound == TTEntry::Bound::LOWER_BOUND && ttScore >= posEval) ||
@@ -573,8 +573,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                     if (noisyMove != move)
                         history.updateNoisyStats(ExtMove::from(board, noisyMove), -bonus);
                 }
-                m_TT.store(ttIdx, board.zkey(), depth, rootPly, bestScore, move, TTEntry::Bound::LOWER_BOUND);
-                return bestScore;
+                bound = TTEntry::Bound::LOWER_BOUND;
+                break;
             }
         }
     }
@@ -585,6 +585,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             return -SCORE_MATE + rootPly;
         return SCORE_DRAW;
     }
+
+    if (!inCheck && (stack->bestMove == Move() || moveIsQuiet(board, stack->bestMove)) &&
+        !(bound == TTEntry::Bound::LOWER_BOUND && stack->staticEval >= bestScore) &&
+        !(bound == TTEntry::Bound::UPPER_BOUND && stack->staticEval <= bestScore))
+        history.updateCorrHist(bestScore - stack->staticEval, depth, board.sideToMove(), board.pawnKey());
 
     m_TT.store(ttIdx, board.zkey(), depth, rootPly, bestScore, stack->bestMove, bound);
 
