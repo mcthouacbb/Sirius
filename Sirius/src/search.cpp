@@ -500,6 +500,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             reduction -= givesCheck;
             reduction += cutnode;
             reduction += stack[1].failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin);
+            reduction = 0;
 
             int reduced = std::min(std::max(newDepth - reduction, 1), newDepth);
             score = -search(thread, reduced, stack + 1, -alpha - 1, -alpha, false, true);
