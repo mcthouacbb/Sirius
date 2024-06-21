@@ -66,6 +66,9 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
     while (pieces)
     {
         uint32_t sq = pieces.poplsb();
+        if ((Bitboard::fromSquare(sq) & evalData.attackedBy[us][PieceType::PAWN]).any())
+            eval += PAWN_DEFENDED_PIECE[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)];
+
         Bitboard attacks = attacks::pieceAttacks<piece>(sq, board.getAllPieces());
         evalData.attackedBy[us][piece] |= attacks;
         evalData.attackedBy2[us] |= evalData.attacked[us] & attacks;
