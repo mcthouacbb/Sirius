@@ -23,10 +23,13 @@ struct SearchStack
     Move bestMove;
     std::array<Move, 2> killers;
 
+    Move excludedMove;
+
     CHEntry* contHistEntry;
     int histScore;
 
     int staticEval;
+    int eval;
 
     uint32_t failHighCount;
 };
