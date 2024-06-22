@@ -380,7 +380,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     stack[1].killers = {};
 
-    if (!isPV && !inCheck)
+    if (!isPV && !inCheck && !singular)
     {
         // reverse futility pruning
         if (depth <= rfpMaxDepth && stack->eval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth + stack[-1].histScore / rfpHistDivisor)
@@ -484,7 +484,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             depth >= 8 &&
             move == ttMove &&
             !singular &&
-            ttDepth + 4 >= depth &&
+            ttDepth + 2 >= depth &&
             ttBound != TTEntry::Bound::UPPER_BOUND &&
             !isMateScore(ttScore);
 
@@ -492,7 +492,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         {
             stack->excludedMove = ttMove;
             int sDepth = (depth - 1) / 2;
-            int sBeta = ttScore - 2 * depth;
+            int sBeta = ttScore - 3 * depth;
 
             int score = search(thread, sDepth, stack, sBeta - 1, sBeta, false, cutnode);
 
@@ -515,8 +515,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         rootPly++;
         movesPlayed++;
 
-        if (givesCheck)
-            extension = std::max(extension, 1);
+        if (givesCheck && !doSE)
+            extension = 1;
 
         int newDepth = depth + extension - 1;
         int score = 0;
