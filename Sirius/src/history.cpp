@@ -11,6 +11,12 @@ void fillHistTable(std::array<HistoryEntry<MAX_VAL>, N>& arr, int value)
     std::fill(arr.begin(), arr.end(), value);
 }
 
+template<size_t N>
+void fillHistTable(std::array<int, N>& arr, int value)
+{
+    std::fill(arr.begin(), arr.end(), value);
+}
+
 template<typename T, size_t N>
 void fillHistTable(std::array<T, N>& arr, int value)
 {
@@ -34,6 +40,7 @@ void History::clear()
     fillHistTable(m_MainHist, 0);
     fillHistTable(m_ContHist, 0);
     fillHistTable(m_CaptHist, 0);
+    fillHistTable(m_CorrHist, 0);
 }
 
 int History::getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const
