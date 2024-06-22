@@ -380,7 +380,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     stack[1].killers = {};
 
-    if (!isPV && !inCheck && !singular)
+    if (!isPV && !inCheck)
     {
         // reverse futility pruning
         if (depth <= rfpMaxDepth && stack->eval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth + stack[-1].histScore / rfpHistDivisor)
@@ -515,7 +515,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         rootPly++;
         movesPlayed++;
 
-        if (givesCheck && !doSE)
+        if (givesCheck)
             extension = 1;
 
         int newDepth = depth + extension - 1;
