@@ -249,3 +249,8 @@ inline int relativeRankOf(int square)
         square ^= 56;
     return rankOf(square);
 }
+
+inline int chebyshev(int sq1, int sq2)
+{
+    return std::max(std::abs(rankOf(sq1) - rankOf(sq2)), std::abs(fileOf(sq1) - fileOf(sq2)));
+}
