@@ -45,6 +45,19 @@ void printWeatherFactoryConfig()
     std::cout << "}";
 }
 
+void printOpenBenchConfig()
+{
+    for (auto& param : searchParams())
+    {
+        std::cout << param.name << " int "
+            << param.defaultValue << ' '
+            << param.min << ' '
+            << param.max << ' '
+            << param.step << ' '
+            << "0.002" << std::endl;
+    }
+}
+
 #endif
 
 extern std::array<std::array<int, 64>, 64> lmrTable;

@@ -45,6 +45,10 @@ int main(int argc, char** argv)
     {
         search::printWeatherFactoryConfig();
     }
+    else if (mode == "obconfig")
+    {
+        search::printOpenBenchConfig();
+    }
 #endif
     else
     {
