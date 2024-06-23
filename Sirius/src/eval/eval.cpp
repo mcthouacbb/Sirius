@@ -46,6 +46,8 @@ struct EvalData
     ColorArray<Bitboard> kingRing;
     ColorArray<PackedScore> attackWeight;
     ColorArray<int> attackCount;
+
+    Bitboard passedPawns;
 };
 
 template<Color us, PieceType piece>
@@ -105,7 +107,7 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
 
 
 template<Color us>
-PackedScore evaluatePawns(const Board& board)
+PackedScore evaluatePawns(const Board& board, EvalData& evalData)
 {
     Bitboard ourPawns = board.getPieces(us, PieceType::PAWN);
 
@@ -116,7 +118,10 @@ PackedScore evaluatePawns(const Board& board)
     {
         uint32_t sq = pawns.poplsb();
         if (board.isPassedPawn(sq))
+        {
+            evalData.passedPawns |= Bitboard::fromSquare(sq);
             eval += PASSED_PAWN[relativeRankOf<us>(sq)];
+        }
         if (board.isIsolatedPawn(sq))
             eval += ISOLATED_PAWN[fileOf(sq)];
     }
@@ -132,21 +137,46 @@ PackedScore evaluatePawns(const Board& board)
     return eval;
 }
 
-PackedScore evaluatePawns(const Board& board, PawnTable* pawnTable)
+PackedScore evaluatePawns(const Board& board, EvalData& evalData, PawnTable* pawnTable)
 {
     if (pawnTable)
     {
         const auto& entry = pawnTable->probe(board.pawnKey());
         if (entry.pawnKey == board.pawnKey())
+        {
+            evalData.passedPawns = entry.passedPawns;
             return entry.score;
+        }
     }
 
-    PackedScore eval = evaluatePawns<Color::WHITE>(board) - evaluatePawns<Color::BLACK>(board);
+    PackedScore eval = evaluatePawns<Color::WHITE>(board, evalData) - evaluatePawns<Color::BLACK>(board, evalData);
     if (pawnTable)
     {
-        PawnEntry replace = {board.pawnKey(), eval};
+        PawnEntry replace = {board.pawnKey(), evalData.passedPawns, eval};
         pawnTable->store(replace);
     }
+
+    return eval;
+}
+
+template<Color us>
+PackedScore evaluateKingPawn(const Board& board, const EvalData& evalData)
+{
+    constexpr Color them = ~us;
+    uint32_t ourKing = board.getPieces(us, PieceType::KING).lsb();
+    uint32_t theirKing = board.getPieces(them, PieceType::KING).lsb();
+
+    Bitboard passers = evalData.passedPawns & board.getColor(us);
+
+    PackedScore eval{0, 0};
+
+    while (passers.any())
+    {
+        uint32_t passer = passers.poplsb();
+        eval += OUR_PASSER_PROXIMITY[chebyshev(ourKing, passer)];
+        eval += THEIR_PASSER_PROXIMITY[chebyshev(theirKing, passer)];
+    }
+
     return eval;
 }
 
@@ -271,9 +301,11 @@ int evaluate(const Board& board, search::SearchThread* thread)
     eval += evaluatePieces<Color::WHITE, PieceType::ROOK>(board, evalData) - evaluatePieces<Color::BLACK, PieceType::ROOK>(board, evalData);
     eval += evaluatePieces<Color::WHITE, PieceType::QUEEN>(board, evalData) - evaluatePieces<Color::BLACK, PieceType::QUEEN>(board, evalData);
 
+
     eval += evaluateKings<Color::WHITE>(board, evalData) - evaluateKings<Color::BLACK>(board, evalData);
 
-    eval += evaluatePawns(board, thread ? &thread->pawnTable : nullptr);
+    eval += evaluatePawns(board, evalData, thread ? &thread->pawnTable : nullptr);
+    eval += evaluateKingPawn<Color::WHITE>(board, evalData) - evaluateKingPawn<Color::BLACK>(board, evalData);
     eval += evaluateThreats<Color::WHITE>(board, evalData) - evaluateThreats<Color::BLACK>(board, evalData);
 
 

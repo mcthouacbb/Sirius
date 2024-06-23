@@ -5,6 +5,7 @@
 struct PawnEntry
 {
     ZKey pawnKey;
+    Bitboard passedPawns;
     PackedScore score;
 };
 
