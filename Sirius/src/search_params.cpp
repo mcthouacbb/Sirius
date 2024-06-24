@@ -49,11 +49,11 @@ void printOpenBenchConfig()
 {
     for (auto& param : searchParams())
     {
-        std::cout << param.name << " int "
-            << param.defaultValue << ' '
-            << param.min << ' '
-            << param.max << ' '
-            << param.step << ' '
+        std::cout << param.name << ", int, "
+            << param.defaultValue << ", "
+            << param.min << ", "
+            << param.max << ", "
+            << param.step << ", "
             << "0.002" << std::endl;
     }
 }
