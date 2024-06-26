@@ -98,7 +98,6 @@ SEARCH_PARAM_CALLBACK(lmrDivisor, 236, 180, 320, 10, updateLmrTable);
 SEARCH_PARAM(lmrHistDivisor, 8192, 4096, 16384, 512);
 
 SEARCH_PARAM(qsFpMargin, 60, 0, 250, 16);
-SEARCH_PARAM(qsSeeMargin, 0, -200, 100, 80);
 
 
 }

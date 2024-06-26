@@ -659,7 +659,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         auto [move, moveScore] = ordering.selectMove(moveIdx);
         if (!board.isLegal(move))
             continue;
-        if (!board.see(move, qsSeeMargin))
+        if (!board.see(move, 0))
             continue;
         if (!inCheck && futility <= alpha && !board.see(move, 1))
         {
