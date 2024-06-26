@@ -102,6 +102,7 @@ constexpr int MAX_CORR_HIST = CORR_HIST_SCALE * 64;
 using CorrHist = std::array<std::array<int, CORR_HIST_ENTRIES>, 2>;
 
 int historyBonus(int depth);
+int historyMalus(int depth);
 
 class History
 {
