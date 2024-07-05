@@ -308,6 +308,7 @@ int evaluate(const Board& board, search::SearchThread* thread)
     eval += evaluateKingPawn<Color::WHITE>(board, evalData) - evaluateKingPawn<Color::BLACK>(board, evalData);
     eval += evaluateThreats<Color::WHITE>(board, evalData) - evaluateThreats<Color::BLACK>(board, evalData);
 
+    eval += (color == Color::WHITE ? TEMPO : -TEMPO);
 
     return (color == Color::WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg(), board.evalState().phase);
 }
