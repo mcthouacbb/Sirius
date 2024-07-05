@@ -359,7 +359,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         ))
             return ttScore;
     }
-    else if (depth >= minIIRDepth)
+
+    if (isPV && ttMove == Move() && depth >= minIIRDepth)
+        depth--;
+
+    if (cutnode && ttMove == Move() && depth >= 7)
         depth--;
 
     stack->staticEval = inCheck ? SCORE_NONE : eval::evaluate(board);
