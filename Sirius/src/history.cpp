@@ -31,7 +31,13 @@ void fillHistTable(std::array<T, N>& arr, int value)
 int historyBonus(int depth)
 {
     // formula from berserk
-    return std::min(search::maxHistBonus, search::histScaleQuadratic * depth * depth + search::histScaleLinear * depth - search::histBonusOffset);
+    return std::min(search::maxHistBonus, search::histBonusQuadratic * depth * depth + search::histBonusLinear * depth - search::histBonusOffset);
+}
+
+int historyMalus(int depth)
+{
+    // formula from berserk
+    return std::min(search::maxHistMalus, search::histMalusQuadratic * depth * depth + search::histMalusLinear * depth - search::histMalusOffset);
 }
 
 

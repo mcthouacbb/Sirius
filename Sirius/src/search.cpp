@@ -554,13 +554,14 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 }
 
                 int bonus = historyBonus(depth);
+                int malus = historyMalus(depth);
                 if (quiet)
                 {
                     history.updateQuietStats(threats, ExtMove::from(board, move), contHistEntries, bonus);
                     for (Move quietMove : quietsTried)
                     {
                         if (quietMove != move)
-                            history.updateQuietStats(threats, ExtMove::from(board, quietMove), contHistEntries, -bonus);
+                            history.updateQuietStats(threats, ExtMove::from(board, quietMove), contHistEntries, -malus);
                     }
                 }
                 else
@@ -571,7 +572,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 for (Move noisyMove : noisiesTried)
                 {
                     if (noisyMove != move)
-                        history.updateNoisyStats(ExtMove::from(board, noisyMove), -bonus);
+                        history.updateNoisyStats(ExtMove::from(board, noisyMove), -malus);
                 }
                 bound = TTEntry::Bound::LOWER_BOUND;
                 break;
@@ -641,7 +642,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         alpha = posEval;
 
     int bestScore = inCheck ? -SCORE_MATE : posEval;
-    int futility = inCheck ? -SCORE_MATE : posEval + 60;
+    int futility = inCheck ? -SCORE_MATE : posEval + qsFpMargin;
 
     if (rootPly >= MAX_PLY)
         return alpha;
