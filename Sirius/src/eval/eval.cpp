@@ -63,12 +63,23 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
         if (pieces.multiple())
             eval += BISHOP_PAIR;
 
+    Bitboard occupancy = board.getAllPieces();
+    if constexpr (piece == PieceType::BISHOP)
+        occupancy ^= board.getPieces(us, PieceType::BISHOP) | board.getPieces(us, PieceType::QUEEN);
+    else if constexpr (piece == PieceType::ROOK)
+        occupancy ^= board.getPieces(us, PieceType::ROOK) | board.getPieces(us, PieceType::QUEEN);
+    else if constexpr (piece == PieceType::QUEEN)
+        occupancy ^= board.getPieces(us, PieceType::BISHOP) | board.getPieces(us, PieceType::ROOK);
+
     Bitboard outpostSquares = RANK_4 | RANK_5 | (us == Color::WHITE ? RANK_6 : RANK_3);
 
     while (pieces)
     {
         uint32_t sq = pieces.poplsb();
-        Bitboard attacks = attacks::pieceAttacks<piece>(sq, board.getAllPieces());
+        Bitboard attacks = attacks::pieceAttacks<piece>(sq, occupancy);
+        if (board.checkBlockers(us) & Bitboard::fromSquare(sq))
+            attacks &= attacks::inBetweenSquares(sq, board.getPieces(us, PieceType::KING).lsb());
+
         evalData.attackedBy[us][piece] |= attacks;
         evalData.attackedBy2[us] |= evalData.attacked[us] & attacks;
         evalData.attacked[us] |= attacks;
