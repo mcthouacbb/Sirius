@@ -311,7 +311,7 @@ BenchData Search::benchSearch(int depth, const Board& board)
     return data;
 }
 
-int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta, bool isPV, bool cutnode)
+int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta, bool pvNode, bool cutnode)
 {
     if (m_TimeMan.stopHard(thread.limits, thread.nodes))
     {
@@ -353,7 +353,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     if (ttHit)
     {
-        if (!isPV && ttData.depth >= depth && (
+        if (!pvNode && ttData.depth >= depth && (
             ttData.bound == TTEntry::Bound::EXACT ||
             (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta) ||
             (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)
@@ -376,7 +376,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     stack[1].killers = {};
 
-    if (!isPV && !inCheck)
+    if (!pvNode && !inCheck)
     {
         // reverse futility pruning
         if (depth <= rfpMaxDepth && stack->eval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth + stack[-1].histScore / rfpHistDivisor)
@@ -453,13 +453,13 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 continue;
             }
 
-            if (!isPV &&
+            if (!pvNode &&
                 !inCheck &&
                 depth <= lmpMaxDepth &&
                 movesPlayed >= lmpMinMovesBase + depth * depth / (improving ? 1 : 2))
                 break;
 
-            if (!isPV &&
+            if (!pvNode &&
                 depth <= maxSeePruneDepth &&
                 !board.see(move, depth * (quiet ? seePruneMarginQuiet : seePruneMarginNoisy)))
                 continue;
@@ -489,7 +489,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         int newDepth = depth + givesCheck - 1;
         int score = 0;
 
-        if (movesPlayed >= (isPV ? lmrMinMovesPv : lmrMinMovesNonPv) &&
+        if (movesPlayed >= (pvNode ? lmrMinMovesPv : lmrMinMovesNonPv) &&
             depth >= lmrMinDepth &&
             quietLosing &&
             !inCheck)
@@ -497,7 +497,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             int reduction = baseLMR;
 
             reduction += !improving;
-            reduction -= isPV;
+            reduction -= pvNode;
             reduction -= givesCheck;
             reduction += cutnode;
             reduction += stack[1].failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin);
@@ -507,10 +507,10 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             if (score > alpha && reduced < newDepth)
                 score = -search(thread, newDepth, stack + 1, -alpha - 1, -alpha, false, !cutnode);
         }
-        else if (!isPV || movesPlayed > 1)
+        else if (!pvNode || movesPlayed > 1)
             score = -search(thread, newDepth, stack + 1, -alpha - 1, -alpha, false, !cutnode);
 
-        if (isPV && (movesPlayed == 1 || score > alpha))
+        if (pvNode && (movesPlayed == 1 || score > alpha))
             score = -search(thread, newDepth, stack + 1, -beta, -alpha, true, false);
 
         rootPly--;
@@ -533,7 +533,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 bound = TTEntry::Bound::EXACT;
                 alpha = bestScore;
                 stack->bestMove = move;
-                if (isPV)
+                if (pvNode)
                 {
                     stack->pv[0] = move;
                     stack->pvLength = stack[1].pvLength + 1;
