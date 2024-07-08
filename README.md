@@ -10,7 +10,7 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
 | Version | Release Date | [CCRL Blitz](https://ccrl.chessdom.com/ccrl/404/) | [CCRL 40/15](https://ccrl.chessdom.com/ccrl/4040/) |
 | --- | --- | --- | --- |
 | 5.0 | 2023-10-27 | N/A | 2680 |
-| 6.0 | 2024-02-17 | N/A | 2955 |
+| 6.0 | 2024-02-17 | N/A | 2964 |
 
 
 ## Features
@@ -20,11 +20,27 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
     - Zobrist hashing
 - Move Generation
     - Magic Bitboards for sliding pieces
-    - hybrid pseudo-legal/legal move generation
+    - Hybrid pseudo-legal/legal move generation
 - Evaluation
     - Tapered Evaluation
+    - Tempo bonus
     - Material
     - Piece Square Tables
+    - Mobility
+    - Threats
+    - Knight outposts
+    - Rook on semi-open/open file
+    - Bishop pair
+    - Pawn Structure
+        - Passed pawns
+        - Isolated pawns
+        - Defended pawns
+        - Pawn phalanxes
+        - Passed pawn Distance to Kings
+    - King Safety
+        -  King-pawn storm/shield
+        -  Safe checks from enemy pieces
+        -  King ring attackers
     - Tuning via Texel's Tuning Method
 - Search
     - Fail-soft Alpha-Beta Pruning
@@ -38,8 +54,10 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
         - Killer Moves Heuristic
         - History Heuristic
         - Continuation History
+        - Capture History
     - Quiescence Search
         - SEE Pruning
+        - Quiescence Search Futility Pruning
     - Transposition Table
     - Selectivity
         - Check Extension
@@ -57,6 +75,8 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
       	- Improving Heuristic
       	- Node count time management
       	- tt score adjustment
+      	- Static evaluation correction history
+      	- 
         - Lazy SMP
 
 ## CLI Usage
