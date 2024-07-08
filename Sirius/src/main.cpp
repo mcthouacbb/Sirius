@@ -2,7 +2,6 @@
 #include <string>
 
 #include "attacks.h"
-#include "zobrist.h"
 #include "comm/icomm.h"
 #include "comm/cmdline.h"
 #include "comm/uci.h"
@@ -14,7 +13,6 @@
 int main(int argc, char** argv)
 {
     attacks::init();
-    zobrist::init();
     search::init();
 
     if (argc > 1 && std::string(argv[1]) == "bench")
