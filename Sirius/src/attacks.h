@@ -34,7 +34,6 @@ struct AttackData
     };
 
     std::array<std::array<Bitboard, 64>, 64> inBetweenSquares;
-    std::array<std::array<Bitboard, 64>, 64> pinRays;
     std::array<std::array<Bitboard, 64>, 64> moveMasks;
     std::array<std::array<Bitboard, 64>, 64> alignedSquares;
 
