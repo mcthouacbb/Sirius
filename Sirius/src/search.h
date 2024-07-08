@@ -27,6 +27,7 @@ struct SearchStack
     int histScore;
 
     int staticEval;
+    int eval;
 
     uint32_t failHighCount;
 };
