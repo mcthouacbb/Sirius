@@ -51,8 +51,8 @@ void genMoves(const Board& board, MoveList& moves)
     Bitboard checkers = board.checkers();
     if (!checkers.multiple())
     {
-        uint32_t kingIdx = board.getPieces(color, PieceType::KING).lsb();
-        Bitboard moveMask = ~board.getColor(color) & (checkers.any() ? attacks::moveMask(kingIdx, checkers.lsb()) : Bitboard(~0ull));
+        Bitboard moveMask = ~board.getColor(color) &
+            (checkers.any() ? attacks::moveMask(board.kingSq(color), checkers.lsb()) : Bitboard(~0ull));
         genPawnMoves<type, color>(board, moves, moveMask);
         if constexpr (type == MoveGenType::NOISY)
             moveMask &= board.getColor(~color);
@@ -69,17 +69,16 @@ void genKingMoves(const Board& board, MoveList& moves)
 {
     Bitboard usBB = board.getColor(color);
     Bitboard oppBB = board.getColor(~color);
-    Bitboard kingBB = board.getPieces(color, PieceType::KING);
-    uint32_t kingIdx = kingBB.lsb();
+    uint32_t kingSq = board.kingSq(color);
 
-    Bitboard kingAttacks = attacks::kingAttacks(kingIdx);
+    Bitboard kingAttacks = attacks::kingAttacks(kingSq);
     kingAttacks &= ~usBB;
     if constexpr (type == MoveGenType::NOISY)
         kingAttacks &= oppBB;
     while (kingAttacks.any())
     {
         uint32_t dst = kingAttacks.poplsb();
-        moves.push_back(Move(kingIdx, dst, MoveType::NONE));
+        moves.push_back(Move(kingSq, dst, MoveType::NONE));
     }
 
     if constexpr (type == MoveGenType::NOISY_QUIET)
@@ -91,12 +90,12 @@ void genKingMoves(const Board& board, MoveList& moves)
 
             if ((attacks::kscBlockSquares<color>() & board.getAllPieces()).empty() && (board.castlingRights() & kscBit))
             {
-                moves.push_back(Move(kingIdx, kingIdx + 2, MoveType::CASTLE));
+                moves.push_back(Move(kingSq, kingSq + 2, MoveType::CASTLE));
             }
 
             if ((attacks::qscBlockSquares<color>() & board.getAllPieces()).empty() && (board.castlingRights() & qscBit))
             {
-                moves.push_back(Move(kingIdx, kingIdx - 2, MoveType::CASTLE));
+                moves.push_back(Move(kingSq, kingSq - 2, MoveType::CASTLE));
             }
         }
     }

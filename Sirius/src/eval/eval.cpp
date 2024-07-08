@@ -78,7 +78,7 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
         uint32_t sq = pieces.poplsb();
         Bitboard attacks = attacks::pieceAttacks<piece>(sq, occupancy);
         if ((board.checkBlockers(us) & Bitboard::fromSquare(sq)).any())
-            attacks &= attacks::inBetweenSquares(sq, board.getPieces(us, PieceType::KING).lsb());
+            attacks &= attacks::inBetweenSquares(sq, board.kingSq(us));
 
         evalData.attackedBy[us][piece] |= attacks;
         evalData.attackedBy2[us] |= evalData.attacked[us] & attacks;
@@ -174,8 +174,8 @@ template<Color us>
 PackedScore evaluateKingPawn(const Board& board, const EvalData& evalData)
 {
     constexpr Color them = ~us;
-    uint32_t ourKing = board.getPieces(us, PieceType::KING).lsb();
-    uint32_t theirKing = board.getPieces(them, PieceType::KING).lsb();
+    uint32_t ourKing = board.kingSq(us);
+    uint32_t theirKing = board.kingSq(them);
 
     Bitboard passers = evalData.passedPawns & board.getColor(us);
 
@@ -272,8 +272,8 @@ void initEvalData(const Board& board, EvalData& evalData)
     Bitboard blackPawns = board.getPieces(Color::BLACK, PieceType::PAWN);
     Bitboard whitePawnAttacks = attacks::pawnAttacks<Color::WHITE>(whitePawns);
     Bitboard blackPawnAttacks = attacks::pawnAttacks<Color::BLACK>(blackPawns);
-    uint32_t whiteKing = board.getPieces(Color::WHITE, PieceType::KING).lsb();
-    uint32_t blackKing = board.getPieces(Color::BLACK, PieceType::KING).lsb();
+    uint32_t whiteKing = board.kingSq(Color::WHITE);
+    uint32_t blackKing = board.kingSq(Color::BLACK);
 
     evalData.mobilityArea[Color::WHITE] = ~blackPawnAttacks;
     evalData.pawnAttackSpans[Color::WHITE] = attacks::fillUp<Color::WHITE>(whitePawnAttacks);

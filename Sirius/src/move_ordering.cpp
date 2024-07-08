@@ -36,7 +36,7 @@ bool moveIsCapture(const Board& board, Move move)
 }
 
 MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, const History& history)
-    : m_Board(board), m_Moves(moves)
+    : m_Moves(moves)
 {
     for (uint32_t i = 0; i < m_Moves.size(); i++)
     {
@@ -62,7 +62,7 @@ MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, c
 }
 
 MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, const std::array<Move, 2>& killers, std::span<const CHEntry* const> contHistEntries, const History& history)
-    : m_Board(board), m_Moves(moves)
+    : m_Moves(moves)
 {
     for (uint32_t i = 0; i < m_Moves.size(); i++)
     {

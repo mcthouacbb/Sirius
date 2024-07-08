@@ -26,7 +26,6 @@ public:
 
     ScoredMove selectMove(uint32_t index);
 private:
-    const Board& m_Board;
     MoveList& m_Moves;
     std::array<int, 256> m_MoveScores;
 };

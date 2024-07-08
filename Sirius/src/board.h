@@ -74,6 +74,7 @@ public:
     Bitboard getPieces(Color color, PieceType type) const;
     Bitboard getColor(Color color) const;
     Bitboard getAllPieces() const;
+    uint32_t kingSq(Color color) const;
 
     bool squareAttacked(Color color, uint32_t square) const;
     bool squareAttacked(Color color, uint32_t square, Bitboard blockers) const;
@@ -210,6 +211,11 @@ inline Bitboard Board::getColor(Color color) const
 inline Bitboard Board::getAllPieces() const
 {
     return currState().colors[0] | currState().colors[1];
+}
+
+inline uint32_t Board::kingSq(Color color) const
+{
+    return getPieces(color, PieceType::KING).lsb();
 }
 
 inline bool Board::squareAttacked(Color color, uint32_t square) const
