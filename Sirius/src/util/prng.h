@@ -7,13 +7,14 @@
 struct PRNG
 {
 public:
-    void seed(uint64_t s);
-    uint64_t next64();
+    constexpr PRNG() = default;
+    constexpr void seed(uint64_t s);
+    constexpr uint64_t next64();
 private:
     uint64_t a, b, c, counter;
 };
 
-inline void PRNG::seed(uint64_t s)
+constexpr void PRNG::seed(uint64_t s)
 {
     a = b = c = s;
     counter = 1;
@@ -21,7 +22,7 @@ inline void PRNG::seed(uint64_t s)
         next64();
 }
 
-inline uint64_t PRNG::next64()
+constexpr uint64_t PRNG::next64()
 {
     uint64_t tmp = a + b + counter++;
     a = b ^ (b >> 12);

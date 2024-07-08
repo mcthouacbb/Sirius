@@ -67,6 +67,14 @@ struct alignas(32) TTBucket
     }
 };
 
+struct ProbedTTData
+{
+    int score;
+    Move move;
+    int depth;
+    TTEntry::Bound bound;
+};
+
 class TT
 {
 public:
@@ -80,8 +88,8 @@ public:
     TT(const TT&) = delete;
     TT& operator=(const TT&) = delete;
 
-    size_t probe(ZKey key, bool& found, int ply, int& score, Move& move, int& depth, TTEntry::Bound& bound);
-    void store(size_t idx, ZKey key, int depth, int ply, int score, Move move, TTEntry::Bound type);
+    bool probe(ZKey key, int ply, ProbedTTData& ttData);
+    void store(ZKey key, int ply, int depth, int score, Move move, TTEntry::Bound type);
     int quality(int age, int depth) const;
     void prefetch(ZKey key) const;
 

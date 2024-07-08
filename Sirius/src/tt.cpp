@@ -76,7 +76,7 @@ inline int storeScore(int score, int ply)
     return score;
 }
 
-size_t TT::probe(ZKey key, bool& found, int ply, int& score, Move& move, int& depth, TTEntry::Bound& bound)
+bool TT::probe(ZKey key, int ply, ProbedTTData& ttData)
 {
     size_t idx = index(key.value);
     TTBucket& bucket = m_Buckets[idx];
@@ -96,27 +96,25 @@ size_t TT::probe(ZKey key, bool& found, int ply, int& score, Move& move, int& de
 
     if (entryIdx == -1)
     {
-        found = false;
-        return idx;
+        return false;
     }
-    found = true;
 
     auto entry = entries[entryIdx];
 
-    score = retrieveScore(entry.score, ply);
-    move = entry.bestMove;
-    depth = entry.depth;
-    bound = entry.bound();
+    ttData.score = retrieveScore(entry.score, ply);
+    ttData.move = entry.bestMove;
+    ttData.depth = entry.depth;
+    ttData.bound = entry.bound();
 
-    return idx;
+    return true;
 }
 
-void TT::store(size_t idx, ZKey key, int depth, int ply, int score, Move move, TTEntry::Bound bound)
+void TT::store(ZKey key, int depth, int ply, int score, Move move, TTEntry::Bound bound)
 {
     // 16 bit keys to save space
     // idea from JW
     uint16_t key16 = key.value & 0xFFFF;
-    TTBucket& bucket = m_Buckets[idx];
+    TTBucket& bucket = m_Buckets[index(key.value)];
     int currQuality = INT_MAX;
     int replaceIdx = -1;
     std::array<TTEntry, ENTRY_COUNT> entries;

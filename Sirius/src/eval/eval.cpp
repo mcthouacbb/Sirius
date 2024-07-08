@@ -54,31 +54,31 @@ template<Color us, PieceType piece>
 PackedScore evaluatePieces(const Board& board, EvalData& evalData)
 {
     constexpr Color them = ~us;
-    Bitboard ourPawns = board.getPieces(us, PieceType::PAWN);
-    Bitboard theirPawns = board.getPieces(them, PieceType::PAWN);
+    Bitboard ourPawns = board.pieces(us, PieceType::PAWN);
+    Bitboard theirPawns = board.pieces(them, PieceType::PAWN);
 
     PackedScore eval{0, 0};
-    Bitboard pieces = board.getPieces(us, piece);
+    Bitboard pieces = board.pieces(us, piece);
     if constexpr (piece == PieceType::BISHOP)
         if (pieces.multiple())
             eval += BISHOP_PAIR;
 
-    Bitboard occupancy = board.getAllPieces();
+    Bitboard occupancy = board.allPieces();
     if constexpr (piece == PieceType::BISHOP)
-        occupancy ^= board.getPieces(us, PieceType::BISHOP) | board.getPieces(us, PieceType::QUEEN);
+        occupancy ^= board.pieces(us, PieceType::BISHOP) | board.pieces(us, PieceType::QUEEN);
     else if constexpr (piece == PieceType::ROOK)
-        occupancy ^= board.getPieces(us, PieceType::ROOK) | board.getPieces(us, PieceType::QUEEN);
+        occupancy ^= board.pieces(us, PieceType::ROOK) | board.pieces(us, PieceType::QUEEN);
     else if constexpr (piece == PieceType::QUEEN)
-        occupancy ^= board.getPieces(us, PieceType::BISHOP) | board.getPieces(us, PieceType::ROOK);
+        occupancy ^= board.pieces(us, PieceType::BISHOP) | board.pieces(us, PieceType::ROOK);
 
     Bitboard outpostSquares = RANK_4 | RANK_5 | (us == Color::WHITE ? RANK_6 : RANK_3);
 
-    while (pieces)
+    while (pieces.any())
     {
         uint32_t sq = pieces.poplsb();
         Bitboard attacks = attacks::pieceAttacks<piece>(sq, occupancy);
-        if (board.checkBlockers(us) & Bitboard::fromSquare(sq))
-            attacks &= attacks::inBetweenSquares(sq, board.getPieces(us, PieceType::KING).lsb());
+        if ((board.checkBlockers(us) & Bitboard::fromSquare(sq)).any())
+            attacks &= attacks::inBetweenSquares(sq, board.kingSq(us));
 
         evalData.attackedBy[us][piece] |= attacks;
         evalData.attackedBy2[us] |= evalData.attacked[us] & attacks;
@@ -86,9 +86,9 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
 
         eval += MOBILITY[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)][(attacks & evalData.mobilityArea[us]).popcount()];
 
-        Bitboard threats = attacks & board.getColor(them);
-        while (threats)
-            eval += THREATS[static_cast<int>(piece)][static_cast<int>(getPieceType(board.getPieceAt(threats.poplsb())))];
+        Bitboard threats = attacks & board.pieces(them);
+        while (threats.any())
+            eval += THREATS[static_cast<int>(piece)][static_cast<int>(getPieceType(board.pieceAt(threats.poplsb())))];
 
         if (Bitboard kingRingAtks = evalData.kingRing[them] & attacks; kingRingAtks.any())
         {
@@ -107,7 +107,7 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
         if constexpr (piece == PieceType::KNIGHT)
         {
             Bitboard outposts = outpostSquares & ~evalData.pawnAttackSpans[them] & evalData.attackedBy[us][PieceType::PAWN];
-            if (Bitboard::fromSquare(sq) & outposts)
+            if ((Bitboard::fromSquare(sq) & outposts).any())
                 eval += KNIGHT_OUTPOST;
         }
     }
@@ -120,12 +120,12 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
 template<Color us>
 PackedScore evaluatePawns(const Board& board, EvalData& evalData)
 {
-    Bitboard ourPawns = board.getPieces(us, PieceType::PAWN);
+    Bitboard ourPawns = board.pieces(us, PieceType::PAWN);
 
     PackedScore eval{0, 0};
 
     Bitboard pawns = ourPawns;
-    while (pawns)
+    while (pawns.any())
     {
         uint32_t sq = pawns.poplsb();
         if (board.isPassedPawn(sq))
@@ -138,11 +138,11 @@ PackedScore evaluatePawns(const Board& board, EvalData& evalData)
     }
 
     Bitboard phalanx = ourPawns & ourPawns.west();
-    while (phalanx)
+    while (phalanx.any())
         eval += PAWN_PHALANX[relativeRankOf<us>(phalanx.poplsb())];
 
     Bitboard defended = ourPawns & attacks::pawnAttacks<us>(ourPawns);
-    while (defended)
+    while (defended.any())
         eval += DEFENDED_PAWN[relativeRankOf<us>(defended.poplsb())];
 
     return eval;
@@ -174,10 +174,10 @@ template<Color us>
 PackedScore evaluateKingPawn(const Board& board, const EvalData& evalData)
 {
     constexpr Color them = ~us;
-    uint32_t ourKing = board.getPieces(us, PieceType::KING).lsb();
-    uint32_t theirKing = board.getPieces(them, PieceType::KING).lsb();
+    uint32_t ourKing = board.kingSq(us);
+    uint32_t theirKing = board.kingSq(them);
 
-    Bitboard passers = evalData.passedPawns & board.getColor(us);
+    Bitboard passers = evalData.passedPawns & board.pieces(us);
 
     PackedScore eval{0, 0};
 
@@ -196,10 +196,10 @@ template<Color us>
 PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
 {
     constexpr Color them = ~us;
-    Bitboard threats = evalData.attackedBy[us][PieceType::PAWN] & board.getColor(them);
+    Bitboard threats = evalData.attackedBy[us][PieceType::PAWN] & board.pieces(them);
     PackedScore eval{0, 0};
-    while (threats)
-        eval += THREATS[static_cast<int>(PieceType::PAWN)][static_cast<int>(getPieceType(board.getPieceAt(threats.poplsb())))];
+    while (threats.any())
+        eval += THREATS[static_cast<int>(PieceType::PAWN)][static_cast<int>(getPieceType(board.pieceAt(threats.poplsb())))];
     return eval;
 }
 
@@ -213,7 +213,7 @@ PackedScore evalKingPawnFile(uint32_t file, Bitboard ourPawns, Bitboard theirPaw
         // 4 = e file
         int idx = (kingFile == file) ? 1 : (kingFile >= 4) == (kingFile < file) ? 0 : 2;
 
-        int rankDist = filePawns ?
+        int rankDist = filePawns.any() ?
             std::abs(rankOf(us == Color::WHITE ? filePawns.msb() : filePawns.lsb()) - rankOf(theirKing)) :
             7;
         eval += PAWN_STORM[idx][rankDist];
@@ -222,7 +222,7 @@ PackedScore evalKingPawnFile(uint32_t file, Bitboard ourPawns, Bitboard theirPaw
         Bitboard filePawns = theirPawns & Bitboard::fileBB(file);
         // 4 = e file
         int idx = (kingFile == file) ? 1 : (kingFile >= 4) == (kingFile < file) ? 0 : 2;
-        int rankDist = filePawns ?
+        int rankDist = filePawns.any() ?
             std::abs(rankOf(us == Color::WHITE ? filePawns.msb() : filePawns.lsb()) - rankOf(theirKing)) :
             7;
         eval += PAWN_SHIELD[idx][rankDist];
@@ -234,18 +234,18 @@ template<Color us>
 PackedScore evaluateKings(const Board& board, const EvalData& evalData)
 {
     constexpr Color them = ~us;
-    Bitboard ourPawns = board.getPieces(us, PieceType::PAWN);
-    Bitboard theirPawns = board.getPieces(them, PieceType::PAWN);
+    Bitboard ourPawns = board.pieces(us, PieceType::PAWN);
+    Bitboard theirPawns = board.pieces(them, PieceType::PAWN);
 
-    uint32_t theirKing = board.getPieces(them, PieceType::KING).lsb();
+    uint32_t theirKing = board.pieces(them, PieceType::KING).lsb();
 
     PackedScore eval{0, 0};
 
     for (uint32_t file = 0; file < 8; file++)
         eval += evalKingPawnFile<us>(file, ourPawns, theirPawns, theirKing);
 
-    Bitboard rookCheckSquares = attacks::rookAttacks(theirKing, board.getAllPieces());
-    Bitboard bishopCheckSquares = attacks::rookAttacks(theirKing, board.getAllPieces());
+    Bitboard rookCheckSquares = attacks::rookAttacks(theirKing, board.allPieces());
+    Bitboard bishopCheckSquares = attacks::rookAttacks(theirKing, board.allPieces());
 
     Bitboard knightChecks = evalData.attackedBy[us][PieceType::KNIGHT] & attacks::knightAttacks(theirKing);
     Bitboard bishopChecks = evalData.attackedBy[us][PieceType::BISHOP] & bishopCheckSquares;
@@ -268,12 +268,12 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
 
 void initEvalData(const Board& board, EvalData& evalData)
 {
-    Bitboard whitePawns = board.getPieces(Color::WHITE, PieceType::PAWN);
-    Bitboard blackPawns = board.getPieces(Color::BLACK, PieceType::PAWN);
+    Bitboard whitePawns = board.pieces(Color::WHITE, PieceType::PAWN);
+    Bitboard blackPawns = board.pieces(Color::BLACK, PieceType::PAWN);
     Bitboard whitePawnAttacks = attacks::pawnAttacks<Color::WHITE>(whitePawns);
     Bitboard blackPawnAttacks = attacks::pawnAttacks<Color::BLACK>(blackPawns);
-    uint32_t whiteKing = board.getPieces(Color::WHITE, PieceType::KING).lsb();
-    uint32_t blackKing = board.getPieces(Color::BLACK, PieceType::KING).lsb();
+    uint32_t whiteKing = board.kingSq(Color::WHITE);
+    uint32_t blackKing = board.kingSq(Color::BLACK);
 
     evalData.mobilityArea[Color::WHITE] = ~blackPawnAttacks;
     evalData.pawnAttackSpans[Color::WHITE] = attacks::fillUp<Color::WHITE>(whitePawnAttacks);

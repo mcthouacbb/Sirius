@@ -26,7 +26,6 @@ set(SRCS
     "src/time_man.h"
     "src/tt.cpp"
     "src/tt.h"
-    "src/zobrist.cpp"
     "src/zobrist.h"
 
     "src/eval/combined_psqt.h"

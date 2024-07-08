@@ -34,7 +34,6 @@ struct AttackData
     };
 
     std::array<std::array<Bitboard, 64>, 64> inBetweenSquares;
-    std::array<std::array<Bitboard, 64>, 64> pinRays;
     std::array<std::array<Bitboard, 64>, 64> moveMasks;
     std::array<std::array<Bitboard, 64>, 64> alignedSquares;
 
@@ -134,7 +133,7 @@ inline constexpr Bitboard qscBlockSquares()
 
 inline bool aligned(uint32_t a, uint32_t b, uint32_t c)
 {
-    return static_cast<bool>(attackData.alignedSquares[a][b] & Bitboard::fromSquare(c));
+    return (attackData.alignedSquares[a][b] & Bitboard::fromSquare(c)).any();
 }
 
 inline Bitboard inBetweenSquares(uint32_t src, uint32_t dst)

@@ -95,8 +95,8 @@ void History::updateCorrHist(int bonus, int depth, Color stm, ZKey pawnHash)
 
 int History::getMainHist(Bitboard threats, ExtMove move) const
 {
-    bool srcThreat = static_cast<bool>((threats >> move.srcPos()) & 0x01);
-    bool dstThreat = static_cast<bool>((threats >> move.dstPos()) & 0x01);
+    bool srcThreat = ((threats >> move.srcPos()) & 0x01).any();
+    bool dstThreat = ((threats >> move.dstPos()) & 0x01).any();
     return m_MainHist[static_cast<int>(getPieceColor(move.movingPiece()))][move.fromTo()][srcThreat][dstThreat];
 }
 
@@ -112,8 +112,8 @@ int History::getCaptHist(ExtMove move) const
 
 void History::updateMainHist(Bitboard threats, ExtMove move, int bonus)
 {
-    bool srcThreat = static_cast<bool>((threats >> move.srcPos()) & 0x01);
-    bool dstThreat = static_cast<bool>((threats >> move.dstPos()) & 0x01);
+    bool srcThreat = ((threats >> move.srcPos()) & 0x01).any();
+    bool dstThreat = ((threats >> move.dstPos()) & 0x01).any();
     m_MainHist[static_cast<int>(getPieceColor(move.movingPiece()))][move.fromTo()][srcThreat][dstThreat].update(bonus);
 }
 
