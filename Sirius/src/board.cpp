@@ -638,57 +638,57 @@ bool Board::squareAttacked(Color color, uint32_t square, Bitboard blockers) cons
 
 Bitboard Board::attackersTo(Color color, uint32_t square, Bitboard blockers) const
 {
-    Bitboard queens = getPieces(PieceType::QUEEN);
-    Bitboard pawns = (getPieces(color, PieceType::PAWN) & attacks::pawnAttacks(~color, square));
+    Bitboard queens = pieces(PieceType::QUEEN);
+    Bitboard pawns = (pieces(color, PieceType::PAWN) & attacks::pawnAttacks(~color, square));
     Bitboard nonPawns =
-        (getPieces(PieceType::KNIGHT) & attacks::knightAttacks(square)) |
-        (getPieces(PieceType::KING) & attacks::kingAttacks(square)) |
-        ((getPieces(PieceType::BISHOP) | queens) & attacks::bishopAttacks(square, blockers)) |
-        ((getPieces(PieceType::ROOK) | queens) & attacks::rookAttacks(square, blockers));
-    return pawns | (nonPawns & getColor(color));
+        (pieces(PieceType::KNIGHT) & attacks::knightAttacks(square)) |
+        (pieces(PieceType::KING) & attacks::kingAttacks(square)) |
+        ((pieces(PieceType::BISHOP) | queens) & attacks::bishopAttacks(square, blockers)) |
+        ((pieces(PieceType::ROOK) | queens) & attacks::rookAttacks(square, blockers));
+    return pawns | (nonPawns & pieces(color));
 }
 
 Bitboard Board::attackersTo(uint32_t square, Bitboard blockers) const
 {
-    Bitboard queens = getPieces(PieceType::QUEEN);
+    Bitboard queens = pieces(PieceType::QUEEN);
     Bitboard pawns =
-        (getPieces(Color::WHITE, PieceType::PAWN) & attacks::pawnAttacks(Color::BLACK, square)) |
-        (getPieces(Color::BLACK, PieceType::PAWN) & attacks::pawnAttacks(Color::WHITE, square));
+        (pieces(Color::WHITE, PieceType::PAWN) & attacks::pawnAttacks(Color::BLACK, square)) |
+        (pieces(Color::BLACK, PieceType::PAWN) & attacks::pawnAttacks(Color::WHITE, square));
 
     Bitboard nonPawns =
-        (getPieces(PieceType::KNIGHT) & attacks::knightAttacks(square)) |
-        (getPieces(PieceType::KING) & attacks::kingAttacks(square)) |
-        ((getPieces(PieceType::BISHOP) | queens) & attacks::bishopAttacks(square, blockers)) |
-        ((getPieces(PieceType::ROOK) | queens) & attacks::rookAttacks(square, blockers));
+        (pieces(PieceType::KNIGHT) & attacks::knightAttacks(square)) |
+        (pieces(PieceType::KING) & attacks::kingAttacks(square)) |
+        ((pieces(PieceType::BISHOP) | queens) & attacks::bishopAttacks(square, blockers)) |
+        ((pieces(PieceType::ROOK) | queens) & attacks::rookAttacks(square, blockers));
     return pawns | nonPawns;
 }
 
 bool Board::isPassedPawn(uint32_t square) const
 {
-    Piece pce = getPieceAt(square);
+    Piece pce = pieceAt(square);
     Bitboard mask = attacks::passedPawnMask(getPieceColor(pce), square);
-    return (mask & getPieces(~getPieceColor(pce), PieceType::PAWN)).empty();
+    return (mask & pieces(~getPieceColor(pce), PieceType::PAWN)).empty();
 }
 
 bool Board::isIsolatedPawn(uint32_t square) const
 {
-    Piece pce = getPieceAt(square);
+    Piece pce = pieceAt(square);
     Bitboard mask = attacks::isolatedPawnMask(square);
-    return (mask & getPieces(getPieceColor(pce), PieceType::PAWN)).empty();
+    return (mask & pieces(getPieceColor(pce), PieceType::PAWN)).empty();
 }
 
 Bitboard Board::pinnersBlockers(uint32_t square, Bitboard attackers, Bitboard& pinners) const
 {
-    Bitboard queens = getPieces(PieceType::QUEEN);
+    Bitboard queens = pieces(PieceType::QUEEN);
     attackers &=
-        (attacks::rookAttacks(square, 0) & (getPieces(PieceType::ROOK) | queens)) |
-        (attacks::bishopAttacks(square, 0) & (getPieces(PieceType::BISHOP) | queens));
+        (attacks::rookAttacks(square, 0) & (pieces(PieceType::ROOK) | queens)) |
+        (attacks::bishopAttacks(square, 0) & (pieces(PieceType::BISHOP) | queens));
 
     Bitboard blockers = 0;
 
-    Bitboard blockMask = getAllPieces() ^ attackers;
+    Bitboard blockMask = allPieces() ^ attackers;
 
-    Bitboard sameColor = getColor(getPieceColor(currState().squares[square]));
+    Bitboard sameColor = pieces(getPieceColor(currState().squares[square]));
 
     while (attackers.any())
     {
@@ -712,7 +712,7 @@ bool Board::see(Move move, int margin) const
     int src = move.srcPos();
     int dst = move.dstPos();
 
-    Bitboard allPieces = getAllPieces() ^ Bitboard::fromSquare(src);
+    Bitboard allPieces = this->allPieces() ^ Bitboard::fromSquare(src);
     Bitboard attackers = attackersTo(dst, allPieces) ^ Bitboard::fromSquare(src);
 
     int value = 0;
@@ -723,20 +723,20 @@ bool Board::see(Move move, int margin) const
             return 0 >= margin;
         case MoveType::NONE:
         {
-            PieceType type = getPieceType(getPieceAt(dst));
+            PieceType type = getPieceType(pieceAt(dst));
             if (type == PieceType::NONE)
                 value = -margin;
             else
                 value = seePieceValue(type) - margin;
             if (value < 0)
                 return false;
-            value = seePieceValue(getPieceType(getPieceAt(src))) - value;
+            value = seePieceValue(getPieceType(pieceAt(src))) - value;
             break;
         }
         case MoveType::PROMOTION:
         {
             PieceType promo = promoPiece(move.promotion());
-            PieceType type = getPieceType(getPieceAt(dst));
+            PieceType type = getPieceType(pieceAt(dst));
             value = seePieceValue(promo) - seePieceValue(PieceType::PAWN);
             if (type == PieceType::NONE)
                 value -= margin;
@@ -761,19 +761,19 @@ bool Board::see(Move move, int margin) const
 
     Color sideToMove = m_SideToMove;
 
-    Bitboard diagPieces = getPieces(PieceType::BISHOP) | getPieces(PieceType::QUEEN);
-    Bitboard straightPieces = getPieces(PieceType::ROOK) | getPieces(PieceType::QUEEN);
+    Bitboard diagPieces = pieces(PieceType::BISHOP) | pieces(PieceType::QUEEN);
+    Bitboard straightPieces = pieces(PieceType::ROOK) | pieces(PieceType::QUEEN);
 
     bool us = false;
 
     while (true)
     {
         sideToMove = ~sideToMove;
-        Bitboard stmAttackers = attackers & getColor(sideToMove);
+        Bitboard stmAttackers = attackers & pieces(sideToMove);
         if (stmAttackers.empty())
             return !us;
 
-        if (Bitboard pawns = (stmAttackers & getPieces(PieceType::PAWN)); pawns.any())
+        if (Bitboard pawns = (stmAttackers & pieces(PieceType::PAWN)); pawns.any())
         {
             Bitboard pawn = pawns.lsbBB();
             allPieces ^= pawn;
@@ -784,7 +784,7 @@ bool Board::see(Move move, int margin) const
             if (value < static_cast<int>(us))
                 return us;
         }
-        else if (Bitboard knights = (stmAttackers & getPieces(PieceType::KNIGHT)); knights.any())
+        else if (Bitboard knights = (stmAttackers & pieces(PieceType::KNIGHT)); knights.any())
         {
             Bitboard knight = knights.lsbBB();
             allPieces ^= knight;
@@ -794,7 +794,7 @@ bool Board::see(Move move, int margin) const
             if (value < static_cast<int>(us))
                 return us;
         }
-        else if (Bitboard bishops = (stmAttackers & getPieces(PieceType::BISHOP)); bishops.any())
+        else if (Bitboard bishops = (stmAttackers & pieces(PieceType::BISHOP)); bishops.any())
         {
             Bitboard bishop = bishops.lsbBB();
             allPieces ^= bishop;
@@ -805,7 +805,7 @@ bool Board::see(Move move, int margin) const
             if (value < static_cast<int>(us))
                 return us;
         }
-        else if (Bitboard rooks = (stmAttackers & getPieces(PieceType::ROOK)); rooks.any())
+        else if (Bitboard rooks = (stmAttackers & pieces(PieceType::ROOK)); rooks.any())
         {
             Bitboard rook = rooks.lsbBB();
             allPieces ^= rook;
@@ -816,7 +816,7 @@ bool Board::see(Move move, int margin) const
             if (value < static_cast<int>(us))
                 return us;
         }
-        else if (Bitboard queens = (stmAttackers & getPieces(PieceType::QUEEN)); queens.any())
+        else if (Bitboard queens = (stmAttackers & pieces(PieceType::QUEEN)); queens.any())
         {
             Bitboard queen = queens.lsbBB();
             allPieces ^= queen;
@@ -829,9 +829,9 @@ bool Board::see(Move move, int margin) const
             if (value < static_cast<int>(us))
                 return us;
         }
-        else if ((stmAttackers & getPieces(PieceType::KING)).any())
+        else if ((stmAttackers & pieces(PieceType::KING)).any())
         {
-            if ((attackers & getColor(~sideToMove)).any())
+            if ((attackers & pieces(~sideToMove)).any())
             {
                 return !us;
             }
@@ -855,16 +855,16 @@ bool Board::isLegal(Move move) const
     if (move.type() == MoveType::ENPASSANT)
     {
         int captureSq = to + (m_SideToMove == Color::WHITE ? -8 : 8);
-        Bitboard piecesAfter = Bitboard::fromSquare(to) | (getAllPieces() ^ Bitboard::fromSquare(from) ^ Bitboard::fromSquare(captureSq));
-        return (attacks::rookAttacks(kingSq(m_SideToMove), piecesAfter) & (getPieces(~m_SideToMove, PieceType::ROOK) | getPieces(~m_SideToMove, PieceType::QUEEN))).empty() &&
-            (attacks::bishopAttacks(kingSq(m_SideToMove), piecesAfter) & (getPieces(~m_SideToMove, PieceType::BISHOP) | getPieces(~m_SideToMove, PieceType::QUEEN))).empty();
+        Bitboard piecesAfter = Bitboard::fromSquare(to) | (allPieces() ^ Bitboard::fromSquare(from) ^ Bitboard::fromSquare(captureSq));
+        return (attacks::rookAttacks(kingSq(m_SideToMove), piecesAfter) & (pieces(~m_SideToMove, PieceType::ROOK) | pieces(~m_SideToMove, PieceType::QUEEN))).empty() &&
+            (attacks::bishopAttacks(kingSq(m_SideToMove), piecesAfter) & (pieces(~m_SideToMove, PieceType::BISHOP) | pieces(~m_SideToMove, PieceType::QUEEN))).empty();
     }
 
     if (getPieceType(currState().squares[from]) == PieceType::KING)
     {
         if (move.type() == MoveType::CASTLE && squareAttacked(~m_SideToMove, (move.srcPos() + move.dstPos()) / 2))
             return false;
-        return !squareAttacked(~m_SideToMove, move.dstPos(), getAllPieces() ^ Bitboard::fromSquare(from));
+        return !squareAttacked(~m_SideToMove, move.dstPos(), allPieces() ^ Bitboard::fromSquare(from));
     }
 
     // pinned pieces
@@ -963,22 +963,22 @@ void Board::updateCheckInfo()
 
     currState().checkInfo.checkers = attackersTo(~m_SideToMove, kingSq);
     currState().checkInfo.blockers[static_cast<int>(Color::WHITE)] =
-        pinnersBlockers(whiteKingSq, getColor(Color::BLACK), currState().checkInfo.pinners[static_cast<int>(Color::WHITE)]);
+        pinnersBlockers(whiteKingSq, pieces(Color::BLACK), currState().checkInfo.pinners[static_cast<int>(Color::WHITE)]);
     currState().checkInfo.blockers[static_cast<int>(Color::BLACK)] =
-        pinnersBlockers(blackKingSq, getColor(Color::WHITE), currState().checkInfo.pinners[static_cast<int>(Color::BLACK)]);
+        pinnersBlockers(blackKingSq, pieces(Color::WHITE), currState().checkInfo.pinners[static_cast<int>(Color::BLACK)]);
 }
 
 void Board::calcThreats()
 {
     Color color = ~m_SideToMove;
     Bitboard threats = 0;
-    Bitboard occupied = getAllPieces();
+    Bitboard occupied = allPieces();
 
-    Bitboard queens = getPieces(color, PieceType::QUEEN);
-    Bitboard rooks = getPieces(color, PieceType::ROOK);
-    Bitboard bishops = getPieces(color, PieceType::BISHOP);
-    Bitboard knights = getPieces(color, PieceType::KNIGHT);
-    Bitboard pawns = getPieces(color, PieceType::PAWN);
+    Bitboard queens = pieces(color, PieceType::QUEEN);
+    Bitboard rooks = pieces(color, PieceType::ROOK);
+    Bitboard bishops = pieces(color, PieceType::BISHOP);
+    Bitboard knights = pieces(color, PieceType::KNIGHT);
+    Bitboard pawns = pieces(color, PieceType::PAWN);
 
     rooks |= queens;
     while (rooks.any())

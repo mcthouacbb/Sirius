@@ -69,11 +69,11 @@ public:
     bool is3FoldDraw(int searchPly);
     bool is50MoveDraw();
 
-    Piece getPieceAt(uint32_t square) const;
-    Bitboard getPieces(PieceType type) const;
-    Bitboard getPieces(Color color, PieceType type) const;
-    Bitboard getColor(Color color) const;
-    Bitboard getAllPieces() const;
+    Piece pieceAt(uint32_t square) const;
+    Bitboard pieces(PieceType type) const;
+    Bitboard pieces(Color color, PieceType type) const;
+    Bitboard pieces(Color color) const;
+    Bitboard allPieces() const;
     uint32_t kingSq(Color color) const;
 
     bool squareAttacked(Color color, uint32_t square) const;
@@ -188,49 +188,49 @@ inline ZKey Board::pawnKey() const
     return currState().pawnKey;
 }
 
-inline Piece Board::getPieceAt(uint32_t square) const
+inline Piece Board::pieceAt(uint32_t square) const
 {
     return currState().squares[square];
 }
 
-inline Bitboard Board::getPieces(PieceType type) const
+inline Bitboard Board::pieces(PieceType type) const
 {
     return currState().pieces[static_cast<int>(type)];
 }
 
-inline Bitboard Board::getPieces(Color color, PieceType type) const
+inline Bitboard Board::pieces(Color color, PieceType type) const
 {
-    return getPieces(type) & getColor(color);
+    return pieces(type) & pieces(color);
 }
 
-inline Bitboard Board::getColor(Color color) const
+inline Bitboard Board::pieces(Color color) const
 {
     return currState().colors[static_cast<int>(color)];
 }
 
-inline Bitboard Board::getAllPieces() const
+inline Bitboard Board::allPieces() const
 {
     return currState().colors[0] | currState().colors[1];
 }
 
 inline uint32_t Board::kingSq(Color color) const
 {
-    return getPieces(color, PieceType::KING).lsb();
+    return pieces(color, PieceType::KING).lsb();
 }
 
 inline bool Board::squareAttacked(Color color, uint32_t square) const
 {
-    return squareAttacked(color, square, getAllPieces());
+    return squareAttacked(color, square, allPieces());
 }
 
 inline Bitboard Board::attackersTo(Color color, uint32_t square) const
 {
-    return attackersTo(color, square, getAllPieces());
+    return attackersTo(color, square, allPieces());
 }
 
 inline Bitboard Board::attackersTo(uint32_t square) const
 {
-    return attackersTo(square, getAllPieces());
+    return attackersTo(square, allPieces());
 }
 
 inline const eval::EvalState& Board::evalState() const

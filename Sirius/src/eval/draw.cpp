@@ -6,14 +6,14 @@ namespace eval
 bool isImmediateDraw(const Board& board)
 {
     Bitboard nonMinorPcs =
-        board.getPieces(PieceType::QUEEN) |
-        board.getPieces(PieceType::ROOK) |
-        board.getPieces(PieceType::PAWN);
+        board.pieces(PieceType::QUEEN) |
+        board.pieces(PieceType::ROOK) |
+        board.pieces(PieceType::PAWN);
 
     if (nonMinorPcs.any())
         return false;
 
-    switch (board.getAllPieces().popcount())
+    switch (board.allPieces().popcount())
     {
         case 2:
             return true;
@@ -21,7 +21,7 @@ bool isImmediateDraw(const Board& board)
             return true;
         case 4:
         {
-            Bitboard bishops = board.getPieces(PieceType::BISHOP);
+            Bitboard bishops = board.pieces(PieceType::BISHOP);
             if (bishops.popcount() == 2 && ((bishops & LIGHT_SQUARES).popcount() == 2 || (bishops & LIGHT_SQUARES).empty()))
                 return true;
             return false;
@@ -34,18 +34,18 @@ bool isImmediateDraw(const Board& board)
 bool canForceMate(const Board& board)
 {
     Bitboard nonMinorPcs =
-        board.getPieces(PieceType::QUEEN) |
-        board.getPieces(PieceType::ROOK) |
-        board.getPieces(PieceType::PAWN);
+        board.pieces(PieceType::QUEEN) |
+        board.pieces(PieceType::ROOK) |
+        board.pieces(PieceType::PAWN);
 
     if (nonMinorPcs.any())
         return true;
 
-    Bitboard bishops = board.getPieces(PieceType::BISHOP);
-    Bitboard knights = board.getPieces(PieceType::KNIGHT);
+    Bitboard bishops = board.pieces(PieceType::BISHOP);
+    Bitboard knights = board.pieces(PieceType::KNIGHT);
 
-    Bitboard white = board.getColor(Color::WHITE);
-    Bitboard black = board.getColor(Color::BLACK);
+    Bitboard white = board.pieces(Color::WHITE);
+    Bitboard black = board.pieces(Color::BLACK);
 
     Bitboard blackBishops = black & bishops;
     Bitboard blackKnights = black & knights;

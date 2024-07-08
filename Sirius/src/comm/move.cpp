@@ -366,7 +366,7 @@ search_moves:
         moveLen++;
     int toSquare = toFile | (toRank << 3);
     
-    if (!isCapture && board.getPieceAt(toSquare) != Piece::NONE)
+    if (!isCapture && board.pieceAt(toSquare) != Piece::NONE)
     {
         return {MoveStrFind::Result::NOT_FOUND, Move(), moveLen};
     }
@@ -379,11 +379,11 @@ search_moves:
         switch (it->type())
         {
             case MoveType::ENPASSANT:
-                if (isCapture && (toRank == 2 || toRank == 5) && board.getPieceAt(toSquare + pawnOffset) == Piece::NONE)
+                if (isCapture && (toRank == 2 || toRank == 5) && board.pieceAt(toSquare + pawnOffset) == Piece::NONE)
                     continue;
                 break;
             default:
-                if (isCapture && board.getPieceAt(toSquare) == Piece::NONE)
+                if (isCapture && board.pieceAt(toSquare) == Piece::NONE)
                     continue;
                 break;
         }
@@ -399,7 +399,7 @@ search_moves:
             continue;
 
         int srcSquare = it->srcPos();
-        Piece srcPiece = board.getPieceAt(srcSquare);
+        Piece srcPiece = board.pieceAt(srcSquare);
         if (getPieceType(srcPiece) != piece)
             continue;
 
@@ -441,7 +441,7 @@ bool isAmbiguous(const Board& board, const MoveList& legalMoves, PieceType piece
     {
         int srcPos = it->srcPos();
         int dstPos = it->dstPos();
-        PieceType movePiece = getPieceType(board.getPieceAt(srcPos));
+        PieceType movePiece = getPieceType(board.pieceAt(srcPos));
         if (movePiece != piece)
             continue;
 
@@ -468,8 +468,8 @@ std::string convMoveToSAN(const Board& board, const MoveList& legalMoves, Move m
     {
         return move.dstPos() > move.srcPos() ? "O-O" : "O-O-O";
     }
-    PieceType piece = getPieceType(board.getPieceAt(move.srcPos()));
-    bool isCapture = board.getPieceAt(move.dstPos()) != Piece::NONE;
+    PieceType piece = getPieceType(board.pieceAt(move.srcPos()));
+    bool isCapture = board.pieceAt(move.dstPos()) != Piece::NONE;
     if (piece == PieceType::PAWN)
     {
         int srcPos = move.srcPos();

@@ -22,11 +22,11 @@ private:
 
 inline ExtMove ExtMove::from(const Board& board, Move move)
 {
-    Piece moving = board.getPieceAt(move.srcPos());
+    Piece moving = board.pieceAt(move.srcPos());
     Piece captured =
         move.type() == MoveType::ENPASSANT ?
         makePiece(PieceType::PAWN, ~board.sideToMove()) :
-        board.getPieceAt(move.dstPos());
+        board.pieceAt(move.dstPos());
     Piece promotion = move.type() == MoveType::PROMOTION ? promotionPiece(board.sideToMove(), move.promotion()) : Piece::NONE;
     return ExtMove(move, moving, captured, promotion);
 }
