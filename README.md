@@ -110,8 +110,9 @@ Do not use the Makefile, it is intended for building with OpenBench only
     - On their own, the CMake files only define what is absolutely necessary to build Sirius(With the exception of a flag that links msvc std lib statically), so you don't have to change the build files to build Sirius yourself
 
 ## Credits/Thanks
-- [Sebastian Lague](https://www.youtube.com/@SebastianLague), for getting me into the chess programming
+- [Sebastian Lague](https://www.youtube.com/@SebastianLague), for getting me into chess programming
 - [The Chess Programming Wiki](https://www.chessprogramming.org/), a bit outdated but nonetheless an excellent resource
+- [OpenBench](https://github.com/AndyGrant/OpenBench), an very well made distributed SPRT testing framework for chess engines
 - [Stockfish](https://github.com/official-stockfish/Stockfish)
 - [Ethereal](https://github.com/AndyGrant/Ethereal), one of the best references for chess programming
 - [Berserk](https://github.com/jhonnold/berserk), another good reference engine
@@ -119,7 +120,7 @@ Do not use the Makefile, it is intended for building with OpenBench only
 - Crafty
 - Zurichess
 - The Engine Programming Discord Server, and the people in it
-    - [@JW](https://github.com/jw1912), developer of [Akimbo](https://github.com/jw1912/akimbo), helped me a ton with developing and testing the engine
+    - [@JW](https://github.com/jw1912), developer of [Akimbo](https://github.com/jw1912/akimbo), [Bullet](https://github.com/jw1912/bullet), and [Monty](https://github.com/official-monty/Monty), helped me a ton with developing and testing the engine
     - [@Ciekce](https://github.com/ciekce/), developer of [Stormphrax](https://github.com/ciekce/Stormphrax), who, along with JW, taught me many things about Chess Programming, and is an excellent c++ programmer
     - [@Alex2262](https://github.com/Alex2262), developer of [Altaire](https://github.com/Alex2262/AltairChessEngine)
     - [@Cj5716](https://github.com/cj5716/), general contributor to many engines
