@@ -2,21 +2,24 @@
 
 A UCI chess engine written in c++.
 Sirius does not come with a gui. To play against it, you should download a chess GUI that supports the Universal Chess Interface(UCI) protocol
-Optionally, you can also play from the command line
 
 ## Strength
 See [Releases](https://github.com/mcthouacbb/Sirius/releases)
 
 | Version | Release Date | [CCRL Blitz](https://ccrl.chessdom.com/ccrl/404/) | [CCRL 40/15](https://ccrl.chessdom.com/ccrl/4040/) |
 | --- | --- | --- | --- |
-| 5.0 | 2023-10-27 | N/A | 2680 |
+| 5.0 | 2023-10-27 | N/A | 2677 |
 | 6.0 | 2024-02-17 | N/A | 2964 |
+| 7.0 | 2024-07-09 | N/A |  N/A |
 
+## Usage
+Sirius can be used with any UCI Chess GUI or matchrunner including Arena, Cutechess, Cutechess-cli, Fastchess, Banksia, and more.
+You can also play it on [Lichess](https://lichess.org/@/Sirius_Bot)(Though it's not online very often)
 
 ## Features
 - Board representation
     - BitBoards
-    - Mailbox 8x8
+    - 8x8 Mailbox
     - Zobrist hashing
 - Move Generation
     - Magic Bitboards for sliding pieces
@@ -40,8 +43,9 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
     - King Safety
         -  King-pawn storm/shield
         -  Safe checks from enemy pieces
-        -  King ring attackers
+        -  King ring attacks
     - Tuning via Texel's Tuning Method
+        - [https://github.com/mcthouacbb/Sirius-Tune-2](https://github.com/mcthouacbb/Sirius-Tune-2)
 - Search
     - Fail-soft Alpha-Beta Pruning
     - Iterative Deepening
@@ -75,15 +79,8 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
       	- Improving Heuristic
       	- Node count time management
       	- tt score adjustment
-      	- Static evaluation correction history
-      	- 
+      	- Static evaluation correction histor
         - Lazy SMP
-
-## CLI Usage
-- Type "uci" for the UCI protocol(not recommended for direct use, usually used by a chess GUI)
-    - Protocol is explained [here](https://backscattering.de/chess/uci)
-- Type "cmdline" for the CLI protocol(Mainly for convenience in certain situations)
-    - Protocol is explained [below](#command-line-protocol)
 
 ## Non-standard UCI commands
 - `"d"`
@@ -99,7 +96,9 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
 | Threads          | integer |       1       |         [1, 256]          | Number of threads used to search.                                                    |
 
 ## Building
-- C++20, CMake, and decent C++ compiler required
+Do not use the Makefile, it is intended for building with OpenBench only
+
+- C++20, CMake, and a decent C++ compiler required
 - If you have ninja and clang, you can build the release builds by running the following commands
   ```
   cmake --preset ninja-clang-x86-64-v<version>
@@ -111,8 +110,9 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
     - On their own, the CMake files only define what is absolutely necessary to build Sirius(With the exception of a flag that links msvc std lib statically), so you don't have to change the build files to build Sirius yourself
 
 ## Credits/Thanks
-- [Sebastian Lague](https://www.youtube.com/@SebastianLague), for getting me into the chess programming
+- [Sebastian Lague](https://www.youtube.com/@SebastianLague), for getting me into chess programming
 - [The Chess Programming Wiki](https://www.chessprogramming.org/), a bit outdated but nonetheless an excellent resource
+- [OpenBench](https://github.com/AndyGrant/OpenBench), an very well made distributed SPRT testing framework for chess engines
 - [Stockfish](https://github.com/official-stockfish/Stockfish)
 - [Ethereal](https://github.com/AndyGrant/Ethereal), one of the best references for chess programming
 - [Berserk](https://github.com/jhonnold/berserk), another good reference engine
@@ -120,7 +120,7 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
 - Crafty
 - Zurichess
 - The Engine Programming Discord Server, and the people in it
-    - [@JW](https://github.com/jw1912), developer of [Akimbo](https://github.com/jw1912/akimbo), helped me a ton with developing and testing the engine
+    - [@JW](https://github.com/jw1912), developer of [Akimbo](https://github.com/jw1912/akimbo), [Bullet](https://github.com/jw1912/bullet), and [Monty](https://github.com/official-monty/Monty), helped me a ton with developing and testing the engine
     - [@Ciekce](https://github.com/ciekce/), developer of [Stormphrax](https://github.com/ciekce/Stormphrax), who, along with JW, taught me many things about Chess Programming, and is an excellent c++ programmer
     - [@Alex2262](https://github.com/Alex2262), developer of [Altaire](https://github.com/Alex2262/AltairChessEngine)
     - [@Cj5716](https://github.com/cj5716/), general contributor to many engines
@@ -130,50 +130,3 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
 - [Rustic Chess Blog](https://rustic-chess.org/), currently a WIP but it has excellent explanations for the techniques it does explain.
 - Many others
 
-
-<div id="command-line-protocol"></div>
-
-## Command Line Protocol
-- `"position" {"fen" | "startpos"} [fenString]`
-    - Set the board position to the starting position or the fenString
-- `"print"`
-    - Print the current state of the board
-          - Piece positions
-        - Number of plies since the start of the game(starts at 0)
-        - Half Move Clock
-            - Used to detect 50 move rule draws
-            - Draw at 100 half moves
-            - Castling Rights
-          - Side to move
-        - Square of en passant, if available
-        - Zobrist hash
-- `"move" <move>`
-    - makes a move
-    - Standard Algebraic Notation(FIDE notation)
-    - Square is a file (a-h) and rank(1-8)
-    - Promotion piece is either, q(queen), r(rook), b(bishop), or n(knight)
-- `"undo"`
-    - Undo the last move that was made
-- `"eval"`
-    - Prints the static evaluation of the position
-- `"qeval"`
-    - Prints the quiescence search evaluation of the position
-    - Currently not working
-- `"search" "depth" <depth>`
-- `"search" "time" <time>`
-- `"search" "infinite"`
-    - Performs an iterative deepening search up to depth, until time time, or until interrupted
-    - Prints out the evaluation, node count, and PV of each depth
-- `"stop"`
-    - Stops the search
-- `"tests"`
-    - Runs test suite
-    - Currently, only perft tests are run
-- `"perft" <depth>`
-    - Performs are perft up to depth
-    - A perft(performance test) searches all moves up to depth and returns the number of positions reached
-    - WARNING: time usage increases exponentially with depth
-- `"book"`
-    - Returns all the moves in the opening book
-    - Opening book is currently hardcoded to "Sirius/res/gaviota_trim.pgn"
-    - Prints "No moves in book found" if position is not in book
