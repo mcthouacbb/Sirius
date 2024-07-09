@@ -9,14 +9,17 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
 
 | Version | Release Date | [CCRL Blitz](https://ccrl.chessdom.com/ccrl/404/) | [CCRL 40/15](https://ccrl.chessdom.com/ccrl/4040/) |
 | --- | --- | --- | --- |
-| 5.0 | 2023-10-27 | N/A | 2680 |
+| 5.0 | 2023-10-27 | N/A | 2677 |
 | 6.0 | 2024-02-17 | N/A | 2964 |
 
+## Usage
+Sirius can be used with any UCI Chess GUI or matchrunner including Arena, Cutechess, Cutechess-cli, Fastchess, Banksia, and more.
+You can also play it on [Lichess](https://lichess.org/@/Sirius_Bot)(Though it's not online very often)
 
 ## Features
 - Board representation
     - BitBoards
-    - Mailbox 8x8
+    - 8x8 Mailbox
     - Zobrist hashing
 - Move Generation
     - Magic Bitboards for sliding pieces
@@ -40,8 +43,9 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
     - King Safety
         -  King-pawn storm/shield
         -  Safe checks from enemy pieces
-        -  King ring attackers
+        -  King ring attacks
     - Tuning via Texel's Tuning Method
+        - [https://github.com/mcthouacbb/Sirius-Tune-2](https://github.com/mcthouacbb/Sirius-Tune-2)
 - Search
     - Fail-soft Alpha-Beta Pruning
     - Iterative Deepening
@@ -92,7 +96,9 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
 | Threads          | integer |       1       |         [1, 256]          | Number of threads used to search.                                                    |
 
 ## Building
-- C++20, CMake, and decent C++ compiler required
+Do not use the Makefile, it is intended for building with OpenBench only
+
+- C++20, CMake, and a decent C++ compiler required
 - If you have ninja and clang, you can build the release builds by running the following commands
   ```
   cmake --preset ninja-clang-x86-64-v<version>
