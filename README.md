@@ -2,7 +2,6 @@
 
 A UCI chess engine written in c++.
 Sirius does not come with a gui. To play against it, you should download a chess GUI that supports the Universal Chess Interface(UCI) protocol
-Optionally, you can also play from the command line
 
 ## Strength
 See [Releases](https://github.com/mcthouacbb/Sirius/releases)
