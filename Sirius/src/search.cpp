@@ -474,10 +474,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 break;
         }
 
-        m_TT.prefetch(board.keyAfter(move));
-        stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
-        stack->histScore = histScore;
-
         int extension = 0;
 
         bool doSE = !root &&
@@ -490,7 +486,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         if (doSE)
         {
-            stack->excludedMove = ttData.move;
+            stack->excludedMove = move;
             int sDepth = (depth - 1) / 2;
             int sBeta = ttData.score - 2 * depth;
 
@@ -502,6 +498,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 extension = 1;
             }
         }
+
+        stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
+        stack->histScore = histScore;
+
+        m_TT.prefetch(board.keyAfter(move));
 
         uint64_t nodesBefore = thread.nodes;
         board.makeMove(move);
