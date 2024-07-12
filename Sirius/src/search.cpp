@@ -42,6 +42,7 @@ void SearchThread::reset()
     for (int i = 0; i <= MAX_PLY; i++)
     {
         stack[i].killers[0] = stack[i].killers[1] = Move();
+        stack[i].excludedMove = Move();
         stack[i].pv = {};
         stack[i].pvLength = 0;
         stack[i].contHistEntry = nullptr;
@@ -338,6 +339,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     bool root = rootPly == 0;
     bool inCheck = board.checkers().any();
+    bool singular = stack->excludedMove != Move();
 
     if (eval::isImmediateDraw(board) || board.isDraw(rootPly))
         return SCORE_DRAW;
@@ -349,33 +351,36 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         return qsearch(thread, stack, alpha, beta);
 
     ProbedTTData ttData = {};
-    bool ttHit = m_TT.probe(board.zkey(), rootPly, ttData);
+    bool ttHit = false;
 
-    if (ttHit)
+    if (!singular)
     {
+        ttHit = m_TT.probe(board.zkey(), rootPly, ttData);
         if (!pvNode && ttData.depth >= depth && (
             ttData.bound == TTEntry::Bound::EXACT ||
             (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta) ||
             (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)
         ))
             return ttData.score;
+
+        if (!ttHit && depth >= minIIRDepth)
+            depth--;
+
+        stack->staticEval = inCheck ? SCORE_NONE : history.correctStaticEval(eval::evaluate(board), board.sideToMove(), board.pawnKey());
+
+        stack->eval = stack->staticEval;
+        if (!inCheck && ttHit && (
+            ttData.bound == TTEntry::Bound::EXACT ||
+            (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= stack->eval) ||
+            (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= stack->eval)
+        ))
+            stack->eval = ttData.score;
     }
-    else if (depth >= minIIRDepth)
-        depth--;
 
-    stack->staticEval = inCheck ? SCORE_NONE : history.correctStaticEval(eval::evaluate(board), board.sideToMove(), board.pawnKey());
     bool improving = !inCheck && rootPly > 1 && stack->staticEval > stack[-2].staticEval;
-    stack->eval = stack->staticEval;
-    if (!inCheck && ttHit && (
-        ttData.bound == TTEntry::Bound::EXACT ||
-        (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= stack->eval) ||
-        (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= stack->eval)
-    ))
-        stack->eval = ttData.score;
-
     stack[1].killers = {};
 
-    if (!pvNode && !inCheck)
+    if (!pvNode && !inCheck && !singular)
     {
         // reverse futility pruning
         if (depth <= rfpMaxDepth && stack->eval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth + stack[-1].histScore / rfpHistDivisor)
@@ -431,7 +436,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     for (int moveIdx = 0; moveIdx < static_cast<int>(moves.size()); moveIdx++)
     {
         auto [move, moveScore] = ordering.selectMove(static_cast<uint32_t>(moveIdx));
-        if (!board.isLegal(move))
+        if (move == stack->excludedMove || !board.isLegal(move))
             continue;
         bool quiet = moveIsQuiet(board, move);
         bool quietLosing = moveScore < MoveOrdering::KILLER_SCORE;
@@ -473,6 +478,31 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
         stack->histScore = histScore;
 
+        int extension = 0;
+
+        bool doSE = !root &&
+            depth >= 8 &&
+            move == ttData.move &&
+            !singular &&
+            ttData.depth + 2 >= depth &&
+            ttData.bound != TTEntry::Bound::UPPER_BOUND &&
+            !isMateScore(ttData.score);
+
+        if (doSE)
+        {
+            stack->excludedMove = ttData.move;
+            int sDepth = (depth - 1) / 2;
+            int sBeta = ttData.score - 2 * depth;
+
+            int score = search(thread, sDepth, stack, sBeta - 1, sBeta, false, cutnode);
+
+            stack->excludedMove = Move();
+            if (score < sBeta)
+            {
+                extension = 1;
+            }
+        }
+
         uint64_t nodesBefore = thread.nodes;
         board.makeMove(move);
         thread.nodes.fetch_add(1, std::memory_order_relaxed);
@@ -485,7 +515,10 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         rootPly++;
         movesPlayed++;
 
-        int newDepth = depth + givesCheck - 1;
+        if (givesCheck)
+            extension = std::max(extension, 1);
+
+        int newDepth = depth + extension - 1;
         int score = 0;
 
         if (movesPlayed >= (pvNode ? lmrMinMovesPv : lmrMinMovesNonPv) &&
@@ -582,17 +615,22 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     if (movesPlayed == 0)
     {
+        if (singular)
+            return alpha;
         if (inCheck)
             return -SCORE_MATE + rootPly;
         return SCORE_DRAW;
     }
 
-    if (!inCheck && (stack->bestMove == Move() || moveIsQuiet(board, stack->bestMove)) &&
-        !(bound == TTEntry::Bound::LOWER_BOUND && stack->staticEval >= bestScore) &&
-        !(bound == TTEntry::Bound::UPPER_BOUND && stack->staticEval <= bestScore))
-        history.updateCorrHist(bestScore - stack->staticEval, depth, board.sideToMove(), board.pawnKey());
+    if (!singular)
+    {
+        if (!inCheck && (stack->bestMove == Move() || moveIsQuiet(board, stack->bestMove)) &&
+            !(bound == TTEntry::Bound::LOWER_BOUND && stack->staticEval >= bestScore) &&
+            !(bound == TTEntry::Bound::UPPER_BOUND && stack->staticEval <= bestScore))
+            history.updateCorrHist(bestScore - stack->staticEval, depth, board.sideToMove(), board.pawnKey());
 
-    m_TT.store(board.zkey(), depth, rootPly, bestScore, stack->bestMove, bound);
+        m_TT.store(board.zkey(), depth, rootPly, bestScore, stack->bestMove, bound);
+    }
 
     return bestScore;
 }
