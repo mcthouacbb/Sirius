@@ -356,7 +356,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     if (!singular)
     {
         ttHit = m_TT.probe(board.zkey(), rootPly, ttData);
-        if (!pvNode && ttData.depth >= depth && (
+        if (ttHit && !pvNode && ttData.depth >= depth && (
             ttData.bound == TTEntry::Bound::EXACT ||
             (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta) ||
             (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)
