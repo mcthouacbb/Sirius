@@ -480,23 +480,20 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             depth >= 8 &&
             move == ttData.move &&
             !singular &&
-            ttData.depth + 2 >= depth &&
-            ttData.bound != TTEntry::Bound::UPPER_BOUND &&
-            !isMateScore(ttData.score);
+            ttData.depth + 3 >= depth &&
+            ttData.bound != TTEntry::Bound::UPPER_BOUND;
 
         if (doSE)
         {
             stack->excludedMove = move;
             int sDepth = (depth - 1) / 2;
-            int sBeta = ttData.score - 2 * depth;
+            int sBeta = std::max(-SCORE_MATE + 1, ttData.score - 2 * depth);
 
             int score = search(thread, sDepth, stack, sBeta - 1, sBeta, false, cutnode);
 
             stack->excludedMove = Move();
             if (score < sBeta)
-            {
                 extension = 1;
-            }
         }
 
         stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
@@ -516,7 +513,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         rootPly++;
         movesPlayed++;
 
-        if (givesCheck)
+        if (!doSE && givesCheck)
             extension = std::max(extension, 1);
 
         int newDepth = depth + extension - 1;
