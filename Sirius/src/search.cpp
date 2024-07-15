@@ -496,10 +496,10 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 extension = 1;
         }
 
+        m_TT.prefetch(board.keyAfter(move));
+
         stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
         stack->histScore = histScore;
-
-        m_TT.prefetch(board.keyAfter(move));
 
         uint64_t nodesBefore = thread.nodes;
         board.makeMove(move);
