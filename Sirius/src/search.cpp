@@ -513,8 +513,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         rootPly++;
         movesPlayed++;
 
-        if (!doSE && givesCheck)
-            extension = std::max(extension, 1);
+        if (givesCheck)
+            extension++;
 
         int newDepth = depth + extension - 1;
         int score = 0;
