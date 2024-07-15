@@ -487,7 +487,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         {
             stack->excludedMove = move;
             int sDepth = (depth - 1) / 2;
-            int sBeta = std::max(-SCORE_MATE + 1, ttData.score - 5 * depth / 2);
+            int sBeta = std::max(-SCORE_MATE + 1, ttData.score - 3 * depth / 2);
 
             int score = search(thread, sDepth, stack, sBeta - 1, sBeta, false, cutnode);
 
