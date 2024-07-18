@@ -189,10 +189,18 @@ PackedScore evaluateKingPawn(const Board& board, const EvalData& evalData)
 
 // I'll figure out how to add the other pieces here later
 template<Color us>
-PackedScore evaluateThreats(const Board&, const EvalData&)
+PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
 {
-    //constexpr Color them = ~us;
+    constexpr Color them = ~us;
+
     PackedScore eval{0, 0};
+    Bitboard nonPawnEnemies = board.pieces(them) ^ board.pieces(them, PieceType::PAWN);
+    Bitboard pawnThreats = evalData.attackedBy[us][PieceType::PAWN] & nonPawnEnemies;
+    while (pawnThreats.any())
+    {
+        PieceType threatened = getPieceType(board.pieceAt(pawnThreats.poplsb()));
+        eval += THREAT_BY_PAWN[static_cast<int>(threatened)];
+    }
     return eval;
 }
 
