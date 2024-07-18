@@ -86,10 +86,6 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
 
         eval += MOBILITY[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)][(attacks & evalData.mobilityArea[us]).popcount()];
 
-        Bitboard threats = attacks & board.pieces(them);
-        while (threats.any())
-            eval += THREATS[static_cast<int>(piece)][static_cast<int>(getPieceType(board.pieceAt(threats.poplsb())))];
-
         if (Bitboard kingRingAtks = evalData.kingRing[them] & attacks; kingRingAtks.any())
         {
             evalData.attackWeight[us] += KING_ATTACKER_WEIGHT[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)];
@@ -193,13 +189,10 @@ PackedScore evaluateKingPawn(const Board& board, const EvalData& evalData)
 
 // I'll figure out how to add the other pieces here later
 template<Color us>
-PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
+PackedScore evaluateThreats(const Board&, const EvalData&)
 {
-    constexpr Color them = ~us;
-    Bitboard threats = evalData.attackedBy[us][PieceType::PAWN] & board.pieces(them);
+    //constexpr Color them = ~us;
     PackedScore eval{0, 0};
-    while (threats.any())
-        eval += THREATS[static_cast<int>(PieceType::PAWN)][static_cast<int>(getPieceType(board.pieceAt(threats.poplsb())))];
     return eval;
 }
 
