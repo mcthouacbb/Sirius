@@ -32,7 +32,7 @@ public:
     void startSearch();
     void updateNodes(Move move, uint64_t nodes);
     bool stopHard(const SearchLimits& searchLimits, uint64_t nodes);
-    bool stopSoft(Move bestMove, uint64_t totalNodes, const SearchLimits& searchLimits) const;
+    bool stopSoft(Move bestMove, uint64_t totalNodes, const SearchLimits& searchLimits);
 private:
     static constexpr uint32_t TIME_CHECK_INTERVAL = 2048;
 
@@ -43,4 +43,6 @@ private:
     uint32_t checkCounter;
 
     std::array<uint64_t, 4096> m_NodeCounts;
+    Move m_PrevBestMove;
+    uint32_t m_Stability;
 };
