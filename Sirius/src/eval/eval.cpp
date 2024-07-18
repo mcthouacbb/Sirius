@@ -201,6 +201,14 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
         PieceType threatened = getPieceType(board.pieceAt(pawnThreats.poplsb()));
         eval += THREAT_BY_PAWN[static_cast<int>(threatened)];
     }
+
+    Bitboard minorThreats = (evalData.attackedBy[us][PieceType::KNIGHT] | evalData.attackedBy[us][PieceType::ROOK]) & nonPawnEnemies;
+    while (minorThreats.any())
+    {
+        PieceType threatened = getPieceType(board.pieceAt(minorThreats.poplsb()));
+        eval += THREAT_BY_MINOR[static_cast<int>(threatened)];
+    }
+
     return eval;
 }
 
