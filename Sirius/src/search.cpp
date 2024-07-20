@@ -602,6 +602,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
 {
     auto& rootPly = thread.rootPly;
     auto& board = thread.board;
+    auto& history = thread.history;
     stack->pvLength = 0;
     if (eval::isImmediateDraw(board))
         return SCORE_DRAW;
@@ -643,14 +644,24 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     if (rootPly >= MAX_PLY)
         return alpha;
 
-    MoveList captures;
-    genMoves<MoveGenType::NOISY>(board, captures);
+    std::array<CHEntry*, 3> contHistEntries = {
+        rootPly > 0 ? stack[-1].contHistEntry : nullptr,
+        rootPly > 1 ? stack[-2].contHistEntry : nullptr,
+        rootPly > 3 ? stack[-4].contHistEntry : nullptr
+    };
 
-    MoveOrdering ordering(board, captures, ttData.move, thread.history);
+    MoveList moves;
+    if (inCheck)
+        genMoves<MoveGenType::NOISY_QUIET>(board, moves);
+    else
+        genMoves<MoveGenType::NOISY>(board, moves);
+
+
+    MoveOrdering ordering(board, moves, ttData.move, contHistEntries, history);
 
     TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
     stack->bestMove = Move();
-    for (int moveIdx = 0; moveIdx < static_cast<int>(captures.size()); moveIdx++)
+    for (int moveIdx = 0; moveIdx < static_cast<int>(moves.size()); moveIdx++)
     {
         auto [move, moveScore] = ordering.selectMove(moveIdx);
         if (!board.isLegal(move))
@@ -663,6 +674,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
             continue;
         }
         board.makeMove(move);
+        stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
         thread.nodes.fetch_add(1, std::memory_order_relaxed);
         rootPly++;
         int score = -qsearch(thread, stack + 1, -beta, -alpha);

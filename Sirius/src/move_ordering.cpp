@@ -35,7 +35,7 @@ bool moveIsCapture(const Board& board, Move move)
         board.pieceAt(move.dstPos()) != Piece::NONE;
 }
 
-MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, const History& history)
+MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, std::span<const CHEntry* const> contHistEntries, const History& history)
     : m_Moves(moves)
 {
     for (uint32_t i = 0; i < m_Moves.size(); i++)
@@ -48,14 +48,18 @@ MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, c
             m_MoveScores[i] = 10000000;
             continue;
         }
-
         bool isCapture = moveIsCapture(board, move);
         bool isPromotion = move.type() == MoveType::PROMOTION;
-        score = history.getNoisyStats(ExtMove::from(board, move));
+        score = CAPTURE_SCORE + history.getNoisyStats(ExtMove::from(board, move));
         if (isCapture)
             score += mvvLva(board, move);
         if (isPromotion)
             score += 100 * promotionBonus(move);
+
+        if (!isCapture && !isPromotion)
+        {
+            score = history.getQuietStats(board.threats(), ExtMove::from(board, move), contHistEntries);
+        }
 
         m_MoveScores[i] = score;
     }
