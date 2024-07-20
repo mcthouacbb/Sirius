@@ -209,6 +209,13 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
         eval += THREAT_BY_MINOR[static_cast<int>(threatened)];
     }
 
+    Bitboard hanging = evalData.attacked[us] & ~evalData.attacked[them] & board.pieces(them);
+    Bitboard hangingPawns = hanging & board.pieces(PieceType::PAWN);
+    Bitboard hangingPieces = hanging ^ hangingPawns;
+
+    eval += HANGING_PAWN * hangingPawns.popcount();
+    eval += HANGING_PIECE * hangingPieces.popcount();
+
     return eval;
 }
 
