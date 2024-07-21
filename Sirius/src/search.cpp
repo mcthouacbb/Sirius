@@ -350,6 +350,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     ProbedTTData ttData = {};
     bool ttHit = m_TT.probe(board.zkey(), rootPly, ttData);
+    bool ttPV = pvNode || (ttHit && ttData.pv);
 
     if (ttHit)
     {
@@ -495,9 +496,10 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         {
             int reduction = baseLMR;
 
-            reduction += !improving;
             reduction -= pvNode;
+            reduction -= ttPV;
             reduction -= givesCheck;
+            reduction += !improving;
             reduction += cutnode;
             reduction += stack[1].failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin);
 
@@ -592,7 +594,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         !(bound == TTEntry::Bound::UPPER_BOUND && stack->staticEval <= bestScore))
         history.updateCorrHist(bestScore - stack->staticEval, depth, board.sideToMove(), board.pawnKey());
 
-    m_TT.store(board.zkey(), depth, rootPly, bestScore, stack->bestMove, bound);
+    m_TT.store(board.zkey(), depth, rootPly, bestScore, stack->bestMove, bound, ttPV);
 
     return bestScore;
 }
@@ -610,6 +612,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
 
     ProbedTTData ttData = {};
     bool ttHit = m_TT.probe(board.zkey(), rootPly, ttData);
+    bool pvHit = ttHit && ttData.pv;
 
     if (ttHit)
     {
@@ -693,7 +696,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         }
     }
 
-    m_TT.store(board.zkey(), 0, rootPly, bestScore, stack->bestMove, bound);
+    m_TT.store(board.zkey(), 0, rootPly, bestScore, stack->bestMove, bound, pvHit);
 
 
     return bestScore;

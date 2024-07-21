@@ -28,7 +28,12 @@ struct TTEntry
 
     uint8_t gen()
     {
-        return genBound >> 2;
+        return genBound >> 3;
+    }
+
+    bool pv()
+    {
+        return (genBound >> 2) & 1;
     }
 
     Bound bound()
@@ -36,9 +41,9 @@ struct TTEntry
         return static_cast<Bound>(genBound & 3);
     }
 
-    static uint8_t makeGenBound(uint8_t gen, Bound bound)
+    static uint8_t makeGenBound(uint8_t gen, bool pv, Bound bound)
     {
-        return static_cast<int>(bound) | (gen << 2);
+        return static_cast<int>(bound) | (pv << 2) | (gen << 3);
     }
 };
 
@@ -73,12 +78,13 @@ struct ProbedTTData
     Move move;
     int depth;
     TTEntry::Bound bound;
+    bool pv;
 };
 
 class TT
 {
 public:
-    static constexpr int GEN_CYCLE_LENGTH = 1 << 6;
+    static constexpr int GEN_CYCLE_LENGTH = 1 << 5;
 
     TT(size_t size);
     ~TT() = default;
@@ -89,7 +95,7 @@ public:
     TT& operator=(const TT&) = delete;
 
     bool probe(ZKey key, int ply, ProbedTTData& ttData);
-    void store(ZKey key, int ply, int depth, int score, Move move, TTEntry::Bound type);
+    void store(ZKey key, int ply, int depth, int score, Move move, TTEntry::Bound type, bool pv);
     int quality(int age, int depth) const;
     void prefetch(ZKey key) const;
 

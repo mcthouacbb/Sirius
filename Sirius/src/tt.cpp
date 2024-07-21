@@ -105,11 +105,12 @@ bool TT::probe(ZKey key, int ply, ProbedTTData& ttData)
     ttData.move = entry.bestMove;
     ttData.depth = entry.depth;
     ttData.bound = entry.bound();
+    ttData.pv = entry.pv();
 
     return true;
 }
 
-void TT::store(ZKey key, int depth, int ply, int score, Move move, TTEntry::Bound bound)
+void TT::store(ZKey key, int depth, int ply, int score, Move move, TTEntry::Bound bound, bool pv)
 {
     // 16 bit keys to save space
     // idea from JW
@@ -151,12 +152,12 @@ void TT::store(ZKey key, int depth, int ply, int score, Move move, TTEntry::Boun
 
     if (bound == TTEntry::Bound::EXACT ||
         replace.key16 != key16 ||
-        depth >= replace.depth - 2)
+        depth + 2 * pv >= replace.depth - 2)
     {
         replace.key16 = key16;
         replace.depth = static_cast<uint8_t>(depth);
         replace.score = static_cast<int16_t>(storeScore(score, ply));
-        replace.genBound = TTEntry::makeGenBound(static_cast<uint8_t>(m_CurrAge), bound);
+        replace.genBound = TTEntry::makeGenBound(static_cast<uint8_t>(m_CurrAge), pv, bound);
     }
 
     uint64_t replaceData;
