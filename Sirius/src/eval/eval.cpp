@@ -86,10 +86,6 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
 
         eval += MOBILITY[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)][(attacks & evalData.mobilityArea[us]).popcount()];
 
-        Bitboard threats = attacks & board.pieces(them);
-        while (threats.any())
-            eval += THREATS[static_cast<int>(piece)][static_cast<int>(getPieceType(board.pieceAt(threats.poplsb())))];
-
         if (Bitboard kingRingAtks = evalData.kingRing[them] & attacks; kingRingAtks.any())
         {
             evalData.attackWeight[us] += KING_ATTACKER_WEIGHT[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)];
@@ -196,10 +192,53 @@ template<Color us>
 PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
 {
     constexpr Color them = ~us;
-    Bitboard threats = evalData.attackedBy[us][PieceType::PAWN] & board.pieces(them);
+
     PackedScore eval{0, 0};
-    while (threats.any())
-        eval += THREATS[static_cast<int>(PieceType::PAWN)][static_cast<int>(getPieceType(board.pieceAt(threats.poplsb())))];
+
+    Bitboard defendedBB = evalData.attacked[them];
+
+    Bitboard pawnThreats = evalData.attackedBy[us][PieceType::PAWN] & board.pieces(them);
+    while (pawnThreats.any())
+    {
+        PieceType threatened = getPieceType(board.pieceAt(pawnThreats.poplsb()));
+        eval += THREAT_BY_PAWN[static_cast<int>(threatened)];
+    }
+
+    Bitboard knightThreats = evalData.attackedBy[us][PieceType::KNIGHT] & board.pieces(them);
+    while (knightThreats.any())
+    {
+        int threat = knightThreats.poplsb();
+        PieceType threatened = getPieceType(board.pieceAt(threat));
+        bool defended = (defendedBB & Bitboard::fromSquare(threat)).any();
+        eval += THREAT_BY_KNIGHT[defended][static_cast<int>(threatened)];
+    }
+
+    Bitboard bishopThreats = evalData.attackedBy[us][PieceType::BISHOP] & board.pieces(them);
+    while (bishopThreats.any())
+    {
+        int threat = bishopThreats.poplsb();
+        PieceType threatened = getPieceType(board.pieceAt(threat));
+        bool defended = (defendedBB & Bitboard::fromSquare(threat)).any();
+        eval += THREAT_BY_BISHOP[defended][static_cast<int>(threatened)];
+    }
+
+    Bitboard rookThreats = evalData.attackedBy[us][PieceType::ROOK] & board.pieces(them);
+    while (rookThreats.any())
+    {
+        int threat = rookThreats.poplsb();
+        PieceType threatened = getPieceType(board.pieceAt(threat));
+        bool defended = (defendedBB & Bitboard::fromSquare(threat)).any();
+        eval += THREAT_BY_ROOK[defended][static_cast<int>(threatened)];
+    }
+
+    Bitboard queenThreats = evalData.attackedBy[us][PieceType::QUEEN] & board.pieces(them);
+    while (queenThreats.any())
+    {
+        int threat = queenThreats.poplsb();
+        PieceType threatened = getPieceType(board.pieceAt(threat));
+        bool defended = (defendedBB & Bitboard::fromSquare(threat)).any();
+        eval += THREAT_BY_QUEEN[defended][static_cast<int>(threatened)];
+    }
     return eval;
 }
 
