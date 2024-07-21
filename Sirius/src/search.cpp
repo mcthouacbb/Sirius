@@ -363,10 +363,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     else if (depth >= minIIRDepth)
         depth--;
 
-    stack->staticEval = inCheck ? SCORE_NONE : eval::evaluate(board);
+    stack->staticEval = inCheck ? SCORE_NONE : history.correctStaticEval(eval::evaluate(board), board.sideToMove(), board.pawnKey());
     bool improving = !inCheck && rootPly > 1 && stack->staticEval > stack[-2].staticEval;
-
-    stack->eval = history.correctStaticEval(stack->staticEval, board.sideToMove(), board.pawnKey());
+    stack->eval = stack->staticEval;
     if (!inCheck && ttHit && (
         ttData.bound == TTEntry::Bound::EXACT ||
         (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= stack->eval) ||
@@ -622,7 +621,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     }
 
     bool inCheck = board.checkers().any();
-    stack->staticEval = inCheck ? SCORE_NONE : eval::evaluate(board, &thread);
+    stack->staticEval = inCheck ? SCORE_NONE : thread.history.correctStaticEval(eval::evaluate(board, &thread), board.sideToMove(), board.pawnKey());
 
     stack->eval = stack->staticEval;
     if (!inCheck && ttHit && (
