@@ -57,47 +57,47 @@ SEARCH_PARAM(histMalusQuadratic, 4, 1, 8, 1);
 SEARCH_PARAM(histMalusLinear, 200, 64, 384, 32);
 SEARCH_PARAM(histMalusOffset, 68, 64, 768, 64);
 
-SEARCH_PARAM(aspInitDelta, 12, 8, 30, 4);
-SEARCH_PARAM(minAspDepth, 5, 3, 7, 1);
+SEARCH_PARAM(aspInitDelta, 8, 8, 30, 4);
+SEARCH_PARAM(minAspDepth, 2, 3, 7, 1);
 SEARCH_PARAM(aspWideningFactor, 7, 1, 32, 2);
 
-SEARCH_PARAM(minIIRDepth, 2, 2, 9, 1);
+SEARCH_PARAM(minIIRDepth, 1, 1, 9, 1);
 
-SEARCH_PARAM(rfpMaxDepth, 8, 4, 10, 1);
-SEARCH_PARAM(rfpImprovingMargin, 40, 30, 80, 8);
-SEARCH_PARAM(rfpMargin, 86, 50, 100, 8);
-SEARCH_PARAM(rfpHistDivisor, 410, 256, 512, 16);
+SEARCH_PARAM(rfpMaxDepth, 12, 4, 10, 1);
+SEARCH_PARAM(rfpImprovingMargin, 10, 30, 80, 8);
+SEARCH_PARAM(rfpMargin, 20, 50, 100, 8);
+SEARCH_PARAM(rfpHistDivisor, 205, 256, 512, 16);
 
 SEARCH_PARAM(nmpMinDepth, 2, 2, 5, 1);
 SEARCH_PARAM(nmpBaseReduction, 5, 2, 5, 1);
-SEARCH_PARAM(nmpDepthReductionScale, 4, 3, 6, 1);
+SEARCH_PARAM(nmpDepthReductionScale, 3, 3, 6, 1);
 SEARCH_PARAM(nmpEvalReductionScale, 208, 50, 300, 10);
-SEARCH_PARAM(nmpMaxEvalReduction, 4, 2, 5, 1);
+SEARCH_PARAM(nmpMaxEvalReduction, 8, 2, 5, 1);
 
-SEARCH_PARAM(fpBaseMargin, 160, 60, 360, 12);
-SEARCH_PARAM(fpDepthMargin, 124, 10, 180, 12);
-SEARCH_PARAM(fpMaxDepth, 4, 4, 9, 1);
+SEARCH_PARAM(fpBaseMargin, 80, 60, 360, 12);
+SEARCH_PARAM(fpDepthMargin, 50, 10, 180, 12);
+SEARCH_PARAM(fpMaxDepth, 8, 4, 9, 1);
 
 SEARCH_PARAM(lmpMaxDepth, 10, 4, 11, 1);
-SEARCH_PARAM(lmpMinMovesBase, 2, 2, 7, 1);
+SEARCH_PARAM(lmpMinMovesBase, 1, 2, 7, 1);
 
-SEARCH_PARAM(maxSeePruneDepth, 7, 6, 11, 1);
-SEARCH_PARAM(seePruneMarginNoisy, -99, -120, -30, 6);
-SEARCH_PARAM(seePruneMarginQuiet, -66, -120, -30, 6);
+SEARCH_PARAM(maxSeePruneDepth, 10, 6, 11, 1);
+SEARCH_PARAM(seePruneMarginNoisy, -50, -120, -30, 6);
+SEARCH_PARAM(seePruneMarginQuiet, -33, -120, -30, 6);
 
 SEARCH_PARAM(maxHistPruningDepth, 5, 2, 8, 1);
-SEARCH_PARAM(histPruningMargin, 1729, 512, 4096, 128);
+SEARCH_PARAM(histPruningMargin, 500, 512, 4096, 128);
 
-SEARCH_PARAM(lmrMinDepth, 3, 2, 5, 1);
-SEARCH_PARAM(lmrMinMovesNonPv, 3, 1, 6, 1);
-SEARCH_PARAM(lmrMinMovesPv, 4, 2, 8, 1);
+SEARCH_PARAM(lmrMinDepth, 2, 2, 5, 1);
+SEARCH_PARAM(lmrMinMovesNonPv, 1, 1, 6, 1);
+SEARCH_PARAM(lmrMinMovesPv, 1, 2, 8, 1);
 SEARCH_PARAM(lmrFailHighCountMargin, 2, 2, 12, 1);
 
-SEARCH_PARAM_CALLBACK(lmrBase, 65, -50, 200, 10, updateLmrTable);
-SEARCH_PARAM_CALLBACK(lmrDivisor, 224, 180, 320, 10, updateLmrTable);
-SEARCH_PARAM(lmrHistDivisor, 8735, 4096, 16384, 512);
+SEARCH_PARAM_CALLBACK(lmrBase, 134, -50, 200, 10, updateLmrTable);
+SEARCH_PARAM_CALLBACK(lmrDivisor, 112, 180, 320, 10, updateLmrTable);
+SEARCH_PARAM(lmrHistDivisor, 4367, 4096, 16384, 512);
 
-SEARCH_PARAM(qsFpMargin, 60, 0, 250, 16);
+SEARCH_PARAM(qsFpMargin, 30, 0, 250, 16);
 
 
 }
