@@ -490,14 +490,14 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         if (movesPlayed >= (pvNode ? lmrMinMovesPv : lmrMinMovesNonPv) &&
             depth >= lmrMinDepth &&
-            quietLosing &&
-            !inCheck)
+            quietLosing)
         {
             int reduction = baseLMR;
 
             reduction += !improving;
             reduction -= pvNode;
             reduction -= givesCheck;
+            reduction -= inCheck;
             reduction += cutnode;
             reduction += stack[1].failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin);
 
