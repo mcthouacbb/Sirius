@@ -14,7 +14,7 @@ int mvv(const Board& board, Move move)
     constexpr int MVV_VALUES[6] = {
         100, 300, 300, 450, 900, 0
     };
-    return MVV_VALUES[dstPiece];
+    return 8 * MVV_VALUES[dstPiece];
 }
 
 int promotionBonus(Move move)
