@@ -167,7 +167,7 @@ PackedScore evaluatePawns(const Board& board, EvalData& evalData, PawnTable* paw
 }
 
 template<Color us>
-PackedScore evaluateKingPawn(const Board& board, const EvalData& evalData)
+PackedScore evaluatePassedPawns(const Board& board, const EvalData& evalData)
 {
     constexpr Color them = ~us;
     uint32_t ourKing = board.kingSq(us);
@@ -175,13 +175,21 @@ PackedScore evaluateKingPawn(const Board& board, const EvalData& evalData)
 
     Bitboard passers = evalData.passedPawns & board.pieces(us);
 
+    Bitboard nonPawnEnemies = board.pieces(them) & ~board.pieces(PieceType::PAWN);
+
     PackedScore eval{0, 0};
 
     while (passers.any())
     {
         uint32_t passer = passers.poplsb();
+        uint32_t enemyKingDist = chebyshev(theirKing, passer);
+
         eval += OUR_PASSER_PROXIMITY[chebyshev(ourKing, passer)];
-        eval += THEIR_PASSER_PROXIMITY[chebyshev(theirKing, passer)];
+        eval += THEIR_PASSER_PROXIMITY[enemyKingDist];
+
+        uint32_t promotionDist = 7 - relativeRankOf<us>(passer);
+        if (nonPawnEnemies.empty() && promotionDist < enemyKingDist - (board.sideToMove() == them))
+            eval += RULE_OF_SQUARE;
     }
 
     return eval;
@@ -364,7 +372,7 @@ int evaluate(const Board& board, search::SearchThread* thread)
     eval += evaluateKings<Color::WHITE>(board, evalData) - evaluateKings<Color::BLACK>(board, evalData);
 
     eval += evaluatePawns(board, evalData, thread ? &thread->pawnTable : nullptr);
-    eval += evaluateKingPawn<Color::WHITE>(board, evalData) - evaluateKingPawn<Color::BLACK>(board, evalData);
+    eval += evaluatePassedPawns<Color::WHITE>(board, evalData) - evaluatePassedPawns<Color::BLACK>(board, evalData);
     eval += evaluateThreats<Color::WHITE>(board, evalData) - evaluateThreats<Color::BLACK>(board, evalData);
 
     eval += (color == Color::WHITE ? TEMPO : -TEMPO);
