@@ -106,6 +106,13 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
             if ((Bitboard::fromSquare(sq) & outposts).any())
                 eval += KNIGHT_OUTPOST;
         }
+
+        if constexpr (piece == PieceType::BISHOP)
+        {
+            bool lightSquare = (Bitboard::fromSquare(sq) & LIGHT_SQUARES).any();
+            Bitboard sameColorPawns = board.pieces(us, PieceType::PAWN) & (lightSquare ? LIGHT_SQUARES : DARK_SQUARES);
+            eval += BISHOP_PAWNS[std::min(sameColorPawns.popcount(), 6u)];
+        }
     }
 
     return eval;
