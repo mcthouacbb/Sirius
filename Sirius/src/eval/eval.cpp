@@ -247,6 +247,13 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
         eval += THREAT_BY_QUEEN[defended][static_cast<int>(threatened)];
     }
 
+    Bitboard kingThreats = evalData.attackedBy[us][PieceType::KING] & board.pieces(them) & ~defendedBB;
+    while (kingThreats.any())
+    {
+        PieceType threatened = getPieceType(board.pieceAt(kingThreats.poplsb()));
+        eval += THREAT_BY_KING[static_cast<int>(threatened)];
+    }
+
     Bitboard nonPawnEnemies = board.pieces(them) & ~board.pieces(PieceType::PAWN);
 
     Bitboard safe = ~defendedBB | (evalData.attacked[us] & ~evalData.attackedBy[them][PieceType::PAWN]);
