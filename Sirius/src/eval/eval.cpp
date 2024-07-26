@@ -105,6 +105,10 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
             Bitboard outposts = outpostSquares & ~evalData.pawnAttackSpans[them] & evalData.attackedBy[us][PieceType::PAWN];
             if ((Bitboard::fromSquare(sq) & outposts).any())
                 eval += KNIGHT_OUTPOST;
+
+            uint32_t above = sq + attacks::pawnPushOffset<us>();
+            if ((Bitboard::fromSquare(above) & ourPawns).any())
+                eval += SHIELDED_KNIGHT;
         }
 
         if constexpr (piece == PieceType::BISHOP)
@@ -112,6 +116,10 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
             bool lightSquare = (Bitboard::fromSquare(sq) & LIGHT_SQUARES).any();
             Bitboard sameColorPawns = board.pieces(us, PieceType::PAWN) & (lightSquare ? LIGHT_SQUARES : DARK_SQUARES);
             eval += BISHOP_PAWNS[std::min(sameColorPawns.popcount(), 6u)];
+
+            uint32_t above = sq + attacks::pawnPushOffset<us>();
+            if ((Bitboard::fromSquare(above) & ourPawns).any())
+                eval += SHIELDED_BISHOP;
         }
     }
 
