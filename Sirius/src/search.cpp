@@ -435,9 +435,10 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             continue;
         bool quiet = moveIsQuiet(board, move);
         bool quietLosing = moveScore < MoveOrdering::KILLER_SCORE;
+        ExtMove extMove = ExtMove::from(board, move);
 
         int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
-        int histScore = quiet ? history.getQuietStats(threats, ExtMove::from(board, move), contHistEntries) : history.getNoisyStats(ExtMove::from(board, move));
+        int histScore = quiet ? history.getQuietStats(threats, extMove, contHistEntries) : history.getNoisyStats(extMove);
         if (quiet)
             baseLMR -= histScore / lmrHistDivisor;
 
@@ -470,7 +471,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         }
 
         m_TT.prefetch(board.keyAfter(move));
-        stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
+        stack->contHistEntry = &history.contHistEntry(extMove);
         stack->histScore = histScore;
 
         uint64_t nodesBefore = thread.nodes;
@@ -504,7 +505,14 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             int reduced = std::min(std::max(newDepth - reduction, 1), newDepth);
             score = -search(thread, reduced, stack + 1, -alpha - 1, -alpha, false, true);
             if (score > alpha && reduced < newDepth)
+            {
                 score = -search(thread, newDepth, stack + 1, -alpha - 1, -alpha, false, !cutnode);
+
+                int bonus = score <= alpha ? -historyMalus(newDepth) :
+                    score >= beta ? historyBonus(newDepth) : 0;
+
+                history.updateContHist(extMove, contHistEntries, bonus);
+            }
         }
         else if (!pvNode || movesPlayed > 1)
             score = -search(thread, newDepth, stack + 1, -alpha - 1, -alpha, false, !cutnode);
@@ -557,7 +565,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 int malus = historyMalus(depth);
                 if (quiet)
                 {
-                    history.updateQuietStats(threats, ExtMove::from(board, move), contHistEntries, bonus);
+                    history.updateQuietStats(threats, extMove, contHistEntries, bonus);
                     for (Move quietMove : quietsTried)
                     {
                         if (quietMove != move)
@@ -566,7 +574,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 }
                 else
                 {
-                    history.updateNoisyStats(ExtMove::from(board, move), bonus);
+                    history.updateNoisyStats(extMove, bonus);
                 }
 
                 for (Move noisyMove : noisiesTried)

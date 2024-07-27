@@ -78,6 +78,13 @@ void History::updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry
             updateContHist(entry, move, bonus);
 }
 
+void History::updateContHist(ExtMove move, std::span<CHEntry*> contHistEntries, int bonus)
+{
+    for (auto entry : contHistEntries)
+        if (entry)
+            updateContHist(entry, move, bonus);
+}
+
 void History::updateNoisyStats(ExtMove move, int bonus)
 {
     updateCaptHist(move, bonus);
