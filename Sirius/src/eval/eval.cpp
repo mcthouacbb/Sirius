@@ -358,8 +358,20 @@ void initEvalData(const Board& board, EvalData& evalData)
     evalData.kingRing[Color::BLACK] = (blackKingAtks | blackKingAtks.south()) & ~Bitboard::fromSquare(blackKing);
 }
 
+
+int evaluateScale(const Board& board, PackedScore eval)
+{
+    Color strongSide = eval.eg() > 0 ? Color::WHITE : Color::BLACK;
+
+    int strongPawns = board.pieces(strongSide, PieceType::PAWN).popcount();
+
+    return 80 + strongPawns * 7;
+}
+
 int evaluate(const Board& board, search::SearchThread* thread)
 {
+    constexpr int SCALE_FACTOR = 128;
+
     EvalData evalData = {};
     initEvalData(board, evalData);
 
@@ -374,16 +386,17 @@ int evaluate(const Board& board, search::SearchThread* thread)
     eval += evaluatePieces<Color::WHITE, PieceType::ROOK>(board, evalData) - evaluatePieces<Color::BLACK, PieceType::ROOK>(board, evalData);
     eval += evaluatePieces<Color::WHITE, PieceType::QUEEN>(board, evalData) - evaluatePieces<Color::BLACK, PieceType::QUEEN>(board, evalData);
 
-
     eval += evaluateKings<Color::WHITE>(board, evalData) - evaluateKings<Color::BLACK>(board, evalData);
 
     eval += evaluatePawns(board, evalData, thread ? &thread->pawnTable : nullptr);
     eval += evaluateKingPawn<Color::WHITE>(board, evalData) - evaluateKingPawn<Color::BLACK>(board, evalData);
     eval += evaluateThreats<Color::WHITE>(board, evalData) - evaluateThreats<Color::BLACK>(board, evalData);
 
+    int scale = evaluateScale(board, eval);
+
     eval += (color == Color::WHITE ? TEMPO : -TEMPO);
 
-    return (color == Color::WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg(), board.evalState().phase);
+    return (color == Color::WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg() * scale / SCALE_FACTOR, board.evalState().phase);
 }
 
 
