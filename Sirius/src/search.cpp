@@ -427,6 +427,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     int bestScore = -SCORE_MAX;
     int movesPlayed = 0;
+    bool noisyTTMove = ttData.move != Move() && !moveIsQuiet(board, ttData.move);
 
     for (int moveIdx = 0; moveIdx < static_cast<int>(moves.size()); moveIdx++)
     {
@@ -495,6 +496,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             int reduction = baseLMR;
 
             reduction += !improving;
+            reduction += noisyTTMove;
             reduction -= pvNode;
             reduction -= givesCheck;
             reduction -= inCheck;
