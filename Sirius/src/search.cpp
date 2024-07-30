@@ -363,8 +363,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     else if (depth >= minIIRDepth)
         depth--;
 
-    //if (board.psqtState().needsRefresh)
-        board.refreshPsqt();
     stack->staticEval = inCheck ? SCORE_NONE : history.correctStaticEval(eval::evaluate(board), board.sideToMove(), board.pawnKey());
     bool improving = !inCheck && rootPly > 1 && stack->staticEval > stack[-2].staticEval;
     stack->eval = stack->staticEval;

@@ -389,7 +389,7 @@ PackedScore evaluatePsqt(const Board& board)
     return eval;
 }
 
-int evaluate(const Board& board, search::SearchThread* thread)
+int evaluate(Board& board, search::SearchThread* thread)
 {
     constexpr int SCALE_FACTOR = 128;
 
@@ -400,6 +400,8 @@ int evaluate(const Board& board, search::SearchThread* thread)
         return SCORE_DRAW;
 
     Color color = board.sideToMove();
+    if (board.psqtState().needsRefresh)
+        board.refreshPsqt();
     PackedScore eval = board.psqtState().materialPsqt;//evaluatePsqt(board);
     auto f = evaluatePsqt(board);
 
