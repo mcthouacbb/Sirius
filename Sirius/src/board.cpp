@@ -22,7 +22,7 @@ void Board::setToFen(const std::string_view& fen)
     currState().pieces = {};
     currState().colors = {};
 
-    currState().evalState.init();
+    currState().psqtState.init();
     currState().zkey.value = 0;
     currState().pawnKey.value = 0;
 
@@ -99,6 +99,7 @@ void Board::setToFen(const std::string_view& fen)
                 goto done;
         }
     }
+
 done:
     i++;
     m_SideToMove = fen[i] == 'w' ? Color::WHITE : Color::BLACK;
@@ -177,7 +178,7 @@ void Board::setToEpd(const std::string_view& epd)
     currState().pieces = {};
     currState().colors = {};
 
-    currState().evalState.init();
+    currState().psqtState.init();
     currState().zkey.value = 0;
     currState().pawnKey.value = 0;
 
@@ -1034,7 +1035,7 @@ void Board::addPiece(int pos, Color color, PieceType piece)
     currState().pieces[static_cast<int>(piece)] |= posBB;
     currState().colors[static_cast<int>(color)] |= posBB;
 
-    currState().evalState.addPiece(color, piece, pos);
+    currState().psqtState.addPiece(color, piece, pos);
 }
 
 void Board::addPiece(int pos, Piece piece)
@@ -1044,7 +1045,7 @@ void Board::addPiece(int pos, Piece piece)
     currState().pieces[static_cast<int>(getPieceType(piece))] |= posBB;
     currState().colors[static_cast<int>(getPieceColor(piece))] |= posBB;
 
-    currState().evalState.addPiece(getPieceColor(piece), getPieceType(piece), pos);
+    currState().psqtState.addPiece(getPieceColor(piece), getPieceType(piece), pos);
 }
 
 void Board::removePiece(int pos)
@@ -1056,7 +1057,7 @@ void Board::removePiece(int pos)
     currState().pieces[static_cast<int>(pieceType)] ^= posBB;
     currState().colors[static_cast<int>(color)] ^= posBB;
 
-    currState().evalState.removePiece(color, pieceType, pos);
+    currState().psqtState.removePiece(color, pieceType, pos);
 }
 
 void Board::movePiece(int src, int dst)
@@ -1073,5 +1074,5 @@ void Board::movePiece(int src, int dst)
     currState().pieces[static_cast<int>(pieceType)] ^= moveBB;
     currState().colors[static_cast<int>(color)] ^= moveBB;
 
-    currState().evalState.movePiece(color, pieceType, src, dst);
+    currState().psqtState.movePiece(color, pieceType, src, dst);
 }

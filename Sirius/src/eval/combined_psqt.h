@@ -23,9 +23,9 @@ constexpr auto init()
 
 constexpr auto combinedPsqt = init();
 
-inline PackedScore combinedPsqtScore(Color color, PieceType piece, int square)
+inline PackedScore combinedPsqtScore(int bucket, Color color, PieceType piece, int square)
 {
-    return combinedPsqt[static_cast<int>(color)][static_cast<int>(piece)][square];
+    return combinedPsqt[static_cast<int>(color)][static_cast<int>(piece)][square ^ (bucket * 0b111)];
 }
 
 

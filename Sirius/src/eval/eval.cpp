@@ -380,9 +380,7 @@ PackedScore evaluatePsqt(const Board& board)
             while (pieces.any())
             {
                 uint32_t sq = pieces.poplsb();
-                if (mirror)
-                    sq ^= 7;
-                PackedScore d = combinedPsqtScore(c, pt, sq);
+                PackedScore d = combinedPsqtScore(mirror, c, pt, sq);
                 eval += d;
             }
         }
@@ -402,7 +400,11 @@ int evaluate(const Board& board, search::SearchThread* thread)
         return SCORE_DRAW;
 
     Color color = board.sideToMove();
-    PackedScore eval = evaluatePsqt(board);//board.evalState().materialPsqt;
+    PackedScore eval = board.psqtState().materialPsqt;//evaluatePsqt(board);
+    auto f = evaluatePsqt(board);
+
+    if (eval.mg() != f.mg() || eval.eg() != f.eg())
+        __debugbreak();
 
     eval += evaluatePieces<Color::WHITE, PieceType::KNIGHT>(board, evalData) - evaluatePieces<Color::BLACK, PieceType::KNIGHT>(board, evalData);
     eval += evaluatePieces<Color::WHITE, PieceType::BISHOP>(board, evalData) - evaluatePieces<Color::BLACK, PieceType::BISHOP>(board, evalData);
@@ -419,7 +421,7 @@ int evaluate(const Board& board, search::SearchThread* thread)
 
     eval += (color == Color::WHITE ? TEMPO : -TEMPO);
 
-    return (color == Color::WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg() * scale / SCALE_FACTOR, board.evalState().phase);
+    return (color == Color::WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg() * scale / SCALE_FACTOR, board.psqtState().phase);
 }
 
 

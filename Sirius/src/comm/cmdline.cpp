@@ -247,8 +247,8 @@ void CmdLine::staticEvalCommand()
 {
     auto lock = lockStdout();
     std::cout << "Eval: " << eval::evaluate(m_Board) << std::endl;
-    std::cout << "Phase: " << m_Board.evalState().phase << std::endl;
-    std::cout << "Piece Square Tables: " << m_Board.evalState().materialPsqt.mg() << ' ' << m_Board.evalState().materialPsqt.eg() << std::endl;
+    std::cout << "Phase: " << m_Board.psqtState().phase << std::endl;
+    std::cout << "Piece Square Tables: " << m_Board.psqtState().materialPsqt.mg() << ' ' << m_Board.psqtState().materialPsqt.eg() << std::endl;
 }
 
 void CmdLine::searchCommand(std::istringstream& stream)
