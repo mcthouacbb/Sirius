@@ -97,7 +97,6 @@ public:
     ZKey keyAfter(Move move) const;
 
     const eval::PsqtState& psqtState() const;
-    void refreshPsqt();
 private:
     const BoardState& currState() const;
     BoardState& currState();
@@ -237,11 +236,6 @@ inline Bitboard Board::attackersTo(uint32_t square) const
 inline const eval::PsqtState& Board::psqtState() const
 {
     return currState().psqtState;
-}
-
-inline void Board::refreshPsqt()
-{
-    currState().psqtState.refresh(*this);
 }
 
 inline Bitboard Board::checkers() const

@@ -8,6 +8,6 @@
 namespace eval
 {
 
-int evaluate(Board& board, search::SearchThread* thread = nullptr);
+int evaluate(const Board& board, search::SearchThread* thread = nullptr);
 
 }

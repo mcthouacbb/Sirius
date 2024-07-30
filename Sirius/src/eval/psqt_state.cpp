@@ -4,24 +4,31 @@
 namespace eval
 {
 
-void PsqtState::refresh(const Board& board)
+void Accumulator::refresh(const Board& board, Color c)
 {
     materialPsqt = PackedScore(0, 0);
-    for (Color c : {Color::WHITE, Color::BLACK})
+    bucket = getKingBucket(board.kingSq(c));
+    for (PieceType pt : {PieceType::PAWN, PieceType::KNIGHT, PieceType::BISHOP, PieceType::ROOK, PieceType::QUEEN, PieceType::KING})
     {
-        buckets[static_cast<int>(c)] = getKingBucket(board.kingSq(c));
-        for (PieceType pt : {PieceType::PAWN, PieceType::KNIGHT, PieceType::BISHOP, PieceType::ROOK, PieceType::QUEEN, PieceType::KING})
+        Bitboard pieces = board.pieces(c, pt);
+        while (pieces.any())
         {
-            Bitboard pieces = board.pieces(c, pt);
-            while (pieces.any())
-            {
-                uint32_t sq = pieces.poplsb();
-                PackedScore d = combinedPsqtScore(buckets[static_cast<int>(c)], c, pt, sq);
-                materialPsqt += d;
-            }
+            uint32_t sq = pieces.poplsb();
+            PackedScore d = combinedPsqtScore(bucket, c, pt, sq);
+            materialPsqt += d;
         }
     }
     needsRefresh = false;
+}
+
+PackedScore PsqtState::evaluate(const Board& board) const
+{
+    if (accumulators[static_cast<int>(Color::WHITE)].needsRefresh)
+        accumulators[static_cast<int>(Color::WHITE)].refresh(board, Color::WHITE);
+    if (accumulators[static_cast<int>(Color::BLACK)].needsRefresh)
+        accumulators[static_cast<int>(Color::BLACK)].refresh(board, Color::BLACK);
+
+    return accumulators[static_cast<int>(Color::WHITE)].materialPsqt + accumulators[static_cast<int>(Color::BLACK)].materialPsqt;
 }
 
 
