@@ -380,15 +380,10 @@ PackedScore evaluatePsqt(const Board& board)
             while (pieces.any())
             {
                 uint32_t sq = pieces.poplsb();
-                if (c == Color::WHITE)
-                    sq ^= 56;
                 if (mirror)
                     sq ^= 7;
-                PackedScore d = MATERIAL[static_cast<int>(pt)] + PSQT[static_cast<int>(pt)][sq];
-                if (c == Color::WHITE)
-                    eval += d;
-                else
-                    eval -= d;
+                PackedScore d = combinedPsqtScore(c, pt, sq);
+                eval += d;
             }
         }
     }
