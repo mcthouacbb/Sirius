@@ -27,17 +27,20 @@ struct Accumulator
 
     void addPiece(Color color, PieceType piece, int square)
     {
-        materialPsqt += combinedPsqtScore(bucket, color, piece, square);
+        if (!needsRefresh)
+            materialPsqt += combinedPsqtScore(bucket, color, piece, square);
     }
 
     void removePiece(Color color, PieceType piece, int square)
     {
-        materialPsqt -= combinedPsqtScore(bucket, color, piece, square);
+        if (!needsRefresh)
+            materialPsqt -= combinedPsqtScore(bucket, color, piece, square);
     }
 
     void movePiece(Color color, PieceType piece, int src, int dst)
     {
-        materialPsqt += combinedPsqtScore(bucket, color, piece, dst) - combinedPsqtScore(bucket, color, piece, src);
+        if (!needsRefresh)
+            materialPsqt += combinedPsqtScore(bucket, color, piece, dst) - combinedPsqtScore(bucket, color, piece, src);
     }
 };
 
@@ -57,7 +60,7 @@ struct PsqtState
 inline void PsqtState::init()
 {
     phase = TOTAL_PHASE;
-    accumulators.fill({false, -1, PackedScore(0, 0)});
+    accumulators.fill({true, -1, PackedScore(0, 0)});
 }
 
 inline void PsqtState::addPiece(Color color, PieceType piece, int square)

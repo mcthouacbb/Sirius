@@ -401,6 +401,9 @@ int evaluate(const Board& board, search::SearchThread* thread)
 
     Color color = board.sideToMove();
     PackedScore eval = board.psqtState().evaluate(board);
+    PackedScore f = evaluatePsqt(board);
+    if (f.mg() != eval.mg() && f.eg() != eval.eg())
+        __debugbreak();
 
     eval += evaluatePieces<Color::WHITE, PieceType::KNIGHT>(board, evalData) - evaluatePieces<Color::BLACK, PieceType::KNIGHT>(board, evalData);
     eval += evaluatePieces<Color::WHITE, PieceType::BISHOP>(board, evalData) - evaluatePieces<Color::BLACK, PieceType::BISHOP>(board, evalData);
