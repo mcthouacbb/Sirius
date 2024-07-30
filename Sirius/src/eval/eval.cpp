@@ -368,6 +368,34 @@ int evaluateScale(const Board& board, PackedScore eval)
     return 80 + strongPawns * 7;
 }
 
+PackedScore evaluatePsqt(const Board& board)
+{
+    PackedScore eval{0, 0};
+    for (Color c : {Color::WHITE, Color::BLACK})
+    {
+        bool mirror = fileOf(board.kingSq(c)) >= 4;
+        for (PieceType pt : {PieceType::PAWN, PieceType::KNIGHT, PieceType::BISHOP, PieceType::ROOK, PieceType::QUEEN, PieceType::KING})
+        {
+            Bitboard pieces = board.pieces(c, pt);
+            while (pieces.any())
+            {
+                uint32_t sq = pieces.poplsb();
+                if (c == Color::WHITE)
+                    sq ^= 56;
+                if (mirror)
+                    sq ^= 7;
+                PackedScore d = MATERIAL[static_cast<int>(pt)] + PSQT[static_cast<int>(pt)][sq];
+                if (c == Color::WHITE)
+                    eval += d;
+                else
+                    eval -= d;
+            }
+        }
+    }
+
+    return eval;
+}
+
 int evaluate(const Board& board, search::SearchThread* thread)
 {
     constexpr int SCALE_FACTOR = 128;
@@ -379,7 +407,7 @@ int evaluate(const Board& board, search::SearchThread* thread)
         return SCORE_DRAW;
 
     Color color = board.sideToMove();
-    PackedScore eval = board.evalState().materialPsqt;
+    PackedScore eval = evaluatePsqt(board);//board.evalState().materialPsqt;
 
     eval += evaluatePieces<Color::WHITE, PieceType::KNIGHT>(board, evalData) - evaluatePieces<Color::BLACK, PieceType::KNIGHT>(board, evalData);
     eval += evaluatePieces<Color::WHITE, PieceType::BISHOP>(board, evalData) - evaluatePieces<Color::BLACK, PieceType::BISHOP>(board, evalData);
