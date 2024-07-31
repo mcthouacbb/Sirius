@@ -19,35 +19,31 @@ inline int getKingBucket(int kingSq)
 
 struct Accumulator
 {
-    bool needsRefresh;
-    int bucket;
-    PackedScore materialPsqt;
-
-    void refresh(const Board& board, Color c);
+    std::array<PackedScore, BUCKET_COUNT> materialPsqt;
 
     void addPiece(Color color, PieceType piece, int square)
     {
-        if (!needsRefresh)
-            materialPsqt += combinedPsqtScore(bucket, color, piece, square);
+        for (int bucket = 0; bucket < BUCKET_COUNT; bucket++)
+            materialPsqt[bucket] += combinedPsqtScore(bucket, color, piece, square);
     }
 
     void removePiece(Color color, PieceType piece, int square)
     {
-        if (!needsRefresh)
-            materialPsqt -= combinedPsqtScore(bucket, color, piece, square);
+        for (int bucket = 0; bucket < BUCKET_COUNT; bucket++)
+            materialPsqt[bucket] -= combinedPsqtScore(bucket, color, piece, square);
     }
 
     void movePiece(Color color, PieceType piece, int src, int dst)
     {
-        if (!needsRefresh)
-            materialPsqt += combinedPsqtScore(bucket, color, piece, dst) - combinedPsqtScore(bucket, color, piece, src);
+        for (int bucket = 0; bucket < BUCKET_COUNT; bucket++)
+            materialPsqt[bucket] += combinedPsqtScore(bucket, color, piece, dst) - combinedPsqtScore(bucket, color, piece, src);
     }
 };
 
 struct PsqtState
 {
     int phase;
-    mutable std::array<Accumulator, 2> accumulators;
+    std::array<Accumulator, 2> accumulators;
 
     void init();
     PackedScore evaluate(const Board& board) const;
@@ -60,32 +56,24 @@ struct PsqtState
 inline void PsqtState::init()
 {
     phase = TOTAL_PHASE;
-    accumulators.fill({true, -1, PackedScore(0, 0)});
+    accumulators.fill({{PackedScore(0, 0), PackedScore(0, 0)}});
 }
 
 inline void PsqtState::addPiece(Color color, PieceType piece, int square)
 {
-    auto& acc = accumulators[static_cast<int>(color)];
-    if (!acc.needsRefresh)
-        accumulators[static_cast<int>(color)].addPiece(color, piece, square);
+    accumulators[static_cast<int>(color)].addPiece(color, piece, square);
     phase -= getPiecePhase(piece);
 }
 
 inline void PsqtState::removePiece(Color color, PieceType piece, int square)
 {
-    auto& acc = accumulators[static_cast<int>(color)];
-    if (!acc.needsRefresh)
-        acc.removePiece(color, piece, square);
+    accumulators[static_cast<int>(color)].removePiece(color, piece, square);
     phase += getPiecePhase(piece);
 }
 
 inline void PsqtState::movePiece(Color color, PieceType piece, int src, int dst)
 {
-    auto& acc = accumulators[static_cast<int>(color)];
-    if (piece == PieceType::KING && getKingBucket(src) != getKingBucket(dst))
-        acc.needsRefresh = true;
-    else if (!acc.needsRefresh)
-        acc.movePiece(color, piece, src, dst);
+    accumulators[static_cast<int>(color)].movePiece(color, piece, src, dst);
 }
 
 }
