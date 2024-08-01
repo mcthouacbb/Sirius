@@ -359,19 +359,19 @@ void initEvalData(const Board& board, EvalData& evalData)
 }
 
 
-int evaluateScale(const Board& board, PackedScore eval)
+int scaleEGEval(const Board& board, int egEval)
 {
-    Color strongSide = eval.eg() > 0 ? Color::WHITE : Color::BLACK;
+    Color strongSide = egEval > 0 ? Color::WHITE : Color::BLACK;
 
     int strongPawns = board.pieces(strongSide, PieceType::PAWN).popcount();
 
-    return 80 + strongPawns * 7;
+    egEval = egEval * (80 + strongPawns * 7) / 128;
+    egEval = egEval * (200 - board.halfMoveClock()) / 200;
+    return egEval;
 }
 
 int evaluate(const Board& board, search::SearchThread* thread)
 {
-    constexpr int SCALE_FACTOR = 128;
-
     EvalData evalData = {};
     initEvalData(board, evalData);
 
@@ -392,11 +392,9 @@ int evaluate(const Board& board, search::SearchThread* thread)
     eval += evaluateKingPawn<Color::WHITE>(board, evalData) - evaluateKingPawn<Color::BLACK>(board, evalData);
     eval += evaluateThreats<Color::WHITE>(board, evalData) - evaluateThreats<Color::BLACK>(board, evalData);
 
-    int scale = evaluateScale(board, eval);
-
     eval += (color == Color::WHITE ? TEMPO : -TEMPO);
 
-    return (color == Color::WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg() * scale / SCALE_FACTOR, board.psqtState().phase);
+    return (color == Color::WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), scaleEGEval(board, eval.eg()), board.psqtState().phase);
 }
 
 
