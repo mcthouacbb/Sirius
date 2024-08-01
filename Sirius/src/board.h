@@ -2,7 +2,7 @@
 
 #include "defs.h"
 #include "bitboard.h"
-#include "eval/eval_state.h"
+#include "eval/psqt_state.h"
 #include "zobrist.h"
 
 #include <string_view>
@@ -34,7 +34,7 @@ struct BoardState
     ZKey pawnKey;
     CheckInfo checkInfo;
     Bitboard threats;
-    eval::EvalState evalState;
+    eval::PsqtState psqtState;
 };
 
 class Board
@@ -96,7 +96,7 @@ public:
     bool isLegal(Move move) const;
     ZKey keyAfter(Move move) const;
 
-    const eval::EvalState& evalState() const;
+    const eval::PsqtState& psqtState() const;
 private:
     const BoardState& currState() const;
     BoardState& currState();
@@ -233,9 +233,9 @@ inline Bitboard Board::attackersTo(uint32_t square) const
     return attackersTo(square, allPieces());
 }
 
-inline const eval::EvalState& Board::evalState() const
+inline const eval::PsqtState& Board::psqtState() const
 {
-    return currState().evalState;
+    return currState().psqtState;
 }
 
 inline Bitboard Board::checkers() const
