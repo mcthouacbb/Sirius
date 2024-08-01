@@ -368,27 +368,6 @@ int evaluateScale(const Board& board, PackedScore eval)
     return 80 + strongPawns * 7;
 }
 
-PackedScore evaluatePsqt(const Board& board)
-{
-    PackedScore eval{0, 0};
-    for (Color c : {Color::WHITE, Color::BLACK})
-    {
-        bool mirror = fileOf(board.kingSq(c)) >= 4;
-        for (PieceType pt : {PieceType::PAWN, PieceType::KNIGHT, PieceType::BISHOP, PieceType::ROOK, PieceType::QUEEN, PieceType::KING})
-        {
-            Bitboard pieces = board.pieces(c, pt);
-            while (pieces.any())
-            {
-                uint32_t sq = pieces.poplsb();
-                PackedScore d = combinedPsqtScore(mirror, c, pt, sq);
-                eval += d;
-            }
-        }
-    }
-
-    return eval;
-}
-
 int evaluate(const Board& board, search::SearchThread* thread)
 {
     constexpr int SCALE_FACTOR = 128;
