@@ -154,10 +154,19 @@ constexpr int Square::operator-(Square other) const
     return value() - other.value();
 }
 
+// for some reason msvc complains that there is unreachable code here
+// even though there clearly isn't
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4702)
+#endif
 constexpr int Square::value() const
 {
     return static_cast<int>(m_Value);
 }
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 constexpr int Square::rank() const
 {
