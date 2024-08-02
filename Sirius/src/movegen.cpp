@@ -69,7 +69,7 @@ void genKingMoves(const Board& board, MoveList& moves)
 {
     Bitboard usBB = board.pieces(color);
     Bitboard oppBB = board.pieces(~color);
-    uint32_t kingSq = board.kingSq(color);
+    Square kingSq = board.kingSq(color);
 
     Bitboard kingAttacks = attacks::kingAttacks(kingSq);
     kingAttacks &= ~usBB;
@@ -77,7 +77,7 @@ void genKingMoves(const Board& board, MoveList& moves)
         kingAttacks &= oppBB;
     while (kingAttacks.any())
     {
-        uint32_t dst = kingAttacks.poplsb();
+        Square dst = kingAttacks.poplsb();
         moves.push_back(Move(kingSq, dst, MoveType::NONE));
     }
 
@@ -109,11 +109,11 @@ void genPieceMoves(const Board& board, MoveList& moves, Bitboard moveMask)
 
     while (pieceBB.any())
     {
-        uint32_t from = pieceBB.poplsb();
+        Square from = pieceBB.poplsb();
         Bitboard attacks = attacks::pieceAttacks<piece>(from, allPieces) & moveMask;
         while (attacks.any())
         {
-            uint32_t to = attacks.poplsb();
+            Square to = attacks.poplsb();
             moves.push_back(Move(from, to, MoveType::NONE));
         }
     }
@@ -131,31 +131,31 @@ void genPawnMoves(const Board& board, MoveList& moves, Bitboard moveMask)
         Bitboard pawnPushes = attacks::pawnPushes<color>(pawns);
         pawnPushes &= ~allPieces;
 
-        Bitboard doublePushes = attacks::pawnPushes<color>(pawnPushes & Bitboard::nthRank<color, 2>());
+        Bitboard doublePushes = attacks::pawnPushes<color>(pawnPushes & Bitboard::nthRank<color, RANK_3>());
         doublePushes &= ~allPieces;
         doublePushes &= moveMask;
 
         pawnPushes &= moveMask;
 
-        Bitboard promotions = pawnPushes & Bitboard::nthRank<color, 7>();
+        Bitboard promotions = pawnPushes & Bitboard::nthRank<color, RANK_8>();
 
         pawnPushes ^= promotions;
 
         while (pawnPushes.any())
         {
-            uint32_t push = pawnPushes.poplsb();
+            Square push = pawnPushes.poplsb();
             moves.push_back(Move(push - attacks::pawnPushOffset<color>(), push, MoveType::NONE));
         }
 
         while (doublePushes.any())
         {
-            uint32_t dPush = doublePushes.poplsb();
+            Square dPush = doublePushes.poplsb();
             moves.push_back(Move(dPush - 2 * attacks::pawnPushOffset<color>(), dPush, MoveType::NONE));
         }
 
         while (promotions.any())
         {
-            uint32_t promotion = promotions.poplsb();
+            Square promotion = promotions.poplsb();
             moves.push_back(Move(promotion - attacks::pawnPushOffset<color>(), promotion, MoveType::PROMOTION, Promotion::QUEEN));
             moves.push_back(Move(promotion - attacks::pawnPushOffset<color>(), promotion, MoveType::PROMOTION, Promotion::ROOK));
             moves.push_back(Move(promotion - attacks::pawnPushOffset<color>(), promotion, MoveType::PROMOTION, Promotion::BISHOP));
@@ -168,11 +168,11 @@ void genPawnMoves(const Board& board, MoveList& moves, Bitboard moveMask)
         pawnPushes &= ~allPieces;
         pawnPushes &= moveMask;
 
-        Bitboard promotions = pawnPushes & Bitboard::nthRank<color, 7>();
+        Bitboard promotions = pawnPushes & Bitboard::nthRank<color, RANK_8>();
 
         while (promotions.any())
         {
-            uint32_t promotion = promotions.poplsb();
+            Square promotion = promotions.poplsb();
             moves.push_back(Move(promotion - attacks::pawnPushOffset<color>(), promotion, MoveType::PROMOTION, Promotion::QUEEN));
             moves.push_back(Move(promotion - attacks::pawnPushOffset<color>(), promotion, MoveType::PROMOTION, Promotion::ROOK));
             moves.push_back(Move(promotion - attacks::pawnPushOffset<color>(), promotion, MoveType::PROMOTION, Promotion::BISHOP));
@@ -183,24 +183,24 @@ void genPawnMoves(const Board& board, MoveList& moves, Bitboard moveMask)
 
 
     Bitboard eastCaptures = attacks::pawnEastAttacks<color>(pawns);
-    if (board.epSquare() != -1 && (eastCaptures & Bitboard::fromSquare(board.epSquare())).any() && (Bitboard::fromSquare(board.epSquare() - attacks::pawnPushOffset<color>()) & moveMask).any())
-        moves.push_back(Move(board.epSquare() - attacks::pawnPushOffset<color>() - 1, board.epSquare(), MoveType::ENPASSANT));
+    if (board.epSquare() != -1 && (eastCaptures & Bitboard::fromSquare(Square(board.epSquare()))).any() && (Bitboard::fromSquare(Square(board.epSquare()) - attacks::pawnPushOffset<color>()) & moveMask).any())
+        moves.push_back(Move(Square(board.epSquare()) - attacks::pawnPushOffset<color>() - 1, Square(board.epSquare()), MoveType::ENPASSANT));
 
     eastCaptures &= oppBB;
     eastCaptures &= moveMask;
 
-    Bitboard promotions = eastCaptures & Bitboard::nthRank<color, 7>();
+    Bitboard promotions = eastCaptures & Bitboard::nthRank<color, RANK_8>();
     eastCaptures ^= promotions;
 
     while (eastCaptures.any())
     {
-        uint32_t capture = eastCaptures.poplsb();
+        Square capture = eastCaptures.poplsb();
         moves.push_back(Move(capture - attacks::pawnPushOffset<color>() - 1, capture, MoveType::NONE));
     }
 
     while (promotions.any())
     {
-        uint32_t promotion = promotions.poplsb();
+        Square promotion = promotions.poplsb();
         moves.push_back(Move(promotion - attacks::pawnPushOffset<color>() - 1, promotion, MoveType::PROMOTION, Promotion::QUEEN));
         moves.push_back(Move(promotion - attacks::pawnPushOffset<color>() - 1, promotion, MoveType::PROMOTION, Promotion::ROOK));
         moves.push_back(Move(promotion - attacks::pawnPushOffset<color>() - 1, promotion, MoveType::PROMOTION, Promotion::BISHOP));
@@ -209,24 +209,24 @@ void genPawnMoves(const Board& board, MoveList& moves, Bitboard moveMask)
 
 
     Bitboard westCaptures = attacks::pawnWestAttacks<color>(pawns);
-    if (board.epSquare() != -1 && (westCaptures & Bitboard::fromSquare(board.epSquare())).any() && (Bitboard::fromSquare(board.epSquare() - attacks::pawnPushOffset<color>()) & moveMask).any())
-        moves.push_back(Move(board.epSquare() - attacks::pawnPushOffset<color>() + 1, board.epSquare(), MoveType::ENPASSANT));
+    if (board.epSquare() != -1 && (westCaptures & Bitboard::fromSquare(Square(board.epSquare()))).any() && (Bitboard::fromSquare(Square(board.epSquare()) - attacks::pawnPushOffset<color>()) & moveMask).any())
+        moves.push_back(Move(Square(board.epSquare()) - attacks::pawnPushOffset<color>() + 1, Square(board.epSquare()), MoveType::ENPASSANT));
 
     westCaptures &= oppBB;
     westCaptures &= moveMask;
 
-    promotions = westCaptures & Bitboard::nthRank<color, 7>();
+    promotions = westCaptures & Bitboard::nthRank<color, RANK_8>();
     westCaptures ^= promotions;
 
     while (westCaptures.any())
     {
-        uint32_t capture = westCaptures.poplsb();
+        Square capture = westCaptures.poplsb();
         moves.push_back(Move(capture - attacks::pawnPushOffset<color>() + 1, capture, MoveType::NONE));
     }
 
     while (promotions.any())
     {
-        uint32_t promotion = promotions.poplsb();
+        Square promotion = promotions.poplsb();
         moves.push_back(Move(promotion - attacks::pawnPushOffset<color>() + 1, promotion, MoveType::PROMOTION, Promotion::QUEEN));
         moves.push_back(Move(promotion - attacks::pawnPushOffset<color>() + 1, promotion, MoveType::PROMOTION, Promotion::ROOK));
         moves.push_back(Move(promotion - attacks::pawnPushOffset<color>() + 1, promotion, MoveType::PROMOTION, Promotion::BISHOP));

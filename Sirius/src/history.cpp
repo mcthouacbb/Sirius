@@ -95,34 +95,34 @@ void History::updateCorrHist(int bonus, int depth, Color stm, ZKey pawnHash)
 
 int History::getMainHist(Bitboard threats, ExtMove move) const
 {
-    bool srcThreat = ((threats >> move.srcPos()) & 0x01).any();
-    bool dstThreat = ((threats >> move.dstPos()) & 0x01).any();
+    bool srcThreat = (threats & Bitboard::fromSquare(move.fromSq())).any();
+    bool dstThreat = (threats & Bitboard::fromSquare(move.toSq())).any();
     return m_MainHist[static_cast<int>(getPieceColor(move.movingPiece()))][move.fromTo()][srcThreat][dstThreat];
 }
 
 int History::getContHist(const CHEntry* entry, ExtMove move) const
 {
-    return (*entry)[static_cast<int>(move.movingPiece())][move.dstPos()];
+    return (*entry)[static_cast<int>(move.movingPiece())][move.toSq().value()];
 }
 
 int History::getCaptHist(ExtMove move) const
 {
-    return m_CaptHist[static_cast<int>(move.capturedPiece())][static_cast<int>(move.movingPiece())][move.dstPos()];
+    return m_CaptHist[static_cast<int>(move.capturedPiece())][static_cast<int>(move.movingPiece())][move.toSq().value()];
 }
 
 void History::updateMainHist(Bitboard threats, ExtMove move, int bonus)
 {
-    bool srcThreat = ((threats >> move.srcPos()) & 0x01).any();
-    bool dstThreat = ((threats >> move.dstPos()) & 0x01).any();
+    bool srcThreat = (threats & Bitboard::fromSquare(move.fromSq())).any();
+    bool dstThreat = (threats & Bitboard::fromSquare(move.toSq())).any();
     m_MainHist[static_cast<int>(getPieceColor(move.movingPiece()))][move.fromTo()][srcThreat][dstThreat].update(bonus);
 }
 
 void History::updateContHist(CHEntry* entry, ExtMove move, int bonus)
 {
-    (*entry)[static_cast<int>(move.movingPiece())][move.dstPos()].update(bonus);
+    (*entry)[static_cast<int>(move.movingPiece())][move.toSq().value()].update(bonus);
 }
 
 void History::updateCaptHist(ExtMove move, int bonus)
 {
-    m_CaptHist[static_cast<int>(move.capturedPiece())][static_cast<int>(move.movingPiece())][move.dstPos()].update(bonus);
+    m_CaptHist[static_cast<int>(move.capturedPiece())][static_cast<int>(move.movingPiece())][move.toSq().value()].update(bonus);
 }

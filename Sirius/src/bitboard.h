@@ -15,9 +15,8 @@ class Bitboard
 {
 public:
     constexpr Bitboard() = default;
-    constexpr Bitboard(uint64_t v);
-
-    static constexpr Bitboard fromSquare(int sq);
+    explicit constexpr Bitboard(uint64_t v);
+    static constexpr Bitboard fromSquare(Square sq);
 
     constexpr Bitboard operator<<(int other) const;
     constexpr Bitboard operator>>(int other) const;
@@ -45,11 +44,11 @@ public:
 
     constexpr uint64_t value() const;
 
-    uint32_t lsb() const;
+    Square lsb() const;
     Bitboard lsbBB() const;
-    uint32_t msb() const;
+    Square msb() const;
     uint32_t popcount() const;
-    uint32_t poplsb();
+    Square poplsb();
     constexpr bool any() const;
     constexpr bool empty() const;
     constexpr bool multiple() const;
@@ -71,31 +70,30 @@ constexpr Bitboard::Bitboard(uint64_t v)
 
 }
 
+constexpr Bitboard FILE_A_BB = Bitboard(0x0101010101010101ull);
+constexpr Bitboard FILE_B_BB = Bitboard(0x0202020202020202ull);
+constexpr Bitboard FILE_C_BB = Bitboard(0x0404040404040404ull);
+constexpr Bitboard FILE_D_BB = Bitboard(0x0808080808080808ull);
+constexpr Bitboard FILE_E_BB = Bitboard(0x1010101010101010ull);
+constexpr Bitboard FILE_F_BB = Bitboard(0x2020202020202020ull);
+constexpr Bitboard FILE_G_BB = Bitboard(0x4040404040404040ull);
+constexpr Bitboard FILE_H_BB = Bitboard(0x8080808080808080ull);
 
-constexpr Bitboard FILE_A = 0x0101010101010101ull;
-constexpr Bitboard FILE_B = 0x0202020202020202ull;
-constexpr Bitboard FILE_C = 0x0404040404040404ull;
-constexpr Bitboard FILE_D = 0x0808080808080808ull;
-constexpr Bitboard FILE_E = 0x1010101010101010ull;
-constexpr Bitboard FILE_F = 0x2020202020202020ull;
-constexpr Bitboard FILE_G = 0x4040404040404040ull;
-constexpr Bitboard FILE_H = 0x8080808080808080ull;
+constexpr Bitboard RANK_1_BB = Bitboard(0x00000000000000FFull);
+constexpr Bitboard RANK_2_BB = Bitboard(0x000000000000FF00ull);
+constexpr Bitboard RANK_3_BB = Bitboard(0x0000000000FF0000ull);
+constexpr Bitboard RANK_4_BB = Bitboard(0x00000000FF000000ull);
+constexpr Bitboard RANK_5_BB = Bitboard(0x000000FF00000000ull);
+constexpr Bitboard RANK_6_BB = Bitboard(0x0000FF0000000000ull);
+constexpr Bitboard RANK_7_BB = Bitboard(0x00FF000000000000ull);
+constexpr Bitboard RANK_8_BB = Bitboard(0xFF00000000000000ull);
 
-constexpr Bitboard RANK_1 = 0x00000000000000FFull;
-constexpr Bitboard RANK_2 = 0x000000000000FF00ull;
-constexpr Bitboard RANK_3 = 0x0000000000FF0000ull;
-constexpr Bitboard RANK_4 = 0x00000000FF000000ull;
-constexpr Bitboard RANK_5 = 0x000000FF00000000ull;
-constexpr Bitboard RANK_6 = 0x0000FF0000000000ull;
-constexpr Bitboard RANK_7 = 0x00FF000000000000ull;
-constexpr Bitboard RANK_8 = 0xFF00000000000000ull;
+constexpr Bitboard LIGHT_SQUARES_BB = Bitboard(0x55AA55AA55AA55AAull);
+constexpr Bitboard DARK_SQUARES_BB = Bitboard(0xAA55AA55AA55AA55ull);
 
-constexpr Bitboard LIGHT_SQUARES = 0x55AA55AA55AA55AAull;
-constexpr Bitboard DARK_SQUARES = 0xAA55AA55AA55AA55ull;
-
-constexpr Bitboard Bitboard::fromSquare(int sq)
+constexpr Bitboard Bitboard::fromSquare(Square sq)
 {
-    return Bitboard(1ull << sq);
+    return Bitboard(1ull << sq.value());
 }
 
 constexpr Bitboard Bitboard::operator<<(int other) const
@@ -182,22 +180,22 @@ inline std::ostream& operator<<(std::ostream& os, const Bitboard& bitboard)
 
 constexpr Bitboard Bitboard::north() const
 {
-    return m_Value << 8;
+    return Bitboard(m_Value << 8);
 }
 
 constexpr Bitboard Bitboard::south() const
 {
-    return m_Value >> 8;
+    return Bitboard(m_Value >> 8);
 }
 
 constexpr Bitboard Bitboard::west() const
 {
-    return Bitboard(m_Value >> 1) & ~FILE_H;
+    return Bitboard(m_Value >> 1) & ~FILE_H_BB;
 }
 
 constexpr Bitboard Bitboard::east() const
 {
-    return Bitboard(m_Value << 1) & ~FILE_A;
+    return Bitboard(m_Value << 1) & ~FILE_A_BB;
 }
 
 constexpr Bitboard Bitboard::northEast() const
@@ -222,34 +220,40 @@ constexpr uint64_t Bitboard::value() const
     return m_Value;
 }
 
-inline uint32_t Bitboard::lsb() const
+inline Square Bitboard::lsb() const
 {
+    assert(m_Value > 0);
+
 #if defined(__GNUC__) || defined(__clang__)
-    return __builtin_ctzll(m_Value);
+    return Square(__builtin_ctzll(m_Value));
 #elif defined(_MSC_VER)
     unsigned long idx;
     _BitScanForward64(&idx, m_Value);
-    return idx;
+    return Square(idx);
 #else
-    return std::countl_zero(m_Value);
+    return Square(std::countl_zero(m_Value));
 #endif
 }
 
 inline Bitboard Bitboard::lsbBB() const
 {
+    assert(m_Value > 0);
+
     return Bitboard(m_Value & (0 - m_Value));
 }
 
-inline uint32_t Bitboard::msb() const
+inline Square Bitboard::msb() const
 {
+    assert(m_Value > 0);
+
 #if defined(__GNUC__) || defined(__clang__)
-    return 63 - __builtin_clzll(m_Value);
+    return Square(63 - __builtin_clzll(m_Value));
 #elif defined(_MSC_VER)
     unsigned long idx;
     _BitScanReverse64(&idx, m_Value);
-    return idx;
+    return Square(idx);
 #else
-    return 63 - std::countr_zero(m_Value);
+    return Square(63 - std::countr_zero(m_Value));
 #endif
 }
 
@@ -258,9 +262,11 @@ inline uint32_t Bitboard::popcount() const
     return std::popcount(m_Value);
 }
 
-inline uint32_t Bitboard::poplsb()
+inline Square Bitboard::poplsb()
 {
-    uint32_t b = lsb();
+    assert(m_Value > 0);
+
+    Square b = lsb();
     m_Value &= m_Value - 1;
     return b;
 }
@@ -288,12 +294,12 @@ template<Color c, int r>
 constexpr Bitboard Bitboard::nthRank()
 {
     if constexpr (c == Color::WHITE)
-        return RANK_1 << (8 * r);
+        return RANK_1_BB << (8 * r);
     else
-        return RANK_8 >> (8 * r);
+        return RANK_8_BB >> (8 * r);
 }
 
 constexpr Bitboard Bitboard::fileBB(int file)
 {
-    return FILE_A << file;
+    return FILE_A_BB << file;
 }

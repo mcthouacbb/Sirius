@@ -161,9 +161,9 @@ constexpr uint32_t bishopIndexBits[64] = {
 
 Bitboard rays[64][8] = {};
 
-Bitboard getRay(uint32_t pos, Direction dir)
+Bitboard getRay(Square sq, Direction dir)
 {
-    return rays[pos][static_cast<uint32_t>(dir)];
+    return rays[sq.value()][static_cast<uint32_t>(dir)];
 }
 
 inline Bitboard& rayFrom(uint32_t idx, Direction dir)
@@ -173,10 +173,10 @@ inline Bitboard& rayFrom(uint32_t idx, Direction dir)
 
 Bitboard getMaskBlockerIdx(Bitboard mask, uint32_t idx)
 {
-    Bitboard blockers = 0;
+    Bitboard blockers = Bitboard(0);
     while (mask.any())
     {
-        uint32_t lsb = mask.poplsb();
+        Square lsb = mask.poplsb();
         if (idx & 1)
             blockers |= Bitboard::fromSquare(lsb);
         idx >>= 1;
@@ -188,10 +188,10 @@ void initRays()
 {
     for (uint32_t square = 0; square < 64; square++)
     {
-        Bitboard bb = Bitboard::fromSquare(square);
+        Bitboard bb = Bitboard::fromSquare(Square(square));
 
         Bitboard tmp = bb;
-        Bitboard result = 0;
+        Bitboard result = Bitboard(0);
         while (tmp.any())
         {
             tmp = tmp.north();
@@ -200,7 +200,7 @@ void initRays()
         rayFrom(square, Direction::NORTH) = result;
 
         tmp = bb;
-        result = 0;
+        result = Bitboard(0);
         while (tmp.any())
         {
             tmp = tmp.south();
@@ -209,7 +209,7 @@ void initRays()
         rayFrom(square, Direction::SOUTH) = result;
 
         tmp = bb;
-        result = 0;
+        result = Bitboard(0);
         while (tmp.any())
         {
             tmp = tmp.east();
@@ -218,7 +218,7 @@ void initRays()
         rayFrom(square, Direction::EAST) = result;
 
         tmp = bb;
-        result = 0;
+        result = Bitboard(0);
         while (tmp.any())
         {
             tmp = tmp.west();
@@ -227,7 +227,7 @@ void initRays()
         rayFrom(square, Direction::WEST) = result;
 
         tmp = bb;
-        result = 0;
+        result = Bitboard(0);
         while (tmp.any())
         {
             tmp = tmp.northEast();
@@ -236,7 +236,7 @@ void initRays()
         rayFrom(square, Direction::NORTH_EAST) = result;
 
         tmp = bb;
-        result = 0;
+        result = Bitboard(0);
         while (tmp.any())
         {
             tmp = tmp.northWest();
@@ -245,7 +245,7 @@ void initRays()
         rayFrom(square, Direction::NORTH_WEST) = result;
 
         tmp = bb;
-        result = 0;
+        result = Bitboard(0);
         while (tmp.any())
         {
             tmp = tmp.southEast();
@@ -254,7 +254,7 @@ void initRays()
         rayFrom(square, Direction::SOUTH_EAST) = result;
 
         tmp = bb;
-        result = 0;
+        result = Bitboard(0);
         while (tmp.any())
         {
             tmp = tmp.southWest();
@@ -264,7 +264,7 @@ void initRays()
     }
 }
 
-Bitboard getRookAttacksSlow(uint32_t square, Bitboard blockers)
+Bitboard getRookAttacksSlow(Square square, Bitboard blockers)
 {
     Bitboard ray = getRay(square, Direction::NORTH);
     Bitboard attacks = ray;
@@ -288,7 +288,7 @@ Bitboard getRookAttacksSlow(uint32_t square, Bitboard blockers)
     return attacks;
 }
 
-Bitboard getBishopAttacksSlow(uint32_t square, Bitboard blockers)
+Bitboard getBishopAttacksSlow(Square square, Bitboard blockers)
 {
     Bitboard ray = getRay(square, Direction::NORTH_EAST);
     Bitboard attacks = ray;
@@ -356,7 +356,7 @@ void init()
 
     for (uint32_t square = 0; square < 64; square++)
     {
-        Bitboard bb = Bitboard::fromSquare(square);
+        Bitboard bb = Bitboard::fromSquare(Square(square));
         Bitboard king = bb.east() | bb.west();
         Bitboard lr = king | bb;
         king |= lr.north() | lr.south();
@@ -394,14 +394,14 @@ void init()
         {
             if (src == dst)
                 continue;
-            Bitboard dstBB = Bitboard::fromSquare(dst);
+            Bitboard dstBB = Bitboard::fromSquare(Square(dst));
             attackData.moveMasks[src][dst] = dstBB;
             for (Direction dir : allDirs)
             {
-                Bitboard srcRay = getRay(src, dir);
+                Bitboard srcRay = getRay(Square(src), dir);
                 if ((srcRay & dstBB).any())
                 {
-                    Bitboard dstRay = getRay(dst, oppDir(dir));
+                    Bitboard dstRay = getRay(Square(dst), oppDir(dir));
                     attackData.inBetweenSquares[src][dst] = srcRay & dstRay;
                     attackData.moveMasks[src][dst] |= (srcRay & dstRay);
                     attackData.alignedSquares[src][dst] = srcRay | dstRay;
@@ -412,32 +412,32 @@ void init()
 
     for (int i = 0; i < 64; i++)
     {
-        Bitboard white = Bitboard::fromSquare(i) << 8;
+        Bitboard white = Bitboard::fromSquare(Square(i)) << 8;
         white |= white << 8;
         white |= white << 16;
         white |= white << 32;
         attackData.passedPawnMasks[static_cast<int>(Color::WHITE)][i] = white | white.west() | white.east();
 
-        Bitboard black = Bitboard::fromSquare(i) >> 8;
+        Bitboard black = Bitboard::fromSquare(Square(i)) >> 8;
         black |= black >> 8;
         black |= black >> 16;
         black |= black >> 32;
         attackData.passedPawnMasks[static_cast<int>(Color::BLACK)][i] = black | black.west() | black.east();
 
-        Bitboard file = white | black | Bitboard::fromSquare(i);
+        Bitboard file = white | black | Bitboard::fromSquare(Square(i));
         attackData.isolatedPawnMasks[i] = file.west() | file.east();
     }
 
-    constexpr Bitboard EDGE_SQUARES = FILE_A | FILE_H | RANK_1 | RANK_8;
+    constexpr Bitboard EDGE_SQUARES = FILE_A_BB | FILE_H_BB | RANK_1_BB | RANK_8_BB;
     Bitboard* currRook = attackData.rookAttacks.data();
     Bitboard* currBishop = attackData.bishopAttacks.data();
     for (uint32_t square = 0; square < 64; square++)
     {
         Bitboard rookMask =
-            (getRay(square, Direction::NORTH) & ~RANK_8) |
-            (getRay(square, Direction::SOUTH) & ~RANK_1) |
-            (getRay(square, Direction::EAST) & ~FILE_H) |
-            (getRay(square, Direction::WEST) & ~FILE_A);
+            (getRay(Square(square), Direction::NORTH) & ~RANK_8_BB) |
+            (getRay(Square(square), Direction::SOUTH) & ~RANK_1_BB) |
+            (getRay(Square(square), Direction::EAST) & ~FILE_H_BB) |
+            (getRay(Square(square), Direction::WEST) & ~FILE_A_BB);
 
         attackData.rookTable[square].magic = rookMagics[square];
         attackData.rookTable[square].shift = 64 - rookIndexBits[square];
@@ -448,16 +448,16 @@ void init()
         {
             Bitboard blockers = getMaskBlockerIdx(rookMask, i);
             uint32_t idx = static_cast<uint32_t>((blockers.value() * rookMagics[square]) >> (64 - rookIndexBits[square]));
-            attackData.rookTable[square].attackData[idx] = getRookAttacksSlow(square, blockers);
+            attackData.rookTable[square].attackData[idx] = getRookAttacksSlow(Square(square), blockers);
             currRook++;
         }
 
 
         Bitboard bishopMask = ~EDGE_SQUARES &
-            (getRay(square, Direction::NORTH_EAST) |
-                getRay(square, Direction::NORTH_WEST) |
-                getRay(square, Direction::SOUTH_EAST) |
-                getRay(square, Direction::SOUTH_WEST));
+            (getRay(Square(square), Direction::NORTH_EAST) |
+                getRay(Square(square), Direction::NORTH_WEST) |
+                getRay(Square(square), Direction::SOUTH_EAST) |
+                getRay(Square(square), Direction::SOUTH_WEST));
 
         attackData.bishopTable[square].magic = bishopMagics[square];
         attackData.bishopTable[square].shift = 64 - bishopIndexBits[square];
@@ -468,7 +468,7 @@ void init()
             Bitboard blockers = getMaskBlockerIdx(bishopMask, i);
             uint32_t idx = static_cast<uint32_t>((blockers.value() * bishopMagics[square]) >> (64 - bishopIndexBits[square]));
 
-            attackData.bishopTable[square].attackData[idx] = getBishopAttacksSlow(square, blockers);
+            attackData.bishopTable[square].attackData[idx] = getBishopAttacksSlow(Square(square), blockers);
             currBishop++;
         }
     }

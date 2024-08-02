@@ -22,7 +22,7 @@ bool isImmediateDraw(const Board& board)
         case 4:
         {
             Bitboard bishops = board.pieces(PieceType::BISHOP);
-            if (bishops.popcount() == 2 && ((bishops & LIGHT_SQUARES).popcount() == 2 || (bishops & LIGHT_SQUARES).empty()))
+            if (bishops.popcount() == 2 && ((bishops & LIGHT_SQUARES_BB).popcount() == 2 || (bishops & LIGHT_SQUARES_BB).empty()))
                 return true;
             return false;
         }
@@ -52,10 +52,10 @@ bool canForceMate(const Board& board)
     Bitboard whiteBishops = white & bishops;
     Bitboard whiteKnights = white & knights;
 
-    if ((whiteBishops & LIGHT_SQUARES).any() && (whiteBishops & DARK_SQUARES).any())
+    if ((whiteBishops & LIGHT_SQUARES_BB).any() && (whiteBishops & DARK_SQUARES_BB).any())
         return true;
 
-    if ((blackBishops & LIGHT_SQUARES).any() && (whiteBishops & DARK_SQUARES).any())
+    if ((blackBishops & LIGHT_SQUARES_BB).any() && (whiteBishops & DARK_SQUARES_BB).any())
         return true;
 
     if (whiteBishops.any() && whiteKnights.any())

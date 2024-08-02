@@ -69,24 +69,24 @@ public:
     bool is3FoldDraw(int searchPly);
     bool is50MoveDraw();
 
-    Piece pieceAt(uint32_t square) const;
+    Piece pieceAt(Square square) const;
     Bitboard pieces(PieceType type) const;
     Bitboard pieces(Color color, PieceType type) const;
     Bitboard pieces(Color color) const;
     Bitboard allPieces() const;
-    uint32_t kingSq(Color color) const;
+    Square kingSq(Color color) const;
 
-    bool squareAttacked(Color color, uint32_t square) const;
-    bool squareAttacked(Color color, uint32_t square, Bitboard blockers) const;
-    Bitboard attackersTo(Color color, uint32_t square) const;
-    Bitboard attackersTo(Color color, uint32_t square, Bitboard blockers) const;
-    Bitboard attackersTo(uint32_t square) const;
-    Bitboard attackersTo(uint32_t square, Bitboard blockers) const;
+    bool squareAttacked(Color color, Square square) const;
+    bool squareAttacked(Color color, Square square, Bitboard blockers) const;
+    Bitboard attackersTo(Color color, Square square) const;
+    Bitboard attackersTo(Color color, Square square, Bitboard blockers) const;
+    Bitboard attackersTo(Square square) const;
+    Bitboard attackersTo(Square square, Bitboard blockers) const;
 
-    bool isPassedPawn(uint32_t square) const;
-    bool isIsolatedPawn(uint32_t square) const;
+    bool isPassedPawn(Square square) const;
+    bool isIsolatedPawn(Square square) const;
 
-    Bitboard pinnersBlockers(uint32_t square, Bitboard attackers, Bitboard& pinners) const;
+    Bitboard pinnersBlockers(Square square, Bitboard attackers, Bitboard& pinners) const;
 
     Bitboard checkers() const;
     Bitboard checkBlockers(Color color) const;
@@ -105,10 +105,10 @@ private:
     void updateCheckInfo();
     void calcThreats();
     void calcRepetitions();
-    void addPiece(int pos, Color color, PieceType piece);
-    void addPiece(int pos, Piece piece);
-    void removePiece(int pos);
-    void movePiece(int src, int dst);
+    void addPiece(Square pos, Color color, PieceType piece);
+    void addPiece(Square pos, Piece piece);
+    void removePiece(Square pos);
+    void movePiece(Square src, Square dst);
 
     int seePieceValue(PieceType type) const;
 
@@ -188,9 +188,9 @@ inline ZKey Board::pawnKey() const
     return currState().pawnKey;
 }
 
-inline Piece Board::pieceAt(uint32_t square) const
+inline Piece Board::pieceAt(Square square) const
 {
-    return currState().squares[square];
+    return currState().squares[square.value()];
 }
 
 inline Bitboard Board::pieces(PieceType type) const
@@ -213,22 +213,22 @@ inline Bitboard Board::allPieces() const
     return currState().colors[0] | currState().colors[1];
 }
 
-inline uint32_t Board::kingSq(Color color) const
+inline Square Board::kingSq(Color color) const
 {
     return pieces(color, PieceType::KING).lsb();
 }
 
-inline bool Board::squareAttacked(Color color, uint32_t square) const
+inline bool Board::squareAttacked(Color color, Square square) const
 {
     return squareAttacked(color, square, allPieces());
 }
 
-inline Bitboard Board::attackersTo(Color color, uint32_t square) const
+inline Bitboard Board::attackersTo(Color color, Square square) const
 {
     return attackersTo(color, square, allPieces());
 }
 
-inline Bitboard Board::attackersTo(uint32_t square) const
+inline Bitboard Board::attackersTo(Square square) const
 {
     return attackersTo(square, allPieces());
 }

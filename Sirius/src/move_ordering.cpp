@@ -7,10 +7,10 @@ namespace
 
 int mvvLva(const Board& board, Move move)
 {
-    int srcPiece = static_cast<int>(getPieceType(board.pieceAt(move.srcPos())));
+    int srcPiece = static_cast<int>(getPieceType(board.pieceAt(move.fromSq())));
     int dstPiece = static_cast<int>(move.type() == MoveType::ENPASSANT ?
         PieceType::PAWN :
-        getPieceType(board.pieceAt(move.dstPos()))
+        getPieceType(board.pieceAt(move.toSq()))
     );
     return 10 * dstPiece - srcPiece + 15;
 }
@@ -26,13 +26,13 @@ bool moveIsQuiet(const Board& board, Move move)
 {
 	return move.type() != MoveType::PROMOTION &&
 		move.type() != MoveType::ENPASSANT &&
-		board.pieceAt(move.dstPos()) == Piece::NONE;
+		board.pieceAt(move.toSq()) == Piece::NONE;
 }
 
 bool moveIsCapture(const Board& board, Move move)
 {
     return move.type() == MoveType::ENPASSANT ||
-        board.pieceAt(move.dstPos()) != Piece::NONE;
+        board.pieceAt(move.toSq()) != Piece::NONE;
 }
 
 MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, const History& history)
