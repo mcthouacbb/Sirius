@@ -428,16 +428,16 @@ void init()
         attackData.isolatedPawnMasks[i] = file.west() | file.east();
     }
 
-    constexpr Bitboard EDGE_SQUARES = FILE_A | FILE_H | RANK_1 | RANK_8;
+    constexpr Bitboard EDGE_SQUARES = FILE_A_BB | FILE_H_BB | RANK_1_BB | RANK_8_BB;
     Bitboard* currRook = attackData.rookAttacks.data();
     Bitboard* currBishop = attackData.bishopAttacks.data();
     for (uint32_t square = 0; square < 64; square++)
     {
         Bitboard rookMask =
-            (getRay(square, Direction::NORTH) & ~RANK_8) |
-            (getRay(square, Direction::SOUTH) & ~RANK_1) |
-            (getRay(square, Direction::EAST) & ~FILE_H) |
-            (getRay(square, Direction::WEST) & ~FILE_A);
+            (getRay(square, Direction::NORTH) & ~RANK_8_BB) |
+            (getRay(square, Direction::SOUTH) & ~RANK_1_BB) |
+            (getRay(square, Direction::EAST) & ~FILE_H_BB) |
+            (getRay(square, Direction::WEST) & ~FILE_A_BB);
 
         attackData.rookTable[square].magic = rookMagics[square];
         attackData.rookTable[square].shift = 64 - rookIndexBits[square];

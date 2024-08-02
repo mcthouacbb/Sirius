@@ -71,27 +71,26 @@ constexpr Bitboard::Bitboard(uint64_t v)
 
 }
 
+constexpr Bitboard FILE_A_BB = 0x0101010101010101ull;
+constexpr Bitboard FILE_B_BB = 0x0202020202020202ull;
+constexpr Bitboard FILE_C_BB = 0x0404040404040404ull;
+constexpr Bitboard FILE_D_BB = 0x0808080808080808ull;
+constexpr Bitboard FILE_E_BB = 0x1010101010101010ull;
+constexpr Bitboard FILE_F_BB = 0x2020202020202020ull;
+constexpr Bitboard FILE_G_BB = 0x4040404040404040ull;
+constexpr Bitboard FILE_H_BB = 0x8080808080808080ull;
 
-constexpr Bitboard FILE_A = 0x0101010101010101ull;
-constexpr Bitboard FILE_B = 0x0202020202020202ull;
-constexpr Bitboard FILE_C = 0x0404040404040404ull;
-constexpr Bitboard FILE_D = 0x0808080808080808ull;
-constexpr Bitboard FILE_E = 0x1010101010101010ull;
-constexpr Bitboard FILE_F = 0x2020202020202020ull;
-constexpr Bitboard FILE_G = 0x4040404040404040ull;
-constexpr Bitboard FILE_H = 0x8080808080808080ull;
+constexpr Bitboard RANK_1_BB = 0x00000000000000FFull;
+constexpr Bitboard RANK_2_BB = 0x000000000000FF00ull;
+constexpr Bitboard RANK_3_BB = 0x0000000000FF0000ull;
+constexpr Bitboard RANK_4_BB = 0x00000000FF000000ull;
+constexpr Bitboard RANK_5_BB = 0x000000FF00000000ull;
+constexpr Bitboard RANK_6_BB = 0x0000FF0000000000ull;
+constexpr Bitboard RANK_7_BB = 0x00FF000000000000ull;
+constexpr Bitboard RANK_8_BB = 0xFF00000000000000ull;
 
-constexpr Bitboard RANK_1 = 0x00000000000000FFull;
-constexpr Bitboard RANK_2 = 0x000000000000FF00ull;
-constexpr Bitboard RANK_3 = 0x0000000000FF0000ull;
-constexpr Bitboard RANK_4 = 0x00000000FF000000ull;
-constexpr Bitboard RANK_5 = 0x000000FF00000000ull;
-constexpr Bitboard RANK_6 = 0x0000FF0000000000ull;
-constexpr Bitboard RANK_7 = 0x00FF000000000000ull;
-constexpr Bitboard RANK_8 = 0xFF00000000000000ull;
-
-constexpr Bitboard LIGHT_SQUARES = 0x55AA55AA55AA55AAull;
-constexpr Bitboard DARK_SQUARES = 0xAA55AA55AA55AA55ull;
+constexpr Bitboard LIGHT_SQUARES_BB = 0x55AA55AA55AA55AAull;
+constexpr Bitboard DARK_SQUARES_BB = 0xAA55AA55AA55AA55ull;
 
 constexpr Bitboard Bitboard::fromSquare(int sq)
 {
@@ -192,12 +191,12 @@ constexpr Bitboard Bitboard::south() const
 
 constexpr Bitboard Bitboard::west() const
 {
-    return Bitboard(m_Value >> 1) & ~FILE_H;
+    return Bitboard(m_Value >> 1) & ~FILE_H_BB;
 }
 
 constexpr Bitboard Bitboard::east() const
 {
-    return Bitboard(m_Value << 1) & ~FILE_A;
+    return Bitboard(m_Value << 1) & ~FILE_A_BB;
 }
 
 constexpr Bitboard Bitboard::northEast() const
@@ -288,12 +287,12 @@ template<Color c, int r>
 constexpr Bitboard Bitboard::nthRank()
 {
     if constexpr (c == Color::WHITE)
-        return RANK_1 << (8 * r);
+        return RANK_1_BB << (8 * r);
     else
-        return RANK_8 >> (8 * r);
+        return RANK_8_BB >> (8 * r);
 }
 
 constexpr Bitboard Bitboard::fileBB(int file)
 {
-    return FILE_A << file;
+    return FILE_A_BB << file;
 }

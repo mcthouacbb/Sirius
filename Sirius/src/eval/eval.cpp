@@ -71,7 +71,7 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
     else if constexpr (piece == PieceType::QUEEN)
         occupancy ^= board.pieces(us, PieceType::BISHOP) | board.pieces(us, PieceType::ROOK);
 
-    Bitboard outpostSquares = RANK_4 | RANK_5 | (us == Color::WHITE ? RANK_6 : RANK_3);
+    Bitboard outpostSquares = RANK_4_BB | RANK_5_BB | (us == Color::WHITE ? RANK_6_BB : RANK_3_BB);
 
     while (pieces.any())
     {
@@ -109,8 +109,8 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
 
         if constexpr (piece == PieceType::BISHOP)
         {
-            bool lightSquare = (Bitboard::fromSquare(sq) & LIGHT_SQUARES).any();
-            Bitboard sameColorPawns = board.pieces(us, PieceType::PAWN) & (lightSquare ? LIGHT_SQUARES : DARK_SQUARES);
+            bool lightSquare = (Bitboard::fromSquare(sq) & LIGHT_SQUARES_BB).any();
+            Bitboard sameColorPawns = board.pieces(us, PieceType::PAWN) & (lightSquare ? LIGHT_SQUARES_BB : DARK_SQUARES_BB);
             eval += BISHOP_PAWNS[std::min(sameColorPawns.popcount(), 6u)];
         }
     }
