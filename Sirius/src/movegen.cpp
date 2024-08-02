@@ -131,13 +131,13 @@ void genPawnMoves(const Board& board, MoveList& moves, Bitboard moveMask)
         Bitboard pawnPushes = attacks::pawnPushes<color>(pawns);
         pawnPushes &= ~allPieces;
 
-        Bitboard doublePushes = attacks::pawnPushes<color>(pawnPushes & Bitboard::nthRank<color, 2>());
+        Bitboard doublePushes = attacks::pawnPushes<color>(pawnPushes & Bitboard::nthRank<color, RANK_3>());
         doublePushes &= ~allPieces;
         doublePushes &= moveMask;
 
         pawnPushes &= moveMask;
 
-        Bitboard promotions = pawnPushes & Bitboard::nthRank<color, 7>();
+        Bitboard promotions = pawnPushes & Bitboard::nthRank<color, RANK_8>();
 
         pawnPushes ^= promotions;
 
@@ -168,7 +168,7 @@ void genPawnMoves(const Board& board, MoveList& moves, Bitboard moveMask)
         pawnPushes &= ~allPieces;
         pawnPushes &= moveMask;
 
-        Bitboard promotions = pawnPushes & Bitboard::nthRank<color, 7>();
+        Bitboard promotions = pawnPushes & Bitboard::nthRank<color, RANK_8>();
 
         while (promotions.any())
         {
@@ -189,7 +189,7 @@ void genPawnMoves(const Board& board, MoveList& moves, Bitboard moveMask)
     eastCaptures &= oppBB;
     eastCaptures &= moveMask;
 
-    Bitboard promotions = eastCaptures & Bitboard::nthRank<color, 7>();
+    Bitboard promotions = eastCaptures & Bitboard::nthRank<color, RANK_8>();
     eastCaptures ^= promotions;
 
     while (eastCaptures.any())
@@ -215,7 +215,7 @@ void genPawnMoves(const Board& board, MoveList& moves, Bitboard moveMask)
     westCaptures &= oppBB;
     westCaptures &= moveMask;
 
-    promotions = westCaptures & Bitboard::nthRank<color, 7>();
+    promotions = westCaptures & Bitboard::nthRank<color, RANK_8>();
     westCaptures ^= promotions;
 
     while (westCaptures.any())

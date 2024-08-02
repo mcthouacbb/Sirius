@@ -77,6 +77,25 @@ inline PieceType promoPiece(Promotion promo)
     return promoPieces[static_cast<int>(promo) >> 14];
 }
 
+constexpr int RANK_1 = 0;
+constexpr int RANK_2 = 1;
+constexpr int RANK_3 = 2;
+constexpr int RANK_4 = 3;
+constexpr int RANK_5 = 4;
+constexpr int RANK_6 = 5;
+constexpr int RANK_7 = 6;
+constexpr int RANK_8 = 7;
+
+
+constexpr int FILE_A = 0;
+constexpr int FILE_B = 1;
+constexpr int FILE_C = 2;
+constexpr int FILE_D = 3;
+constexpr int FILE_E = 4;
+constexpr int FILE_F = 5;
+constexpr int FILE_G = 6;
+constexpr int FILE_H = 7;
+
 struct Square
 {
 public:
