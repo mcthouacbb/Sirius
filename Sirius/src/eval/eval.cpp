@@ -188,11 +188,14 @@ PackedScore evaluatePassedPawns(const Board& board, const EvalData& evalData)
     {
         Square passer = passers.poplsb();
         int rank = passer.relativeRank<us>();
-        eval += OUR_PASSER_PROXIMITY[Square::chebyshev(ourKing, passer)];
-        eval += THEIR_PASSER_PROXIMITY[Square::chebyshev(theirKing, passer)];
+        if (rank >= RANK_4)
+        {
+            eval += OUR_PASSER_PROXIMITY[Square::chebyshev(ourKing, passer)];
+            eval += THEIR_PASSER_PROXIMITY[Square::chebyshev(theirKing, passer)];
 
-        if (board.pieceAt(passer + attacks::pawnPushOffset<us>()) == Piece::NONE)
-            eval += FREE_PASSER[rank];
+            if (board.pieceAt(passer + attacks::pawnPushOffset<us>()) == Piece::NONE)
+                eval += FREE_PASSER[rank];
+        }
     }
 
     return eval;
@@ -303,7 +306,7 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
     Bitboard ourPawns = board.pieces(us, PieceType::PAWN);
     Bitboard theirPawns = board.pieces(them, PieceType::PAWN);
 
-    Square theirKing = board.pieces(them, PieceType::KING).lsb();
+    Square theirKing = board.kingSq(them);
 
     PackedScore eval{0, 0};
 
