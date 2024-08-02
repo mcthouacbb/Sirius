@@ -77,18 +77,128 @@ inline PieceType promoPiece(Promotion promo)
     return promoPieces[static_cast<int>(promo) >> 14];
 }
 
+struct Square
+{
+public:
+    constexpr Square() = default;
+    explicit constexpr Square(int sq);
+    constexpr Square(int rank, int file);
+
+    constexpr bool operator==(const Square& other) const = default;
+    constexpr bool operator!=(const Square& other) const = default;
+    constexpr bool operator>(const Square& other) const;
+    constexpr bool operator>=(const Square& other) const;
+    constexpr bool operator<(const Square& other) const;
+    constexpr bool operator<=(const Square& other) const;
+
+    constexpr Square operator+(int other) const;
+    constexpr Square operator-(int other) const;
+    constexpr int operator-(Square other) const;
+
+    constexpr int value() const;
+    constexpr int rank() const;
+    constexpr int file() const;
+    template<Color c>
+    constexpr int relativeRank() const;
+
+    static constexpr int chebyshev(Square a, Square b);
+    static constexpr Square average(Square a, Square b);
+private:
+    uint8_t m_Value;
+};
+
+constexpr Square::Square(int sq)
+    : m_Value(static_cast<uint8_t>(sq))
+{
+    assert(sq < 64);
+}
+
+constexpr Square::Square(int rank, int file)
+    : m_Value(static_cast<uint8_t>(rank * 8 + file))
+{
+
+}
+
+constexpr bool Square::operator>(const Square& other) const
+{
+    return value() > other.value();
+}
+
+constexpr bool Square::operator>=(const Square& other) const
+{
+    return value() >= other.value();
+}
+
+constexpr bool Square::operator<(const Square& other) const
+{
+    return value() < other.value();
+}
+
+constexpr bool Square::operator<=(const Square& other) const
+{
+    return value() <= other.value();
+}
+
+constexpr Square Square::operator+(int other) const
+{
+    return Square(value() + other);
+}
+
+constexpr Square Square::operator-(int other) const
+{
+    return Square(value() - other);
+}
+
+constexpr int Square::operator-(Square other) const
+{
+    return value() - other.value();
+}
+
+constexpr int Square::value() const
+{
+    return static_cast<int>(m_Value);
+}
+
+constexpr int Square::rank() const
+{
+    return value() / 8;
+}
+
+constexpr int Square::file() const
+{
+    return value() % 8;
+}
+
+template<Color c>
+constexpr int Square::relativeRank() const
+{
+    if constexpr (c == Color::BLACK)
+        return rank() ^ 7;
+    return rank();
+}
+
+constexpr int Square::chebyshev(Square a, Square b)
+{
+    return std::max(std::abs(a.rank() - b.rank()), std::abs(a.file() - b.file()));
+}
+
+constexpr Square Square::average(Square a, Square b)
+{
+    return Square((a.value() + b.value()) / 2);
+}
+
 struct Move
 {
 public:
     Move() = default;
-    Move(int src, int dst, MoveType type);
-    Move(int src, int dst, MoveType type, Promotion promotion);
+    Move(Square from, Square to, MoveType type);
+    Move(Square from, Square to, MoveType type, Promotion promotion);
 
     bool operator==(const Move& other) const = default;
     bool operator!=(const Move& other) const = default;
 
-    int srcPos() const;
-    int dstPos() const;
+    Square fromSq() const;
+    Square toSq() const;
     int fromTo() const;
     MoveType type() const;
     Promotion promotion() const;
@@ -98,31 +208,27 @@ private:
     uint16_t m_Data;
 };
 
-inline Move::Move(int src, int dst, MoveType type)
+inline Move::Move(Square from, Square to, MoveType type)
     : m_Data(0)
 {
-    assert(src >= 0 && src < 64 && "Src pos is out of range");
-    assert(dst >= 0 && dst < 64 && "Dst pos is out of range");
-    m_Data = static_cast<uint16_t>(src | (dst << 6) | static_cast<int>(type));
+    m_Data = static_cast<uint16_t>(from.value() | (to.value() << 6) | static_cast<int>(type));
 }
 
-inline Move::Move(int src, int dst, MoveType type, Promotion promotion)
+inline Move::Move(Square from, Square to, MoveType type, Promotion promotion)
     : m_Data(0)
 {
-    assert(src >= 0 && src < 64 && "Src pos is out of range");
-    assert(dst >= 0 && dst < 64 && "Dst pos is out of range");
-    m_Data = static_cast<uint16_t>(src | (dst << 6) | static_cast<int>(type) | static_cast<int>(promotion));
+    m_Data = static_cast<uint16_t>(from.value() | (to.value() << 6) | static_cast<int>(type) | static_cast<int>(promotion));
 }
 
 
-inline int Move::srcPos() const
+inline Square Move::fromSq() const
 {
-    return m_Data & 63;
+    return Square(m_Data & 63);
 }
 
-inline int Move::dstPos() const
+inline Square Move::toSq() const
 {
-    return (m_Data >> 6) & 63;
+    return Square((m_Data >> 6) & 63);
 }
 
 inline int Move::fromTo() const
@@ -230,27 +336,4 @@ constexpr PackedScore operator*(int a, const PackedScore& b)
 constexpr PackedScore operator*(const PackedScore& a, int b)
 {
     return PackedScore(a.m_Value * b);
-}
-
-inline int fileOf(int square)
-{
-    return square % 8;
-}
-
-inline int rankOf(int square)
-{
-    return square / 8;
-}
-
-template<Color c>
-inline int relativeRankOf(int square)
-{
-    if constexpr (c == Color::BLACK)
-        square ^= 56;
-    return rankOf(square);
-}
-
-inline int chebyshev(int sq1, int sq2)
-{
-    return std::max(std::abs(rankOf(sq1) - rankOf(sq2)), std::abs(fileOf(sq1) - fileOf(sq2)));
 }

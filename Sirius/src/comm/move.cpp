@@ -36,7 +36,7 @@ MoveStrFind findMoveFromPCN(const MoveList& legalMoves, const char* moveStr)
     for (size_t i = 0; i < legalMoves.size(); i++)
     {
         Move move = legalMoves[i];
-        if (move.srcPos() == src && move.dstPos() == dst)
+        if (move.fromSq() == Square(src) && move.toSq() == Square(dst))
         {
             if (isPromotion)
             {
@@ -114,7 +114,7 @@ MoveStrFind findMoveFromSAN(const Board& board, const MoveList& legalMoves, cons
                 for (size_t i = 0; i < legalMoves.size(); i++)
                 {
                     Move move = legalMoves[i];
-                    if (move.type() == MoveType::CASTLE && move.dstPos() > move.srcPos())
+                    if (move.type() == MoveType::CASTLE && move.toSq() > move.fromSq())
                     {
                         return {MoveStrFind::Result::FOUND, move, 3 + (moveStr[3] == '+' || moveStr[3] == '#')};
                     }
@@ -128,7 +128,7 @@ MoveStrFind findMoveFromSAN(const Board& board, const MoveList& legalMoves, cons
                 for (size_t i = 0; i < legalMoves.size(); i++)
                 {
                     Move move = legalMoves[i];
-                    if (move.type() == MoveType::CASTLE && move.dstPos() < move.srcPos())
+                    if (move.type() == MoveType::CASTLE && move.toSq() < move.fromSq())
                     {
                         return {MoveStrFind::Result::FOUND, move, 5 + (moveStr[5] == '+' || moveStr[5] == '#')};
                     }
@@ -364,8 +364,8 @@ search_moves:
         moveLen++;
     else if (moveStr[moveLen] == '#')
         moveLen++;
-    int toSquare = toFile | (toRank << 3);
-    
+    Square toSquare(toRank, toFile);
+
     if (!isCapture && board.pieceAt(toSquare) != Piece::NONE)
     {
         return {MoveStrFind::Result::NOT_FOUND, Move(), moveLen};
@@ -395,17 +395,17 @@ search_moves:
         if (isPromotion && it->promotion() != promotion)
             continue;
 
-        if (it->dstPos() != toSquare)
+        if (it->toSq() != Square(toSquare))
             continue;
 
-        int srcSquare = it->srcPos();
+        Square srcSquare = it->fromSq();
         Piece srcPiece = board.pieceAt(srcSquare);
         if (getPieceType(srcPiece) != piece)
             continue;
 
-        if (fromRank != -1 && fromRank != (srcSquare >> 3))
+        if (fromRank != -1 && fromRank != (srcSquare.rank()))
             continue;
-        if (fromFile != -1 && fromFile != (srcSquare & 7))
+        if (fromFile != -1 && fromFile != (srcSquare.file()))
             continue;
 
         if (match)
@@ -423,10 +423,10 @@ search_moves:
 std::string convMoveToPCN(Move move)
 {
     std::string str(4 + (move.type() == MoveType::PROMOTION), ' ');
-    str[0] = static_cast<char>((move.srcPos() & 7) + 'a');
-    str[1] = static_cast<char>((move.srcPos() >> 3) + '1');
-    str[2] = static_cast<char>((move.dstPos() & 7) + 'a');
-    str[3] = static_cast<char>((move.dstPos() >> 3) + '1');
+    str[0] = static_cast<char>(move.fromSq().file() + 'a');
+    str[1] = static_cast<char>(move.fromSq().rank() + '1');
+    str[2] = static_cast<char>(move.toSq().file() + 'a');
+    str[3] = static_cast<char>(move.toSq().rank() + '1');
     if (move.type() == MoveType::PROMOTION)
     {
         str[4] = promoChars[(static_cast<int>(move.promotion()) >> 14)];
@@ -434,13 +434,13 @@ std::string convMoveToPCN(Move move)
     return str;
 }
 
-bool isAmbiguous(const Board& board, const MoveList& legalMoves, PieceType piece, int toSquare, int fromFile, int fromRank)
+bool isAmbiguous(const Board& board, const MoveList& legalMoves, PieceType piece, Square toSquare, int fromFile, int fromRank)
 {
     const Move* match = nullptr;
     for (const Move* it = legalMoves.data(); it != legalMoves.data() + legalMoves.size(); it++)
     {
-        int srcPos = it->srcPos();
-        int dstPos = it->dstPos();
+        Square srcPos = it->fromSq();
+        Square dstPos = it->toSq();
         PieceType movePiece = getPieceType(board.pieceAt(srcPos));
         if (movePiece != piece)
             continue;
@@ -448,10 +448,10 @@ bool isAmbiguous(const Board& board, const MoveList& legalMoves, PieceType piece
         if (dstPos != toSquare)
             continue;
 
-        if (fromFile != -1 && fromFile != (srcPos & 7))
+        if (fromFile != -1 && fromFile != srcPos.file())
             continue;
 
-        if (fromRank != -1 && fromRank != (srcPos >> 3))
+        if (fromRank != -1 && fromRank != srcPos.rank())
             continue;
 
         if (match)
@@ -466,15 +466,15 @@ std::string convMoveToSAN(const Board& board, const MoveList& legalMoves, Move m
 {
     if (move.type() == MoveType::CASTLE)
     {
-        return move.dstPos() > move.srcPos() ? "O-O" : "O-O-O";
+        return move.toSq() > move.fromSq() ? "O-O" : "O-O-O";
     }
-    PieceType piece = getPieceType(board.pieceAt(move.srcPos()));
-    bool isCapture = board.pieceAt(move.dstPos()) != Piece::NONE;
+    PieceType piece = getPieceType(board.pieceAt(move.fromSq()));
+    bool isCapture = board.pieceAt(move.toSq()) != Piece::NONE;
     if (piece == PieceType::PAWN)
     {
-        int srcPos = move.srcPos();
-        int dstPos = move.dstPos();
-        if ((srcPos & 7) == (dstPos & 7))
+        Square srcPos = move.fromSq();
+        Square dstPos = move.toSq();
+        if (srcPos.file() == dstPos.file())
         {
             std::string str(2 + 2 * (move.type() == MoveType::PROMOTION), ' ');
             if (move.type() == MoveType::PROMOTION)
@@ -482,8 +482,8 @@ std::string convMoveToSAN(const Board& board, const MoveList& legalMoves, Move m
                 str[2] = '=';
                 str[3] = promoChars[static_cast<int>(move.promotion()) >> 14];
             }
-            str[0] = static_cast<char>((dstPos & 7) + 'a');
-            str[1] = static_cast<char>((dstPos >> 3) + '1');
+            str[0] = static_cast<char>(dstPos.file() + 'a');
+            str[1] = static_cast<char>(dstPos.rank() + '1');
             return str;
         }
         else
@@ -494,10 +494,10 @@ std::string convMoveToSAN(const Board& board, const MoveList& legalMoves, Move m
                 str[4] = '=';
                 str[5] = promoChars[static_cast<int>(move.promotion()) >> 14];
             }
-            str[0] = static_cast<char>((srcPos & 7) + 'a');
+            str[0] = static_cast<char>(srcPos.file() + 'a');
             str[1] = 'x';
-            str[2] = static_cast<char>((dstPos & 7) + 'a');
-            str[3] = static_cast<char>((dstPos >> 3) + '1');
+            str[2] = static_cast<char>(dstPos.file() + 'a');
+            str[3] = static_cast<char>(dstPos.rank() + '1');
             return str;
         }
     }
@@ -505,8 +505,8 @@ std::string convMoveToSAN(const Board& board, const MoveList& legalMoves, Move m
     {
         char pceChar = pieceChars[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)];
 
-        int srcPos = move.srcPos();
-        int dstPos = move.dstPos();
+        Square srcPos = move.fromSq();
+        Square dstPos = move.toSq();
 
         if (!isAmbiguous(board, legalMoves, piece, dstPos, -1, -1))
         {
@@ -516,49 +516,49 @@ std::string convMoveToSAN(const Board& board, const MoveList& legalMoves, Move m
             {
                 str[1] = 'x';
             }
-            str[1 + isCapture] = static_cast<char>((dstPos & 7) + 'a');
-            str[2 + isCapture] = static_cast<char>((dstPos >> 3) + '1');
+            str[1 + isCapture] = static_cast<char>(dstPos.file() + 'a');
+            str[2 + isCapture] = static_cast<char>(dstPos.rank() + '1');
             return str;
         }
 
-        if (!isAmbiguous(board, legalMoves, piece, dstPos, srcPos & 7, -1))
+        if (!isAmbiguous(board, legalMoves, piece, dstPos, srcPos.file(), -1))
         {
             std::string str(4 + isCapture, ' ');
             str[0] = pceChar;
-            str[1] = (srcPos & 7) + 'a';
+            str[1] = static_cast<char>(srcPos.file() + 'a');
             if (isCapture)
             {
                 str[2] = 'x';
             }
-            str[2 + isCapture] = static_cast<char>((dstPos & 7) + 'a');
-            str[3 + isCapture] = static_cast<char>((dstPos >> 3) + '1');
+            str[2 + isCapture] = static_cast<char>(dstPos.file() + 'a');
+            str[3 + isCapture] = static_cast<char>(dstPos.rank() + '1');
             return str;
         }
 
-        if (!isAmbiguous(board, legalMoves, piece, dstPos, srcPos >> 3, -1))
+        if (!isAmbiguous(board, legalMoves, piece, dstPos, srcPos.rank(), -1))
         {
             std::string str(4 + isCapture, ' ');
             str[0] = pceChar;
-            str[1] = static_cast<char>((srcPos >> 3) + '1');
+            str[1] = static_cast<char>(srcPos.rank() + '1');
             if (isCapture)
             {
                 str[2] = 'x';
             }
-            str[2 + isCapture] = static_cast<char>((dstPos & 7) + 'a');
-            str[3 + isCapture] = static_cast<char>((dstPos >> 3) + '1');
+            str[2 + isCapture] = static_cast<char>(dstPos.file() + 'a');
+            str[3 + isCapture] = static_cast<char>(dstPos.rank() + '1');
             return str;
         }
 
         std::string str(5 + isCapture, ' ');
         str[0] = pceChar;
-        str[1] = static_cast<char>((srcPos & 7) + 'a');
-        str[2] = static_cast<char>((srcPos >> 3) + '1');
+        str[1] = static_cast<char>(srcPos.file() + 'a');
+        str[2] = static_cast<char>(srcPos.rank() + '1');
         if (isCapture)
         {
             str[3] = 'x';
         }
-        str[3 + isCapture] = static_cast<char>((dstPos & 7) + 'a');
-        str[4 + isCapture] = static_cast<char>((dstPos >> 3) + '1');
+        str[3 + isCapture] = static_cast<char>(dstPos.file() + 'a');
+        str[4 + isCapture] = static_cast<char>(dstPos.rank() + '1');
         return str;
     }
 }

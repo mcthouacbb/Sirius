@@ -18,8 +18,8 @@ struct Keys
 
 constexpr Keys generateZobristKeys()
 {
-    Keys keys;
-    
+    Keys keys = {};
+
     PRNG prng;
     prng.seed(8367428251681ull);
 
@@ -47,9 +47,9 @@ struct ZKey
     uint64_t value;
 
     void flipSideToMove();
-    void addPiece(PieceType piece, Color color, uint32_t square);
-    void removePiece(PieceType piece, Color color, uint32_t square);
-    void movePiece(PieceType piece, Color color, uint32_t src, uint32_t dst);
+    void addPiece(PieceType piece, Color color, Square square);
+    void removePiece(PieceType piece, Color color, Square square);
+    void movePiece(PieceType piece, Color color, Square src, Square dst);
 
     void updateCastlingRights(uint32_t rights);
     void updateEP(uint32_t epFile);
@@ -63,19 +63,19 @@ inline void ZKey::flipSideToMove()
     value ^= zobrist::keys.blackToMove;
 }
 
-inline void ZKey::addPiece(PieceType piece, Color color, uint32_t square)
+inline void ZKey::addPiece(PieceType piece, Color color, Square square)
 {
-    value ^= zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][square];
+    value ^= zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][square.value()];
 }
 
-inline void ZKey::removePiece(PieceType piece, Color color, uint32_t square)
+inline void ZKey::removePiece(PieceType piece, Color color, Square square)
 {
-    value ^= zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][square];
+    value ^= zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][square.value()];
 }
 
-inline void ZKey::movePiece(PieceType piece, Color color, uint32_t src, uint32_t dst)
+inline void ZKey::movePiece(PieceType piece, Color color, Square src, Square dst)
 {
-    value ^= zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][src] ^ zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][dst];
+    value ^= zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][src.value()] ^ zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][dst.value()];
 }
 
 inline void ZKey::updateCastlingRights(uint32_t castlingRights)

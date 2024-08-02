@@ -22,11 +22,11 @@ private:
 
 inline ExtMove ExtMove::from(const Board& board, Move move)
 {
-    Piece moving = board.pieceAt(move.srcPos());
+    Piece moving = board.pieceAt(move.fromSq());
     Piece captured =
         move.type() == MoveType::ENPASSANT ?
         makePiece(PieceType::PAWN, ~board.sideToMove()) :
-        board.pieceAt(move.dstPos());
+        board.pieceAt(move.toSq());
     Piece promotion = move.type() == MoveType::PROMOTION ? promotionPiece(board.sideToMove(), move.promotion()) : Piece::NONE;
     return ExtMove(move, moving, captured, promotion);
 }
@@ -47,7 +47,7 @@ inline Piece ExtMove::promotionPiece() const
 }
 
 inline ExtMove::ExtMove(Move move, Piece moving, Piece captured, Piece promotion)
-    : Move(move.srcPos(), move.dstPos(), move.type(), move.promotion()), m_Moving(moving), m_Captured(captured), m_Promotion(promotion)
+    : Move(move.fromSq(), move.toSq(), move.type(), move.promotion()), m_Moving(moving), m_Captured(captured), m_Promotion(promotion)
 {
 
 }
@@ -111,12 +111,12 @@ public:
 
     CHEntry& contHistEntry(ExtMove move)
     {
-        return m_ContHist[static_cast<int>(move.movingPiece())][move.dstPos()];
+        return m_ContHist[static_cast<int>(move.movingPiece())][move.toSq().value()];
     }
 
     const CHEntry& contHistEntry(ExtMove move) const
     {
-        return m_ContHist[static_cast<int>(move.movingPiece())][move.dstPos()];
+        return m_ContHist[static_cast<int>(move.movingPiece())][move.toSq().value()];
     }
 
     int getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const;
