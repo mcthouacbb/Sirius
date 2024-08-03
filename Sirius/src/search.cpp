@@ -346,7 +346,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         return eval::evaluate(board, &thread);
 
     if (depth <= 0)
-        return qsearch(thread, stack, alpha, beta);
+        return qsearch(thread, stack, alpha, beta, pvNode);
 
     ProbedTTData ttData = {};
     bool ttHit = m_TT.probe(board.zkey(), rootPly, ttData);
@@ -599,7 +599,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     return bestScore;
 }
 
-int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int beta)
+int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int beta, bool pvNode)
 {
     auto& rootPly = thread.rootPly;
     auto& board = thread.board;
@@ -613,7 +613,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     ProbedTTData ttData = {};
     bool ttHit = m_TT.probe(board.zkey(), rootPly, ttData);
 
-    if (ttHit)
+    if (ttHit && !pvNode)
     {
         if (ttData.bound == TTEntry::Bound::EXACT ||
             (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta) ||
@@ -666,7 +666,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         board.makeMove(move);
         thread.nodes.fetch_add(1, std::memory_order_relaxed);
         rootPly++;
-        int score = -qsearch(thread, stack + 1, -beta, -alpha);
+        int score = -qsearch(thread, stack + 1, -beta, -alpha, pvNode);
         board.unmakeMove();
         rootPly--;
 
