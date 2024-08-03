@@ -14,7 +14,7 @@ namespace eval
 constexpr int BUCKET_COUNT = 2;
 inline int getKingBucket(Square kingSq)
 {
-    return kingSq.file() >= 4;
+    return kingSq.file() >= FILE_E;
 }
 
 struct Accumulator
