@@ -122,8 +122,8 @@ private:
     int iterDeep(SearchThread& thread, bool report, bool normalSearch);
     int aspWindows(SearchThread& thread, int depth, Move& bestMove, int prevScore);
 
-    int search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta, bool isPV, bool cutnode);
-    int qsearch(SearchThread& thread, SearchStack* stack, int alpha, int beta);
+    int search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta, bool pvNode, bool cutnode);
+    int qsearch(SearchThread& thread, SearchStack* stack, int alpha, int beta, bool pvNode);
 
     Board& m_Board;
     std::atomic_bool m_ShouldStop;
