@@ -100,11 +100,11 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
                 eval += (theirPawns & fileBB).any() ? ROOK_OPEN[1] : ROOK_OPEN[0];
         }
 
-        if constexpr (piece == PieceType::KNIGHT)
+        if constexpr (piece == PieceType::KNIGHT || piece == PieceType::BISHOP)
         {
             Bitboard outposts = outpostSquares & ~evalData.pawnAttackSpans[them] & evalData.attackedBy[us][PieceType::PAWN];
             if ((Bitboard::fromSquare(sq) & outposts).any())
-                eval += KNIGHT_OUTPOST;
+                eval += piece == PieceType::KNIGHT ? KNIGHT_OUTPOST : BISHOP_OUTPOST;
         }
 
         if constexpr (piece == PieceType::BISHOP)
