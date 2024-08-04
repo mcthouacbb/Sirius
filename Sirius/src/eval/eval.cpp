@@ -365,6 +365,30 @@ void initEvalData(const Board& board, EvalData& evalData)
     evalData.kingRing[Color::BLACK] = (blackKingAtks | blackKingAtks.south()) & ~Bitboard::fromSquare(blackKing);
 }
 
+// idea from stockfish, which was originally from Tord Romstad
+template<Color us>
+PackedScore evaluateImbalance(const Board& board)
+{
+    constexpr Color them = ~us;
+
+    PackedScore eval{0, 0};
+
+    for (int i1 = static_cast<int>(PieceType::PAWN); i1 <= static_cast<int>(PieceType::QUEEN); i1++)
+    {
+        PieceType pt1 = static_cast<PieceType>(i1);
+        PackedScore v = IMBALANCE_US[static_cast<int>(pt1)][static_cast<int>(pt1)] * board.pieces(us, pt1).popcount();
+        for (int i2 = i1 + 1; i2 <= static_cast<int>(PieceType::QUEEN); i2++)
+        {
+            PieceType pt2 = static_cast<PieceType>(i2);
+            v += IMBALANCE_US[static_cast<int>(pt1)][static_cast<int>(pt2)] * board.pieces(us, pt2).popcount();
+            v += IMBALANCE_THEM[static_cast<int>(pt1)][static_cast<int>(pt2)] * board.pieces(them, pt2).popcount();
+        }
+
+        eval += v * board.pieces(us, pt1).popcount();
+    }
+
+    return eval;
+}
 
 int evaluateScale(const Board& board, PackedScore eval)
 {
@@ -387,6 +411,8 @@ int evaluate(const Board& board, search::SearchThread* thread)
 
     Color color = board.sideToMove();
     PackedScore eval = board.psqtState().evaluate(board);
+
+    eval += evaluateImbalance<Color::WHITE>(board) - evaluateImbalance<Color::BLACK>(board);
 
     eval += evaluatePieces<Color::WHITE, PieceType::KNIGHT>(board, evalData) - evaluatePieces<Color::BLACK, PieceType::KNIGHT>(board, evalData);
     eval += evaluatePieces<Color::WHITE, PieceType::BISHOP>(board, evalData) - evaluatePieces<Color::BLACK, PieceType::BISHOP>(board, evalData);
