@@ -555,8 +555,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                     }
                 }
 
-                int bonus = historyBonus(depth);
-                int malus = historyMalus(depth);
+                int histDepth = depth + (score > beta + 50);
+                int bonus = historyBonus(histDepth);
+                int malus = historyMalus(histDepth);
                 if (quiet)
                 {
                     history.updateQuietStats(threats, ExtMove::from(board, move), contHistEntries, bonus);
