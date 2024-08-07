@@ -481,9 +481,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         bool doSE = !root &&
             !excluded &&
-            depth >= 7 &&
+            depth >= seMinDepth &&
             ttData.move == move &&
-            ttData.depth >= depth - 3 &&
+            ttData.depth >= depth - seTTDepthMargin &&
             ttData.bound != TTEntry::Bound::UPPER_BOUND &&
             !isMateScore(ttData.score);
 
@@ -491,7 +491,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         if (doSE)
         {
-            int sBeta = std::max(-SCORE_MATE, ttData.score - depth);
+            int sBeta = std::max(-SCORE_MATE, ttData.score - sBetaScale * depth / 16);
             int sDepth = (depth - 1) / 2;
             stack->excludedMove = ttData.move;
 
