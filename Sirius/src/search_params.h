@@ -88,6 +88,10 @@ SEARCH_PARAM(seePruneMarginQuiet, -66, -120, -30, 6);
 SEARCH_PARAM(maxHistPruningDepth, 5, 2, 8, 1);
 SEARCH_PARAM(histPruningMargin, 1729, 512, 4096, 128);
 
+SEARCH_PARAM(seMinDepth, 7, 4, 9, 1);
+SEARCH_PARAM(seTTDepthMargin, 3, 2, 5, 1);
+SEARCH_PARAM(sBetaScale, 16, 8, 32, 1);
+
 SEARCH_PARAM(lmrMinDepth, 3, 2, 5, 1);
 SEARCH_PARAM(lmrMinMovesNonPv, 3, 1, 6, 1);
 SEARCH_PARAM(lmrMinMovesPv, 4, 2, 8, 1);
