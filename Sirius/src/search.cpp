@@ -370,7 +370,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         else if (depth >= minIIRDepth)
             depth--;
 
-        stack->staticEval = inCheck ? SCORE_NONE : history.correctStaticEval(eval::evaluate(board), board.sideToMove(), board.pawnKey());
+        stack->staticEval = inCheck ? SCORE_NONE : history.correctStaticEval(eval::evaluate(board, &thread), board.sideToMove(), board.pawnKey());
         stack->eval = stack->staticEval;
         if (!inCheck && ttHit && (
             ttData.bound == TTEntry::Bound::EXACT ||
