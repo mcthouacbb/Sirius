@@ -34,6 +34,9 @@ set(SRCS
     "src/eval/eval.cpp"
     "src/eval/eval.h"
     "src/eval/eval_constants.h"
+    "src/eval/eval_state.cpp"
+    "src/eval/eval_state.h"
+    "src/eval/eval_terms.h"
     "src/eval/pawn_structure.cpp"
     "src/eval/pawn_structure.h"
     "src/eval/pawn_table.h"
@@ -58,6 +61,7 @@ set(SRCS
 
     "src/util/color_piece_array.h"
     "src/util/static_vector.h"
+    "src/util/piece_set.h"
     "src/util/prng.h"
 )
 

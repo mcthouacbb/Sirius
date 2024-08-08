@@ -212,6 +212,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
     Move bestMove = {};
 
     thread.reset();
+    thread.evalState.init(thread.board);
 
     report = report && normalSearch;
 
@@ -521,7 +522,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         stack->histScore = histScore;
 
         uint64_t nodesBefore = thread.nodes;
-        board.makeMove(move);
+        board.makeMove(move, thread.evalState);
         thread.nodes.fetch_add(1, std::memory_order_relaxed);
         bool givesCheck = board.checkers().any();
         if (!doSE && givesCheck)
@@ -564,7 +565,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             score = -search(thread, newDepth, stack + 1, -beta, -alpha, true, false);
 
         rootPly--;
-        board.unmakeMove();
+        board.unmakeMove(thread.evalState);
         if (root && thread.isMainThread())
             m_TimeMan.updateNodes(move, thread.nodes - nodesBefore);
 
@@ -715,11 +716,11 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
             bestScore = std::max(bestScore, futility);
             continue;
         }
-        board.makeMove(move);
+        board.makeMove(move, thread.evalState);
         thread.nodes.fetch_add(1, std::memory_order_relaxed);
         rootPly++;
         int score = -qsearch(thread, stack + 1, -beta, -alpha, pvNode);
-        board.unmakeMove();
+        board.unmakeMove(thread.evalState);
         rootPly--;
 
         if (score > bestScore)

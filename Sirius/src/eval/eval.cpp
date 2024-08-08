@@ -330,7 +330,7 @@ int evaluate(const Board& board, search::SearchThread* thread)
     constexpr int SCALE_FACTOR = 128;
 
     Color color = board.sideToMove();
-    PackedScore eval = board.psqtState().evaluate(board);
+    PackedScore eval = thread->evalState.psqtState().evaluate(board);
 
     PawnStructure pawnStructure;
     eval += evaluatePawns(board, pawnStructure, thread ? &thread->pawnTable : nullptr);
@@ -352,7 +352,7 @@ int evaluate(const Board& board, search::SearchThread* thread)
 
     eval += (color == Color::WHITE ? TEMPO : -TEMPO);
 
-    return (color == Color::WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg() * scale / SCALE_FACTOR, board.psqtState().phase);
+    return (color == Color::WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg() * scale / SCALE_FACTOR, thread->evalState.psqtState().phase);
 }
 
 

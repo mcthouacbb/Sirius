@@ -1,5 +1,6 @@
 #include "pawn_structure.h"
 #include "../attacks.h"
+#include "eval_constants.h"
 
 namespace eval
 {
