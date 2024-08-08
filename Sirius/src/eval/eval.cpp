@@ -17,6 +17,15 @@ struct EvalData
     ColorArray<int> attackCount;
 };
 
+template<Color us>
+PackedScore evaluateKnightOutposts(const Board& board, const PawnStructure& pawnStructure)
+{
+    constexpr Color them = ~us;
+    Bitboard outpostRanks = RANK_4_BB | RANK_5_BB | (us == Color::WHITE ? RANK_6_BB : RANK_3_BB);
+    Bitboard outposts = outpostRanks & ~pawnStructure.pawnAttackSpans[them] & pawnStructure.pawnAttacks[us];
+    return KNIGHT_OUTPOST * (board.pieces(us, PieceType::KNIGHT) & outposts).popcount();
+}
+
 template<Color us, PieceType piece>
 PackedScore evaluatePieces(const Board& board, EvalData& evalData, const PawnStructure& pawnStructure)
 {
@@ -31,12 +40,7 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData, const PawnStr
             eval += BISHOP_PAIR;
 
     if constexpr (piece == PieceType::KNIGHT)
-    {
-        Bitboard outpostRanks = RANK_4_BB | RANK_5_BB | (us == Color::WHITE ? RANK_6_BB : RANK_3_BB);
-        Bitboard outposts = outpostRanks & ~pawnStructure.pawnAttackSpans[them] & evalData.attackedBy[us][PieceType::PAWN];
-        if (Bitboard outpostKnights = pieces & outposts; outpostKnights.any())
-            eval += KNIGHT_OUTPOST * outpostKnights.popcount();
-    }
+        eval += evaluateKnightOutposts<us>(board, pawnStructure);
 
     Bitboard occupancy = board.allPieces();
     if constexpr (piece == PieceType::BISHOP)
@@ -237,18 +241,28 @@ PackedScore evalKingPawnFile(uint32_t file, Bitboard ourPawns, Bitboard theirPaw
 }
 
 template<Color us>
-PackedScore evaluateKings(const Board& board, const EvalData& evalData)
+PackedScore evaluateStormShield(const Board& board)
 {
     constexpr Color them = ~us;
+    PackedScore eval{0, 0};
     Bitboard ourPawns = board.pieces(us, PieceType::PAWN);
     Bitboard theirPawns = board.pieces(them, PieceType::PAWN);
-
     Square theirKing = board.kingSq(them);
-
-    PackedScore eval{0, 0};
 
     for (uint32_t file = 0; file < 8; file++)
         eval += evalKingPawnFile<us>(file, ourPawns, theirPawns, theirKing);
+
+    return eval;
+}
+
+template<Color us>
+PackedScore evaluateKings(const Board& board, const EvalData& evalData)
+{
+    constexpr Color them = ~us;
+
+    Square theirKing = board.kingSq(them);
+
+    PackedScore eval = evaluateStormShield<us>(board);
 
     Bitboard rookCheckSquares = attacks::rookAttacks(theirKing, board.allPieces());
     Bitboard bishopCheckSquares = attacks::rookAttacks(theirKing, board.allPieces());
