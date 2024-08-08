@@ -26,6 +26,40 @@ PackedScore evaluateKnightOutposts(const Board& board, const PawnStructure& pawn
     return KNIGHT_OUTPOST * (board.pieces(us, PieceType::KNIGHT) & outposts).popcount();
 }
 
+template<Color us>
+PackedScore evaluateBishopPawns(const Board& board)
+{
+    Bitboard bishops = board.pieces(us, PieceType::BISHOP);
+
+    PackedScore eval{0, 0};
+    while (bishops.any())
+    {
+        Square sq = bishops.poplsb();
+        bool lightSquare = (Bitboard::fromSquare(sq) & LIGHT_SQUARES_BB).any();
+        Bitboard sameColorPawns = board.pieces(us, PieceType::PAWN) & (lightSquare ? LIGHT_SQUARES_BB : DARK_SQUARES_BB);
+        eval += BISHOP_PAWNS[std::min(sameColorPawns.popcount(), 6u)];
+    }
+    return eval;
+}
+
+template<Color us>
+PackedScore evaluateRookOpen(const Board& board)
+{
+    constexpr Color them = ~us;
+    Bitboard ourPawns = board.pieces(us, PieceType::PAWN);
+    Bitboard theirPawns = board.pieces(them, PieceType::PAWN);
+    Bitboard rooks = board.pieces(us, PieceType::ROOK);
+
+    PackedScore eval{0, 0};
+    while (rooks.any())
+    {
+        Bitboard fileBB = Bitboard::fileBB(rooks.poplsb().file());
+        if ((ourPawns & fileBB).empty())
+            eval += (theirPawns & fileBB).any() ? ROOK_OPEN[1] : ROOK_OPEN[0];
+    }
+    return eval;
+}
+
 template<Color us, PieceType piece>
 PackedScore evaluatePieces(const Board& board, EvalData& evalData, const PawnStructure& pawnStructure)
 {
@@ -36,11 +70,17 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData, const PawnStr
     PackedScore eval{0, 0};
     Bitboard pieces = board.pieces(us, piece);
     if constexpr (piece == PieceType::BISHOP)
+    {
         if (pieces.multiple())
             eval += BISHOP_PAIR;
+        eval += evaluateBishopPawns<us>(board);
+    }
 
     if constexpr (piece == PieceType::KNIGHT)
         eval += evaluateKnightOutposts<us>(board, pawnStructure);
+
+    if constexpr (piece == PieceType::ROOK)
+        eval += evaluateRookOpen<us>(board);
 
     Bitboard occupancy = board.allPieces();
     if constexpr (piece == PieceType::BISHOP)
@@ -68,21 +108,6 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData, const PawnStr
         {
             evalData.attackWeight[us] += KING_ATTACKER_WEIGHT[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)];
             evalData.attackCount[us] += kingRingAtks.popcount();
-        }
-
-        Bitboard fileBB = Bitboard::fileBB(sq.file());
-
-        if constexpr (piece == PieceType::ROOK)
-        {
-            if ((ourPawns & fileBB).empty())
-                eval += (theirPawns & fileBB).any() ? ROOK_OPEN[1] : ROOK_OPEN[0];
-        }
-
-        if constexpr (piece == PieceType::BISHOP)
-        {
-            bool lightSquare = (Bitboard::fromSquare(sq) & LIGHT_SQUARES_BB).any();
-            Bitboard sameColorPawns = board.pieces(us, PieceType::PAWN) & (lightSquare ? LIGHT_SQUARES_BB : DARK_SQUARES_BB);
-            eval += BISHOP_PAWNS[std::min(sameColorPawns.popcount(), 6u)];
         }
     }
 
