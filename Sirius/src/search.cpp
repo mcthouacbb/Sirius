@@ -212,7 +212,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
     Move bestMove = {};
 
     thread.reset();
-    thread.evalState.init(thread.board);
+    thread.evalState.init(thread.board, thread.pawnTable);
 
     report = report && normalSearch;
 

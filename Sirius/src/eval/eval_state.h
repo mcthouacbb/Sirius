@@ -2,6 +2,7 @@
 
 #include "psqt_state.h"
 #include "pawn_structure.h"
+#include "pawn_table.h"
 #include "../util/static_vector.h"
 #include "../util/piece_set.h"
 #include <optional>
@@ -38,15 +39,14 @@ struct EvalState
 public:
     EvalState();
 
-    void init(const Board& board);
+    void init(const Board& board, PawnTable& pawnTable);
 
     void push(const Board& board, const EvalUpdates& updates);
     void pop();
 
-    const PsqtState& psqtState() const
-    {
-        return m_CurrEntry->psqtState;
-    }
+    PackedScore score(const Board& board) const;
+    const PawnStructure& pawnStructure() const;
+    int phase() const;
 private:
     struct StackEntry
     {
@@ -73,6 +73,7 @@ private:
 
     std::array<StackEntry, 256> m_Stack;
     StackEntry* m_CurrEntry;
+    PawnTable* m_PawnTable;
 };
 
 
