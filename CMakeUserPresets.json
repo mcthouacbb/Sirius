@@ -31,7 +31,7 @@
             "generator": "Visual Studio 17 2022",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
-                "CMAKE_CXX_FLAGS_INIT": "/W4 /WX /Gy",
+                "CMAKE_CXX_FLAGS_INIT": "/W4 /Gy",
                 "CMAKE_CXX_FLAGS_DEBUG_INIT": "/fsanitize=address",
                 "CMAKE_CXX_FLAGS_RELEASE_INIT": ""
             },
