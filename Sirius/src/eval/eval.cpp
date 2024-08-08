@@ -63,6 +63,14 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
         if (pieces.multiple())
             eval += BISHOP_PAIR;
 
+    if constexpr (piece == PieceType::KNIGHT)
+    {
+        Bitboard outpostRanks = RANK_4_BB | RANK_5_BB | (us == Color::WHITE ? RANK_6_BB : RANK_3_BB);
+        Bitboard outposts = outpostRanks & ~evalData.pawnAttackSpans[them] & evalData.attackedBy[us][PieceType::PAWN];
+        if (Bitboard outpostKnights = pieces & outposts; outpostKnights.any())
+            eval += KNIGHT_OUTPOST * outpostKnights.popcount();
+    }
+
     Bitboard occupancy = board.allPieces();
     if constexpr (piece == PieceType::BISHOP)
         occupancy ^= board.pieces(us, PieceType::BISHOP) | board.pieces(us, PieceType::QUEEN);
@@ -71,7 +79,6 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
     else if constexpr (piece == PieceType::QUEEN)
         occupancy ^= board.pieces(us, PieceType::BISHOP) | board.pieces(us, PieceType::ROOK);
 
-    Bitboard outpostSquares = RANK_4_BB | RANK_5_BB | (us == Color::WHITE ? RANK_6_BB : RANK_3_BB);
 
     while (pieces.any())
     {
@@ -98,13 +105,6 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
         {
             if ((ourPawns & fileBB).empty())
                 eval += (theirPawns & fileBB).any() ? ROOK_OPEN[1] : ROOK_OPEN[0];
-        }
-
-        if constexpr (piece == PieceType::KNIGHT)
-        {
-            Bitboard outposts = outpostSquares & ~evalData.pawnAttackSpans[them] & evalData.attackedBy[us][PieceType::PAWN];
-            if ((Bitboard::fromSquare(sq) & outposts).any())
-                eval += KNIGHT_OUTPOST;
         }
 
         if constexpr (piece == PieceType::BISHOP)
