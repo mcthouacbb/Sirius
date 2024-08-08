@@ -36,6 +36,7 @@ set(SRCS
     "src/eval/eval_constants.h"
     "src/eval/eval_state.cpp"
     "src/eval/eval_state.h"
+    "src/eval/eval_terms.cpp"
     "src/eval/eval_terms.h"
     "src/eval/pawn_structure.cpp"
     "src/eval/pawn_structure.h"
