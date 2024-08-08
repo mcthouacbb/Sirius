@@ -1,12 +1,14 @@
+#pragma once
+
 #include <vector>
 #include "../zobrist.h"
 #include "../defs.h"
+#include "pawn_structure.h"
 
 struct PawnEntry
 {
     ZKey pawnKey;
-    Bitboard passedPawns;
-    PackedScore score;
+    eval::PawnStructure pawnStructure;
 };
 
 class PawnTable

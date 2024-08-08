@@ -2,7 +2,6 @@
 
 #include "defs.h"
 #include "bitboard.h"
-#include "eval/psqt_state.h"
 #include "zobrist.h"
 
 #include <string_view>
@@ -34,8 +33,56 @@ struct BoardState
     ZKey pawnKey;
     CheckInfo checkInfo;
     Bitboard threats;
-    eval::PsqtState psqtState;
+
+    void addPiece(Square pos, Color color, PieceType pieceType)
+    {
+        squares[pos.value()] = makePiece(pieceType, color);
+
+        Bitboard posBB = Bitboard::fromSquare(pos);
+        pieces[static_cast<int>(pieceType)] |= posBB;
+        colors[static_cast<int>(color)] |= posBB;
+    }
+
+    void addPiece(Square pos, Piece piece)
+    {
+        squares[pos.value()] = piece;
+        Bitboard posBB = Bitboard::fromSquare(pos);
+        pieces[static_cast<int>(getPieceType(piece))] |= posBB;
+        colors[static_cast<int>(getPieceColor(piece))] |= posBB;
+    }
+
+    void removePiece(Square pos)
+    {
+        Bitboard posBB = Bitboard::fromSquare(pos);
+        Piece piece = squares[pos.value()];
+        PieceType pieceType = getPieceType(piece);
+        Color color = getPieceColor(piece);
+        squares[pos.value()] = Piece::NONE;
+        pieces[static_cast<int>(pieceType)] ^= posBB;
+        colors[static_cast<int>(color)] ^= posBB;
+    }
+
+    void movePiece(Square src, Square dst)
+    {
+        Piece piece = squares[src.value()];
+        Bitboard srcBB = Bitboard::fromSquare(src);
+        Bitboard dstBB = Bitboard::fromSquare(dst);
+        Bitboard moveBB = srcBB | dstBB;
+        PieceType pieceType = getPieceType(piece);
+        Color color = getPieceColor(piece);
+
+        squares[dst.value()] = piece;
+        squares[src.value()] = Piece::NONE;
+        pieces[static_cast<int>(pieceType)] ^= moveBB;
+        colors[static_cast<int>(color)] ^= moveBB;
+    }
 };
+
+namespace eval
+{
+struct EvalState;
+struct EvalUpdates;
+}
 
 class Board
 {
@@ -52,7 +99,9 @@ public:
     std::string epdStr() const;
 
     void makeMove(Move move);
+    void makeMove(Move move, eval::EvalState& evalState);
     void unmakeMove();
+    void unmakeMove(eval::EvalState& evalState);
     void makeNullMove();
     void unmakeNullMove();
 
@@ -95,9 +144,13 @@ public:
     bool see(Move move, int margin) const;
     bool isLegal(Move move) const;
     ZKey keyAfter(Move move) const;
-
-    const eval::PsqtState& psqtState() const;
 private:
+    template<bool updateEval>
+    void makeMove(Move move, eval::EvalState* evalState);
+
+    template<bool updateEval>
+    void unmakeMove(eval::EvalState* evalState);
+
     const BoardState& currState() const;
     BoardState& currState();
     Bitboard pinners(Color color) const;
@@ -105,10 +158,10 @@ private:
     void updateCheckInfo();
     void calcThreats();
     void calcRepetitions();
-    void addPiece(Square pos, Color color, PieceType piece);
-    void addPiece(Square pos, Piece piece);
-    void removePiece(Square pos);
-    void movePiece(Square src, Square dst);
+    void addPiece(Square pos, Color color, PieceType pieceType, eval::EvalUpdates& updates);
+    void addPiece(Square pos, Piece piece, eval::EvalUpdates& updates);
+    void removePiece(Square pos, eval::EvalUpdates& updates);
+    void movePiece(Square src, Square dst, eval::EvalUpdates& updates);
 
     int seePieceValue(PieceType type) const;
 
@@ -126,6 +179,26 @@ private:
 inline const BoardState& Board::currState() const
 {
     return m_States.back();
+}
+
+inline void Board::makeMove(Move move)
+{
+    makeMove<false>(move, nullptr);
+}
+
+inline void Board::makeMove(Move move, eval::EvalState& evalState)
+{
+    makeMove<true>(move, &evalState);
+}
+
+inline void Board::unmakeMove()
+{
+    unmakeMove<false>(nullptr);
+}
+
+inline void Board::unmakeMove(eval::EvalState& evalState)
+{
+    unmakeMove<true>(&evalState);
 }
 
 inline BoardState& Board::currState()
@@ -231,11 +304,6 @@ inline Bitboard Board::attackersTo(Color color, Square square) const
 inline Bitboard Board::attackersTo(Square square) const
 {
     return attackersTo(square, allPieces());
-}
-
-inline const eval::PsqtState& Board::psqtState() const
-{
-    return currState().psqtState;
 }
 
 inline Bitboard Board::checkers() const

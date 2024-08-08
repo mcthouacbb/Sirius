@@ -246,10 +246,11 @@ void CmdLine::printBoardCommand()
 void CmdLine::staticEvalCommand()
 {
     auto lock = lockStdout();
-    std::cout << "Eval: " << eval::evaluate(m_Board) << std::endl;
-    std::cout << "Phase: " << m_Board.psqtState().phase << std::endl;
-    PackedScore psqt = m_Board.psqtState().evaluate(m_Board);
-    std::cout << "Piece Square Tables: " << psqt.mg() << ' ' << psqt.eg() << std::endl;
+    std::cout << "not currently supported" << std::endl;
+    //std::cout << "Eval: " << eval::evaluate(m_Board) << std::endl;
+    //std::cout << "Phase: " << m_Board.psqtState().phase << std::endl;
+    //PackedScore psqt = m_Board.psqtState().evaluate(m_Board);
+    //std::cout << "Piece Square Tables: " << psqt.mg() << ' ' << psqt.eg() << std::endl;
 }
 
 void CmdLine::searchCommand(std::istringstream& stream)
