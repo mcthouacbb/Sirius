@@ -43,6 +43,7 @@ void SearchThread::reset()
     {
         stack[i].killers[0] = stack[i].killers[1] = Move();
         stack[i].excludedMove = Move();
+        stack[i].multiExts = 0;
         stack[i].pv = {};
         stack[i].pvLength = 0;
         stack[i].contHistEntry = nullptr;
@@ -436,6 +437,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     int movesPlayed = 0;
     bool noisyTTMove = ttData.move != Move() && !moveIsQuiet(board, ttData.move);
 
+    if (!root)
+        stack->multiExts = stack[-1].multiExts;
+
     for (int moveIdx = 0; moveIdx < static_cast<int>(moves.size()); moveIdx++)
     {
         auto [move, moveScore] = ordering.selectMove(static_cast<uint32_t>(moveIdx));
@@ -500,10 +504,17 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             stack->excludedMove = Move();
 
             if (score < sBeta)
-                extension = 1;
+            {
+                if (!pvNode && stack->multiExts < maxMultiExts && score < sBeta - doubleExtMargin)
+                    extension = 2;
+                else
+                    extension = 1;
+            }
             else if (sBeta >= beta)
                 return sBeta;
         }
+
+        stack->multiExts += extension >= 2;
 
         m_TT.prefetch(board.keyAfter(move));
         stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
