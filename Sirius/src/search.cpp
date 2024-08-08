@@ -501,6 +501,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
             if (score < sBeta)
                 extension = 1;
+            else if (sBeta >= beta)
+                return sBeta;
         }
 
         m_TT.prefetch(board.keyAfter(move));
