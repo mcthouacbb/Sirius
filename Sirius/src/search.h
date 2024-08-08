@@ -21,6 +21,7 @@ struct SearchStack
     int pvLength;
 
     Move excludedMove;
+    int multiExts;
 
     Move bestMove;
     std::array<Move, 2> killers;
