@@ -100,6 +100,7 @@ bool TT::probe(ZKey key, int ply, ProbedTTData& ttData)
     auto entry = bucket.entries[entryIdx];
 
     ttData.score = retrieveScore(entry.score, ply);
+    ttData.staticEval = entry.staticEval;
     ttData.move = entry.bestMove;
     ttData.depth = entry.depth;
     ttData.bound = entry.bound();
@@ -107,7 +108,7 @@ bool TT::probe(ZKey key, int ply, ProbedTTData& ttData)
     return true;
 }
 
-void TT::store(ZKey key, int depth, int ply, int score, Move move, TTEntry::Bound bound)
+void TT::store(ZKey key, int depth, int ply, int score, int staticEval, Move move, TTEntry::Bound bound)
 {
     // 16 bit keys to save space
     // idea from JW
@@ -149,6 +150,7 @@ void TT::store(ZKey key, int depth, int ply, int score, Move move, TTEntry::Boun
         depth >= replace.depth - 2)
     {
         replace.key16 = key16;
+        replace.staticEval = staticEval;
         replace.depth = static_cast<uint8_t>(depth);
         replace.score = static_cast<int16_t>(storeScore(score, ply));
         replace.genBound = TTEntry::makeGenBound(static_cast<uint8_t>(m_CurrAge), bound);
