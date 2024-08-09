@@ -380,7 +380,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         }
         else
         {
-            rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
+            rawStaticEval = eval::evaluate(board, &thread);
             stack->staticEval = history.correctStaticEval(rawStaticEval, board.sideToMove(), board.pawnKey());
             stack->eval = stack->staticEval;
             if (ttHit && (
@@ -697,7 +697,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     }
     else
     {
-        rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
+        rawStaticEval = eval::evaluate(board, &thread);
         stack->staticEval = inCheck ? SCORE_NONE : thread.history.correctStaticEval(rawStaticEval, board.sideToMove(), board.pawnKey());
 
         stack->eval = stack->staticEval;
