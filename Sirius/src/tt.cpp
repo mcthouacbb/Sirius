@@ -82,12 +82,10 @@ bool TT::probe(ZKey key, int ply, ProbedTTData& ttData)
     TTBucket& bucket = m_Buckets[idx];
     int entryIdx = -1;
     uint16_t key16 = key.value & 0xFFFF;
-    std::array<TTEntry, ENTRY_COUNT> entries;
+
     for (int i = 0; i < ENTRY_COUNT; i++)
     {
-        uint64_t entryData = bucket.entries[i].load(std::memory_order_relaxed);
-        std::memcpy(&entries[i], &entryData, sizeof(TTEntry));
-        if (entries[i].key16 == key16)
+        if (bucket.entries[i].key16 == key16)
         {
             entryIdx = i;
             break;
@@ -99,7 +97,7 @@ bool TT::probe(ZKey key, int ply, ProbedTTData& ttData)
         return false;
     }
 
-    auto entry = entries[entryIdx];
+    auto entry = bucket.entries[entryIdx];
 
     ttData.score = retrieveScore(entry.score, ply);
     ttData.move = entry.bestMove;
@@ -117,18 +115,15 @@ void TT::store(ZKey key, int depth, int ply, int score, Move move, TTEntry::Boun
     TTBucket& bucket = m_Buckets[index(key.value)];
     int currQuality = INT_MAX;
     int replaceIdx = -1;
-    std::array<TTEntry, ENTRY_COUNT> entries;
     for (int i = 0; i < ENTRY_COUNT; i++)
     {
-        uint64_t entryData = bucket.entries[i].load(std::memory_order_relaxed);
-        std::memcpy(&entries[i], &entryData, sizeof(TTEntry));
-        if (entries[i].key16 == key16)
+        if (bucket.entries[i].key16 == key16)
         {
             replaceIdx = i;
             break;
         }
 
-        int entryQuality = quality(entries[i].gen(), entries[i].depth);
+        int entryQuality = quality(bucket.entries[i].gen(), bucket.entries[i].depth);
         if (entryQuality < currQuality)
         {
             currQuality = entryQuality;
@@ -138,7 +133,7 @@ void TT::store(ZKey key, int depth, int ply, int score, Move move, TTEntry::Boun
 
     // only overwrite the move if new move is not a null move or the entry is from a different position
     // idea from stockfish and ethereal
-    TTEntry replace = entries[replaceIdx];
+    TTEntry& replace = bucket.entries[replaceIdx];
     if (move != Move() || replace.key16 != key16)
         replace.bestMove = move;
 
@@ -158,10 +153,6 @@ void TT::store(ZKey key, int depth, int ply, int score, Move move, TTEntry::Boun
         replace.score = static_cast<int16_t>(storeScore(score, ply));
         replace.genBound = TTEntry::makeGenBound(static_cast<uint8_t>(m_CurrAge), bound);
     }
-
-    uint64_t replaceData;
-    std::memcpy(&replaceData, &replace, sizeof(TTEntry));
-    bucket.entries[replaceIdx].store(replaceData, std::memory_order_relaxed);
 }
 
 int TT::quality(int age, int depth) const

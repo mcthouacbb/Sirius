@@ -48,23 +48,7 @@ static constexpr int ENTRY_COUNT = 4;
 
 struct alignas(32) TTBucket
 {
-    std::array<std::atomic_uint64_t, ENTRY_COUNT> entries;
-
-    TTBucket() = default;
-
-    TTBucket(const TTBucket& other)
-    {
-        *this = other;
-    }
-
-    TTBucket& operator=(const TTBucket& other)
-    {
-        for (int i = 0; i < ENTRY_COUNT; i++)
-        {
-            entries[i].store(other.entries[i].load(std::memory_order_relaxed), std::memory_order_relaxed);
-        }
-        return *this;
-    }
+    std::array<TTEntry, ENTRY_COUNT> entries;
 };
 
 struct ProbedTTData
