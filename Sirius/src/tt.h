@@ -13,6 +13,7 @@ struct TTEntry
 {
     uint16_t key16;
     int16_t score;
+    int16_t staticEval;
     Move bestMove;
     uint8_t depth;
     // 2 bits bound(lower), 6 bits gen(upper)
@@ -42,34 +43,20 @@ struct TTEntry
     }
 };
 
-static_assert(sizeof(TTEntry) == 8, "TTEntry must be 8 bytes");
+static_assert(sizeof(TTEntry) == 10, "TTEntry must be 10 bytes");
+static_assert(alignof(TTEntry) == 2, "TTEntry must have 2 byte alignment");
 
-static constexpr int ENTRY_COUNT = 4;
+static constexpr int ENTRY_COUNT = 3;
 
 struct alignas(32) TTBucket
 {
-    std::array<std::atomic_uint64_t, ENTRY_COUNT> entries;
-
-    TTBucket() = default;
-
-    TTBucket(const TTBucket& other)
-    {
-        *this = other;
-    }
-
-    TTBucket& operator=(const TTBucket& other)
-    {
-        for (int i = 0; i < ENTRY_COUNT; i++)
-        {
-            entries[i].store(other.entries[i].load(std::memory_order_relaxed), std::memory_order_relaxed);
-        }
-        return *this;
-    }
+    std::array<TTEntry, ENTRY_COUNT> entries;
 };
 
 struct ProbedTTData
 {
     int score;
+    int staticEval;
     Move move;
     int depth;
     TTEntry::Bound bound;
@@ -89,7 +76,7 @@ public:
     TT& operator=(const TT&) = delete;
 
     bool probe(ZKey key, int ply, ProbedTTData& ttData);
-    void store(ZKey key, int ply, int depth, int score, Move move, TTEntry::Bound type);
+    void store(ZKey key, int ply, int depth, int score, int staticEval, Move move, TTEntry::Bound type);
     int quality(int age, int depth) const;
     void prefetch(ZKey key) const;
 

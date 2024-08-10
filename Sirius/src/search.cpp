@@ -355,6 +355,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     ProbedTTData ttData = {};
     bool ttHit = false;
 
+    int rawStaticEval = SCORE_NONE;
+
     if (!excluded)
     {
         ttHit = m_TT.probe(board.zkey(), rootPly, ttData);
@@ -371,14 +373,23 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         else if (depth >= minIIRDepth)
             depth--;
 
-        stack->staticEval = inCheck ? SCORE_NONE : history.correctStaticEval(eval::evaluate(board, &thread), board.sideToMove(), board.pawnKey());
-        stack->eval = stack->staticEval;
-        if (!inCheck && ttHit && (
-            ttData.bound == TTEntry::Bound::EXACT ||
-            (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= stack->eval) ||
-            (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= stack->eval)
-        ))
-            stack->eval = ttData.score;
+        if (inCheck)
+        {
+            stack->staticEval = SCORE_NONE;
+            stack->eval = SCORE_NONE;
+        }
+        else
+        {
+            rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
+            stack->staticEval = history.correctStaticEval(rawStaticEval, board.sideToMove(), board.pawnKey());
+            stack->eval = stack->staticEval;
+            if (ttHit && (
+                ttData.bound == TTEntry::Bound::EXACT ||
+                (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= stack->eval) ||
+                (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= stack->eval)
+            ))
+                stack->eval = ttData.score;
+        }
     }
 
     bool improving = !inCheck && rootPly > 1 && stack->staticEval > stack[-2].staticEval;
@@ -648,7 +659,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             !(bound == TTEntry::Bound::UPPER_BOUND && stack->staticEval <= bestScore))
             history.updateCorrHist(bestScore - stack->staticEval, depth, board.sideToMove(), board.pawnKey());
 
-        m_TT.store(board.zkey(), depth, rootPly, bestScore, stack->bestMove, bound);
+        m_TT.store(board.zkey(), depth, rootPly, bestScore, rawStaticEval, stack->bestMove, bound);
     }
 
     return bestScore;
@@ -678,15 +689,25 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     }
 
     bool inCheck = board.checkers().any();
-    stack->staticEval = inCheck ? SCORE_NONE : thread.history.correctStaticEval(eval::evaluate(board, &thread), board.sideToMove(), board.pawnKey());
+    int rawStaticEval = SCORE_NONE;
+    if (inCheck)
+    {
+        stack->staticEval = SCORE_NONE;
+        stack->eval = SCORE_NONE;
+    }
+    else
+    {
+        rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
+        stack->staticEval = inCheck ? SCORE_NONE : thread.history.correctStaticEval(rawStaticEval, board.sideToMove(), board.pawnKey());
 
-    stack->eval = stack->staticEval;
-    if (!inCheck && ttHit && (
-        ttData.bound == TTEntry::Bound::EXACT ||
-        (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= stack->eval) ||
-        (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= stack->eval)
-    ))
-        stack->eval = ttData.score;
+        stack->eval = stack->staticEval;
+        if (!inCheck && ttHit && (
+            ttData.bound == TTEntry::Bound::EXACT ||
+            (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= stack->eval) ||
+            (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= stack->eval)
+        ))
+            stack->eval = ttData.score;
+    }
 
     if (stack->eval >= beta)
         return stack->eval;
@@ -750,7 +771,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         }
     }
 
-    m_TT.store(board.zkey(), 0, rootPly, bestScore, stack->bestMove, bound);
+    m_TT.store(board.zkey(), 0, rootPly, bestScore, rawStaticEval, stack->bestMove, bound);
 
 
     return bestScore;
