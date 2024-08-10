@@ -6,8 +6,7 @@ namespace eval
 {
 
 #define S(mg, eg) PackedScore(mg, eg)
-
-constexpr PackedScore MATERIAL[6] = {S(  67,   98), S( 304,  398), S( 294,  401), S( 425,  738), S( 858, 1363), S(0, 0)};
+constexpr PackedScore MATERIAL[6] = {S(  67,   98), S( 311,  410), S( 330,  423), S( 425,  746), S( 865, 1400), S(0, 0)};
 
 constexpr PackedScore PSQT[6][64] = {
 	{
@@ -73,10 +72,10 @@ constexpr PackedScore PSQT[6][64] = {
 };
 
 constexpr PackedScore MOBILITY[4][28] = {
-	{S(  -8,   -2), S( -34,  -55), S( -10,  -20), S(  -0,    6), S(  10,   20), S(  14,   33), S(  23,   40), S(  32,   47), S(  40,   46), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0)},
-	{S(  -3,  -26), S( -39,  -94), S( -15,  -38), S(  -8,  -14), S(   4,   -0), S(  12,    9), S(  17,   21), S(  22,   27), S(  25,   32), S(  29,   35), S(  29,   39), S(  39,   32), S(  31,   40), S(  45,   29), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0)},
-	{S( -38,  -22), S(  11,  -64), S( -26,  -36), S( -16,  -20), S(  -9,  -14), S(  -3,    2), S(   1,    8), S(  -5,   19), S(   0,   22), S(   4,   28), S(   9,   32), S(  11,   39), S(  15,   44), S(  23,   44), S(  31,   39), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0)},
-	{S( -40,   43), S( -57,  -40), S(-113,  -13), S( -73, -243), S( -76,  -77), S( -31,   -9), S( -21,   14), S( -13,   17), S(  -5,   23), S(  -3,   50), S(  -1,   59), S(   2,   70), S(   6,   76), S(  10,   79), S(  13,   83), S(  16,   87), S(  18,   90), S(  18,   96), S(  19,   99), S(  19,  103), S(  28,   97), S(  34,   85), S(  38,   87), S(  63,   60), S(  70,   60), S( 113,   23), S( 116,   19), S(  67,   19)}
+	{S( -15,  -14), S( -41,  -67), S( -17,  -32), S(  -7,   -6), S(   3,    8), S(   7,   21), S(  16,   28), S(  25,   35), S(  33,   34), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0)},
+	{S( -16,  -32), S( -52, -100), S( -28,  -44), S( -21,  -20), S(  -9,   -6), S(  -1,    3), S(   4,   15), S(   9,   21), S(  12,   26), S(  16,   29), S(  16,   33), S(  26,   26), S(  18,   34), S(  32,   23), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0)},
+	{S( -38,  -30), S(  11,  -72), S( -26,  -44), S( -16,  -28), S(  -9,  -22), S(  -3,   -6), S(   1,    0), S(  -5,   11), S(   0,   14), S(   4,   20), S(   9,   24), S(  11,   31), S(  15,   36), S(  23,   36), S(  31,   31), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0)},
+	{S( -47,    6), S( -64,  -77), S(-120,  -50), S( -80, -280), S( -83, -114), S( -38,  -46), S( -28,  -23), S( -20,  -20), S( -12,  -14), S( -10,   13), S(  -8,   22), S(  -5,   33), S(  -1,   39), S(   3,   42), S(   6,   46), S(   9,   50), S(  11,   53), S(  11,   59), S(  12,   62), S(  12,   66), S(  21,   60), S(  27,   48), S(  31,   50), S(  56,   23), S(  63,   23), S( 106,  -14), S( 109,  -18), S(  60,  -18)}
 };
 
 constexpr PackedScore THREAT_BY_PAWN[6] = {S(   8,  -18), S(  68,   32), S(  68,   62), S(  92,    6), S(  79,  -20), S(   0,    0)};
@@ -85,7 +84,7 @@ constexpr PackedScore THREAT_BY_KNIGHT[2][6] = {
 	{S(  -4,   12), S(  14,   45), S(  32,   34), S(  65,   32), S(  56,   -2), S(   0,    0)}
 };
 constexpr PackedScore THREAT_BY_BISHOP[2][6] = {
-	{S(   5,   36), S(  52,   26), S(  -0,   36), S(  76,    9), S(  74,   44), S(   0,    0)},
+	{S(   5,   36), S(  52,   26), S(   0,   36), S(  76,    9), S(  74,   44), S(   0,    0)},
 	{S(   1,   10), S(  24,   25), S( -15,    9), S(  48,   44), S(  53,  131), S(   0,    0)}
 };
 constexpr PackedScore THREAT_BY_ROOK[2][6] = {
@@ -94,7 +93,7 @@ constexpr PackedScore THREAT_BY_ROOK[2][6] = {
 };
 constexpr PackedScore THREAT_BY_QUEEN[2][6] = {
 	{S(  13,    6), S(  38,    9), S(  20,   45), S(  26,   -9), S(  13,  -70), S( 141,  -33)},
-	{S(  -0,   15), S(   2,    8), S(  -4,   23), S(  -4,    4), S( -21,  -60), S( 119,   48)}
+	{S(   0,   15), S(   2,    8), S(  -4,   23), S(  -4,    4), S( -21,  -60), S( 119,   48)}
 };
 constexpr PackedScore THREAT_BY_KING[6] = {S( -14,   45), S(  34,   44), S(  34,   50), S( 107,    8), S(   0,    0), S(   0,    0)};
 constexpr PackedScore PUSH_THREAT = S(  20,   17);
@@ -104,7 +103,7 @@ constexpr PackedScore ISOLATED_PAWN[8] = {S(  -6,    4), S(  -2,  -14), S( -10, 
 constexpr PackedScore PAWN_PHALANX[8] = {S(   0,    0), S(   3,   -1), S(  13,    7), S(  20,   16), S(  49,   58), S( 131,  172), S(-199,  428), S(   0,    0)};
 constexpr PackedScore DEFENDED_PAWN[8] = {S(   0,    0), S(   0,    0), S(  19,   12), S(  13,    9), S(  15,   17), S(  30,   45), S( 186,   27), S(   0,    0)};
 
-constexpr PackedScore OUR_PASSER_PROXIMITY[8] = {S(   0,    0), S(  10,   71), S( -14,   48), S(  -3,   19), S(   1,    7), S(   7,   -0), S(  16,    1), S(   9,    1)};
+constexpr PackedScore OUR_PASSER_PROXIMITY[8] = {S(   0,    0), S(  10,   71), S( -14,   48), S(  -3,   19), S(   1,    7), S(   7,    0), S(  16,    1), S(   9,    1)};
 constexpr PackedScore THEIR_PASSER_PROXIMITY[8] = {S(   0,    0), S( -76,  -10), S(  15,  -19), S(   5,   18), S(  11,   37), S(   3,   69), S(   9,   70), S(   6,   61)};
 constexpr PackedScore FREE_PASSER[8] = {S(   0,    0), S(   0,    0), S(   0,    0), S(   6,   11), S(   5,   25), S( -11,   86), S(  33,  114), S(   0,    0)};
 
@@ -122,11 +121,11 @@ constexpr PackedScore SAFE_KNIGHT_CHECK = S(  83,   -3);
 constexpr PackedScore SAFE_BISHOP_CHECK = S(  16,   -7);
 constexpr PackedScore SAFE_ROOK_CHECK = S(  58,   -2);
 constexpr PackedScore SAFE_QUEEN_CHECK = S(  31,   14);
-constexpr PackedScore KING_ATTACKER_WEIGHT[4] = {S(  16,   -4), S(   9,   -0), S(  11,  -20), S(   1,    8)};
-constexpr PackedScore KING_ATTACKS[14] = {S( -26,    9), S( -29,    6), S( -31,    4), S( -29,    8), S( -21,    5), S(  -6,    2), S(  18,   -6), S(  48,  -18), S(  96,  -39), S( 127,  -44), S( 166,  -61), S( 195,  -48), S( 235, -144), S( 193,    9)};
+constexpr PackedScore KING_ATTACKER_WEIGHT[4] = {S(  16,   -4), S(   9,    0), S(  11,  -20), S(   1,    8)};
+constexpr PackedScore KING_ATTACKS[14] = {S( -92,   31), S( -95,   28), S( -97,   26), S( -95,   30), S( -87,   27), S( -72,   24), S( -48,   16), S( -18,    4), S(  30,  -17), S(  61,  -22), S( 100,  -39), S( 129,  -26), S( 169, -122), S( 127,   31)};
 
 constexpr PackedScore KNIGHT_OUTPOST = S(  26,   19);
-constexpr PackedScore BISHOP_PAWNS[7] = {S(  29,   42), S(  32,   37), S(  29,   28), S(  24,   20), S(  19,   11), S(  17,   -3), S(  11,  -17)};
+constexpr PackedScore BISHOP_PAWNS[7] = {S(   6,   26), S(   9,   21), S(   6,   12), S(   1,    4), S(  -4,   -5), S(  -6,  -19), S( -12,  -33)};
 constexpr PackedScore BISHOP_PAIR = S(  22,   64);
 constexpr PackedScore ROOK_OPEN[2] = {S(  25,    8), S(  15,    6)};
 
