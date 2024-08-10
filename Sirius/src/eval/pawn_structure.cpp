@@ -36,10 +36,7 @@ PackedScore PawnStructure::evaluate(const Board& board)
     {
         Square sq = pawns.poplsb();
         if (board.isPassedPawn(sq))
-        {
             passedPawns |= Bitboard::fromSquare(sq);
-            eval += PASSED_PAWN[sq.relativeRank<us>()];
-        }
         if (board.isIsolatedPawn(sq))
             eval += ISOLATED_PAWN[sq.file()];
     }
