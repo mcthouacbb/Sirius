@@ -33,34 +33,6 @@ void evaluatePawns(const Board& board, PawnStructure& pawnStructure, PawnTable* 
 }
 
 template<Color us>
-PackedScore evaluatePassedPawns(const Board& board, const PawnStructure& pawnStructure)
-{
-    constexpr Color them = ~us;
-    Square ourKing = board.kingSq(us);
-    Square theirKing = board.kingSq(them);
-
-    Bitboard passers = pawnStructure.passedPawns & board.pieces(us);
-
-    PackedScore eval{0, 0};
-
-    while (passers.any())
-    {
-        Square passer = passers.poplsb();
-        int rank = passer.relativeRank<us>();
-        if (rank >= RANK_4)
-        {
-            eval += OUR_PASSER_PROXIMITY[Square::chebyshev(ourKing, passer)];
-            eval += THEIR_PASSER_PROXIMITY[Square::chebyshev(theirKing, passer)];
-
-            if (board.pieceAt(passer + attacks::pawnPushOffset<us>()) == Piece::NONE)
-                eval += FREE_PASSER[rank];
-        }
-    }
-
-    return eval;
-}
-
-template<Color us>
 PackedScore evalKingPawnFile(uint32_t file, Bitboard ourPawns, Bitboard theirPawns, Square theirKing)
 {
     PackedScore eval{0, 0};
