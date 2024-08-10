@@ -727,11 +727,14 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
 
     TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
     stack->bestMove = Move();
+    uint32_t movesPlayed = 0;
     for (int moveIdx = 0; moveIdx < static_cast<int>(captures.size()); moveIdx++)
     {
         auto [move, moveScore] = ordering.selectMove(moveIdx);
         if (!board.isLegal(move))
             continue;
+        if (!inCheck && movesPlayed >= qsLmpMargin)
+            break;
         if (!board.see(move, 0))
             continue;
         if (!inCheck && futility <= alpha && !board.see(move, 1))
@@ -739,6 +742,8 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
             bestScore = std::max(bestScore, futility);
             continue;
         }
+
+        movesPlayed++;
         board.makeMove(move, thread.evalState);
         thread.nodes.fetch_add(1, std::memory_order_relaxed);
         rootPly++;
