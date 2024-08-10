@@ -117,9 +117,6 @@ PackedScore evaluateRookOpen(const Board& board)
     return eval;
 }
 
-template PackedScore evaluatePassedPawns<Color::WHITE>(const Board& board, const PawnStructure& pawnStructure);
-template PackedScore evaluatePassedPawns<Color::BLACK>(const Board& board, const PawnStructure& pawnStructure);
-
 template PackedScore evalKingPawnFile<Color::WHITE>(uint32_t file, Bitboard ourPawns, Bitboard theirPawns, Square theirKing);
 template PackedScore evalKingPawnFile<Color::BLACK>(uint32_t file, Bitboard ourPawns, Bitboard theirPawns, Square theirKing);
 
