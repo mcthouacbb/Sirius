@@ -54,7 +54,6 @@ private:
 
         PsqtState psqtState;
         PawnStructure pawnStructure;
-        PackedScore passers;
         PackedScore pawnShieldStorm;
         PackedScore knightOutposts;
         PackedScore bishopPawns;

@@ -164,6 +164,37 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
     return eval;
 }
 
+template<Color us>
+PackedScore evaluatePassedPawns(const Board& board, const PawnStructure& pawnStructure, const EvalData& evalData)
+{
+    constexpr Color them = ~us;
+    Square ourKing = board.kingSq(us);
+    Square theirKing = board.kingSq(them);
+
+    Bitboard passers = pawnStructure.passedPawns & board.pieces(us);
+
+    PackedScore eval{0, 0};
+
+    while (passers.any())
+    {
+        Square passer = passers.poplsb();
+        int rank = passer.relativeRank<us>();
+        if (rank >= RANK_4)
+        {
+            Square pushSq = passer + attacks::pawnPushOffset<us>();
+
+            bool blocked = board.pieceAt(pushSq) != Piece::NONE;
+            bool controlled = (evalData.attacked[them] & Bitboard::fromSquare(pushSq)).any();
+            eval += PASSED_PAWN[blocked][controlled][rank];
+
+            eval += OUR_PASSER_PROXIMITY[Square::chebyshev(ourKing, passer)];
+            eval += THEIR_PASSER_PROXIMITY[Square::chebyshev(theirKing, passer)];
+        }
+    }
+
+    return eval;
+}
+
 void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& pawnStructure)
 {
     Bitboard whitePawns = board.pieces(Color::WHITE, PieceType::PAWN);
@@ -221,7 +252,7 @@ int evaluate(const Board& board, search::SearchThread* thread)
     eval += evaluatePieces<Color::WHITE, PieceType::QUEEN>(board, evalData) - evaluatePieces<Color::BLACK, PieceType::QUEEN>(board, evalData);
 
     eval += evaluateKings<Color::WHITE>(board, evalData) - evaluateKings<Color::BLACK>(board, evalData);
-
+    eval += evaluatePassedPawns<Color::WHITE>(board, pawnStructure, evalData) - evaluatePassedPawns<Color::BLACK>(board, pawnStructure, evalData);
     eval += evaluateThreats<Color::WHITE>(board, evalData) - evaluateThreats<Color::BLACK>(board, evalData);
 
     int scale = evaluateScale(board, eval);

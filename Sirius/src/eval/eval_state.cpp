@@ -28,9 +28,6 @@ void EvalState::init(const Board& board, PawnTable& pawnTable)
         }
 
     evaluatePawns(board, currEntry().pawnStructure, m_PawnTable);
-    currEntry().passers =
-        evaluatePassedPawns<Color::WHITE>(board, currEntry().pawnStructure) -
-        evaluatePassedPawns<Color::BLACK>(board, currEntry().pawnStructure);
     currEntry().pawnShieldStorm =
         evaluateStormShield<Color::WHITE>(board) -
         evaluateStormShield<Color::BLACK>(board);
@@ -65,13 +62,6 @@ void EvalState::push(const Board& board, const EvalUpdates& updates)
         evaluatePawns(board, currEntry().pawnStructure, m_PawnTable);
     else
         currEntry().pawnStructure = oldEntry.pawnStructure;
-
-    if (updates.changedPieces.hasAny(eval_terms::passers.deps))
-        currEntry().passers =
-            evaluatePassedPawns<Color::WHITE>(board, currEntry().pawnStructure) -
-            evaluatePassedPawns<Color::BLACK>(board, currEntry().pawnStructure);
-    else
-        currEntry().passers = oldEntry.passers;
 
     if (updates.changedPieces.hasAny(eval_terms::pawnShieldStorm.deps))
         currEntry().pawnShieldStorm =
@@ -108,7 +98,6 @@ PackedScore EvalState::score(const Board& board) const
     return
         currEntry().psqtState.evaluate(board) +
         currEntry().pawnStructure.score +
-        currEntry().passers +
         currEntry().pawnShieldStorm +
         currEntry().knightOutposts +
         currEntry().bishopPawns +
