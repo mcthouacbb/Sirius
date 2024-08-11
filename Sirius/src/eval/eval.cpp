@@ -151,6 +151,7 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
     Bitboard queenChecks = evalData.attackedBy[us][PieceType::QUEEN] & (bishopCheckSquares | rookCheckSquares);
 
     Bitboard safe = ~evalData.attacked[them] | (~evalData.attackedBy2[them] & evalData.attackedBy[them][PieceType::KING]);
+    Bitboard weak = safe & evalData.attacked[us];
 
     eval += SAFE_KNIGHT_CHECK * (knightChecks & safe).popcount();
     eval += SAFE_BISHOP_CHECK * (bishopChecks & safe).popcount();
@@ -160,6 +161,7 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
     eval += evalData.attackWeight[us];
     int attackCount = std::min(evalData.attackCount[us], 13);
     eval += KING_ATTACKS[attackCount];
+    eval += WEAK_KING_RING[std::min((weak & evalData.kingRing[them]).popcount(), 8u)];
 
     return eval;
 }
