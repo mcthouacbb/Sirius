@@ -152,6 +152,8 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
 
     Bitboard safe = ~evalData.attacked[them] | (~evalData.attackedBy2[them] & evalData.attackedBy[them][PieceType::KING]);
 
+    Bitboard virtualMobility = attacks::queenAttacks(theirKing, board.allPieces()) & ~board.pieces(us);
+
     eval += SAFE_KNIGHT_CHECK * (knightChecks & safe).popcount();
     eval += SAFE_BISHOP_CHECK * (bishopChecks & safe).popcount();
     eval += SAFE_ROOK_CHECK * (rookChecks & safe).popcount();
@@ -160,6 +162,7 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
     eval += evalData.attackWeight[us];
     int attackCount = std::min(evalData.attackCount[us], 13);
     eval += KING_ATTACKS[attackCount];
+    eval += VIRTUAL_MOBILITY[virtualMobility.popcount()];
 
     return eval;
 }
