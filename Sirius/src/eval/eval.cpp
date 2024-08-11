@@ -143,7 +143,7 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
     PackedScore eval{0, 0};
 
     Bitboard rookCheckSquares = attacks::rookAttacks(theirKing, board.allPieces());
-    Bitboard bishopCheckSquares = attacks::rookAttacks(theirKing, board.allPieces());
+    Bitboard bishopCheckSquares = attacks::bishopAttacks(theirKing, board.allPieces());
 
     Bitboard knightChecks = evalData.attackedBy[us][PieceType::KNIGHT] & attacks::knightAttacks(theirKing);
     Bitboard bishopChecks = evalData.attackedBy[us][PieceType::BISHOP] & bishopCheckSquares;
