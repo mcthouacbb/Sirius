@@ -49,6 +49,12 @@ PackedScore PawnStructure::evaluate(const Board& board)
     while (defended.any())
         eval += DEFENDED_PAWN[defended.poplsb().relativeRank<us>()];
 
+    // map all doubled pawns to first rank
+    Bitboard doubled = ourPawns & ourPawns.north();
+    doubled = attacks::fillUp<Color::BLACK>(doubled) & RANK_1_BB;
+    while (doubled.any())
+        eval += DOUBLED_PAWN[doubled.poplsb().value()];
+
     return eval;
 }
 
