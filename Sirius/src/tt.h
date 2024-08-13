@@ -17,7 +17,7 @@ struct TTEntry
     Move bestMove;
     uint8_t depth;
     // 2 bits bound(lower), 6 bits gen(upper)
-    uint8_t genBound;
+    uint8_t genBoundPV;
 
     enum class Bound : uint8_t
     {
@@ -27,19 +27,24 @@ struct TTEntry
         UPPER_BOUND
     };
 
+    bool pv()
+    {
+        return (genBoundPV >> 2) & 1;
+    }
+
     uint8_t gen()
     {
-        return genBound >> 2;
+        return genBoundPV >> 3;
     }
 
     Bound bound()
     {
-        return static_cast<Bound>(genBound & 3);
+        return static_cast<Bound>(genBoundPV & 3);
     }
 
-    static uint8_t makeGenBound(uint8_t gen, Bound bound)
+    static uint8_t makeGenBoundPV(bool pv, uint8_t gen, Bound bound)
     {
-        return static_cast<int>(bound) | (gen << 2);
+        return static_cast<int>(bound) | (pv << 2) | (gen << 3);
     }
 };
 
@@ -59,13 +64,14 @@ struct ProbedTTData
     int staticEval;
     Move move;
     int depth;
+    bool pv;
     TTEntry::Bound bound;
 };
 
 class TT
 {
 public:
-    static constexpr int GEN_CYCLE_LENGTH = 1 << 6;
+    static constexpr int GEN_CYCLE_LENGTH = 1 << 5;
 
     TT(size_t size);
     ~TT() = default;
@@ -76,7 +82,7 @@ public:
     TT& operator=(const TT&) = delete;
 
     bool probe(ZKey key, int ply, ProbedTTData& ttData);
-    void store(ZKey key, int ply, int depth, int score, int staticEval, Move move, TTEntry::Bound type);
+    void store(ZKey key, int ply, int depth, int score, int staticEval, Move move, bool pv, TTEntry::Bound type);
     int quality(int age, int depth) const;
     void prefetch(ZKey key) const;
 
