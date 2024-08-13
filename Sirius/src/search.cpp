@@ -399,7 +399,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     {
         // reverse futility pruning
         if (depth <= rfpMaxDepth && stack->eval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth + stack[-1].histScore / rfpHistDivisor)
-            return stack->eval;
+            return (beta + stack->eval) / 2;
 
         // null move pruning
         Bitboard nonPawns = board.pieces(board.sideToMove()) ^ board.pieces(board.sideToMove(), PieceType::PAWN);
