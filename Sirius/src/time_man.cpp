@@ -11,7 +11,7 @@ void TimeManager::setLimits(const SearchLimits& limits, Color us)
 {
     if (limits.clock.enabled)
     {
-        Duration time = limits.clock.timeLeft[static_cast<int>(us)];
+        Duration time = std::max(Duration(1), limits.clock.timeLeft[static_cast<int>(us)] - limits.overhead);
         Duration inc = limits.clock.increments[static_cast<int>(us)];
 
         // formulas from stormphrax

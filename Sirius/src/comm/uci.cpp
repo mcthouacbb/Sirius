@@ -25,7 +25,8 @@ UCI::UCI()
     };
     m_Options = {
         {"Hash", UCIOption("Hash", {64, 64, 1, 65536}, hashCallback)},
-        {"Threads", UCIOption("Threads", {1, 1, 1, 256}, threadsCallback)}
+        {"Threads", UCIOption("Threads", {1, 1, 1, 256}, threadsCallback)},
+        {"MoveOverhead", UCIOption("MoveOverhead", {10, 10, 1, 100})},
     };
 #ifdef EXTERNAL_TUNE
     for (auto& param : search::searchParams())
@@ -265,6 +266,7 @@ void UCI::goCommand(std::istringstream& stream)
     std::string tok;
     SearchLimits limits = {};
     limits.maxDepth = 1000;
+    limits.overhead = Duration(m_Options["MoveOverhead"].intValue());
     while (stream.tellg() != -1)
     {
         stream >> tok;
