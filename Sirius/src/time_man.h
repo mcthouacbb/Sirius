@@ -19,6 +19,8 @@ struct SearchLimits
         std::array<Duration, 2> increments;
         bool enabled;
     } clock;
+
+    Duration overhead;
 };
 
 class TimeManager
