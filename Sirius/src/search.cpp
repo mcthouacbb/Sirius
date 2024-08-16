@@ -370,7 +370,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             ))
                 return ttData.score;
         }
-        else if (depth >= minIIRDepth)
+        if ((!ttHit || ttData.depth <= depth - iirTTDepthMargin) && depth >= minIIRDepth)
             depth--;
 
         if (inCheck)

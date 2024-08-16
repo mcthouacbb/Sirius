@@ -62,6 +62,7 @@ SEARCH_PARAM(minAspDepth, 5, 3, 7, 1);
 SEARCH_PARAM(aspWideningFactor, 7, 1, 32, 2);
 
 SEARCH_PARAM(minIIRDepth, 2, 2, 9, 1);
+SEARCH_PARAM(iirTTDepthMargin, 4, 2, 6, 1);
 
 SEARCH_PARAM(rfpMaxDepth, 8, 4, 10, 1);
 SEARCH_PARAM(rfpImprovingMargin, 40, 30, 80, 8);
