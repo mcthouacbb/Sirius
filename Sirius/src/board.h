@@ -272,7 +272,7 @@ inline uint64_t Board::materialKey() const
 
     for (Color c : {WHITE, BLACK})
     {
-        for (PieceType pt : {PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING})
+        for (PieceType pt : {PAWN, KNIGHT, BISHOP, ROOK, QUEEN})
         {
             int shift = static_cast<int>(pt) * 6 + static_cast<int>(c) * 30;
             std::uint64_t count = pieces(c, pt).popcount();

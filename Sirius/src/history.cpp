@@ -96,7 +96,7 @@ void History::updateCorrHist(int bonus, int depth, const Board& board)
     pawnEntry = (pawnEntry * (256 - weight) + scaledBonus * weight) / 256;
     pawnEntry = std::clamp(pawnEntry, -MAX_CORR_HIST, MAX_CORR_HIST);
 
-    auto& materialEntry = m_PawnCorrHist[static_cast<int>(stm)][board.materialKey() % PAWN_CORR_HIST_ENTRIES];
+    auto& materialEntry = m_MaterialCorrHist[static_cast<int>(stm)][board.materialKey() % MATERIAL_CORR_HIST_ENTRIES];
     materialEntry = (materialEntry * (256 - weight) + scaledBonus * weight) / 256;
     materialEntry = std::clamp(materialEntry, -MAX_CORR_HIST, MAX_CORR_HIST);
 }
