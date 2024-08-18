@@ -157,6 +157,11 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
     eval += SAFE_ROOK_CHECK * (rookChecks & safe).popcount();
     eval += SAFE_QUEEN_CHECK * (queenChecks & safe).popcount();
 
+    eval += UNSAFE_KNIGHT_CHECK * (knightChecks & ~safe).popcount();
+    eval += UNSAFE_BISHOP_CHECK * (bishopChecks & ~safe).popcount();
+    eval += UNSAFE_ROOK_CHECK * (rookChecks & ~safe).popcount();
+    eval += UNSAFE_QUEEN_CHECK * (queenChecks & ~safe).popcount();
+
     eval += evalData.attackWeight[us];
     int attackCount = std::min(evalData.attackCount[us], 13);
     eval += KING_ATTACKS[attackCount];
