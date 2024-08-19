@@ -113,6 +113,7 @@ public:
     int pliesFromNull() const;
     ZKey zkey() const;
     ZKey pawnKey() const;
+    uint64_t materialKey() const;
 
     bool isDraw(int searchPly);
     bool is3FoldDraw(int searchPly);
@@ -259,6 +260,27 @@ inline ZKey Board::zkey() const
 inline ZKey Board::pawnKey() const
 {
     return currState().pawnKey;
+}
+
+// yoinked from motor, which I think yoinked from Caissa
+inline uint64_t Board::materialKey() const
+{
+    uint64_t material_key = 0;
+
+    using enum Color;
+    using enum PieceType;
+
+    for (Color c : {WHITE, BLACK})
+    {
+        for (PieceType pt : {PAWN, KNIGHT, BISHOP, ROOK, QUEEN})
+        {
+            int shift = static_cast<int>(pt) * 6 + static_cast<int>(c) * 30;
+            std::uint64_t count = pieces(c, pt).popcount();
+            material_key |= (count << shift);
+        }
+    }
+
+    return murmurHash3(material_key);
 }
 
 inline Piece Board::pieceAt(Square square) const

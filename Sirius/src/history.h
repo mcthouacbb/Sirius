@@ -96,10 +96,12 @@ using CHEntry = std::array<std::array<HistoryEntry<HISTORY_MAX>, 64>, 16>;
 using ContHist = std::array<std::array<CHEntry, 64>, 16>;
 using CaptHist = std::array<std::array<std::array<HistoryEntry<HISTORY_MAX>, 64>, 16>, 16>;
 
-constexpr int CORR_HIST_ENTRIES = 16384;
+constexpr int PAWN_CORR_HIST_ENTRIES = 16384;
+constexpr int MATERIAL_CORR_HIST_ENTRIES = 32768;
 constexpr int CORR_HIST_SCALE = 256;
-constexpr int MAX_CORR_HIST = CORR_HIST_SCALE * 64;
-using CorrHist = std::array<std::array<int, CORR_HIST_ENTRIES>, 2>;
+constexpr int MAX_CORR_HIST = CORR_HIST_SCALE * 32;
+using PawnCorrHist = std::array<std::array<int, PAWN_CORR_HIST_ENTRIES>, 2>;
+using MaterialCorrHist = std::array<std::array<int, MATERIAL_CORR_HIST_ENTRIES>, 2>;
 
 int historyBonus(int depth);
 int historyMalus(int depth);
@@ -121,12 +123,12 @@ public:
 
     int getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const;
     int getNoisyStats(ExtMove move) const;
-    int correctStaticEval(int staticEval, Color stm, ZKey pawnHash) const;
+    int correctStaticEval(int staticEval, const Board& board) const;
 
     void clear();
     void updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus);
     void updateNoisyStats(ExtMove move, int bonus);
-    void updateCorrHist(int bonus, int depth, Color stm, ZKey pawnHash);
+    void updateCorrHist(int bonus, int depth, const Board& board);
 private:
     int getMainHist(Bitboard threats, ExtMove move) const;
     int getContHist(const CHEntry* entry, ExtMove move) const;
@@ -139,5 +141,6 @@ private:
     MainHist m_MainHist;
     ContHist m_ContHist;
     CaptHist m_CaptHist;
-    CorrHist m_CorrHist;
+    PawnCorrHist m_PawnCorrHist;
+    MaterialCorrHist m_MaterialCorrHist;
 };

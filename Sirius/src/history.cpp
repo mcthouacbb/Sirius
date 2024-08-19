@@ -46,7 +46,8 @@ void History::clear()
     fillHistTable(m_MainHist, 0);
     fillHistTable(m_ContHist, 0);
     fillHistTable(m_CaptHist, 0);
-    fillHistTable(m_CorrHist, 0);
+    fillHistTable(m_PawnCorrHist, 0);
+    fillHistTable(m_MaterialCorrHist, 0);
 }
 
 int History::getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const
@@ -63,10 +64,12 @@ int History::getNoisyStats(ExtMove move) const
     return getCaptHist(move);
 }
 
-int History::correctStaticEval(int staticEval, Color stm, ZKey pawnHash) const
+int History::correctStaticEval(int staticEval, const Board& board) const
 {
-    int bonus = m_CorrHist[static_cast<int>(stm)][pawnHash.value % CORR_HIST_ENTRIES];
-    int corrected = staticEval + bonus / CORR_HIST_SCALE;
+    Color stm = board.sideToMove();
+    int pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % PAWN_CORR_HIST_ENTRIES];
+    int materialEntry = m_MaterialCorrHist[static_cast<int>(stm)][board.materialKey() % MATERIAL_CORR_HIST_ENTRIES];
+    int corrected = staticEval + (pawnEntry + materialEntry) / CORR_HIST_SCALE;
     return std::clamp(corrected, -SCORE_MATE_IN_MAX, SCORE_MATE_IN_MAX);
 }
 
@@ -83,14 +86,19 @@ void History::updateNoisyStats(ExtMove move, int bonus)
     updateCaptHist(move, bonus);
 }
 
-void History::updateCorrHist(int bonus, int depth, Color stm, ZKey pawnHash)
+void History::updateCorrHist(int bonus, int depth, const Board& board)
 {
-    auto& entry = m_CorrHist[static_cast<int>(stm)][pawnHash.value % CORR_HIST_ENTRIES];
+    Color stm = board.sideToMove();
     int scaledBonus = bonus * CORR_HIST_SCALE;
     int weight = std::min(1 + depth, 16);
 
-    entry = (entry * (256 - weight) + scaledBonus * weight) / 256;
-    entry = std::clamp(entry, -MAX_CORR_HIST, MAX_CORR_HIST);
+    auto& pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % PAWN_CORR_HIST_ENTRIES];
+    pawnEntry = (pawnEntry * (256 - weight) + scaledBonus * weight) / 256;
+    pawnEntry = std::clamp(pawnEntry, -MAX_CORR_HIST, MAX_CORR_HIST);
+
+    auto& materialEntry = m_MaterialCorrHist[static_cast<int>(stm)][board.materialKey() % MATERIAL_CORR_HIST_ENTRIES];
+    materialEntry = (materialEntry * (256 - weight) + scaledBonus * weight) / 256;
+    materialEntry = std::clamp(materialEntry, -MAX_CORR_HIST, MAX_CORR_HIST);
 }
 
 int History::getMainHist(Bitboard threats, ExtMove move) const
