@@ -140,6 +140,7 @@ public:
     int pliesFromNull() const;
     ZKey zkey() const;
     ZKey pawnKey() const;
+    ZKey nonPawnKey(Color color) const;
     uint64_t materialKey() const;
 
     bool isDraw(int searchPly);
@@ -287,6 +288,11 @@ inline ZKey Board::zkey() const
 inline ZKey Board::pawnKey() const
 {
     return currState().pawnKey;
+}
+
+inline ZKey Board::nonPawnKey(Color color) const
+{
+    return currState().nonPawnKey[static_cast<int>(color)];
 }
 
 // yoinked from motor, which I think yoinked from Caissa

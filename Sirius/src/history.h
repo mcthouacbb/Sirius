@@ -96,12 +96,14 @@ using CHEntry = std::array<std::array<HistoryEntry<HISTORY_MAX>, 64>, 16>;
 using ContHist = std::array<std::array<CHEntry, 64>, 16>;
 using CaptHist = std::array<std::array<std::array<HistoryEntry<HISTORY_MAX>, 64>, 16>, 16>;
 
-constexpr int PAWN_CORR_HIST_ENTRIES = 16384;
-constexpr int MATERIAL_CORR_HIST_ENTRIES = 32768;
 constexpr int CORR_HIST_SCALE = 256;
 constexpr int MAX_CORR_HIST = CORR_HIST_SCALE * 32;
+constexpr int PAWN_CORR_HIST_ENTRIES = 16384;
+constexpr int MATERIAL_CORR_HIST_ENTRIES = 32768;
+constexpr int NON_PAWN_CORR_HIST_ENTRIES = 16384;
 using PawnCorrHist = std::array<std::array<int, PAWN_CORR_HIST_ENTRIES>, 2>;
 using MaterialCorrHist = std::array<std::array<int, MATERIAL_CORR_HIST_ENTRIES>, 2>;
+using NonPawnCorrHist = std::array<std::array<std::array<int, NON_PAWN_CORR_HIST_ENTRIES>, 2>, 2>;
 
 int historyBonus(int depth);
 int historyMalus(int depth);
@@ -143,4 +145,5 @@ private:
     CaptHist m_CaptHist;
     PawnCorrHist m_PawnCorrHist;
     MaterialCorrHist m_MaterialCorrHist;
+    NonPawnCorrHist m_NonPawnCorrHist;
 };
