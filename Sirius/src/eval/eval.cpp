@@ -202,15 +202,24 @@ PackedScore evaluatePassedPawns(const Board& board, const PawnStructure& pawnStr
 
 PackedScore evaluateComplexity(const Board& board, const PawnStructure& pawnStructure, PackedScore eval)
 {
+    constexpr Bitboard KING_SIDE = FILE_A_BB | FILE_B_BB | FILE_C_BB | FILE_D_BB;
+    constexpr Bitboard QUEEN_SIDE = ~KING_SIDE;
+    Bitboard pawns = board.pieces(PieceType::PAWN);
+    bool pawnsBothSides = (pawns & KING_SIDE).any() && (pawns & QUEEN_SIDE).any();
+
     PackedScore complexity =
-        COMPLEXITY_PAWNS * board.pieces(PieceType::PAWN).popcount() +
+        COMPLEXITY_PAWNS * pawns.popcount() +
         COMPLEXITY_PASSERS * pawnStructure.passedPawns.popcount() +
+        COMPLEXITY_PAWNS_BOTH_SIDES * pawnsBothSides +
         COMPLEXITY_OFFSET;
 
     int mgSign = (eval.mg() > 0) - (eval.mg() < 0);
     int egSign = (eval.eg() > 0) - (eval.eg() < 0);
 
-    return PackedScore(mgSign * complexity.mg(), egSign * complexity.eg());
+    int mgComplexity = std::clamp(complexity.mg(), -std::abs(eval.mg()), 0);
+    int egComplexity = std::max(complexity.eg(), -std::abs(eval.eg()));
+
+    return PackedScore(mgSign * mgComplexity, egSign * egComplexity);
 }
 
 int evaluateScale(const Board& board, PackedScore eval)
