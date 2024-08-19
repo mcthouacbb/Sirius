@@ -461,7 +461,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         if (!board.isLegal(move))
             continue;
         bool quiet = moveIsQuiet(board, move);
-        bool quietLosing = moveScore < MoveOrdering::KILLER_SCORE;
+        bool quietLosing = moveScore <= MoveOrdering::KILLER_SCORE + 1;
 
         int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
         int histScore = quiet ? history.getQuietStats(threats, ExtMove::from(board, move), contHistEntries) : history.getNoisyStats(ExtMove::from(board, move));
