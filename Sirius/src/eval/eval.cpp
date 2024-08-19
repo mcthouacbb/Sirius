@@ -200,6 +200,37 @@ PackedScore evaluatePassedPawns(const Board& board, const PawnStructure& pawnStr
     return eval;
 }
 
+PackedScore evaluateComplexity(const Board& board, const PawnStructure& pawnStructure, PackedScore eval)
+{
+    constexpr Bitboard KING_SIDE = FILE_A_BB | FILE_B_BB | FILE_C_BB | FILE_D_BB;
+    constexpr Bitboard QUEEN_SIDE = ~KING_SIDE;
+    Bitboard pawns = board.pieces(PieceType::PAWN);
+    bool pawnsBothSides = (pawns & KING_SIDE).any() && (pawns & QUEEN_SIDE).any();
+
+    PackedScore complexity =
+        COMPLEXITY_PAWNS * pawns.popcount() +
+        COMPLEXITY_PASSERS * pawnStructure.passedPawns.popcount() +
+        COMPLEXITY_PAWNS_BOTH_SIDES * pawnsBothSides +
+        COMPLEXITY_OFFSET;
+
+    int mgSign = (eval.mg() > 0) - (eval.mg() < 0);
+    int egSign = (eval.eg() > 0) - (eval.eg() < 0);
+
+    int mgComplexity = std::clamp(complexity.mg(), -std::abs(eval.mg()), 0);
+    int egComplexity = std::max(complexity.eg(), -std::abs(eval.eg()));
+
+    return PackedScore(mgSign * mgComplexity, egSign * egComplexity);
+}
+
+int evaluateScale(const Board& board, PackedScore eval)
+{
+    Color strongSide = eval.eg() > 0 ? Color::WHITE : Color::BLACK;
+
+    int strongPawns = board.pieces(strongSide, PieceType::PAWN).popcount();
+
+    return 80 + strongPawns * 7;
+}
+
 void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& pawnStructure)
 {
     Bitboard whitePawns = board.pieces(Color::WHITE, PieceType::PAWN);
@@ -226,16 +257,6 @@ void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& p
     evalData.kingRing[Color::BLACK] = (blackKingAtks | blackKingAtks.south()) & ~Bitboard::fromSquare(blackKing);
 }
 
-
-int evaluateScale(const Board& board, PackedScore eval)
-{
-    Color strongSide = eval.eg() > 0 ? Color::WHITE : Color::BLACK;
-
-    int strongPawns = board.pieces(strongSide, PieceType::PAWN).popcount();
-
-    return 80 + strongPawns * 7;
-}
-
 int evaluate(const Board& board, search::SearchThread* thread)
 {
     if (!eval::canForceMate(board))
@@ -259,6 +280,7 @@ int evaluate(const Board& board, search::SearchThread* thread)
     eval += evaluateKings<Color::WHITE>(board, evalData) - evaluateKings<Color::BLACK>(board, evalData);
     eval += evaluatePassedPawns<Color::WHITE>(board, pawnStructure, evalData) - evaluatePassedPawns<Color::BLACK>(board, pawnStructure, evalData);
     eval += evaluateThreats<Color::WHITE>(board, evalData) - evaluateThreats<Color::BLACK>(board, evalData);
+    eval += evaluateComplexity(board, pawnStructure, eval);
 
     int scale = evaluateScale(board, eval);
 
