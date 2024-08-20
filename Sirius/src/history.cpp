@@ -74,7 +74,8 @@ int History::correctStaticEval(int staticEval, const Board& board) const
     int nonPawnBlackEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(Color::BLACK)][board.nonPawnKey(Color::BLACK).value % NON_PAWN_CORR_HIST_ENTRIES];
     int nonPawnEntry = (nonPawnWhiteEntry + nonPawnBlackEntry) / 2;
     int corrected = staticEval + (pawnEntry + materialEntry + nonPawnEntry) / CORR_HIST_SCALE;
-    return std::clamp(corrected, -SCORE_MATE_IN_MAX, SCORE_MATE_IN_MAX);
+    int test = std::clamp(corrected, -SCORE_MATE_IN_MAX, SCORE_MATE_IN_MAX);
+    return staticEval;
 }
 
 void History::updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus)
