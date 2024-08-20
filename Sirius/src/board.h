@@ -30,6 +30,7 @@ struct BoardState
     int repetitions;
     int lastRepetition;
     ZKey zkey;
+    std::array<ZKey, 2> nonPawnKey;
     ZKey pawnKey;
     CheckInfo checkInfo;
     Bitboard threats;
@@ -41,14 +42,28 @@ struct BoardState
         Bitboard posBB = Bitboard::fromSquare(pos);
         pieces[static_cast<int>(pieceType)] |= posBB;
         colors[static_cast<int>(color)] |= posBB;
+
+        zkey.addPiece(pieceType, color, pos);
+        if (pieceType == PieceType::PAWN)
+            pawnKey.addPiece(pieceType, color, pos);
+        else
+            nonPawnKey[static_cast<int>(color)].addPiece(pieceType, color, pos);
     }
 
     void addPiece(Square pos, Piece piece)
     {
         squares[pos.value()] = piece;
         Bitboard posBB = Bitboard::fromSquare(pos);
-        pieces[static_cast<int>(getPieceType(piece))] |= posBB;
-        colors[static_cast<int>(getPieceColor(piece))] |= posBB;
+        PieceType pieceType = getPieceType(piece);
+        Color color = getPieceColor(piece);
+        pieces[static_cast<int>(pieceType)] |= posBB;
+        colors[static_cast<int>(color)] |= posBB;
+
+        zkey.addPiece(pieceType, color, pos);
+        if (pieceType == PieceType::PAWN)
+            pawnKey.addPiece(pieceType, color, pos);
+        else
+            nonPawnKey[static_cast<int>(color)].addPiece(pieceType, color, pos);
     }
 
     void removePiece(Square pos)
@@ -60,6 +75,12 @@ struct BoardState
         squares[pos.value()] = Piece::NONE;
         pieces[static_cast<int>(pieceType)] ^= posBB;
         colors[static_cast<int>(color)] ^= posBB;
+
+        zkey.removePiece(pieceType, color, pos);
+        if (pieceType == PieceType::PAWN)
+            pawnKey.removePiece(pieceType, color, pos);
+        else
+            nonPawnKey[static_cast<int>(color)].removePiece(pieceType, color, pos);
     }
 
     void movePiece(Square src, Square dst)
@@ -75,6 +96,12 @@ struct BoardState
         squares[src.value()] = Piece::NONE;
         pieces[static_cast<int>(pieceType)] ^= moveBB;
         colors[static_cast<int>(color)] ^= moveBB;
+
+        zkey.movePiece(pieceType, color, src, dst);
+        if (pieceType == PieceType::PAWN)
+            pawnKey.movePiece(pieceType, color, src, dst);
+        else
+            nonPawnKey[static_cast<int>(color)].movePiece(pieceType, color, src, dst);
     }
 };
 
@@ -113,6 +140,7 @@ public:
     int pliesFromNull() const;
     ZKey zkey() const;
     ZKey pawnKey() const;
+    ZKey nonPawnKey(Color color) const;
     uint64_t materialKey() const;
 
     bool isDraw(int searchPly);
@@ -260,6 +288,11 @@ inline ZKey Board::zkey() const
 inline ZKey Board::pawnKey() const
 {
     return currState().pawnKey;
+}
+
+inline ZKey Board::nonPawnKey(Color color) const
+{
+    return currState().nonPawnKey[static_cast<int>(color)];
 }
 
 // yoinked from motor, which I think yoinked from Caissa
