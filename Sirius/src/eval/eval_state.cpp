@@ -96,12 +96,12 @@ void EvalState::pop()
 PackedScore EvalState::score(const Board& board) const
 {
     return
-        currEntry().psqtState.evaluate(board) +
+        currEntry().psqtState.evaluate(board)/* +
         currEntry().pawnStructure.score +
         currEntry().pawnShieldStorm +
         currEntry().knightOutposts +
         currEntry().bishopPawns +
-        currEntry().rookOpen;
+        currEntry().rookOpen*/;
 }
 
 const PawnStructure& EvalState::pawnStructure() const

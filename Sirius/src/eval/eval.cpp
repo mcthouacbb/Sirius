@@ -262,12 +262,12 @@ int evaluate(const Board& board, search::SearchThread* thread)
     if (!eval::canForceMate(board))
         return SCORE_DRAW;
 
-    constexpr int SCALE_FACTOR = 128;
+    //constexpr int SCALE_FACTOR = 128;
 
     Color color = board.sideToMove();
     PackedScore eval = thread->evalState.score(board);
 
-    const PawnStructure& pawnStructure = thread->evalState.pawnStructure();
+    /*const PawnStructure& pawnStructure = thread->evalState.pawnStructure();
 
     EvalData evalData = {};
     initEvalData(board, evalData, pawnStructure);
@@ -284,9 +284,9 @@ int evaluate(const Board& board, search::SearchThread* thread)
 
     int scale = evaluateScale(board, eval);
 
-    eval += (color == Color::WHITE ? TEMPO : -TEMPO);
+    eval += (color == Color::WHITE ? TEMPO : -TEMPO);*/
 
-    return (color == Color::WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg() * scale / SCALE_FACTOR, thread->evalState.phase());
+    return (color == Color::WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg()/* * scale / SCALE_FACTOR*/, thread->evalState.phase());
 }
 
 
