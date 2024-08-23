@@ -77,9 +77,7 @@ constexpr PackedScore MATERIAL[7] = {
     S(0, 0), S(63, 119), S(267, 337), S(301, 360), S(381, 631), S(769, 1197), S(0, 0)
 };
 
-constexpr PackedScore PSQT[7][64] = {
-    // none
-    {},
+constexpr PackedScore PSQT[6][64] = {
     // pawn
     {
         S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0),
