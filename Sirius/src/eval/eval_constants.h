@@ -73,8 +73,8 @@ constexpr PackedScore PSQT[6][64] = {
 };
 */
 
-constexpr PackedScore MATERIAL[7] = {
-    S(0, 0), S(63, 119), S(267, 337), S(301, 360), S(381, 631), S(769, 1197), S(0, 0)
+constexpr PackedScore MATERIAL[6] = {
+    S(63, 119), S(267, 337), S(301, 360), S(381, 631), S(769, 1197), S(0, 0)
 };
 
 constexpr PackedScore PSQT[6][64] = {
