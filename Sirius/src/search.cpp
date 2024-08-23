@@ -573,7 +573,12 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             int reduced = std::min(std::max(newDepth - reduction, 1), newDepth);
             score = -search(thread, reduced, stack + 1, -alpha - 1, -alpha, false, true);
             if (score > alpha && reduced < newDepth)
+            {
+                bool doDeeper = score > bestScore + 35 + 2 * newDepth;
+                bool doShallower = score < bestScore + 8;
+                newDepth += doDeeper - doShallower;
                 score = -search(thread, newDepth, stack + 1, -alpha - 1, -alpha, false, !cutnode);
+            }
         }
         else if (!pvNode || movesPlayed > 1)
             score = -search(thread, newDepth, stack + 1, -alpha - 1, -alpha, false, !cutnode);
