@@ -206,11 +206,13 @@ PackedScore evaluateComplexity(const Board& board, const PawnStructure& pawnStru
     constexpr Bitboard QUEEN_SIDE = ~KING_SIDE;
     Bitboard pawns = board.pieces(PieceType::PAWN);
     bool pawnsBothSides = (pawns & KING_SIDE).any() && (pawns & QUEEN_SIDE).any();
+    bool pawnEndgame = board.allPieces() == (pawns | board.pieces(PieceType::KING));
 
     PackedScore complexity =
         COMPLEXITY_PAWNS * pawns.popcount() +
         COMPLEXITY_PASSERS * pawnStructure.passedPawns.popcount() +
         COMPLEXITY_PAWNS_BOTH_SIDES * pawnsBothSides +
+        COMPLEXITY_PAWN_ENDGAME * pawnEndgame +
         COMPLEXITY_OFFSET;
 
     int mgSign = (eval.mg() > 0) - (eval.mg() < 0);
