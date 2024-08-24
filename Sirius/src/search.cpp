@@ -480,7 +480,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             }
 
             if (!pvNode &&
-                !inCheck &&
                 depth <= lmpMaxDepth &&
                 movesPlayed >= lmpMinMovesBase + depth * depth / (improving ? 1 : 2))
                 break;
