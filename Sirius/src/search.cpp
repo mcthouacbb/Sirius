@@ -406,7 +406,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         Bitboard nonPawns = board.pieces(board.sideToMove()) ^ board.pieces(board.sideToMove(), PieceType::PAWN);
         if (board.pliesFromNull() > 0 && depth >= nmpMinDepth && stack->eval >= beta && nonPawns.multiple())
         {
-            int r = nmpBaseReduction + depth / nmpDepthReductionScale + std::min((stack->eval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
+            int r =
+                nmpBaseReduction +
+                depth / nmpDepthReductionScale +
+                std::min((stack->eval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction) +
+                improving;
             board.makeNullMove();
             rootPly++;
             int nullScore = -search(thread, depth - r, stack + 1, -beta, -beta + 1, false, !cutnode);
