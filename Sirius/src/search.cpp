@@ -467,6 +467,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         int histScore = quiet ? history.getQuietStats(threats, ExtMove::from(board, move), contHistEntries) : history.getNoisyStats(ExtMove::from(board, move));
         if (quiet)
             baseLMR -= histScore / lmrHistDivisor;
+        else
+            baseLMR -= histScore / 8192;
 
         if (!root && quietLosing && bestScore > -SCORE_WIN)
         {
