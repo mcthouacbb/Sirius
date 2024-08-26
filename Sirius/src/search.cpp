@@ -635,7 +635,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 int malus = historyMalus(depth);
                 if (quiet)
                 {
-                    if (depth > 2 && quietsTried.size() > 1)
+                    if (depth > 2 || quietsTried.size() > 1)
                         history.updateQuietStats(threats, ExtMove::from(board, move), contHistEntries, bonus);
 
                     for (Move quietMove : quietsTried)
