@@ -629,11 +629,15 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                     }
                 }
 
+                bound = TTEntry::Bound::LOWER_BOUND;
+
                 int bonus = historyBonus(depth);
                 int malus = historyMalus(depth);
                 if (quiet)
                 {
-                    history.updateQuietStats(threats, ExtMove::from(board, move), contHistEntries, bonus);
+                    if (depth > 2 && quietsTried.size() > 1)
+                        history.updateQuietStats(threats, ExtMove::from(board, move), contHistEntries, bonus);
+
                     for (Move quietMove : quietsTried)
                     {
                         if (quietMove != move)
@@ -650,7 +654,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                     if (noisyMove != move)
                         history.updateNoisyStats(ExtMove::from(board, noisyMove), -malus);
                 }
-                bound = TTEntry::Bound::LOWER_BOUND;
                 break;
             }
         }
