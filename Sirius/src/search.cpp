@@ -404,7 +404,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         // null move pruning
         Bitboard nonPawns = board.pieces(board.sideToMove()) ^ board.pieces(board.sideToMove(), PieceType::PAWN);
-        if (board.pliesFromNull() > 0 && depth >= nmpMinDepth && stack->eval >= beta && nonPawns.multiple())
+        if (board.pliesFromNull() > 0 && depth >= nmpMinDepth &&
+            stack->eval >= beta && stack->staticEval >= beta + 175 - 25 * depth &&
+            nonPawns.multiple())
         {
             int r = nmpBaseReduction + depth / nmpDepthReductionScale + std::min((stack->eval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
             board.makeNullMove();
