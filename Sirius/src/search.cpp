@@ -474,7 +474,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             if (lmrDepth <= fpMaxDepth &&
                 !inCheck &&
                 alpha < SCORE_WIN &&
-                stack->eval + fpBaseMargin + fpDepthMargin * lmrDepth <= alpha)
+                stack->eval + fpBaseMargin + fpDepthMargin * (lmrDepth + improving) <= alpha)
             {
                 continue;
             }
