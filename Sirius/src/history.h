@@ -7,6 +7,7 @@
 struct ExtMove : public Move
 {
 public:
+    explicit ExtMove();
     static ExtMove from(const Board& board, Move move);
 
     Piece movingPiece() const;
@@ -19,6 +20,12 @@ private:
 
     Piece m_Moving, m_Captured, m_Promotion;
 };
+
+inline ExtMove::ExtMove()
+    : Move(), m_Moving(Piece::NONE), m_Captured(Piece::NONE), m_Promotion(Piece::NONE)
+{
+
+}
 
 inline ExtMove ExtMove::from(const Board& board, Move move)
 {

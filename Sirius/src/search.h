@@ -24,6 +24,8 @@ struct SearchStack
     Move excludedMove;
     int multiExts;
 
+    ExtMove playedMove;
+
     Move bestMove;
     std::array<Move, 2> killers;
 

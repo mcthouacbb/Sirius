@@ -43,6 +43,7 @@ void SearchThread::reset()
     {
         stack[i].killers[0] = stack[i].killers[1] = Move();
         stack[i].excludedMove = Move();
+        stack[i].playedMove = ExtMove();
         stack[i].multiExts = 0;
         stack[i].pv = {};
         stack[i].pvLength = 0;
@@ -539,6 +540,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         m_TT.prefetch(board.keyAfter(move));
         stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
         stack->histScore = histScore;
+        stack->playedMove = ExtMove::from(board, move);
 
         uint64_t nodesBefore = thread.nodes;
         board.makeMove(move, thread.evalState);
@@ -595,6 +597,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         stack->contHistEntry = nullptr;
         stack->histScore = 0;
+        stack->playedMove = ExtMove();
 
         if (m_ShouldStop)
             return alpha;
@@ -661,6 +664,19 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         if (inCheck)
             return -SCORE_MATE + rootPly;
         return SCORE_DRAW;
+    }
+
+    if (stack->bestMove == Move() && !root && stack[-1].playedMove.capturedPiece() == Piece::NONE)
+    {
+        SearchStack* prev = stack - 1;
+        int prevPly = rootPly - 1;
+        std::array<CHEntry*, 3> prevCHEntries = {
+            prevPly > 0 ? prev[-1].contHistEntry : nullptr,
+            prevPly > 1 ? prev[-2].contHistEntry : nullptr,
+            prevPly > 3 ? prev[-4].contHistEntry : nullptr
+        };
+
+        history.updateQuietStats(threats, stack[-1].playedMove, prevCHEntries, historyBonus(depth));
     }
 
     if (!excluded)
