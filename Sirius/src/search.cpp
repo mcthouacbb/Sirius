@@ -564,6 +564,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         {
             int reduction = baseLMR;
 
+            if (!quiet)
+                reduction -= histScore / 8735;
+
             reduction += !improving;
             reduction += noisyTTMove;
             reduction -= ttPV;
