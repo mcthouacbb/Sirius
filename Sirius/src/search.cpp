@@ -14,7 +14,7 @@
 namespace search
 {
 
-std::array<std::array<int, 64>, 64> lmrTable;
+std::array<std::array<std::array<int, 64>, 64>, 2> lmrTable;
 
 void init()
 {
@@ -22,7 +22,15 @@ void init()
     {
         for (int i = 1; i < 64; i++)
         {
-            lmrTable[d][i] = static_cast<int>(lmrBase / 100.0 + std::log(static_cast<double>(d)) * std::log(static_cast<double>(i)) / (lmrDivisor / 100.0));
+            lmrTable[false][d][i] = static_cast<int>(lmrNoisyBase / 100.0 + std::log(static_cast<double>(d)) * std::log(static_cast<double>(i)) / (lmrNoisyDivisor / 100.0));
+        }
+    }
+
+    for (int d = 1; d < 64; d++)
+    {
+        for (int i = 1; i < 64; i++)
+        {
+            lmrTable[true][d][i] = static_cast<int>(lmrQuietBase / 100.0 + std::log(static_cast<double>(d)) * std::log(static_cast<double>(i)) / (lmrQuietDivisor / 100.0));
         }
     }
 }
@@ -465,7 +473,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         bool quiet = moveIsQuiet(board, move);
         bool quietLosing = moveScore < MoveOrdering::KILLER_SCORE;
 
-        int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
+        int baseLMR = lmrTable[quiet][std::min(depth, 63)][std::min(movesPlayed, 63)];
         int histScore = quiet ? history.getQuietStats(threats, ExtMove::from(board, move), contHistEntries) : history.getNoisyStats(ExtMove::from(board, move));
         if (quiet)
             baseLMR -= histScore / lmrHistDivisor;

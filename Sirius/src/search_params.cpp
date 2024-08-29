@@ -60,7 +60,7 @@ void printOpenBenchConfig()
 
 #endif
 
-extern std::array<std::array<int, 64>, 64> lmrTable;
+extern std::array<std::array<std::array<int, 64>, 64>, 2> lmrTable;
 
 void updateLmrTable()
 {
@@ -68,7 +68,15 @@ void updateLmrTable()
     {
         for (int i = 1; i < 64; i++)
         {
-            lmrTable[d][i] = static_cast<int>(lmrBase / 100.0 + std::log(static_cast<double>(d)) * std::log(static_cast<double>(i)) / (lmrDivisor / 100.0));
+            lmrTable[false][d][i] = static_cast<int>(lmrNoisyBase / 100.0 + std::log(static_cast<double>(d)) * std::log(static_cast<double>(i)) / (lmrNoisyDivisor / 100.0));
+        }
+    }
+
+    for (int d = 1; d < 64; d++)
+    {
+        for (int i = 1; i < 64; i++)
+        {
+            lmrTable[true][d][i] = static_cast<int>(lmrQuietBase / 100.0 + std::log(static_cast<double>(d)) * std::log(static_cast<double>(i)) / (lmrQuietDivisor / 100.0));
         }
     }
 }

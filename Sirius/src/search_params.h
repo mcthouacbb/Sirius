@@ -101,8 +101,10 @@ SEARCH_PARAM(lmrMinMovesNonPv, 3, 1, 6, 1);
 SEARCH_PARAM(lmrMinMovesPv, 4, 2, 8, 1);
 SEARCH_PARAM(lmrFailHighCountMargin, 2, 2, 12, 1);
 
-SEARCH_PARAM_CALLBACK(lmrBase, 65, -50, 200, 10, updateLmrTable);
-SEARCH_PARAM_CALLBACK(lmrDivisor, 224, 180, 320, 10, updateLmrTable);
+SEARCH_PARAM_CALLBACK(lmrNoisyBase, -20, -50, 200, 10, updateLmrTable);
+SEARCH_PARAM_CALLBACK(lmrNoisyDivisor, 270, 180, 320, 10, updateLmrTable);
+SEARCH_PARAM_CALLBACK(lmrQuietBase, 70, -50, 200, 10, updateLmrTable);
+SEARCH_PARAM_CALLBACK(lmrQuietDivisor, 210, 180, 320, 10, updateLmrTable);
 SEARCH_PARAM(lmrHistDivisor, 8735, 4096, 16384, 512);
 
 SEARCH_PARAM(qsFpMargin, 60, 0, 250, 16);
