@@ -402,6 +402,13 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         if (depth <= rfpMaxDepth && stack->eval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth + stack[-1].histScore / rfpHistDivisor)
             return stack->eval;
 
+        if (depth <= razoringMaxDepth && stack->eval <= alpha - razoringMargin * depth)
+        {
+            int score = qsearch(thread, stack, alpha, beta, pvNode);
+            if (score <= alpha)
+                return score;
+        }
+
         // null move pruning
         Bitboard nonPawns = board.pieces(board.sideToMove()) ^ board.pieces(board.sideToMove(), PieceType::PAWN);
         if (board.pliesFromNull() > 0 && depth >= nmpMinDepth &&
