@@ -495,9 +495,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 !board.see(move, seeMargin))
                 continue;
 
-            if (quiet &&
-                depth <= maxHistPruningDepth &&
-                histScore < -histPruningMargin * depth)
+            int histMargin = quiet ?
+                -histPruningMarginQuiet * depth :
+                -histPruningMarginNoisy * depth;
+            if (depth <= maxHistPruningDepth &&
+                histScore < histMargin)
                 break;
         }
 

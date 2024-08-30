@@ -88,7 +88,8 @@ SEARCH_PARAM(seeCaptHistMax, 100, 50, 200, 6);
 SEARCH_PARAM(seeCaptHistDivisor, 32, 16, 96, 2);
 
 SEARCH_PARAM(maxHistPruningDepth, 5, 2, 8, 1);
-SEARCH_PARAM(histPruningMargin, 1729, 512, 4096, 128);
+SEARCH_PARAM(histPruningMarginQuiet, 1729, 512, 4096, 128);
+SEARCH_PARAM(histPruningMarginNoisy, 1729, 512, 4096, 128);
 
 SEARCH_PARAM(seMinDepth, 7, 4, 9, 1);
 SEARCH_PARAM(seTTDepthMargin, 3, 2, 5, 1);
