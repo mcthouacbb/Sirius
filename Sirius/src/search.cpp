@@ -495,8 +495,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 break;
 
             int seeMargin = quiet ?
-                depth * seePruneMarginQuiet :
-                depth * seePruneMarginNoisy - std::clamp(histScore / 32, -seeCaptHistMax * depth, seeCaptHistMax * depth);
+                depth * seePruneMarginQuiet - std::clamp(histScore / seeQuietHistDivisor, -seeQuietHistMax * depth, seeQuietHistMax * depth) :
+                depth * seePruneMarginNoisy - std::clamp(histScore / seeCaptHistDivisor, -seeCaptHistMax * depth, seeCaptHistMax * depth);
             if (!pvNode &&
                 depth <= maxSeePruneDepth &&
                 !board.see(move, seeMargin))
