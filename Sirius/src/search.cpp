@@ -402,7 +402,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         if (depth <= rfpMaxDepth && stack->eval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth + stack[-1].histScore / rfpHistDivisor)
             return stack->eval;
 
-        if (depth <= razoringMaxDepth && stack->eval <= alpha - razoringMargin * depth)
+        if (depth <= razoringMaxDepth && stack->eval <= alpha - razoringMargin * depth && alpha < 2000)
         {
             int score = qsearch(thread, stack, alpha, beta, pvNode);
             if (score <= alpha)
