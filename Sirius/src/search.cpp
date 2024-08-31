@@ -356,6 +356,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     bool ttHit = false;
 
     int rawStaticEval = SCORE_NONE;
+    int eval = SCORE_NONE;
 
     if (!excluded)
     {
@@ -376,20 +377,24 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         if (inCheck)
         {
             stack->staticEval = SCORE_NONE;
-            stack->eval = SCORE_NONE;
+            eval = SCORE_NONE;
         }
         else
         {
             rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
             stack->staticEval = history.correctStaticEval(rawStaticEval, board);
-            stack->eval = stack->staticEval;
+            eval = stack->staticEval;
             if (ttHit && (
                 ttData.bound == TTEntry::Bound::EXACT ||
-                (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= stack->eval) ||
-                (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= stack->eval)
+                (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= eval) ||
+                (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= eval)
             ))
-                stack->eval = ttData.score;
+                eval = ttData.score;
         }
+    }
+    else
+    {
+        eval = stack->staticEval;
     }
 
     bool ttPV = pvNode || (ttHit && ttData.pv);
@@ -399,10 +404,10 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     if (!pvNode && !inCheck && !excluded)
     {
         // reverse futility pruning
-        if (depth <= rfpMaxDepth && stack->eval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth + stack[-1].histScore / rfpHistDivisor)
-            return stack->eval;
+        if (depth <= rfpMaxDepth && eval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth + stack[-1].histScore / rfpHistDivisor)
+            return eval;
 
-        if (depth <= razoringMaxDepth && stack->eval <= alpha - razoringMargin * depth && alpha < 2000)
+        if (depth <= razoringMaxDepth && eval <= alpha - razoringMargin * depth && alpha < 2000)
         {
             int score = qsearch(thread, stack, alpha, beta, pvNode);
             if (score <= alpha)
@@ -412,10 +417,10 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         // null move pruning
         Bitboard nonPawns = board.pieces(board.sideToMove()) ^ board.pieces(board.sideToMove(), PieceType::PAWN);
         if (board.pliesFromNull() > 0 && depth >= nmpMinDepth &&
-            stack->eval >= beta && stack->staticEval >= beta + nmpEvalBaseMargin - nmpEvalDepthMargin * depth &&
+            eval >= beta && stack->staticEval >= beta + nmpEvalBaseMargin - nmpEvalDepthMargin * depth &&
             nonPawns.multiple())
         {
-            int r = nmpBaseReduction + depth / nmpDepthReductionScale + std::min((stack->eval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
+            int r = nmpBaseReduction + depth / nmpDepthReductionScale + std::min((eval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
             board.makeNullMove();
             rootPly++;
             int nullScore = -search(thread, depth - r, stack + 1, -beta, -beta + 1, false, !cutnode);
@@ -483,7 +488,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             if (lmrDepth <= fpMaxDepth &&
                 !inCheck &&
                 alpha < SCORE_WIN &&
-                stack->eval + fpBaseMargin + fpDepthMargin * lmrDepth <= alpha)
+                eval + fpBaseMargin + fpDepthMargin * lmrDepth <= alpha)
             {
                 continue;
             }
@@ -709,32 +714,34 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
 
     bool inCheck = board.checkers().any();
     int rawStaticEval = SCORE_NONE;
+    int eval = SCORE_NONE;
+
     if (inCheck)
     {
         stack->staticEval = SCORE_NONE;
-        stack->eval = SCORE_NONE;
+        eval = SCORE_NONE;
     }
     else
     {
         rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
         stack->staticEval = inCheck ? SCORE_NONE : thread.history.correctStaticEval(rawStaticEval, board);
 
-        stack->eval = stack->staticEval;
+        eval = stack->staticEval;
         if (!inCheck && ttHit && (
             ttData.bound == TTEntry::Bound::EXACT ||
-            (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= stack->eval) ||
-            (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= stack->eval)
+            (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= eval) ||
+            (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= eval)
         ))
-            stack->eval = ttData.score;
+            eval = ttData.score;
     }
 
-    if (stack->eval >= beta)
-        return stack->eval;
-    if (stack->eval > alpha)
-        alpha = stack->eval;
+    if (eval >= beta)
+        return eval;
+    if (eval > alpha)
+        alpha = eval;
 
-    int bestScore = inCheck ? -SCORE_MATE : stack->eval;
-    int futility = inCheck ? -SCORE_MATE : stack->eval + qsFpMargin;
+    int bestScore = inCheck ? -SCORE_MATE : eval;
+    int futility = inCheck ? -SCORE_MATE : eval + qsFpMargin;
 
     if (rootPly >= MAX_PLY)
         return alpha;
