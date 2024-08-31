@@ -72,6 +72,8 @@ SEARCH_PARAM(razoringMaxDepth, 3, 1, 5, 1);
 SEARCH_PARAM(razoringMargin, 450, 250, 650, 10);
 
 SEARCH_PARAM(nmpMinDepth, 2, 2, 5, 1);
+SEARCH_PARAM(nmpEvalBaseMargin, 175, 50, 300, 10);
+SEARCH_PARAM(nmpEvalDepthMargin, 25, 10, 50, 2);
 SEARCH_PARAM(nmpBaseReduction, 5, 2, 5, 1);
 SEARCH_PARAM(nmpDepthReductionScale, 4, 3, 6, 1);
 SEARCH_PARAM(nmpEvalReductionScale, 208, 50, 300, 10);
