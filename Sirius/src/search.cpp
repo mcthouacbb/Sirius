@@ -369,6 +369,12 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)
             ))
                 return ttData.score;
+
+            if (!pvNode && moveIsQuiet(board, ttData.move) && ttData.depth == depth - 1 && (
+                ((ttData.bound == TTEntry::Bound::EXACT || ttData.bound == TTEntry::Bound::UPPER_BOUND) && ttData.score <= alpha - 200) ||
+                ((ttData.bound == TTEntry::Bound::EXACT || ttData.bound == TTEntry::Bound::LOWER_BOUND) && ttData.score >= beta + 200)
+            ))
+                return ttData.score;
         }
         else if (depth >= minIIRDepth)
             depth--;
