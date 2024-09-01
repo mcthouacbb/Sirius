@@ -61,7 +61,7 @@ MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, c
     }
 }
 
-MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, const std::array<Move, 2>& killers, std::span<const CHEntry* const> contHistEntries, const History& history)
+MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, const std::array<Move, 2>& killers, std::span<const CHEntry* const> contHistEntries, const History& history, int badNoisyMargin)
     : m_Moves(moves)
 {
     for (uint32_t i = 0; i < m_Moves.size(); i++)
@@ -80,7 +80,7 @@ MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, c
 
         if (isCapture)
         {
-            score = history.getNoisyStats(ExtMove::from(board, move)) + CAPTURE_SCORE * board.see(move, 0) + mvvLva(board, move);
+            score = history.getNoisyStats(ExtMove::from(board, move)) + CAPTURE_SCORE * board.see(move, badNoisyMargin) + mvvLva(board, move);
         }
         else if (isPromotion)
         {

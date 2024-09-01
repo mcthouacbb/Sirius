@@ -441,7 +441,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         ttData.move,
         stack->killers,
         contHistEntries,
-        thread.history
+        thread.history,
+        -16 * depth
     );
 
     stack[1].failHighCount = 0;
