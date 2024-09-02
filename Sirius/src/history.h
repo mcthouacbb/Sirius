@@ -126,12 +126,12 @@ public:
         return m_ContHist[static_cast<int>(move.movingPiece())][move.toSq().value()];
     }
 
-    int getQuietStats(Board board, ExtMove move, std::span<const CHEntry* const> contHistEntries) const;
+    int getQuietStats(const Board& board, ExtMove move, std::span<const CHEntry* const> contHistEntries) const;
     int getNoisyStats(ExtMove move) const;
     int correctStaticEval(int staticEval, const Board& board) const;
 
     void clear();
-    void updateQuietStats(Board board, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus);
+    void updateQuietStats(const Board& board, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus);
     void updateNoisyStats(ExtMove move, int bonus);
     void updateCorrHist(int bonus, int depth, const Board& board);
 private:

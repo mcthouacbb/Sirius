@@ -52,7 +52,7 @@ void History::clear()
     fillHistTable(m_NonPawnCorrHist, 0);
 }
 
-int History::getQuietStats(Board board, ExtMove move, std::span<const CHEntry* const> contHistEntries) const
+int History::getQuietStats(const Board& board, ExtMove move, std::span<const CHEntry* const> contHistEntries) const
 {
     int score = getMainHist(board.threats(), move);
     score += getPawnHist(board.pawnKey(), move);
@@ -79,7 +79,7 @@ int History::correctStaticEval(int staticEval, const Board& board) const
     return std::clamp(corrected, -SCORE_MATE_IN_MAX, SCORE_MATE_IN_MAX);
 }
 
-void History::updateQuietStats(Board board, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus)
+void History::updateQuietStats(const Board& board, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus)
 {
     updateMainHist(board.threats(), move, bonus);
     updatePawnHist(board.pawnKey(), move, bonus);
