@@ -539,6 +539,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 return sBeta;
             else if (ttData.score >= beta)
                 extension = -1;
+            else if (cutnode)
+                extension = -2;
         }
 
         stack->multiExts += extension >= 2;
