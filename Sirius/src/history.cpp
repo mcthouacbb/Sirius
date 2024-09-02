@@ -44,6 +44,7 @@ int historyMalus(int depth)
 void History::clear()
 {
     fillHistTable(m_MainHist, 0);
+    fillHistTable(m_PawnHist, 0);
     fillHistTable(m_ContHist, 0);
     fillHistTable(m_CaptHist, 0);
     fillHistTable(m_PawnCorrHist, 0);
@@ -51,9 +52,10 @@ void History::clear()
     fillHistTable(m_NonPawnCorrHist, 0);
 }
 
-int History::getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const
+int History::getQuietStats(Board board, ExtMove move, std::span<const CHEntry* const> contHistEntries) const
 {
-    int score = getMainHist(threats, move);
+    int score = getMainHist(board.threats(), move);
+    score += getPawnHist(board.pawnKey(), move);
     for (auto entry : contHistEntries)
         if (entry)
             score += getContHist(entry, move);
@@ -77,9 +79,10 @@ int History::correctStaticEval(int staticEval, const Board& board) const
     return std::clamp(corrected, -SCORE_MATE_IN_MAX, SCORE_MATE_IN_MAX);
 }
 
-void History::updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus)
+void History::updateQuietStats(Board board, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus)
 {
-    updateMainHist(threats, move, bonus);
+    updateMainHist(board.threats(), move, bonus);
+    updatePawnHist(board.pawnKey(), move, bonus);
     for (auto entry : contHistEntries)
         if (entry)
             updateContHist(entry, move, bonus);
@@ -120,6 +123,13 @@ int History::getMainHist(Bitboard threats, ExtMove move) const
     return m_MainHist[static_cast<int>(getPieceColor(move.movingPiece()))][move.fromTo()][srcThreat][dstThreat];
 }
 
+int History::getPawnHist(ZKey pawnKey, ExtMove move) const
+{
+    Color stm = getPieceColor(move.movingPiece());
+    PieceType piece = getPieceType(move.movingPiece());
+    return m_PawnHist[static_cast<int>(stm)][pawnKey.value % PAWN_HIST_ENTRIES][static_cast<int>(piece)][move.toSq().value()];
+}
+
 int History::getContHist(const CHEntry* entry, ExtMove move) const
 {
     return (*entry)[static_cast<int>(move.movingPiece())][move.toSq().value()];
@@ -135,6 +145,13 @@ void History::updateMainHist(Bitboard threats, ExtMove move, int bonus)
     bool srcThreat = (threats & Bitboard::fromSquare(move.fromSq())).any();
     bool dstThreat = (threats & Bitboard::fromSquare(move.toSq())).any();
     m_MainHist[static_cast<int>(getPieceColor(move.movingPiece()))][move.fromTo()][srcThreat][dstThreat].update(bonus);
+}
+
+void History::updatePawnHist(ZKey pawnKey, ExtMove move, int bonus)
+{
+    Color stm = getPieceColor(move.movingPiece());
+    PieceType piece = getPieceType(move.movingPiece());
+    m_PawnHist[static_cast<int>(stm)][pawnKey.value % PAWN_HIST_ENTRIES][static_cast<int>(piece)][move.toSq().value()].update(bonus);
 }
 
 void History::updateContHist(CHEntry* entry, ExtMove move, int bonus)

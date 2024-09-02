@@ -91,7 +91,10 @@ inline void HistoryEntry<MAX_VAL>::update(int bonus)
 
 static constexpr int HISTORY_MAX = 16384;
 
+constexpr int PAWN_HIST_ENTRIES = 512;
+
 using MainHist = std::array<std::array<std::array<std::array<HistoryEntry<HISTORY_MAX>, 2>, 2>, 4096>, 2>;
+using PawnHist = std::array<std::array<std::array<std::array<HistoryEntry<HISTORY_MAX>, 64>, 6>, PAWN_HIST_ENTRIES>, 2>;
 using CHEntry = std::array<std::array<HistoryEntry<HISTORY_MAX>, 64>, 16>;
 using ContHist = std::array<std::array<CHEntry, 64>, 16>;
 using CaptHist = std::array<std::array<std::array<HistoryEntry<HISTORY_MAX>, 64>, 16>, 16>;
@@ -123,24 +126,27 @@ public:
         return m_ContHist[static_cast<int>(move.movingPiece())][move.toSq().value()];
     }
 
-    int getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const;
+    int getQuietStats(Board board, ExtMove move, std::span<const CHEntry* const> contHistEntries) const;
     int getNoisyStats(ExtMove move) const;
     int correctStaticEval(int staticEval, const Board& board) const;
 
     void clear();
-    void updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus);
+    void updateQuietStats(Board board, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus);
     void updateNoisyStats(ExtMove move, int bonus);
     void updateCorrHist(int bonus, int depth, const Board& board);
 private:
     int getMainHist(Bitboard threats, ExtMove move) const;
+    int getPawnHist(ZKey pawnKey, ExtMove move) const;
     int getContHist(const CHEntry* entry, ExtMove move) const;
     int getCaptHist(ExtMove move) const;
 
     void updateMainHist(Bitboard threats, ExtMove move, int bonus);
+    void updatePawnHist(ZKey pawnKey, ExtMove move, int bonus);
     void updateContHist(CHEntry* entry, ExtMove move, int bonus);
     void updateCaptHist(ExtMove move, int bonus);
 
     MainHist m_MainHist;
+    PawnHist m_PawnHist;
     ContHist m_ContHist;
     CaptHist m_CaptHist;
     PawnCorrHist m_PawnCorrHist;

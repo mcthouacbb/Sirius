@@ -89,7 +89,7 @@ MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, c
         else if (move == killers[0] || move == killers[1])
             score = KILLER_SCORE + (move == killers[0]);
         else
-            score = history.getQuietStats(board.threats(), ExtMove::from(board, move), contHistEntries);
+            score = history.getQuietStats(board, ExtMove::from(board, move), contHistEntries);
         m_MoveScores[i] = score;
     }
 }

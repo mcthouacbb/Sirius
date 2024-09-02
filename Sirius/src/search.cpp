@@ -453,8 +453,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     MoveList quietsTried;
     MoveList noisiesTried;
 
-    Bitboard threats = board.threats();
-
     int bestScore = -SCORE_MAX;
     int movesPlayed = 0;
     bool noisyTTMove = ttData.move != Move() && !moveIsQuiet(board, ttData.move);
@@ -473,7 +471,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         bool quietLosing = moveScore < MoveOrdering::KILLER_SCORE;
 
         int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
-        int histScore = quiet ? history.getQuietStats(threats, ExtMove::from(board, move), contHistEntries) : history.getNoisyStats(ExtMove::from(board, move));
+        int histScore = quiet ? history.getQuietStats(board, ExtMove::from(board, move), contHistEntries) : history.getNoisyStats(ExtMove::from(board, move));
         if (quiet)
             baseLMR -= histScore / lmrHistDivisor;
 
@@ -640,11 +638,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 int malus = historyMalus(depth);
                 if (quiet)
                 {
-                    history.updateQuietStats(threats, ExtMove::from(board, move), contHistEntries, bonus);
+                    history.updateQuietStats(board, ExtMove::from(board, move), contHistEntries, bonus);
                     for (Move quietMove : quietsTried)
                     {
                         if (quietMove != move)
-                            history.updateQuietStats(threats, ExtMove::from(board, quietMove), contHistEntries, -malus);
+                            history.updateQuietStats(board, ExtMove::from(board, quietMove), contHistEntries, -malus);
                     }
                 }
                 else
