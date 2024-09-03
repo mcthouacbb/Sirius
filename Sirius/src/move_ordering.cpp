@@ -80,7 +80,8 @@ MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, c
 
         if (isCapture)
         {
-            score = history.getNoisyStats(ExtMove::from(board, move)) + CAPTURE_SCORE * board.see(move, 0) + mvvLva(board, move);
+            int hist = history.getNoisyStats(ExtMove::from(board, move));
+            score = hist + CAPTURE_SCORE * board.see(move, -hist / 32) + mvvLva(board, move);
         }
         else if (isPromotion)
         {
