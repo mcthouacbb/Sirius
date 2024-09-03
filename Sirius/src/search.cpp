@@ -14,10 +14,9 @@
 namespace search
 {
 
-std::array<std::array<int, 64>, 64> lmrTable;
-
-void init()
+std::array<std::array<int, 64>, 64> genLMRTable()
 {
+    std::array<std::array<int, 64>, 64> lmrTable = {};
     for (int d = 1; d < 64; d++)
     {
         for (int i = 1; i < 64; i++)
@@ -25,7 +24,11 @@ void init()
             lmrTable[d][i] = static_cast<int>(lmrBase / 100.0 + std::log(static_cast<double>(d)) * std::log(static_cast<double>(i)) / (lmrDivisor / 100.0));
         }
     }
+    return lmrTable;
 }
+
+
+std::array<std::array<int, 64>, 64> lmrTable = genLMRTable();
 
 // initialize wakeFlag to search to allow for waiting on search thread at init
 SearchThread::SearchThread(uint32_t id, std::thread&& thread)
