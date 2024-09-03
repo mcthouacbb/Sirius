@@ -198,19 +198,20 @@ inline Bitboard queenAttacks(Square square, Bitboard blockers)
 template<PieceType pce>
 inline Bitboard pieceAttacks(Square square, Bitboard blockers)
 {
+    using enum PieceType;
     static_assert(
-        pce == PieceType::KNIGHT ||
-        pce == PieceType::BISHOP ||
-        pce == PieceType::ROOK ||
-        pce == PieceType::QUEEN ||
-        pce == PieceType::KING, "invalid piece type for attacks::pieceAttacks");
+        pce == KNIGHT ||
+        pce == BISHOP ||
+        pce == ROOK ||
+        pce == QUEEN ||
+        pce == KING, "invalid piece type for attacks::pieceAttacks");
     switch (pce)
     {
-        case PieceType::KNIGHT: return knightAttacks(square);
-        case PieceType::BISHOP: return bishopAttacks(square, blockers);
-        case PieceType::ROOK: return rookAttacks(square, blockers);
-        case PieceType::QUEEN: return queenAttacks(square, blockers);
-        case PieceType::KING: return kingAttacks(square);
+        case KNIGHT: return knightAttacks(square);
+        case BISHOP: return bishopAttacks(square, blockers);
+        case ROOK: return rookAttacks(square, blockers);
+        case QUEEN: return queenAttacks(square, blockers);
+        case KING: return kingAttacks(square);
         // unreachable
         default: return Bitboard(0);
     }

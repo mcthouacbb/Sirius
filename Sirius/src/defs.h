@@ -198,7 +198,12 @@ constexpr int Square::relativeRank() const
 
 constexpr int Square::chebyshev(Square a, Square b)
 {
-    return std::max(std::abs(a.rank() - b.rank()), std::abs(a.file() - b.file()));
+    // hack cus std::abs isn't constexpr
+    int rankDiff = a.rank() - b.rank();
+    rankDiff = rankDiff < 0 ? -rankDiff : rankDiff;
+    int fileDiff = a.file() - b.file();
+    fileDiff = fileDiff < 0 ? -fileDiff : fileDiff;
+    return std::max(rankDiff, fileDiff);
 }
 
 constexpr Square Square::average(Square a, Square b)

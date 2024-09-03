@@ -56,6 +56,7 @@ static constexpr int ENTRY_COUNT = 3;
 struct alignas(32) TTBucket
 {
     std::array<TTEntry, ENTRY_COUNT> entries;
+    char padding[2];
 };
 
 struct ProbedTTData

@@ -16,25 +16,24 @@ namespace eval
 namespace eval_terms
 {
 
+using enum PieceType;
+
 struct EvalTerm
 {
     PieceSet deps;
 };
 
-constexpr EvalTerm pawnStructure = {PieceSet(PieceType::PAWN)};
-constexpr EvalTerm passers = {PieceSet(PieceType::PAWN, PieceType::KNIGHT, PieceType::BISHOP, PieceType::ROOK, PieceType::QUEEN, PieceType::KING)};
-constexpr EvalTerm pawnShieldStorm = {PieceSet(PieceType::PAWN, PieceType::KING)};
-constexpr EvalTerm knightOutposts = {PieceSet(PieceType::PAWN, PieceType::KNIGHT)};
-constexpr EvalTerm bishopPawns = {PieceSet(PieceType::PAWN, PieceType::BISHOP)};
-constexpr EvalTerm rookOpen = {PieceSet(PieceType::PAWN, PieceType::ROOK)};
+constexpr EvalTerm pawnStructure = {PieceSet(PAWN)};
+constexpr EvalTerm passers = {PieceSet(PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING)};
+constexpr EvalTerm pawnShieldStorm = {PieceSet(PAWN, KING)};
+constexpr EvalTerm knightOutposts = {PieceSet(PAWN, KNIGHT)};
+constexpr EvalTerm bishopPawns = {PieceSet(PAWN, BISHOP)};
+constexpr EvalTerm rookOpen = {PieceSet(PAWN, ROOK)};
 
 
 } // namespace eval_terms
 
 void evaluatePawns(const Board& board, PawnStructure& pawnStructure, PawnTable* pawnTable);
-
-template<Color us>
-PackedScore evaluatePassedPawns(const Board& board, const PawnStructure& pawnStructure);
 
 template<Color us>
 PackedScore evalKingPawnFile(uint32_t file, Bitboard ourPawns, Bitboard theirPawns, Square theirKing);

@@ -3,6 +3,7 @@
 #include "defs.h"
 #include "board.h"
 #include <span>
+#include <algorithm>
 
 struct ExtMove : public Move
 {
@@ -89,6 +90,39 @@ inline void HistoryEntry<MAX_VAL>::update(int bonus)
     m_Value += bonus - m_Value * std::abs(bonus) / MAX_VAL;
 }
 
+template<int MAX_VAL>
+struct CorrHistEntry
+{
+public:
+    CorrHistEntry() = default;
+    CorrHistEntry(int value);
+
+    operator int() const;
+
+    void update(int target, int weight);
+private:
+    int m_Value;
+};
+
+template<int MAX_VAL>
+inline CorrHistEntry<MAX_VAL>::CorrHistEntry(int value)
+{
+    m_Value = value;
+}
+
+template<int MAX_VAL>
+inline CorrHistEntry<MAX_VAL>::operator int() const
+{
+    return m_Value;
+}
+
+template<int MAX_VAL>
+inline void CorrHistEntry<MAX_VAL>::update(int target, int weight)
+{
+    m_Value = (m_Value * (256 - weight) + target * weight) / 256;
+    m_Value = std::clamp(m_Value, -MAX_VAL, MAX_VAL);
+}
+
 static constexpr int HISTORY_MAX = 16384;
 
 using MainHist = std::array<std::array<std::array<std::array<HistoryEntry<HISTORY_MAX>, 2>, 2>, 4096>, 2>;
@@ -101,9 +135,9 @@ constexpr int MAX_CORR_HIST = CORR_HIST_SCALE * 32;
 constexpr int PAWN_CORR_HIST_ENTRIES = 16384;
 constexpr int MATERIAL_CORR_HIST_ENTRIES = 32768;
 constexpr int NON_PAWN_CORR_HIST_ENTRIES = 16384;
-using PawnCorrHist = std::array<std::array<int, PAWN_CORR_HIST_ENTRIES>, 2>;
-using MaterialCorrHist = std::array<std::array<int, MATERIAL_CORR_HIST_ENTRIES>, 2>;
-using NonPawnCorrHist = std::array<std::array<std::array<int, NON_PAWN_CORR_HIST_ENTRIES>, 2>, 2>;
+using PawnCorrHist = std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, PAWN_CORR_HIST_ENTRIES>, 2>;
+using MaterialCorrHist = std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, MATERIAL_CORR_HIST_ENTRIES>, 2>;
+using NonPawnCorrHist = std::array<std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, NON_PAWN_CORR_HIST_ENTRIES>, 2>, 2>;
 
 int historyBonus(int depth);
 int historyMalus(int depth);

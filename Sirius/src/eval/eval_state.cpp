@@ -14,13 +14,16 @@ EvalState::EvalState()
 
 void EvalState::init(const Board& board, PawnTable& pawnTable)
 {
+    using enum PieceType;
+    using enum Color;
+
     std::fill(m_Stack.begin(), m_Stack.end(), StackEntry{});
     m_CurrEntry = &m_Stack[0];
     m_PawnTable = &pawnTable;
 
     currEntry().psqtState.init();
-    for (Color c : {Color::WHITE, Color::BLACK})
-        for (PieceType pt : {PieceType::PAWN, PieceType::KNIGHT, PieceType::BISHOP, PieceType::ROOK, PieceType::QUEEN, PieceType::KING})
+    for (Color c : {WHITE, BLACK})
+        for (PieceType pt : {PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING})
         {
             Bitboard pieces = board.pieces(c, pt);
             while (pieces.any())

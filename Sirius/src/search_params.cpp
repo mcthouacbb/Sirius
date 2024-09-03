@@ -10,6 +10,8 @@
 namespace search
 {
 
+std::array<std::array<int, 64>, 64> genLMRTable();
+
 #ifdef EXTERNAL_TUNE
 
 // used to make searchParams initialized after
@@ -64,13 +66,7 @@ extern std::array<std::array<int, 64>, 64> lmrTable;
 
 void updateLmrTable()
 {
-    for (int d = 1; d < 64; d++)
-    {
-        for (int i = 1; i < 64; i++)
-        {
-            lmrTable[d][i] = static_cast<int>(lmrBase / 100.0 + std::log(static_cast<double>(d)) * std::log(static_cast<double>(i)) / (lmrDivisor / 100.0));
-        }
-    }
+    lmrTable = genLMRTable();
 }
 
 

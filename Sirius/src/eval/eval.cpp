@@ -17,26 +17,27 @@ struct EvalData
     ColorArray<int> attackCount;
 };
 
+using enum PieceType;
+using enum Color;
+
 template<Color us, PieceType piece>
 PackedScore evaluatePieces(const Board& board, EvalData& evalData)
 {
     constexpr Color them = ~us;
-    Bitboard ourPawns = board.pieces(us, PieceType::PAWN);
-    Bitboard theirPawns = board.pieces(them, PieceType::PAWN);
 
     PackedScore eval{0, 0};
     Bitboard pieces = board.pieces(us, piece);
-    if constexpr (piece == PieceType::BISHOP)
+    if constexpr (piece == BISHOP)
         if (pieces.multiple())
             eval += BISHOP_PAIR;
 
     Bitboard occupancy = board.allPieces();
-    if constexpr (piece == PieceType::BISHOP)
-        occupancy ^= board.pieces(us, PieceType::BISHOP) | board.pieces(us, PieceType::QUEEN);
-    else if constexpr (piece == PieceType::ROOK)
-        occupancy ^= board.pieces(us, PieceType::ROOK) | board.pieces(us, PieceType::QUEEN);
-    else if constexpr (piece == PieceType::QUEEN)
-        occupancy ^= board.pieces(us, PieceType::BISHOP) | board.pieces(us, PieceType::ROOK);
+    if constexpr (piece == BISHOP)
+        occupancy ^= board.pieces(us, BISHOP) | board.pieces(us, QUEEN);
+    else if constexpr (piece == ROOK)
+        occupancy ^= board.pieces(us, ROOK) | board.pieces(us, QUEEN);
+    else if constexpr (piece == QUEEN)
+        occupancy ^= board.pieces(us, BISHOP) | board.pieces(us, ROOK);
 
 
     while (pieces.any())
@@ -50,11 +51,11 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
         evalData.attackedBy2[us] |= evalData.attacked[us] & attacks;
         evalData.attacked[us] |= attacks;
 
-        eval += MOBILITY[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)][(attacks & evalData.mobilityArea[us]).popcount()];
+        eval += MOBILITY[static_cast<int>(piece) - static_cast<int>(KNIGHT)][(attacks & evalData.mobilityArea[us]).popcount()];
 
         if (Bitboard kingRingAtks = evalData.kingRing[them] & attacks; kingRingAtks.any())
         {
-            evalData.attackWeight[us] += KING_ATTACKER_WEIGHT[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)];
+            evalData.attackWeight[us] += KING_ATTACKER_WEIGHT[static_cast<int>(piece) - static_cast<int>(KNIGHT)];
             evalData.attackCount[us] += kingRingAtks.popcount();
         }
     }
@@ -72,14 +73,14 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
 
     Bitboard defendedBB = evalData.attacked[them];
 
-    Bitboard pawnThreats = evalData.attackedBy[us][PieceType::PAWN] & board.pieces(them);
+    Bitboard pawnThreats = evalData.attackedBy[us][PAWN] & board.pieces(them);
     while (pawnThreats.any())
     {
         PieceType threatened = getPieceType(board.pieceAt(pawnThreats.poplsb()));
         eval += THREAT_BY_PAWN[static_cast<int>(threatened)];
     }
 
-    Bitboard knightThreats = evalData.attackedBy[us][PieceType::KNIGHT] & board.pieces(them);
+    Bitboard knightThreats = evalData.attackedBy[us][KNIGHT] & board.pieces(them);
     while (knightThreats.any())
     {
         Square threat = knightThreats.poplsb();
@@ -88,7 +89,7 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
         eval += THREAT_BY_KNIGHT[defended][static_cast<int>(threatened)];
     }
 
-    Bitboard bishopThreats = evalData.attackedBy[us][PieceType::BISHOP] & board.pieces(them);
+    Bitboard bishopThreats = evalData.attackedBy[us][BISHOP] & board.pieces(them);
     while (bishopThreats.any())
     {
         Square threat = bishopThreats.poplsb();
@@ -97,7 +98,7 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
         eval += THREAT_BY_BISHOP[defended][static_cast<int>(threatened)];
     }
 
-    Bitboard rookThreats = evalData.attackedBy[us][PieceType::ROOK] & board.pieces(them);
+    Bitboard rookThreats = evalData.attackedBy[us][ROOK] & board.pieces(them);
     while (rookThreats.any())
     {
         Square threat = rookThreats.poplsb();
@@ -106,7 +107,7 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
         eval += THREAT_BY_ROOK[defended][static_cast<int>(threatened)];
     }
 
-    Bitboard queenThreats = evalData.attackedBy[us][PieceType::QUEEN] & board.pieces(them);
+    Bitboard queenThreats = evalData.attackedBy[us][QUEEN] & board.pieces(them);
     while (queenThreats.any())
     {
         Square threat = queenThreats.poplsb();
@@ -115,17 +116,17 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
         eval += THREAT_BY_QUEEN[defended][static_cast<int>(threatened)];
     }
 
-    Bitboard kingThreats = evalData.attackedBy[us][PieceType::KING] & board.pieces(them) & ~defendedBB;
+    Bitboard kingThreats = evalData.attackedBy[us][KING] & board.pieces(them) & ~defendedBB;
     while (kingThreats.any())
     {
         PieceType threatened = getPieceType(board.pieceAt(kingThreats.poplsb()));
         eval += THREAT_BY_KING[static_cast<int>(threatened)];
     }
 
-    Bitboard nonPawnEnemies = board.pieces(them) & ~board.pieces(PieceType::PAWN);
+    Bitboard nonPawnEnemies = board.pieces(them) & ~board.pieces(PAWN);
 
-    Bitboard safe = ~defendedBB | (evalData.attacked[us] & ~evalData.attackedBy[them][PieceType::PAWN]);
-    Bitboard pushes = attacks::pawnPushes<us>(board.pieces(us, PieceType::PAWN)) & ~board.allPieces();
+    Bitboard safe = ~defendedBB | (evalData.attacked[us] & ~evalData.attackedBy[them][PAWN]);
+    Bitboard pushes = attacks::pawnPushes<us>(board.pieces(us, PAWN)) & ~board.allPieces();
     pushes |= attacks::pawnPushes<us>(pushes & Bitboard::nthRank<us, RANK_3>()) & ~board.allPieces();
 
     Bitboard pushThreats = attacks::pawnAttacks<us>(pushes & safe) & nonPawnEnemies;
@@ -145,12 +146,12 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
     Bitboard rookCheckSquares = attacks::rookAttacks(theirKing, board.allPieces());
     Bitboard bishopCheckSquares = attacks::bishopAttacks(theirKing, board.allPieces());
 
-    Bitboard knightChecks = evalData.attackedBy[us][PieceType::KNIGHT] & attacks::knightAttacks(theirKing);
-    Bitboard bishopChecks = evalData.attackedBy[us][PieceType::BISHOP] & bishopCheckSquares;
-    Bitboard rookChecks = evalData.attackedBy[us][PieceType::ROOK] & rookCheckSquares;
-    Bitboard queenChecks = evalData.attackedBy[us][PieceType::QUEEN] & (bishopCheckSquares | rookCheckSquares);
+    Bitboard knightChecks = evalData.attackedBy[us][KNIGHT] & attacks::knightAttacks(theirKing);
+    Bitboard bishopChecks = evalData.attackedBy[us][BISHOP] & bishopCheckSquares;
+    Bitboard rookChecks = evalData.attackedBy[us][ROOK] & rookCheckSquares;
+    Bitboard queenChecks = evalData.attackedBy[us][QUEEN] & (bishopCheckSquares | rookCheckSquares);
 
-    Bitboard safe = ~evalData.attacked[them] | (~evalData.attackedBy2[them] & evalData.attackedBy[them][PieceType::KING]);
+    Bitboard safe = ~evalData.attacked[them] | (~evalData.attackedBy2[them] & evalData.attackedBy[them][KING]);
 
     eval += SAFE_KNIGHT_CHECK * (knightChecks & safe).popcount();
     eval += SAFE_BISHOP_CHECK * (bishopChecks & safe).popcount();
@@ -204,9 +205,9 @@ PackedScore evaluateComplexity(const Board& board, const PawnStructure& pawnStru
 {
     constexpr Bitboard KING_SIDE = FILE_A_BB | FILE_B_BB | FILE_C_BB | FILE_D_BB;
     constexpr Bitboard QUEEN_SIDE = ~KING_SIDE;
-    Bitboard pawns = board.pieces(PieceType::PAWN);
+    Bitboard pawns = board.pieces(PAWN);
     bool pawnsBothSides = (pawns & KING_SIDE).any() && (pawns & QUEEN_SIDE).any();
-    bool pawnEndgame = board.allPieces() == (pawns | board.pieces(PieceType::KING));
+    bool pawnEndgame = board.allPieces() == (pawns | board.pieces(KING));
 
     PackedScore complexity =
         COMPLEXITY_PAWNS * pawns.popcount() +
@@ -226,37 +227,37 @@ PackedScore evaluateComplexity(const Board& board, const PawnStructure& pawnStru
 
 int evaluateScale(const Board& board, PackedScore eval)
 {
-    Color strongSide = eval.eg() > 0 ? Color::WHITE : Color::BLACK;
+    Color strongSide = eval.eg() > 0 ? WHITE : BLACK;
 
-    int strongPawns = board.pieces(strongSide, PieceType::PAWN).popcount();
+    int strongPawns = board.pieces(strongSide, PAWN).popcount();
 
     return 80 + strongPawns * 7;
 }
 
 void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& pawnStructure)
 {
-    Bitboard whitePawns = board.pieces(Color::WHITE, PieceType::PAWN);
-    Bitboard blackPawns = board.pieces(Color::BLACK, PieceType::PAWN);
-    Square whiteKing = board.kingSq(Color::WHITE);
-    Square blackKing = board.kingSq(Color::BLACK);
+    Bitboard whitePawns = board.pieces(WHITE, PAWN);
+    Bitboard blackPawns = board.pieces(BLACK, PAWN);
+    Square whiteKing = board.kingSq(WHITE);
+    Square blackKing = board.kingSq(BLACK);
 
-    evalData.mobilityArea[Color::WHITE] = ~pawnStructure.pawnAttacks[Color::BLACK];
-    evalData.attacked[Color::WHITE] = evalData.attackedBy[Color::WHITE][PieceType::PAWN] = pawnStructure.pawnAttacks[Color::WHITE];
+    evalData.mobilityArea[WHITE] = ~pawnStructure.pawnAttacks[BLACK];
+    evalData.attacked[WHITE] = evalData.attackedBy[WHITE][PAWN] = pawnStructure.pawnAttacks[WHITE];
 
     Bitboard whiteKingAtks = attacks::kingAttacks(whiteKing);
-    evalData.attackedBy[Color::WHITE][PieceType::KING] = whiteKingAtks;
-    evalData.attackedBy2[Color::WHITE] = evalData.attacked[Color::WHITE] & whiteKingAtks;
-    evalData.attacked[Color::WHITE] |= whiteKingAtks;
-    evalData.kingRing[Color::WHITE] = (whiteKingAtks | whiteKingAtks.north()) & ~Bitboard::fromSquare(whiteKing);
+    evalData.attackedBy[WHITE][KING] = whiteKingAtks;
+    evalData.attackedBy2[WHITE] = evalData.attacked[WHITE] & whiteKingAtks;
+    evalData.attacked[WHITE] |= whiteKingAtks;
+    evalData.kingRing[WHITE] = (whiteKingAtks | whiteKingAtks.north()) & ~Bitboard::fromSquare(whiteKing);
 
-    evalData.mobilityArea[Color::BLACK] = ~pawnStructure.pawnAttacks[Color::WHITE];
-    evalData.attacked[Color::BLACK] = evalData.attackedBy[Color::BLACK][PieceType::PAWN] = pawnStructure.pawnAttacks[Color::BLACK];
+    evalData.mobilityArea[BLACK] = ~pawnStructure.pawnAttacks[WHITE];
+    evalData.attacked[BLACK] = evalData.attackedBy[BLACK][PAWN] = pawnStructure.pawnAttacks[BLACK];
 
     Bitboard blackKingAtks = attacks::kingAttacks(blackKing);
-    evalData.attackedBy[Color::BLACK][PieceType::KING] = blackKingAtks;
-    evalData.attackedBy2[Color::BLACK] = evalData.attacked[Color::BLACK] & blackKingAtks;
-    evalData.attacked[Color::BLACK] |= blackKingAtks;
-    evalData.kingRing[Color::BLACK] = (blackKingAtks | blackKingAtks.south()) & ~Bitboard::fromSquare(blackKing);
+    evalData.attackedBy[BLACK][KING] = blackKingAtks;
+    evalData.attackedBy2[BLACK] = evalData.attacked[BLACK] & blackKingAtks;
+    evalData.attacked[BLACK] |= blackKingAtks;
+    evalData.kingRing[BLACK] = (blackKingAtks | blackKingAtks.south()) & ~Bitboard::fromSquare(blackKing);
 }
 
 int evaluate(const Board& board, search::SearchThread* thread)
@@ -274,21 +275,21 @@ int evaluate(const Board& board, search::SearchThread* thread)
     EvalData evalData = {};
     initEvalData(board, evalData, pawnStructure);
 
-    eval += evaluatePieces<Color::WHITE, PieceType::KNIGHT>(board, evalData) - evaluatePieces<Color::BLACK, PieceType::KNIGHT>(board, evalData);
-    eval += evaluatePieces<Color::WHITE, PieceType::BISHOP>(board, evalData) - evaluatePieces<Color::BLACK, PieceType::BISHOP>(board, evalData);
-    eval += evaluatePieces<Color::WHITE, PieceType::ROOK>(board, evalData) - evaluatePieces<Color::BLACK, PieceType::ROOK>(board, evalData);
-    eval += evaluatePieces<Color::WHITE, PieceType::QUEEN>(board, evalData) - evaluatePieces<Color::BLACK, PieceType::QUEEN>(board, evalData);
+    eval += evaluatePieces<WHITE, KNIGHT>(board, evalData) - evaluatePieces<BLACK, KNIGHT>(board, evalData);
+    eval += evaluatePieces<WHITE, BISHOP>(board, evalData) - evaluatePieces<BLACK, BISHOP>(board, evalData);
+    eval += evaluatePieces<WHITE, ROOK>(board, evalData) - evaluatePieces<BLACK, ROOK>(board, evalData);
+    eval += evaluatePieces<WHITE, QUEEN>(board, evalData) - evaluatePieces<BLACK, QUEEN>(board, evalData);
 
-    eval += evaluateKings<Color::WHITE>(board, evalData) - evaluateKings<Color::BLACK>(board, evalData);
-    eval += evaluatePassedPawns<Color::WHITE>(board, pawnStructure, evalData) - evaluatePassedPawns<Color::BLACK>(board, pawnStructure, evalData);
-    eval += evaluateThreats<Color::WHITE>(board, evalData) - evaluateThreats<Color::BLACK>(board, evalData);
+    eval += evaluateKings<WHITE>(board, evalData) - evaluateKings<BLACK>(board, evalData);
+    eval += evaluatePassedPawns<WHITE>(board, pawnStructure, evalData) - evaluatePassedPawns<BLACK>(board, pawnStructure, evalData);
+    eval += evaluateThreats<WHITE>(board, evalData) - evaluateThreats<BLACK>(board, evalData);
     eval += evaluateComplexity(board, pawnStructure, eval);
 
     int scale = evaluateScale(board, eval);
 
-    eval += (color == Color::WHITE ? TEMPO : -TEMPO);
+    eval += (color == WHITE ? TEMPO : -TEMPO);
 
-    return (color == Color::WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg() * scale / SCALE_FACTOR, thread->evalState.phase());
+    return (color == WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg() * scale / SCALE_FACTOR, thread->evalState.phase());
 }
 
 
