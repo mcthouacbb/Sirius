@@ -1,12 +1,17 @@
 #include "history.h"
 #include "search_params.h"
-#include <algorithm>
 
 namespace
 {
 
 template<int MAX_VAL, size_t N>
 void fillHistTable(std::array<HistoryEntry<MAX_VAL>, N>& arr, int value)
+{
+    std::fill(arr.begin(), arr.end(), value);
+}
+
+template<int MAX_VAL, size_t N>
+void fillHistTable(std::array<CorrHistEntry<MAX_VAL>, N>& arr, int value)
 {
     std::fill(arr.begin(), arr.end(), value);
 }
@@ -21,9 +26,7 @@ template<typename T, size_t N>
 void fillHistTable(std::array<T, N>& arr, int value)
 {
     for (auto& elem : arr)
-    {
         fillHistTable(elem, value);
-    }
 }
 
 }
@@ -97,20 +100,16 @@ void History::updateCorrHist(int bonus, int depth, const Board& board)
     int weight = std::min(1 + depth, 16);
 
     auto& pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % PAWN_CORR_HIST_ENTRIES];
-    pawnEntry = (pawnEntry * (256 - weight) + scaledBonus * weight) / 256;
-    pawnEntry = std::clamp(pawnEntry, -MAX_CORR_HIST, MAX_CORR_HIST);
+    pawnEntry.update(scaledBonus, weight);
 
     auto& materialEntry = m_MaterialCorrHist[static_cast<int>(stm)][board.materialKey() % MATERIAL_CORR_HIST_ENTRIES];
-    materialEntry = (materialEntry * (256 - weight) + scaledBonus * weight) / 256;
-    materialEntry = std::clamp(materialEntry, -MAX_CORR_HIST, MAX_CORR_HIST);
+    materialEntry.update(scaledBonus, weight);
 
     auto& nonPawnWhiteEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(Color::WHITE)][board.nonPawnKey(Color::WHITE).value % NON_PAWN_CORR_HIST_ENTRIES];
-    nonPawnWhiteEntry = (nonPawnWhiteEntry * (256 - weight) + scaledBonus * weight) / 256;
-    nonPawnWhiteEntry = std::clamp(nonPawnWhiteEntry, -MAX_CORR_HIST, MAX_CORR_HIST);
+    nonPawnWhiteEntry.update(scaledBonus, weight);
 
     auto& nonPawnBlackEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(Color::BLACK)][board.nonPawnKey(Color::BLACK).value % NON_PAWN_CORR_HIST_ENTRIES];
-    nonPawnBlackEntry = (nonPawnBlackEntry * (256 - weight) + scaledBonus * weight) / 256;
-    nonPawnBlackEntry = std::clamp(nonPawnBlackEntry, -MAX_CORR_HIST, MAX_CORR_HIST);
+    nonPawnBlackEntry.update(scaledBonus, weight);
 }
 
 int History::getMainHist(Bitboard threats, ExtMove move) const
