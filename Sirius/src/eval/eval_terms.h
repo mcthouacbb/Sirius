@@ -34,9 +34,6 @@ constexpr EvalTerm rookOpen = {PieceSet(PieceType::PAWN, PieceType::ROOK)};
 void evaluatePawns(const Board& board, PawnStructure& pawnStructure, PawnTable* pawnTable);
 
 template<Color us>
-PackedScore evaluatePassedPawns(const Board& board, const PawnStructure& pawnStructure);
-
-template<Color us>
 PackedScore evalKingPawnFile(uint32_t file, Bitboard ourPawns, Bitboard theirPawns, Square theirKing);
 
 template<Color us>
