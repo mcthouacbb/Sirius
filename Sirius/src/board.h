@@ -171,6 +171,7 @@ public:
     Bitboard threats() const;
 
     bool see(Move move, int margin) const;
+    bool isPseudoLegal(Move move) const;
     bool isLegal(Move move) const;
     ZKey keyAfter(Move move) const;
 private:

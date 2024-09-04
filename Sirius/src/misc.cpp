@@ -160,6 +160,70 @@ void testNoisyGen(Board& board, int depth)
     }
 }
 
+void testIsPseudoLegal(Board& board, int depth)
+{
+    if (depth == 0)
+    {
+        MoveList moves;
+        genMoves<MoveGenType::NOISY_QUIET>(board, moves);
+
+        for (Move move : moves)
+        {
+            if (!board.isPseudoLegal(move))
+            {
+                std::cout << board.fenStr() << std::endl;
+                std::cout << comm::convMoveToPCN(move) << std::endl;
+                throw std::runtime_error("bruh");
+            }
+        }
+
+        for (int from = 0; from < 64; from++)
+        {
+            for (int to = 0; to < 64; to++)
+            {
+                Move move(Square(from), Square(to), MoveType::NONE);
+                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                    throw std::runtime_error("bruh2");
+
+                move = Move(Square(from), Square(to), MoveType::ENPASSANT);
+                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                    throw std::runtime_error("bruh2");
+
+                move = Move(Square(from), Square(to), MoveType::CASTLE);
+                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                    throw std::runtime_error("bruh2");
+
+                move = Move(Square(from), Square(to), MoveType::PROMOTION, Promotion::KNIGHT);
+                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                    throw std::runtime_error("bruh2");
+
+                move = Move(Square(from), Square(to), MoveType::PROMOTION, Promotion::BISHOP);
+                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                    throw std::runtime_error("bruh2");
+
+                move = Move(Square(from), Square(to), MoveType::PROMOTION, Promotion::ROOK);
+                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                    throw std::runtime_error("bruh2");
+
+                move = Move(Square(from), Square(to), MoveType::PROMOTION, Promotion::QUEEN);
+                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                    throw std::runtime_error("bruh2");
+            }
+        }
+        return;
+    }
+
+    MoveList moves;
+    genMoves<MoveGenType::LEGAL>(board, moves);
+
+    for (Move move : moves)
+    {
+        board.makeMove(move);
+        testIsPseudoLegal(board, depth - 1);
+        board.unmakeMove();
+    }
+}
+
 void testQuietGen(Board& board, int depth)
 {
     if (depth == 0)

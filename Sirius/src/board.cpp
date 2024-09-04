@@ -846,6 +846,156 @@ bool Board::isLegal(Move move) const
         attacks::aligned(kingSq(m_SideToMove), move.fromSq(), move.toSq());
 }
 
+// move generation handles double check and check evasions, so this function also handles them
+bool Board::isPseudoLegal(Move move) const
+{
+    if (move.fromSq() == move.toSq())
+        return false;
+
+    Piece srcPiece = pieceAt(move.fromSq());
+    if (srcPiece == Piece::NONE || getPieceColor(srcPiece) != m_SideToMove)
+        return false;
+
+    Piece dstPiece = pieceAt(move.toSq());
+    if (dstPiece != Piece::NONE && (getPieceColor(dstPiece) == m_SideToMove || getPieceType(dstPiece) == PieceType::KING))
+        return false;
+
+    PieceType srcPieceType = getPieceType(srcPiece);
+    PieceType dstPieceType = getPieceType(dstPiece);
+
+    if (move.type() == MoveType::CASTLE)
+    {
+        if (srcPieceType != PieceType::KING || checkers().any())
+            return false;
+
+        Bitboard firstRank = m_SideToMove == Color::WHITE ? Bitboard::nthRank<Color::WHITE, 0>() : Bitboard::nthRank<Color::BLACK, 0>();
+        if ((Bitboard::fromSquare(move.fromSq()) & firstRank).empty() || (Bitboard::fromSquare(move.toSq()) & firstRank).empty())
+            return false;
+
+        if (move.fromSq() > move.toSq())
+        {
+            if (move.toSq() != move.fromSq() - 2)
+                return false;
+            // queen side
+            if ((castlingRights() & (2 << 2 * static_cast<int>(m_SideToMove))) == 0)
+                return false;
+            if (m_SideToMove == Color::WHITE)
+                return (attacks::qscBlockSquares<Color::WHITE>() & allPieces()).empty();
+            else
+                return (attacks::qscBlockSquares<Color::BLACK>() & allPieces()).empty();
+        }
+        else
+        {
+            if (move.toSq() != move.fromSq() + 2)
+                return false;
+            // king side
+            if ((castlingRights() & (1 << 2 * static_cast<int>(m_SideToMove))) == 0)
+                return false;
+            if (m_SideToMove == Color::WHITE)
+                return (attacks::kscBlockSquares<Color::WHITE>() & allPieces()).empty();
+            else
+                return (attacks::kscBlockSquares<Color::BLACK>() & allPieces()).empty();
+        }
+    }
+
+    if (srcPieceType != PieceType::KING && checkers().multiple())
+        return false;
+
+    if (move.type() == MoveType::CASTLE)
+        return false;
+
+    Bitboard moveMask = checkers().any() && srcPieceType != PieceType::KING ? attacks::moveMask(kingSq(m_SideToMove), checkers().lsb()) : Bitboard(~0ull);
+
+    if (move.type() != MoveType::ENPASSANT && (Bitboard::fromSquare(move.toSq()) & moveMask).empty())
+        return false;
+
+    if (srcPieceType == PieceType::PAWN)
+    {
+        int pushOffset = m_SideToMove == Color::WHITE ? attacks::pawnPushOffset<Color::WHITE>() : attacks::pawnPushOffset<Color::BLACK>();
+        if (move.type() == MoveType::ENPASSANT)
+        {
+            if (move.toSq().value() != epSquare())
+                return false;
+            if ((attacks::pawnAttacks(m_SideToMove, move.fromSq()) & Bitboard::fromSquare(move.toSq())).empty())
+                return false;
+            return checkers().empty() || (moveMask & Bitboard::fromSquare(Square(epSquare() - pushOffset))).any();
+        }
+
+        if (dstPieceType == PieceType::NONE)
+        {
+            // must be a push
+            if (move.toSq() - move.fromSq() == pushOffset)
+            {
+                // single
+                Bitboard seventhRank = m_SideToMove == Color::WHITE ? Bitboard::nthRank<Color::WHITE, 6>() : Bitboard::nthRank<Color::BLACK, 6>();
+
+                if (move.type() == MoveType::PROMOTION)
+                {
+                    return (Bitboard::fromSquare(move.fromSq()) & seventhRank).any();
+                }
+                else
+                {
+                    return move.fromSq().value() >= 8 && move.fromSq().value() < 56 && (Bitboard::fromSquare(move.fromSq()) & seventhRank).empty();
+                }
+            }
+            else if (move.toSq() - move.fromSq() == pushOffset * 2)
+            {
+                if (move.type() != MoveType::NONE)
+                    return false;
+                if (pieceAt(move.fromSq() + pushOffset) != Piece::NONE)
+                    return false;
+                // double
+                Bitboard secondRank = m_SideToMove == Color::WHITE ? Bitboard::nthRank<Color::WHITE, 1>() : Bitboard::nthRank<Color::BLACK, 1>();
+                return (Bitboard::fromSquare(move.fromSq()) & secondRank).any();
+            }
+            else
+                return false;
+        }
+        else
+        {
+            // must be a capture
+            if ((attacks::pawnAttacks(m_SideToMove, move.fromSq()) & Bitboard::fromSquare(move.toSq())).empty())
+                return false;
+
+            Bitboard seventhRank = m_SideToMove == Color::WHITE ? Bitboard::nthRank<Color::WHITE, 6>() : Bitboard::nthRank<Color::BLACK, 6>();
+
+            if (move.type() == MoveType::PROMOTION)
+            {
+                return (Bitboard::fromSquare(move.fromSq()) & seventhRank).any();
+            }
+            else
+            {
+                return move.fromSq().value() >= 8 && move.fromSq().value() < 56 && (Bitboard::fromSquare(move.fromSq()) & seventhRank).empty();
+            }
+        }
+    }
+
+    if (move.type() != MoveType::NONE)
+        return false;
+
+    Bitboard pieceAttacks = {};
+    switch (srcPieceType)
+    {
+        case PieceType::KNIGHT:
+            pieceAttacks = attacks::knightAttacks(move.fromSq());
+            break;
+        case PieceType::BISHOP:
+            pieceAttacks = attacks::bishopAttacks(move.fromSq(), allPieces());
+            break;
+        case PieceType::ROOK:
+            pieceAttacks = attacks::rookAttacks(move.fromSq(), allPieces());
+            break;
+        case PieceType::QUEEN:
+            pieceAttacks = attacks::queenAttacks(move.fromSq(), allPieces());
+            break;
+        case PieceType::KING:
+            pieceAttacks = attacks::kingAttacks(move.fromSq());
+            break;
+    }
+
+    return (pieceAttacks & Bitboard::fromSquare(move.toSq())).any();
+}
+
 ZKey Board::keyAfter(Move move) const
 {
     ZKey keyAfter = currState().zkey;

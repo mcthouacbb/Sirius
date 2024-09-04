@@ -13,6 +13,8 @@ void testKeyAfter(Board& board, int depth);
 void testNoisyGen(Board& board, int depth);
 void testQuietGen(Board& board, int depth);
 
+void testIsPseudoLegal(Board& board, int depth);
+
 void testSEE();
 
 void runTests(Board& board, bool fast);
