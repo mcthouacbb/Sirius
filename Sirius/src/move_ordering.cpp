@@ -75,24 +75,31 @@ int MoveOrdering::scoreMoveQSearch(Move move) const
 }
 
 MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move ttMove, const History& history)
-    : m_Board(board), m_Moves(moves), m_TTMove(ttMove), m_History(history)
+    : m_Board(board), m_Moves(moves), m_TTMove(ttMove), m_History(history), m_Curr(0)
 {
     for (uint32_t i = 0; i < m_Moves.size(); i++)
         m_MoveScores[i] = scoreMoveQSearch(m_Moves[i]);
 }
 
 MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move ttMove, const std::array<Move, 2>& killers, std::span<const CHEntry* const> contHistEntries, const History& history)
-    : m_Board(board), m_Moves(moves), m_TTMove(ttMove), m_History(history), m_ContHistEntries(contHistEntries), m_Killers(killers)
+    : m_Board(board), m_Moves(moves), m_TTMove(ttMove), m_History(history), m_ContHistEntries(contHistEntries), m_Killers(killers), m_Curr(0)
 {
     for (uint32_t i = 0; i < m_Moves.size(); i++)
         m_MoveScores[i] = scoreMove(m_Moves[i]);
 }
 
-ScoredMove MoveOrdering::selectMove(uint32_t index)
+ScoredMove MoveOrdering::selectMove()
+{
+    if (m_Curr >= m_Moves.size())
+        return {Move(), NO_MOVE};
+    return selectHighest();
+}
+
+ScoredMove MoveOrdering::selectHighest()
 {
     int bestScore = INT_MIN;
-    uint32_t bestIndex = index;
-    for (uint32_t i = index; i < m_Moves.size(); i++)
+    uint32_t bestIndex = m_Curr;
+    for (uint32_t i = m_Curr; i < m_Moves.size(); i++)
     {
         if (m_MoveScores[i] > bestScore)
         {
@@ -101,8 +108,8 @@ ScoredMove MoveOrdering::selectMove(uint32_t index)
         }
     }
 
-    std::swap(m_Moves[bestIndex], m_Moves[index]);
-    std::swap(m_MoveScores[bestIndex], m_MoveScores[index]);
+    std::swap(m_Moves[bestIndex], m_Moves[m_Curr]);
+    std::swap(m_MoveScores[bestIndex], m_MoveScores[m_Curr]);
 
-    return {m_Moves[index], m_MoveScores[index]};
+    return {m_Moves[m_Curr], m_MoveScores[m_Curr++]};
 }
