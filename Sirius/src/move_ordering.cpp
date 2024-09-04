@@ -75,14 +75,16 @@ int MoveOrdering::scoreMoveQSearch(Move move) const
 }
 
 MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move ttMove, const History& history)
-    : m_Board(board), m_Moves(moves), m_TTMove(ttMove), m_History(history), m_Curr(0)
+    : m_Board(board), m_Moves(moves), m_TTMove(ttMove), m_History(history), m_Curr(0), m_Stage(MovePickStage::QS_TT_MOVE)
 {
     for (uint32_t i = 0; i < m_Moves.size(); i++)
         m_MoveScores[i] = scoreMoveQSearch(m_Moves[i]);
 }
 
 MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move ttMove, const std::array<Move, 2>& killers, std::span<const CHEntry* const> contHistEntries, const History& history)
-    : m_Board(board), m_Moves(moves), m_TTMove(ttMove), m_History(history), m_ContHistEntries(contHistEntries), m_Killers(killers), m_Curr(0)
+    : m_Board(board), m_Moves(moves), m_TTMove(ttMove),
+    m_History(history), m_ContHistEntries(contHistEntries), m_Killers(killers),
+    m_Curr(0), m_Stage(MovePickStage::TT_MOVE)
 {
     for (uint32_t i = 0; i < m_Moves.size(); i++)
         m_MoveScores[i] = scoreMove(m_Moves[i]);
@@ -90,6 +92,40 @@ MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move ttMove, con
 
 ScoredMove MoveOrdering::selectMove()
 {
+    using enum MovePickStage;
+    switch (m_Stage)
+    {
+        case TT_MOVE:
+            ++m_Stage;
+            if (m_TTMove != Move() && m_Board.isPseudoLegal(m_TTMove))
+                return ScoredMove(m_TTMove, 10000000);
+
+            // fallthrough
+        case REST:
+            while (m_Curr < m_Moves.size())
+            {
+                ScoredMove scoredMove = selectHighest();
+                if (scoredMove.move != m_TTMove)
+                    return scoredMove;
+            }
+            return {Move(), NO_MOVE};
+
+
+        case QS_TT_MOVE:
+            ++m_Stage;
+            if (m_TTMove != Move() && m_Board.isPseudoLegal(m_TTMove) && !moveIsQuiet(m_Board, m_TTMove))
+                return ScoredMove(m_TTMove, 10000000);
+
+            // fallthrough
+        case QS_REST:
+            while (m_Curr < m_Moves.size())
+            {
+                ScoredMove scoredMove = selectHighest();
+                if (scoredMove.move != m_TTMove)
+                    return scoredMove;
+            }
+            return {Move(), NO_MOVE};
+    }
     if (m_Curr >= m_Moves.size())
         return {Move(), NO_MOVE};
     return selectHighest();
