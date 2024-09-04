@@ -17,10 +17,12 @@ bool moveIsCapture(const Board& board, Move move);
 enum class MovePickStage
 {
     TT_MOVE,
-    REST,
+    GEN_NOISY_QUIETS,
+    NOISY_QUIETS,
 
     QS_TT_MOVE,
-    QS_REST
+    QS_GEN_NOISIES,
+    QS_NOISIES
 };
 
 inline MovePickStage operator++(MovePickStage& stage)

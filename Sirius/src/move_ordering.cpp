@@ -77,8 +77,6 @@ int MoveOrdering::scoreMoveQSearch(Move move) const
 MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move ttMove, const History& history)
     : m_Board(board), m_Moves(moves), m_TTMove(ttMove), m_History(history), m_Curr(0), m_Stage(MovePickStage::QS_TT_MOVE)
 {
-    for (uint32_t i = 0; i < m_Moves.size(); i++)
-        m_MoveScores[i] = scoreMoveQSearch(m_Moves[i]);
 }
 
 MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move ttMove, const std::array<Move, 2>& killers, std::span<const CHEntry* const> contHistEntries, const History& history)
@@ -86,8 +84,6 @@ MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move ttMove, con
     m_History(history), m_ContHistEntries(contHistEntries), m_Killers(killers),
     m_Curr(0), m_Stage(MovePickStage::TT_MOVE)
 {
-    for (uint32_t i = 0; i < m_Moves.size(); i++)
-        m_MoveScores[i] = scoreMove(m_Moves[i]);
 }
 
 ScoredMove MoveOrdering::selectMove()
@@ -101,7 +97,13 @@ ScoredMove MoveOrdering::selectMove()
                 return ScoredMove(m_TTMove, 10000000);
 
             // fallthrough
-        case REST:
+        case GEN_NOISY_QUIETS:
+            ++m_Stage;
+            for (uint32_t i = 0; i < m_Moves.size(); i++)
+                m_MoveScores[i] = scoreMove(m_Moves[i]);
+
+            // fallthrough
+        case NOISY_QUIETS:
             while (m_Curr < m_Moves.size())
             {
                 ScoredMove scoredMove = selectHighest();
@@ -117,7 +119,13 @@ ScoredMove MoveOrdering::selectMove()
                 return ScoredMove(m_TTMove, 10000000);
 
             // fallthrough
-        case QS_REST:
+        case QS_GEN_NOISIES:
+            ++m_Stage;
+            for (uint32_t i = 0; i < m_Moves.size(); i++)
+                m_MoveScores[i] = scoreMoveQSearch(m_Moves[i]);
+
+            // fallthrough
+        case QS_NOISIES:
             while (m_Curr < m_Moves.size())
             {
                 ScoredMove scoredMove = selectHighest();
