@@ -35,64 +35,57 @@ bool moveIsCapture(const Board& board, Move move)
         board.pieceAt(move.toSq()) != Piece::NONE;
 }
 
-MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, const History& history)
-    : m_Moves(moves)
+int MoveOrdering::scoreMove(Move move) const
 {
-    for (uint32_t i = 0; i < m_Moves.size(); i++)
+    if (move == m_TTMove)
+        return 10000000;
+
+    bool isCapture = moveIsCapture(m_Board, move);
+    bool isPromotion = move.type() == MoveType::PROMOTION;
+
+    if (isCapture)
     {
-        int score = 0;
-        Move move = m_Moves[i];
-
-        if (move == hashMove)
-        {
-            m_MoveScores[i] = 10000000;
-            continue;
-        }
-
-        bool isCapture = moveIsCapture(board, move);
-        bool isPromotion = move.type() == MoveType::PROMOTION;
-        score = history.getNoisyStats(ExtMove::from(board, move));
-        if (isCapture)
-            score += mvvLva(board, move);
-        if (isPromotion)
-            score += 100 * promotionBonus(move);
-
-        m_MoveScores[i] = score;
+        int hist = m_History.getNoisyStats(ExtMove::from(m_Board, move));
+        return hist + CAPTURE_SCORE * m_Board.see(move, -hist / 32) + mvvLva(m_Board, move);
     }
+    else if (isPromotion)
+    {
+        return m_History.getNoisyStats(ExtMove::from(m_Board, move)) + PROMOTION_SCORE + promotionBonus(move);
+    }
+    else if (move == m_Killers[0] || move == m_Killers[1])
+        return KILLER_SCORE + (move == m_Killers[0]);
+    else
+        return m_History.getQuietStats(m_Board.threats(), ExtMove::from(m_Board, move), m_ContHistEntries);
 }
 
-MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move hashMove, const std::array<Move, 2>& killers, std::span<const CHEntry* const> contHistEntries, const History& history)
-    : m_Moves(moves)
+int MoveOrdering::scoreMoveQSearch(Move move) const
+{
+    if (move == m_TTMove)
+        return 10000000;
+
+    bool isCapture = moveIsCapture(m_Board, move);
+    bool isPromotion = move.type() == MoveType::PROMOTION;
+    int score = m_History.getNoisyStats(ExtMove::from(m_Board, move));
+    if (isCapture)
+        score += mvvLva(m_Board, move);
+    if (isPromotion)
+        score += 100 * promotionBonus(move);
+
+    return score;
+}
+
+MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move ttMove, const History& history)
+    : m_Board(board), m_Moves(moves), m_TTMove(ttMove), m_History(history)
 {
     for (uint32_t i = 0; i < m_Moves.size(); i++)
-    {
-        int score = 0;
-        Move move = m_Moves[i];
+        m_MoveScores[i] = scoreMoveQSearch(m_Moves[i]);
+}
 
-        if (move == hashMove)
-        {
-            m_MoveScores[i] = 1000000;
-            continue;
-        }
-
-        bool isCapture = moveIsCapture(board, move);
-        bool isPromotion = move.type() == MoveType::PROMOTION;
-
-        if (isCapture)
-        {
-            int hist = history.getNoisyStats(ExtMove::from(board, move));
-            score = hist + CAPTURE_SCORE * board.see(move, -hist / 32) + mvvLva(board, move);
-        }
-        else if (isPromotion)
-        {
-            score = history.getNoisyStats(ExtMove::from(board, move)) + PROMOTION_SCORE + promotionBonus(move);
-        }
-        else if (move == killers[0] || move == killers[1])
-            score = KILLER_SCORE + (move == killers[0]);
-        else
-            score = history.getQuietStats(board.threats(), ExtMove::from(board, move), contHistEntries);
-        m_MoveScores[i] = score;
-    }
+MoveOrdering::MoveOrdering(const Board& board, MoveList& moves, Move ttMove, const std::array<Move, 2>& killers, std::span<const CHEntry* const> contHistEntries, const History& history)
+    : m_Board(board), m_Moves(moves), m_TTMove(ttMove), m_History(history), m_ContHistEntries(contHistEntries), m_Killers(killers)
+{
+    for (uint32_t i = 0; i < m_Moves.size(); i++)
+        m_MoveScores[i] = scoreMove(m_Moves[i]);
 }
 
 ScoredMove MoveOrdering::selectMove(uint32_t index)
