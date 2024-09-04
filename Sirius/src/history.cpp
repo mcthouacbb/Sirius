@@ -1,5 +1,6 @@
 #include "history.h"
 #include "search_params.h"
+#include "zobrist.h"
 
 namespace
 {
@@ -52,6 +53,7 @@ void History::clear()
     fillHistTable(m_PawnCorrHist, 0);
     fillHistTable(m_MaterialCorrHist, 0);
     fillHistTable(m_NonPawnCorrHist, 0);
+    fillHistTable(m_ThreatsCorrHist, 0);
 }
 
 int History::getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const
@@ -71,12 +73,15 @@ int History::getNoisyStats(ExtMove move) const
 int History::correctStaticEval(int staticEval, const Board& board) const
 {
     Color stm = board.sideToMove();
+    uint64_t threatsKey = murmurHash3(board.threats().value());
     int pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % PAWN_CORR_HIST_ENTRIES];
     int materialEntry = m_MaterialCorrHist[static_cast<int>(stm)][board.materialKey() % MATERIAL_CORR_HIST_ENTRIES];
     int nonPawnWhiteEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(Color::WHITE)][board.nonPawnKey(Color::WHITE).value % NON_PAWN_CORR_HIST_ENTRIES];
     int nonPawnBlackEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(Color::BLACK)][board.nonPawnKey(Color::BLACK).value % NON_PAWN_CORR_HIST_ENTRIES];
     int nonPawnEntry = (nonPawnWhiteEntry + nonPawnBlackEntry) / 2;
-    int corrected = staticEval + (pawnEntry + materialEntry + nonPawnEntry) / CORR_HIST_SCALE;
+    int threatsEntry = m_ThreatsCorrHist[static_cast<int>(stm)][threatsKey % THREATS_CORR_HIST_ENTRIES];
+    
+    int corrected = staticEval + (pawnEntry + materialEntry + nonPawnEntry + threatsEntry) / CORR_HIST_SCALE;
     return std::clamp(corrected, -SCORE_MATE_IN_MAX, SCORE_MATE_IN_MAX);
 }
 
@@ -96,6 +101,7 @@ void History::updateNoisyStats(ExtMove move, int bonus)
 void History::updateCorrHist(int bonus, int depth, const Board& board)
 {
     Color stm = board.sideToMove();
+    uint64_t threatsKey = murmurHash3(board.threats().value());
     int scaledBonus = bonus * CORR_HIST_SCALE;
     int weight = std::min(1 + depth, 16);
 
@@ -110,6 +116,9 @@ void History::updateCorrHist(int bonus, int depth, const Board& board)
 
     auto& nonPawnBlackEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(Color::BLACK)][board.nonPawnKey(Color::BLACK).value % NON_PAWN_CORR_HIST_ENTRIES];
     nonPawnBlackEntry.update(scaledBonus, weight);
+
+    auto& threatsEntry = m_ThreatsCorrHist[static_cast<int>(stm)][threatsKey % THREATS_CORR_HIST_ENTRIES];
+    threatsEntry.update(scaledBonus, weight);
 }
 
 int History::getMainHist(Bitboard threats, ExtMove move) const
