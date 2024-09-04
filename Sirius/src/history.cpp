@@ -73,7 +73,7 @@ int History::getNoisyStats(ExtMove move) const
 int History::correctStaticEval(int staticEval, const Board& board) const
 {
     Color stm = board.sideToMove();
-    uint64_t threatsKey = murmurHash3(board.threats().value());
+    uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
     int pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % PAWN_CORR_HIST_ENTRIES];
     int materialEntry = m_MaterialCorrHist[static_cast<int>(stm)][board.materialKey() % MATERIAL_CORR_HIST_ENTRIES];
     int nonPawnWhiteEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(Color::WHITE)][board.nonPawnKey(Color::WHITE).value % NON_PAWN_CORR_HIST_ENTRIES];
@@ -101,7 +101,7 @@ void History::updateNoisyStats(ExtMove move, int bonus)
 void History::updateCorrHist(int bonus, int depth, const Board& board)
 {
     Color stm = board.sideToMove();
-    uint64_t threatsKey = murmurHash3(board.threats().value());
+    uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
     int scaledBonus = bonus * CORR_HIST_SCALE;
     int weight = std::min(1 + depth, 16);
 
