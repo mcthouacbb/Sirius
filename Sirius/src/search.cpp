@@ -465,9 +465,10 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     if (!root)
         stack->multiExts = stack[-1].multiExts;
 
-    for (int moveIdx = 0; moveIdx < static_cast<int>(moves.size()); moveIdx++)
+    ScoredMove scoredMove = {};
+    while ((scoredMove = ordering.selectMove()).score != MoveOrdering::NO_MOVE)
     {
-        auto [move, moveScore] = ordering.selectMove(static_cast<uint32_t>(moveIdx));
+        auto [move, moveScore] = scoredMove;
         if (move == stack->excludedMove)
             continue;
         if (!board.isLegal(move))
@@ -750,11 +751,13 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
     stack->bestMove = Move();
     int movesPlayed = 0;
-    for (int moveIdx = 0; moveIdx < static_cast<int>(captures.size()); moveIdx++)
+
+    ScoredMove scoredMove = {};
+    while ((scoredMove = ordering.selectMove()).score != MoveOrdering::NO_MOVE)
     {
         if (!inCheck && movesPlayed >= 2)
             break;
-        auto [move, moveScore] = ordering.selectMove(moveIdx);
+        auto [move, moveScore] = scoredMove;
         if (!board.isLegal(move))
             continue;
         if (!board.see(move, 0))
