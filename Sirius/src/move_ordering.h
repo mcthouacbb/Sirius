@@ -23,6 +23,13 @@ enum class MovePickStage
     QS_REST
 };
 
+inline MovePickStage operator++(MovePickStage& stage)
+{
+    assert(stage != MovePickStage::QS_REST);
+    stage = static_cast<MovePickStage>(static_cast<int>(stage) + 1);
+    return stage;
+}
+
 class MoveOrdering
 {
 public:
@@ -50,4 +57,5 @@ private:
     std::array<int, 256> m_MoveScores;
 
     uint32_t m_Curr;
+    MovePickStage m_Stage;
 };
