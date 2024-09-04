@@ -1,7 +1,9 @@
 #include "misc.h"
 #include "comm/move.h"
 #include "movegen.h"
+#include "move_ordering.h"
 #include <chrono>
+#include <algorithm>
 #include <charconv>
 #include <vector>
 #include <fstream>
@@ -122,20 +124,29 @@ void testKeyAfter(Board& board, int depth)
     }
 }
 
-void testQuiescence(Board& board, int depth)
+void testNoisyGen(Board& board, int depth)
 {
     if (depth == 0)
     {
-        MoveList captures;
-        genMoves<MoveGenType::NOISY>(board, captures);
+        MoveList moves;
+        genMoves<MoveGenType::NOISY_QUIET>(board, moves);
 
-        for (Move move : captures)
+        MoveList noisies;
+        genMoves<MoveGenType::NOISY>(board, noisies);
+
+        int numFound = 0;
+        for (Move move : moves)
         {
-            if (move.type() != MoveType::ENPASSANT && board.pieceAt(move.toSq()) == Piece::NONE)
-            {
-                throw std::runtime_error("Not capture");
-            }
+            bool found = std::find(noisies.begin(), noisies.end(), move) != noisies.end();
+            numFound += found;
+
+            if (moveIsQuiet(board, move) && found)
+                throw std::runtime_error("Not noisy");
+            if (!moveIsQuiet(board, move) && !found)
+                throw std::runtime_error("Noisy not found");
         }
+        if (numFound != noisies.size())
+            throw std::runtime_error("More noisies than should be");
         return;
     }
     MoveList moves;
@@ -144,7 +155,43 @@ void testQuiescence(Board& board, int depth)
     for (Move move : moves)
     {
         board.makeMove(move);
-        testQuiescence(board, depth - 1);
+        testNoisyGen(board, depth - 1);
+        board.unmakeMove();
+    }
+}
+
+void testQuietGen(Board& board, int depth)
+{
+    if (depth == 0)
+    {
+        MoveList moves;
+        genMoves<MoveGenType::NOISY_QUIET>(board, moves);
+
+        MoveList quiets;
+        genMoves<MoveGenType::QUIET>(board, quiets);
+
+        int numFound = 0;
+        for (Move move : moves)
+        {
+            bool found = std::find(quiets.begin(), quiets.end(), move) != quiets.end();
+            numFound += found;
+
+            if (moveIsQuiet(board, move) && !found)
+                throw std::runtime_error("Not quiet");
+            if (!moveIsQuiet(board, move) && found)
+                throw std::runtime_error("Quiet not found");
+        }
+        if (numFound != quiets.size())
+            throw std::runtime_error("More Quiets than should be");
+        return;
+    }
+    MoveList moves;
+    genMoves<MoveGenType::LEGAL>(board, moves);
+
+    for (Move move : moves)
+    {
+        board.makeMove(move);
+        testQuietGen(board, depth - 1);
         board.unmakeMove();
     }
 }

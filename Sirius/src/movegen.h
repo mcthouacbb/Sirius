@@ -7,7 +7,8 @@ enum class MoveGenType
 {
     LEGAL,
     NOISY_QUIET,
-    NOISY
+    NOISY,
+    QUIET
 };
 
 using MoveList = StaticVector<Move, 256>;
