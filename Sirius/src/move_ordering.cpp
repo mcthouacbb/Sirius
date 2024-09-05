@@ -37,9 +37,6 @@ bool moveIsCapture(const Board& board, Move move)
 
 int MoveOrdering::scoreMove(Move move) const
 {
-    if (move == m_TTMove)
-        return 10000000;
-
     bool isCapture = moveIsCapture(m_Board, move);
     bool isPromotion = move.type() == MoveType::PROMOTION;
 
@@ -60,9 +57,6 @@ int MoveOrdering::scoreMove(Move move) const
 
 int MoveOrdering::scoreMoveQSearch(Move move) const
 {
-    if (move == m_TTMove)
-        return 10000000;
-
     bool isCapture = moveIsCapture(m_Board, move);
     bool isPromotion = move.type() == MoveType::PROMOTION;
     int score = m_History.getNoisyStats(ExtMove::from(m_Board, move));
