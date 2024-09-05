@@ -429,9 +429,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         }
     }
 
-    MoveList moves;
-    genMoves<MoveGenType::NOISY_QUIET>(board, moves);
-
     std::array<CHEntry*, 3> contHistEntries = {
         rootPly > 0 ? stack[-1].contHistEntry : nullptr,
         rootPly > 1 ? stack[-2].contHistEntry : nullptr,
@@ -440,7 +437,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     MoveOrdering ordering(
         board,
-        moves,
         ttData.move,
         stack->killers,
         contHistEntries,
@@ -743,10 +739,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     if (rootPly >= MAX_PLY)
         return alpha;
 
-    MoveList captures;
-    genMoves<MoveGenType::NOISY>(board, captures);
-
-    MoveOrdering ordering(board, captures, ttData.move, thread.history);
+    MoveOrdering ordering(board, ttData.move, thread.history);
 
     TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
     stack->bestMove = Move();
