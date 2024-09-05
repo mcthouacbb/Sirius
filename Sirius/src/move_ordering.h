@@ -17,8 +17,10 @@ bool moveIsCapture(const Board& board, Move move);
 enum class MovePickStage
 {
     TT_MOVE,
-    GEN_NOISY_QUIETS,
-    NOISY_QUIETS,
+    GEN_NOISY,
+    GOOD_NOISY,
+    GEN_QUIETS,
+    BAD_NOISY_QUIETS,
 
     QS_TT_MOVE,
     QS_GEN_NOISIES,
@@ -46,7 +48,8 @@ public:
     ScoredMove selectMove();
     ScoredMove selectHighest();
 private:
-    int scoreMove(Move move) const;
+    int scoreNoisy(Move move) const;
+    int scoreQuiet(Move move) const;
     int scoreMoveQSearch(Move move) const;
 
     const Board& m_Board;
@@ -59,5 +62,6 @@ private:
     std::array<int, 256> m_MoveScores;
 
     uint32_t m_Curr;
+    uint32_t m_NoisyEnd;
     MovePickStage m_Stage;
 };

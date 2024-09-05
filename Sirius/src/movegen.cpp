@@ -7,7 +7,6 @@ void genMoves(const Board& board, MoveList& moves);
 template<MoveGenType type>
 void genMoves(const Board& board, MoveList& moves)
 {
-    assert(moves.size() == 0);
     if (board.sideToMove() == Color::WHITE)
     {
         genMoves<type, Color::WHITE>(board, moves);

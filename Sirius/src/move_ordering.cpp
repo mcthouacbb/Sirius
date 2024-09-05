@@ -35,21 +35,24 @@ bool moveIsCapture(const Board& board, Move move)
         board.pieceAt(move.toSq()) != Piece::NONE;
 }
 
-int MoveOrdering::scoreMove(Move move) const
+int MoveOrdering::scoreNoisy(Move move) const
 {
     bool isCapture = moveIsCapture(m_Board, move);
-    bool isPromotion = move.type() == MoveType::PROMOTION;
 
     if (isCapture)
     {
         int hist = m_History.getNoisyStats(ExtMove::from(m_Board, move));
         return hist + CAPTURE_SCORE * m_Board.see(move, -hist / 32) + mvvLva(m_Board, move);
     }
-    else if (isPromotion)
+    else
     {
         return m_History.getNoisyStats(ExtMove::from(m_Board, move)) + PROMOTION_SCORE + promotionBonus(move);
     }
-    else if (move == m_Killers[0] || move == m_Killers[1])
+}
+
+int MoveOrdering::scoreQuiet(Move move) const
+{
+    if (move == m_Killers[0] || move == m_Killers[1])
         return KILLER_SCORE + (move == m_Killers[0]);
     else
         return m_History.getQuietStats(m_Board.threats(), ExtMove::from(m_Board, move), m_ContHistEntries);
@@ -91,14 +94,39 @@ ScoredMove MoveOrdering::selectMove()
                 return ScoredMove(m_TTMove, 10000000);
 
             // fallthrough
-        case GEN_NOISY_QUIETS:
+        case GEN_NOISY:
             ++m_Stage;
-            genMoves<MoveGenType::NOISY_QUIET>(m_Board, m_Moves);
+            genMoves<MoveGenType::NOISY>(m_Board, m_Moves);
             for (uint32_t i = 0; i < m_Moves.size(); i++)
-                m_MoveScores[i] = scoreMove(m_Moves[i]);
+                m_MoveScores[i] = scoreNoisy(m_Moves[i]);
+
+            m_NoisyEnd = m_Moves.size();
 
             // fallthrough
-        case NOISY_QUIETS:
+        case GOOD_NOISY:
+            while (m_Curr < m_Moves.size())
+            {
+                ScoredMove scoredMove = selectHighest();
+                if (scoredMove.move == m_TTMove)
+                    continue;
+                if (scoredMove.score < PROMOTION_SCORE - 50000)
+                {
+                    m_Curr--;
+                    break;
+                }
+                return scoredMove;
+            }
+            ++m_Stage;
+
+            // fallthrough
+        case GEN_QUIETS:
+            ++m_Stage;
+            genMoves<MoveGenType::QUIET>(m_Board, m_Moves);
+            for (uint32_t i = m_NoisyEnd; i < m_Moves.size(); i++)
+                m_MoveScores[i] = scoreQuiet(m_Moves[i]);
+
+            // fallthrough
+        case BAD_NOISY_QUIETS:
             while (m_Curr < m_Moves.size())
             {
                 ScoredMove scoredMove = selectHighest();
