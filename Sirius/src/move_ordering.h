@@ -40,8 +40,8 @@ public:
     static constexpr int PROMOTION_SCORE = 400000;
     static constexpr int CAPTURE_SCORE = 500000;
 
-    MoveOrdering(const Board& board, MoveList& moves, Move ttMove, const History& history);
-    MoveOrdering(const Board& board, MoveList& moves, Move hashMove, const std::array<Move, 2>& killers, std::span<const CHEntry* const> contHistEntries, const History& history);
+    MoveOrdering(const Board& board, Move ttMove, const History& history);
+    MoveOrdering(const Board& board, Move hashMove, const std::array<Move, 2>& killers, std::span<const CHEntry* const> contHistEntries, const History& history);
 
     ScoredMove selectMove();
     ScoredMove selectHighest();
@@ -50,7 +50,7 @@ private:
     int scoreMoveQSearch(Move move) const;
 
     const Board& m_Board;
-    MoveList& m_Moves;
+    MoveList m_Moves;
     Move m_TTMove;
     const History& m_History;
     std::span<const CHEntry* const> m_ContHistEntries;
