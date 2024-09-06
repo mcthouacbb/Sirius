@@ -52,10 +52,7 @@ int MoveOrdering::scoreNoisy(Move move) const
 
 int MoveOrdering::scoreQuiet(Move move) const
 {
-    if (move == m_Killers[0] || move == m_Killers[1])
-        return KILLER_SCORE + (move == m_Killers[0]);
-    else
-        return m_History.getQuietStats(m_Board.threats(), ExtMove::from(m_Board, move), m_ContHistEntries);
+    return m_History.getQuietStats(m_Board.threats(), ExtMove::from(m_Board, move), m_ContHistEntries);
 }
 
 int MoveOrdering::scoreMoveQSearch(Move move) const
@@ -119,6 +116,18 @@ ScoredMove MoveOrdering::selectMove()
             ++m_Stage;
 
             // fallthrough
+        case FIRST_KILLER:
+            ++m_Stage;
+            if (m_Board.isPseudoLegal(m_Killers[0]) && moveIsQuiet(m_Board, m_Killers[0]))
+                return ScoredMove(m_Killers[0], KILLER_SCORE);
+
+            // fallthrough
+        case SECOND_KILLER:
+            ++m_Stage;
+            if (m_Board.isPseudoLegal(m_Killers[1]) && moveIsQuiet(m_Board, m_Killers[1]))
+                return ScoredMove(m_Killers[1], KILLER_SCORE);
+        
+            // fallthrough
         case GEN_QUIETS:
             ++m_Stage;
             genMoves<MoveGenType::QUIET>(m_Board, m_Moves);
@@ -130,7 +139,9 @@ ScoredMove MoveOrdering::selectMove()
             while (m_Curr < m_Moves.size())
             {
                 ScoredMove scoredMove = selectHighest();
-                if (scoredMove.move != m_TTMove)
+                if (scoredMove.move != m_TTMove &&
+                    scoredMove.move != m_Killers[0] &&
+                    scoredMove.move != m_Killers[1])
                     return scoredMove;
             }
             return {Move(), NO_MOVE};
