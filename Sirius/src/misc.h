@@ -10,7 +10,10 @@ void testSAN(Board& board, int depth);
 
 void testKeyAfter(Board& board, int depth);
 
-void testQuiescence(Board& board, int depth);
+void testNoisyGen(Board& board, int depth);
+void testQuietGen(Board& board, int depth);
+
+void testIsPseudoLegal(Board& board, int depth);
 
 void testSEE();
 

@@ -7,7 +7,6 @@ void genMoves(const Board& board, MoveList& moves);
 template<MoveGenType type>
 void genMoves(const Board& board, MoveList& moves)
 {
-    assert(moves.size() == 0);
     if (board.sideToMove() == Color::WHITE)
     {
         genMoves<type, Color::WHITE>(board, moves);
@@ -33,6 +32,7 @@ void genMoves<MoveGenType::LEGAL>(const Board& board, MoveList& moves)
 
 template void genMoves<MoveGenType::NOISY>(const Board& board, MoveList& moves);
 template void genMoves<MoveGenType::NOISY_QUIET>(const Board& board, MoveList& moves);
+template void genMoves<MoveGenType::QUIET>(const Board& board, MoveList& moves);
 
 template<MoveGenType type, Color color>
 void genKingMoves(const Board& board, MoveList& moves);
@@ -56,6 +56,8 @@ void genMoves(const Board& board, MoveList& moves)
         genPawnMoves<type, color>(board, moves, moveMask);
         if constexpr (type == MoveGenType::NOISY)
             moveMask &= board.pieces(~color);
+        else if constexpr (type == MoveGenType::QUIET)
+            moveMask &= ~board.pieces(~color);
         genPieceMoves<type, color, PieceType::KNIGHT>(board, moves, moveMask);
         genPieceMoves<type, color, PieceType::BISHOP>(board, moves, moveMask);
         genPieceMoves<type, color, PieceType::ROOK>(board, moves, moveMask);
@@ -75,13 +77,15 @@ void genKingMoves(const Board& board, MoveList& moves)
     kingAttacks &= ~usBB;
     if constexpr (type == MoveGenType::NOISY)
         kingAttacks &= oppBB;
+    else if constexpr (type == MoveGenType::QUIET)
+        kingAttacks &= ~oppBB;
     while (kingAttacks.any())
     {
         Square dst = kingAttacks.poplsb();
         moves.push_back(Move(kingSq, dst, MoveType::NONE));
     }
 
-    if constexpr (type == MoveGenType::NOISY_QUIET)
+    if constexpr (type == MoveGenType::NOISY_QUIET || type == MoveGenType::QUIET)
     {
         if (board.checkers().empty())
         {
@@ -178,6 +182,35 @@ void genPawnMoves(const Board& board, MoveList& moves, Bitboard moveMask)
             moves.push_back(Move(promotion - attacks::pawnPushOffset<color>(), promotion, MoveType::PROMOTION, Promotion::BISHOP));
             moves.push_back(Move(promotion - attacks::pawnPushOffset<color>(), promotion, MoveType::PROMOTION, Promotion::KNIGHT));
         }
+    }
+    else if constexpr (type == MoveGenType::QUIET)
+    {
+        Bitboard pawnPushes = attacks::pawnPushes<color>(pawns);
+        pawnPushes &= ~allPieces;
+
+        Bitboard doublePushes = attacks::pawnPushes<color>(pawnPushes & Bitboard::nthRank<color, 2>());
+        doublePushes &= ~allPieces;
+        doublePushes &= moveMask;
+
+        pawnPushes &= moveMask;
+
+        Bitboard promotions = pawnPushes & Bitboard::nthRank<color, 7>();
+        pawnPushes ^= promotions;
+
+        while (pawnPushes.any())
+        {
+            Square push = pawnPushes.poplsb();
+            moves.push_back(Move(push - attacks::pawnPushOffset<color>(), push, MoveType::NONE));
+        }
+
+        while (doublePushes.any())
+        {
+            Square dPush = doublePushes.poplsb();
+            moves.push_back(Move(dPush - 2 * attacks::pawnPushOffset<color>(), dPush, MoveType::NONE));
+        }
+
+        // rest of the pawn movegen is captures/promos
+        return;
     }
 
 
