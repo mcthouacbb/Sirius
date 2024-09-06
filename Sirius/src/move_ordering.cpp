@@ -35,27 +35,27 @@ bool moveIsCapture(const Board& board, Move move)
         board.pieceAt(move.toSq()) != Piece::NONE;
 }
 
-int MoveOrdering::scoreNoisy(Move move) const
+MoveScore MoveOrdering::scoreNoisy(Move move) const
 {
     bool isCapture = moveIsCapture(m_Board, move);
 
     if (isCapture)
     {
         int hist = m_History.getNoisyStats(ExtMove::from(m_Board, move));
-        return hist + CAPTURE_SCORE * m_Board.see(move, -hist / 32) + mvvLva(m_Board, move);
+        return {hist + mvvLva(m_Board, move), -hist / 32};
     }
     else
     {
-        return m_History.getNoisyStats(ExtMove::from(m_Board, move)) + PROMOTION_SCORE + promotionBonus(move);
+        return {m_History.getNoisyStats(ExtMove::from(m_Board, move)) + PROMOTION_SCORE + promotionBonus(move), 0};
     }
 }
 
-int MoveOrdering::scoreQuiet(Move move) const
+MoveScore MoveOrdering::scoreQuiet(Move move) const
 {
     if (move == m_Killers[0] || move == m_Killers[1])
-        return KILLER_SCORE + (move == m_Killers[0]);
+        return {KILLER_SCORE + (move == m_Killers[0]), 0};
     else
-        return m_History.getQuietStats(m_Board.threats(), ExtMove::from(m_Board, move), m_ContHistEntries);
+        return {m_History.getQuietStats(m_Board.threats(), ExtMove::from(m_Board, move), m_ContHistEntries), 0};
 }
 
 int MoveOrdering::scoreMoveQSearch(Move move) const
@@ -100,38 +100,43 @@ ScoredMove MoveOrdering::selectMove()
             for (uint32_t i = 0; i < m_Moves.size(); i++)
                 m_MoveScores[i] = scoreNoisy(m_Moves[i]);
 
-            m_NoisyEnd = m_Moves.size();
+            m_BadNoisyEnd = 0;
 
             // fallthrough
         case GOOD_NOISY:
             while (m_Curr < m_Moves.size())
             {
-                ScoredMove scoredMove = selectHighest();
-                if (scoredMove.move == m_TTMove)
+                auto move = selectHighest();
+                if (move.first == m_TTMove)
                     continue;
-                if (scoredMove.score < PROMOTION_SCORE - 50000)
+                if (move.second.score > PROMOTION_SCORE - 50000)
+                    return {move.first, move.second.score};
+
+                if (m_Board.see(move.first, move.second.seeMargin))
+                    return {move.first, move.second.score + CAPTURE_SCORE};
+                else
                 {
-                    m_Curr--;
-                    break;
+                    m_MoveScores[m_BadNoisyEnd] = move.second;
+                    m_Moves[m_BadNoisyEnd++] = move.first;
                 }
-                return scoredMove;
             }
             ++m_Stage;
 
             // fallthrough
         case GEN_QUIETS:
             ++m_Stage;
+            m_Moves.resize(m_BadNoisyEnd);
             genMoves<MoveGenType::QUIET>(m_Board, m_Moves);
-            for (uint32_t i = m_NoisyEnd; i < m_Moves.size(); i++)
+            for (uint32_t i = m_BadNoisyEnd; i < m_Moves.size(); i++)
                 m_MoveScores[i] = scoreQuiet(m_Moves[i]);
 
             // fallthrough
         case BAD_NOISY_QUIETS:
             while (m_Curr < m_Moves.size())
             {
-                ScoredMove scoredMove = selectHighest();
-                if (scoredMove.move != m_TTMove)
-                    return scoredMove;
+                auto move = selectHighest();
+                if (move.first != m_TTMove)
+                    return {move.first, move.second.score};
             }
             return {Move(), NO_MOVE};
 
@@ -146,30 +151,27 @@ ScoredMove MoveOrdering::selectMove()
             ++m_Stage;
             genMoves<MoveGenType::NOISY>(m_Board, m_Moves);
             for (uint32_t i = 0; i < m_Moves.size(); i++)
-                m_MoveScores[i] = scoreMoveQSearch(m_Moves[i]);
+                m_MoveScores[i] = {scoreMoveQSearch(m_Moves[i]), 0};
 
             // fallthrough
         case QS_NOISIES:
             while (m_Curr < m_Moves.size())
             {
-                ScoredMove scoredMove = selectHighest();
-                if (scoredMove.move != m_TTMove)
-                    return scoredMove;
+                auto move = selectHighest();
+                if (move.first != m_TTMove)
+                    return {move.first, move.second.score};
             }
             return {Move(), NO_MOVE};
     }
-    if (m_Curr >= m_Moves.size())
-        return {Move(), NO_MOVE};
-    return selectHighest();
 }
 
-ScoredMove MoveOrdering::selectHighest()
+std::pair<Move, MoveScore> MoveOrdering::selectHighest()
 {
-    int bestScore = INT_MIN;
+    MoveScore bestScore = {INT_MIN, 0};
     uint32_t bestIndex = m_Curr;
     for (uint32_t i = m_Curr; i < m_Moves.size(); i++)
     {
-        if (m_MoveScores[i] > bestScore)
+        if (m_MoveScores[i].score > bestScore.score)
         {
             bestScore = m_MoveScores[i];
             bestIndex = i;

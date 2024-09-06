@@ -11,6 +11,12 @@ struct ScoredMove
     int score;
 };
 
+struct MoveScore
+{
+    int score;
+    int seeMargin;
+};
+
 bool moveIsQuiet(const Board& board, Move move);
 bool moveIsCapture(const Board& board, Move move);
 
@@ -46,10 +52,11 @@ public:
     MoveOrdering(const Board& board, Move hashMove, const std::array<Move, 2>& killers, std::span<const CHEntry* const> contHistEntries, const History& history);
 
     ScoredMove selectMove();
-    ScoredMove selectHighest();
 private:
-    int scoreNoisy(Move move) const;
-    int scoreQuiet(Move move) const;
+    std::pair<Move, MoveScore> selectHighest();
+
+    MoveScore scoreNoisy(Move move) const;
+    MoveScore scoreQuiet(Move move) const;
     int scoreMoveQSearch(Move move) const;
 
     const Board& m_Board;
@@ -59,9 +66,9 @@ private:
     std::span<const CHEntry* const> m_ContHistEntries;
     std::array<Move, 2> m_Killers;
 
-    std::array<int, 256> m_MoveScores;
+    std::array<MoveScore, 256> m_MoveScores;
 
     uint32_t m_Curr;
-    uint32_t m_NoisyEnd;
+    uint32_t m_BadNoisyEnd;
     MovePickStage m_Stage;
 };
