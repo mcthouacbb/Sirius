@@ -372,6 +372,10 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)
             ))
                 return ttData.score;
+            if (!pvNode && ttData.depth == depth - 1 &&
+                ttData.bound != TTEntry::Bound::UPPER_BOUND &&
+                ttData.score >= beta + 150)
+                depth--;
         }
         else if (depth >= minIIRDepth)
             depth--;
