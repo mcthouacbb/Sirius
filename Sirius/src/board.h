@@ -48,7 +48,11 @@ struct BoardState
         if (pieceType == PieceType::PAWN)
             pawnKey.addPiece(pieceType, color, pos);
         else
+        {
             nonPawnKey[static_cast<int>(color)].addPiece(pieceType, color, pos);
+            if (pieceType == PieceType::BISHOP || pieceType == PieceType::KNIGHT || pieceType == PieceType::KING)
+                minorPieceKey.addPiece(pieceType, color, pos);
+        }
     }
 
     void addPiece(Square pos, Piece piece)
