@@ -32,6 +32,7 @@ struct BoardState
     ZKey zkey;
     std::array<ZKey, 2> nonPawnKey;
     ZKey minorPieceKey;
+    ZKey majorPieceKey;
     ZKey pawnKey;
     CheckInfo checkInfo;
     Bitboard threats;
@@ -52,6 +53,8 @@ struct BoardState
             nonPawnKey[static_cast<int>(color)].addPiece(pieceType, color, pos);
             if (pieceType == PieceType::BISHOP || pieceType == PieceType::KNIGHT || pieceType == PieceType::KING)
                 minorPieceKey.addPiece(pieceType, color, pos);
+            if (pieceType == PieceType::ROOK || pieceType == PieceType::QUEEN || pieceType == PieceType::KING)
+                majorPieceKey.addPiece(pieceType, color, pos);
         }
     }
 
@@ -72,6 +75,8 @@ struct BoardState
             nonPawnKey[static_cast<int>(color)].addPiece(pieceType, color, pos);
             if (pieceType == PieceType::BISHOP || pieceType == PieceType::KNIGHT || pieceType == PieceType::KING)
                 minorPieceKey.addPiece(pieceType, color, pos);
+            if (pieceType == PieceType::ROOK || pieceType == PieceType::QUEEN || pieceType == PieceType::KING)
+                majorPieceKey.addPiece(pieceType, color, pos);
         }
     }
 
@@ -93,6 +98,8 @@ struct BoardState
             nonPawnKey[static_cast<int>(color)].removePiece(pieceType, color, pos);
             if (pieceType == PieceType::BISHOP || pieceType == PieceType::KNIGHT || pieceType == PieceType::KING)
                 minorPieceKey.removePiece(pieceType, color, pos);
+            if (pieceType == PieceType::ROOK || pieceType == PieceType::QUEEN || pieceType == PieceType::KING)
+                majorPieceKey.removePiece(pieceType, color, pos);
         }
     }
 
@@ -118,6 +125,8 @@ struct BoardState
             nonPawnKey[static_cast<int>(color)].movePiece(pieceType, color, src, dst);
             if (pieceType == PieceType::BISHOP || pieceType == PieceType::KNIGHT || pieceType == PieceType::KING)
                 minorPieceKey.movePiece(pieceType, color, src, dst);
+            if (pieceType == PieceType::ROOK || pieceType == PieceType::QUEEN || pieceType == PieceType::KING)
+                majorPieceKey.movePiece(pieceType, color, src, dst);
         }
     }
 };
@@ -159,6 +168,7 @@ public:
     ZKey pawnKey() const;
     ZKey nonPawnKey(Color color) const;
     ZKey minorPieceKey() const;
+    ZKey majorPieceKey() const;
     uint64_t materialKey() const;
 
     bool isDraw(int searchPly);
@@ -317,6 +327,11 @@ inline ZKey Board::nonPawnKey(Color color) const
 inline ZKey Board::minorPieceKey() const
 {
     return currState().minorPieceKey;
+}
+
+inline ZKey Board::majorPieceKey() const
+{
+    return currState().majorPieceKey;
 }
 
 // yoinked from motor, which I think yoinked from Caissa

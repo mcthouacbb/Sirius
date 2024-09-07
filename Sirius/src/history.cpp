@@ -54,6 +54,8 @@ void History::clear()
     fillHistTable(m_MaterialCorrHist, 0);
     fillHistTable(m_NonPawnCorrHist, 0);
     fillHistTable(m_ThreatsCorrHist, 0);
+    fillHistTable(m_MinorPieceCorrHist, 0);
+    fillHistTable(m_MajorPieceCorrHist, 0);
 }
 
 int History::getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const
@@ -81,8 +83,9 @@ int History::correctStaticEval(int staticEval, const Board& board) const
     int nonPawnEntry = (nonPawnWhiteEntry + nonPawnBlackEntry) / 2;
     int threatsEntry = m_ThreatsCorrHist[static_cast<int>(stm)][threatsKey % THREATS_CORR_HIST_ENTRIES];
     int minorPieceEntry = m_MinorPieceCorrHist[static_cast<int>(stm)][board.minorPieceKey().value % MINOR_PIECE_CORR_HIST_ENTRIES];
+    int majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
 
-    int corrected = staticEval + (pawnEntry + materialEntry + nonPawnEntry + threatsEntry + minorPieceEntry) / CORR_HIST_SCALE;
+    int corrected = staticEval + (pawnEntry + materialEntry + nonPawnEntry + threatsEntry + minorPieceEntry + majorPieceEntry) / CORR_HIST_SCALE;
     return std::clamp(corrected, -SCORE_MATE_IN_MAX, SCORE_MATE_IN_MAX);
 }
 
@@ -123,6 +126,9 @@ void History::updateCorrHist(int bonus, int depth, const Board& board)
 
     auto& minorPieceEntry = m_MinorPieceCorrHist[static_cast<int>(stm)][board.minorPieceKey().value % MINOR_PIECE_CORR_HIST_ENTRIES];
     minorPieceEntry.update(scaledBonus, weight);
+
+    auto& majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
+    majorPieceEntry.update(scaledBonus, weight);
 }
 
 int History::getMainHist(Bitboard threats, ExtMove move) const

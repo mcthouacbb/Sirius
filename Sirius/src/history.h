@@ -137,11 +137,13 @@ constexpr int MATERIAL_CORR_HIST_ENTRIES = 32768;
 constexpr int NON_PAWN_CORR_HIST_ENTRIES = 16384;
 constexpr int THREATS_CORR_HIST_ENTRIES = 16384;
 constexpr int MINOR_PIECE_CORR_HIST_ENTRIES = 16384;
+constexpr int MAJOR_PIECE_CORR_HIST_ENTRIES = 16384;
 using PawnCorrHist = std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, PAWN_CORR_HIST_ENTRIES>, 2>;
 using MaterialCorrHist = std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, MATERIAL_CORR_HIST_ENTRIES>, 2>;
 using NonPawnCorrHist = std::array<std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, NON_PAWN_CORR_HIST_ENTRIES>, 2>, 2>;
 using ThreatsCorrHist = std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, THREATS_CORR_HIST_ENTRIES>, 2>;
 using MinorPieceCorrHist = std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, MINOR_PIECE_CORR_HIST_ENTRIES>, 2>;
+using MajorPieceCorrHist = std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, MAJOR_PIECE_CORR_HIST_ENTRIES>, 2>;
 
 int historyBonus(int depth);
 int historyMalus(int depth);
@@ -186,4 +188,5 @@ private:
     NonPawnCorrHist m_NonPawnCorrHist;
     ThreatsCorrHist m_ThreatsCorrHist;
     MinorPieceCorrHist m_MinorPieceCorrHist;
+    MajorPieceCorrHist m_MajorPieceCorrHist;
 };
