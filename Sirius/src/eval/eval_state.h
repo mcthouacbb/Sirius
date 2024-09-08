@@ -58,6 +58,7 @@ private:
         PackedScore knightOutposts;
         PackedScore bishopPawns;
         PackedScore rookOpen;
+        PackedScore minorBehindPawn;
     };
 
     StackEntry& currEntry()

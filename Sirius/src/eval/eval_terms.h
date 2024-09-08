@@ -29,6 +29,7 @@ constexpr EvalTerm pawnShieldStorm = {PieceSet(PAWN, KING)};
 constexpr EvalTerm knightOutposts = {PieceSet(PAWN, KNIGHT)};
 constexpr EvalTerm bishopPawns = {PieceSet(PAWN, BISHOP)};
 constexpr EvalTerm rookOpen = {PieceSet(PAWN, ROOK)};
+constexpr EvalTerm minorBehindPawn = {PieceSet(PAWN, KNIGHT, BISHOP)};
 
 
 } // namespace eval_terms
@@ -49,6 +50,9 @@ PackedScore evaluateBishopPawns(const Board& board);
 
 template<Color us>
 PackedScore evaluateRookOpen(const Board& board);
+
+template<Color us>
+PackedScore evaluateMinorBehindPawn(const Board& board);
 
 
 }
