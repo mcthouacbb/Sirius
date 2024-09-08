@@ -397,12 +397,13 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     bool ttPV = pvNode || (ttHit && ttData.pv);
     bool improving = !inCheck && rootPly > 1 && stack->staticEval > stack[-2].staticEval;
+    bool refuting = !inCheck && rootPly > 0 && stack[-1].staticEval != SCORE_NONE && stack->staticEval > -stack[-1].staticEval + 35;
     stack[1].killers = {};
 
     if (!pvNode && !inCheck && !excluded)
     {
         // reverse futility pruning
-        if (depth <= rfpMaxDepth && stack->eval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth + stack[-1].histScore / rfpHistDivisor)
+        if (depth <= rfpMaxDepth && stack->eval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * (depth - refuting) + stack[-1].histScore / rfpHistDivisor)
             return stack->eval;
 
         if (depth <= razoringMaxDepth && stack->eval <= alpha - razoringMargin * depth && alpha < 2000)
