@@ -39,6 +39,7 @@ void EvalState::init(const Board& board, PawnTable& pawnTable)
         evaluateKnightOutposts<Color::BLACK>(board, currEntry().pawnStructure);
     currEntry().bishopPawns = evaluateBishopPawns<Color::WHITE>(board) - evaluateBishopPawns<Color::BLACK>(board);
     currEntry().rookOpen = evaluateRookOpen<Color::WHITE>(board) - evaluateRookOpen<Color::BLACK>(board);
+    currEntry().minorBehindPawn = evaluateMinorBehindPawn<Color::WHITE>(board) - evaluateMinorBehindPawn<Color::BLACK>(board);
 }
 
 void EvalState::push(const Board& board, const EvalUpdates& updates)
@@ -89,6 +90,11 @@ void EvalState::push(const Board& board, const EvalUpdates& updates)
         currEntry().rookOpen = evaluateRookOpen<Color::WHITE>(board) - evaluateRookOpen<Color::BLACK>(board);
     else
         currEntry().rookOpen = oldEntry.rookOpen;
+
+    if (updates.changedPieces.hasAny(eval_terms::minorBehindPawn.deps))
+        currEntry().minorBehindPawn = evaluateMinorBehindPawn<Color::WHITE>(board) - evaluateMinorBehindPawn<Color::BLACK>(board);
+    else
+        currEntry().minorBehindPawn = oldEntry.minorBehindPawn;
 }
 
 void EvalState::pop()
@@ -104,7 +110,8 @@ PackedScore EvalState::score(const Board& board) const
         currEntry().pawnShieldStorm +
         currEntry().knightOutposts +
         currEntry().bishopPawns +
-        currEntry().rookOpen;
+        currEntry().rookOpen +
+        currEntry().minorBehindPawn;
 }
 
 const PawnStructure& EvalState::pawnStructure() const

@@ -117,6 +117,16 @@ PackedScore evaluateRookOpen(const Board& board)
     return eval;
 }
 
+template<Color us>
+PackedScore evaluateMinorBehindPawn(const Board& board)
+{
+    Bitboard pawns = board.pieces(PieceType::PAWN);
+    Bitboard minors = board.pieces(us, PieceType::KNIGHT) | board.pieces(us, PieceType::BISHOP);
+
+    Bitboard shielded = minors & (us == Color::WHITE ? pawns.south() : pawns.north());
+    return MINOR_BEHIND_PAWN * shielded.popcount();
+}
+
 template PackedScore evalKingPawnFile<Color::WHITE>(uint32_t file, Bitboard ourPawns, Bitboard theirPawns, Square theirKing);
 template PackedScore evalKingPawnFile<Color::BLACK>(uint32_t file, Bitboard ourPawns, Bitboard theirPawns, Square theirKing);
 
@@ -131,5 +141,8 @@ template PackedScore evaluateBishopPawns<Color::BLACK>(const Board& board);
 
 template PackedScore evaluateRookOpen<Color::WHITE>(const Board& board);
 template PackedScore evaluateRookOpen<Color::BLACK>(const Board& board);
+
+template PackedScore evaluateMinorBehindPawn<Color::WHITE>(const Board& board);
+template PackedScore evaluateMinorBehindPawn<Color::BLACK>(const Board& board);
 
 }
