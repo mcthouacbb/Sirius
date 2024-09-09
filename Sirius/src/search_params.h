@@ -108,7 +108,8 @@ SEARCH_PARAM(lmrFailHighCountMargin, 2, 2, 12, 1);
 
 SEARCH_PARAM_CALLBACK(lmrBase, 65, -50, 200, 10, updateLmrTable);
 SEARCH_PARAM_CALLBACK(lmrDivisor, 224, 180, 320, 10, updateLmrTable);
-SEARCH_PARAM(lmrHistDivisor, 8735, 4096, 16384, 512);
+SEARCH_PARAM(lmrQuietHistDivisor, 8735, 4096, 16384, 512);
+SEARCH_PARAM(lmrNoisyHistDivisor, 6144, 2048, 16384, 512);
 
 SEARCH_PARAM(qsFpMargin, 60, 0, 250, 16);
 
