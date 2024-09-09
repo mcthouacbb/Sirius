@@ -474,8 +474,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
         int histScore = quiet ? history.getQuietStats(threats, ExtMove::from(board, move), contHistEntries) : history.getNoisyStats(ExtMove::from(board, move));
-        if (quiet)
-            baseLMR -= histScore / lmrHistDivisor;
+        baseLMR -= histScore / (quiet ? lmrQuietHistDivisor : lmrNoisyHistDivisor);
 
         if (!root && quietLosing && bestScore > -SCORE_WIN)
         {
