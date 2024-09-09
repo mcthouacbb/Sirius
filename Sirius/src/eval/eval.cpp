@@ -71,7 +71,10 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
 
     PackedScore eval{0, 0};
 
-    Bitboard defendedBB = evalData.attacked[them];
+    Bitboard defendedBB =
+        evalData.attackedBy2[them] |
+        evalData.attackedBy[them][PAWN] |
+        (evalData.attacked[them] & ~evalData.attackedBy2[us]);
 
     Bitboard pawnThreats = evalData.attackedBy[us][PAWN] & board.pieces(them);
     while (pawnThreats.any())
@@ -125,7 +128,7 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
 
     Bitboard nonPawnEnemies = board.pieces(them) & ~board.pieces(PAWN);
 
-    Bitboard safe = ~defendedBB | (evalData.attacked[us] & ~evalData.attackedBy[them][PAWN]);
+    Bitboard safe = ~defendedBB | (evalData.attacked[us] & ~evalData.attackedBy[them][PieceType::PAWN] & ~evalData.attackedBy2[them]);
     Bitboard pushes = attacks::pawnPushes<us>(board.pieces(us, PAWN)) & ~board.allPieces();
     pushes |= attacks::pawnPushes<us>(pushes & Bitboard::nthRank<us, RANK_3>()) & ~board.allPieces();
 
