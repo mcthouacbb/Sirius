@@ -128,8 +128,8 @@ PackedScore evaluateMinorBehindPawn(const Board& board)
     return MINOR_BEHIND_PAWN * shielded.popcount();
 }
 
-template PackedScore evalKingPawnFile<Color::WHITE>(uint32_t file, Bitboard ourPawns, Bitboard theirPawns, Square theirKing);
-template PackedScore evalKingPawnFile<Color::BLACK>(uint32_t file, Bitboard ourPawns, Bitboard theirPawns, Square theirKing);
+template PackedScore evalKingPawnFile<Color::WHITE>(uint32_t file, Bitboard ourPawns, Bitboard theirPawns);
+template PackedScore evalKingPawnFile<Color::BLACK>(uint32_t file, Bitboard ourPawns, Bitboard theirPawns);
 
 template PackedScore evaluateStormShield<Color::WHITE>(const Board& board);
 template PackedScore evaluateStormShield<Color::BLACK>(const Board& board);
