@@ -57,6 +57,13 @@ SEARCH_PARAM(histMalusQuadratic, 4, 1, 8, 1);
 SEARCH_PARAM(histMalusLinear, 200, 64, 384, 32);
 SEARCH_PARAM(histMalusOffset, 68, 64, 768, 64);
 
+SEARCH_PARAM(pawnCorrWeight, 128, 50, 400, 10);
+SEARCH_PARAM(materialCorrWeight, 128, 50, 400, 10);
+SEARCH_PARAM(nonPawnCorrWeight, 128, 50, 400, 10);
+SEARCH_PARAM(threatsCorrWeight, 128, 50, 400, 10);
+SEARCH_PARAM(minorCorrWeight, 128, 50, 400, 10);
+SEARCH_PARAM(majorCorrWeight, 128, 50, 400, 10);
+
 SEARCH_PARAM(aspInitDelta, 12, 8, 30, 4);
 SEARCH_PARAM(minAspDepth, 5, 3, 7, 1);
 SEARCH_PARAM(aspWideningFactor, 7, 1, 32, 2);

@@ -74,6 +74,8 @@ int History::getNoisyStats(ExtMove move) const
 
 int History::correctStaticEval(int staticEval, const Board& board) const
 {
+    constexpr int CORR_HIST_WEIGHT_SCALE = 128;
+    
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
     int pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % PAWN_CORR_HIST_ENTRIES];
@@ -85,7 +87,14 @@ int History::correctStaticEval(int staticEval, const Board& board) const
     int minorPieceEntry = m_MinorPieceCorrHist[static_cast<int>(stm)][board.minorPieceKey().value % MINOR_PIECE_CORR_HIST_ENTRIES];
     int majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
 
-    int corrected = staticEval + (pawnEntry + materialEntry + nonPawnEntry + threatsEntry + minorPieceEntry + majorPieceEntry) / CORR_HIST_SCALE;
+    int correction = pawnEntry * search::pawnCorrWeight;
+    correction += materialEntry * search::materialCorrWeight;
+    correction += nonPawnEntry * search::nonPawnCorrWeight;
+    correction += threatsEntry * search::threatsCorrWeight;
+    correction += minorPieceEntry * search::minorCorrWeight;
+    correction += majorPieceEntry * search::majorCorrWeight;
+
+    int corrected = staticEval + correction / (CORR_HIST_WEIGHT_SCALE * CORR_HIST_SCALE);
     return std::clamp(corrected, -SCORE_MATE_IN_MAX, SCORE_MATE_IN_MAX);
 }
 
