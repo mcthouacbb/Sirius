@@ -7,6 +7,8 @@
 #include "pawn_table.h"
 #include "eval_constants.h"
 
+#include <algorithm>
+
 namespace eval
 {
 
@@ -33,28 +35,25 @@ void evaluatePawns(const Board& board, PawnStructure& pawnStructure, PawnTable* 
 }
 
 template<Color us>
-PackedScore evalKingPawnFile(uint32_t file, Bitboard ourPawns, Bitboard theirPawns, Square theirKing)
+PackedScore evalKingPawnFile(uint32_t file, Bitboard ourPawns, Bitboard theirPawns)
 {
+    constexpr Color them = ~us;
+
     PackedScore eval{0, 0};
-    uint32_t kingFile = theirKing.file();
+    int edgeDist = std::min(file, 7 - file);
     {
         Bitboard filePawns = ourPawns & Bitboard::fileBB(file);
-        // 4 = e file
-        int idx = (kingFile == file) ? 1 : (kingFile >= 4) == (kingFile < file) ? 0 : 2;
-
-        int rankDist = filePawns.any() ?
-            std::abs((us == Color::WHITE ? filePawns.msb() : filePawns.lsb()).rank() - theirKing.rank()) :
-            7;
-        eval += PAWN_STORM[idx][rankDist];
+        int rank = filePawns.any() ?
+            (us == Color::WHITE ? filePawns.msb() : filePawns.lsb()).relativeRank<them>() :
+            0;
+        eval += PAWN_STORM[edgeDist][rank];
     }
     {
         Bitboard filePawns = theirPawns & Bitboard::fileBB(file);
-        // 4 = e file
-        int idx = (kingFile == file) ? 1 : (kingFile >= 4) == (kingFile < file) ? 0 : 2;
-        int rankDist = filePawns.any() ?
-            std::abs((us == Color::WHITE ? filePawns.msb() : filePawns.lsb()).rank() - theirKing.rank()) :
-            7;
-        eval += PAWN_SHIELD[idx][rankDist];
+        int rank = filePawns.any() ?
+            (us == Color::WHITE ? filePawns.msb() : filePawns.lsb()).relativeRank<them>() :
+            0;
+        eval += PAWN_SHIELD[edgeDist][rank];
     }
     return eval;
 }
@@ -68,8 +67,10 @@ PackedScore evaluateStormShield(const Board& board)
     Bitboard theirPawns = board.pieces(them, PieceType::PAWN);
     Square theirKing = board.kingSq(them);
 
-    for (uint32_t file = 0; file < 8; file++)
-        eval += evalKingPawnFile<us>(file, ourPawns, theirPawns, theirKing);
+    uint32_t leftFile = std::clamp(theirKing.file() - 1, FILE_A, FILE_F);
+    uint32_t rightFile = std::clamp(theirKing.file() + 1, FILE_C, FILE_H);
+    for (uint32_t file = leftFile; file <= rightFile; file++)
+        eval += evalKingPawnFile<us>(file, ourPawns, theirPawns);
 
     return eval;
 }
@@ -127,8 +128,8 @@ PackedScore evaluateMinorBehindPawn(const Board& board)
     return MINOR_BEHIND_PAWN * shielded.popcount();
 }
 
-template PackedScore evalKingPawnFile<Color::WHITE>(uint32_t file, Bitboard ourPawns, Bitboard theirPawns, Square theirKing);
-template PackedScore evalKingPawnFile<Color::BLACK>(uint32_t file, Bitboard ourPawns, Bitboard theirPawns, Square theirKing);
+template PackedScore evalKingPawnFile<Color::WHITE>(uint32_t file, Bitboard ourPawns, Bitboard theirPawns);
+template PackedScore evalKingPawnFile<Color::BLACK>(uint32_t file, Bitboard ourPawns, Bitboard theirPawns);
 
 template PackedScore evaluateStormShield<Color::WHITE>(const Board& board);
 template PackedScore evaluateStormShield<Color::BLACK>(const Board& board);
