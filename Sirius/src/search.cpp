@@ -27,8 +27,12 @@ std::array<std::array<int, 64>, 64> genLMRTable()
     return lmrTable;
 }
 
+std::array<std::array<int, 64>, 64> lmrTable = {};
 
-std::array<std::array<int, 64>, 64> lmrTable = genLMRTable();
+void init()
+{
+    lmrTable = genLMRTable();
+}
 
 // initialize wakeFlag to search to allow for waiting on search thread at init
 SearchThread::SearchThread(uint32_t id, std::thread&& thread)
