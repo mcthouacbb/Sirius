@@ -274,8 +274,10 @@ int evaluate(const Board& board, search::SearchThread* thread)
     PackedScore eval = thread->evalState.score(board);
 
     const PawnStructure& pawnStructure = thread->evalState.pawnStructure();
-
     EvalData evalData = {};
+    if (std::abs(eval.mg() + eval.eg()) / 2 > 1100)
+        goto make_score;
+
     initEvalData(board, evalData, pawnStructure);
 
     eval += evaluatePieces<WHITE, KNIGHT>(board, evalData) - evaluatePieces<BLACK, KNIGHT>(board, evalData);
@@ -288,8 +290,8 @@ int evaluate(const Board& board, search::SearchThread* thread)
     eval += evaluateThreats<WHITE>(board, evalData) - evaluateThreats<BLACK>(board, evalData);
     eval += evaluateComplexity(board, pawnStructure, eval);
 
+make_score:
     int scale = evaluateScale(board, eval);
-
     eval += (color == WHITE ? TEMPO : -TEMPO);
 
     return (color == WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg() * scale / SCALE_FACTOR, thread->evalState.phase());
