@@ -13,6 +13,7 @@
 int main(int argc, char** argv)
 {
     attacks::init();
+    search::init();
 
     if (argc > 1 && std::string(argv[1]) == "bench")
     {

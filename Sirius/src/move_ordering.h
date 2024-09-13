@@ -29,7 +29,7 @@ enum class MovePickStage
 
 inline MovePickStage operator++(MovePickStage& stage)
 {
-    assert(stage != MovePickStage::QS_REST);
+    assert(stage != MovePickStage::QS_NOISIES);
     stage = static_cast<MovePickStage>(static_cast<int>(stage) + 1);
     return stage;
 }
