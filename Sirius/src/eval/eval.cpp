@@ -219,13 +219,11 @@ PackedScore evaluateComplexity(const Board& board, const PawnStructure& pawnStru
         COMPLEXITY_PAWN_ENDGAME * pawnEndgame +
         COMPLEXITY_OFFSET;
 
-    int mgSign = (eval.mg() > 0) - (eval.mg() < 0);
     int egSign = (eval.eg() > 0) - (eval.eg() < 0);
 
-    int mgComplexity = std::clamp(complexity.mg(), -std::abs(eval.mg()), 0);
     int egComplexity = std::max(complexity.eg(), -std::abs(eval.eg()));
 
-    return PackedScore(mgSign * mgComplexity, egSign * egComplexity);
+    return PackedScore(0, egSign * egComplexity);
 }
 
 int evaluateScale(const Board& board, PackedScore eval)
