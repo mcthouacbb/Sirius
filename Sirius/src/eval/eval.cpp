@@ -209,11 +209,18 @@ PackedScore evaluateComplexity(const Board& board, const PawnStructure& pawnStru
     constexpr Bitboard KING_SIDE = FILE_A_BB | FILE_B_BB | FILE_C_BB | FILE_D_BB;
     constexpr Bitboard QUEEN_SIDE = ~KING_SIDE;
     Bitboard pawns = board.pieces(PAWN);
+
+    Bitboard whitePawns = board.pieces(Color::WHITE, PieceType::PAWN);
+    Bitboard blackPawns = board.pieces(Color::WHITE, PieceType::PAWN);
+    Bitboard blocked = (whitePawns & attacks::pawnPushes<Color::BLACK>(blackPawns));
+    blocked |= blocked.north();
+
     bool pawnsBothSides = (pawns & KING_SIDE).any() && (pawns & QUEEN_SIDE).any();
     bool pawnEndgame = board.allPieces() == (pawns | board.pieces(KING));
 
     PackedScore complexity =
         COMPLEXITY_PAWNS * pawns.popcount() +
+        COMPLEXITY_BLOCKED * blocked.popcount() +
         COMPLEXITY_PASSERS * pawnStructure.passedPawns.popcount() +
         COMPLEXITY_PAWNS_BOTH_SIDES * pawnsBothSides +
         COMPLEXITY_PAWN_ENDGAME * pawnEndgame +
