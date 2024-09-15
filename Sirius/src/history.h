@@ -138,12 +138,14 @@ constexpr int NON_PAWN_CORR_HIST_ENTRIES = 16384;
 constexpr int THREATS_CORR_HIST_ENTRIES = 16384;
 constexpr int MINOR_PIECE_CORR_HIST_ENTRIES = 16384;
 constexpr int MAJOR_PIECE_CORR_HIST_ENTRIES = 16384;
-using PawnCorrHist = std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, PAWN_CORR_HIST_ENTRIES>, 2>;
-using MaterialCorrHist = std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, MATERIAL_CORR_HIST_ENTRIES>, 2>;
-using NonPawnCorrHist = std::array<std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, NON_PAWN_CORR_HIST_ENTRIES>, 2>, 2>;
-using ThreatsCorrHist = std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, THREATS_CORR_HIST_ENTRIES>, 2>;
-using MinorPieceCorrHist = std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, MINOR_PIECE_CORR_HIST_ENTRIES>, 2>;
-using MajorPieceCorrHist = std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, MAJOR_PIECE_CORR_HIST_ENTRIES>, 2>;
+using CorrEntry = CorrHistEntry<MAX_CORR_HIST>;
+using PawnCorrHist = std::array<std::array<CorrEntry, PAWN_CORR_HIST_ENTRIES>, 2>;
+using MaterialCorrHist = std::array<std::array<CorrEntry, MATERIAL_CORR_HIST_ENTRIES>, 2>;
+using NonPawnCorrHist = std::array<std::array<std::array<CorrEntry, NON_PAWN_CORR_HIST_ENTRIES>, 2>, 2>;
+using ThreatsCorrHist = std::array<std::array<CorrEntry, THREATS_CORR_HIST_ENTRIES>, 2>;
+using MinorPieceCorrHist = std::array<std::array<CorrEntry, MINOR_PIECE_CORR_HIST_ENTRIES>, 2>;
+using MajorPieceCorrHist = std::array<std::array<CorrEntry, MAJOR_PIECE_CORR_HIST_ENTRIES>, 2>;
+using CounterMoveCorrHist = std::array<std::array<CorrEntry, 64>, 16>;
 
 int historyBonus(int depth);
 int historyMalus(int depth);
@@ -163,14 +165,24 @@ public:
         return m_ContHist[static_cast<int>(move.movingPiece())][move.toSq().value()];
     }
 
+    CorrEntry& counterMoveCorrEntry(ExtMove move)
+    {
+        return m_CounterMoveCorrHist[static_cast<int>(move.movingPiece())][move.toSq().value()];
+    }
+
+    const CorrEntry& counterMoveCorrEntry(ExtMove move) const
+    {
+        return m_CounterMoveCorrHist[static_cast<int>(move.movingPiece())][move.toSq().value()];
+    }
+
     int getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const;
     int getNoisyStats(ExtMove move) const;
-    int correctStaticEval(int staticEval, const Board& board) const;
+    int correctStaticEval(int staticEval, const Board& board, CorrEntry* counterMoveCorrEntry) const;
 
     void clear();
     void updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus);
     void updateNoisyStats(ExtMove move, int bonus);
-    void updateCorrHist(int bonus, int depth, const Board& board);
+    void updateCorrHist(int bonus, int depth, const Board& board, CorrEntry* counterMoveCorrEntry);
 private:
     int getMainHist(Bitboard threats, ExtMove move) const;
     int getContHist(const CHEntry* entry, ExtMove move) const;
@@ -189,4 +201,5 @@ private:
     ThreatsCorrHist m_ThreatsCorrHist;
     MinorPieceCorrHist m_MinorPieceCorrHist;
     MajorPieceCorrHist m_MajorPieceCorrHist;
+    CounterMoveCorrHist m_CounterMoveCorrHist;
 };

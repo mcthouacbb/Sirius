@@ -28,6 +28,7 @@ struct SearchStack
     std::array<Move, 2> killers;
 
     CHEntry* contHistEntry;
+    CorrEntry* counterMoveCorrEntry;
     int histScore;
 
     int staticEval;
