@@ -72,7 +72,7 @@ int History::getNoisyStats(ExtMove move) const
     return getCaptHist(move);
 }
 
-int History::correctStaticEval(int staticEval, const Board& board) const
+int History::correctStaticEval(int staticEval, const Board& board, ExtMove followup, ExtMove counter) const
 {
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
@@ -84,6 +84,7 @@ int History::correctStaticEval(int staticEval, const Board& board) const
     int threatsEntry = m_ThreatsCorrHist[static_cast<int>(stm)][threatsKey % THREATS_CORR_HIST_ENTRIES];
     int minorPieceEntry = m_MinorPieceCorrHist[static_cast<int>(stm)][board.minorPieceKey().value % MINOR_PIECE_CORR_HIST_ENTRIES];
     int majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
+    int contEntry = m_ContCorrHist[static_cast<int>(getPieceType(followup.movingPiece()))][followup.toSq().value()][static_cast<int>(counter.movingPiece())][counter.toSq().value()];
 
     int corrected = staticEval + (pawnEntry + materialEntry + nonPawnEntry + threatsEntry + minorPieceEntry + majorPieceEntry) / CORR_HIST_SCALE;
     return std::clamp(corrected, -SCORE_MATE_IN_MAX, SCORE_MATE_IN_MAX);
@@ -102,7 +103,7 @@ void History::updateNoisyStats(ExtMove move, int bonus)
     updateCaptHist(move, bonus);
 }
 
-void History::updateCorrHist(int bonus, int depth, const Board& board)
+void History::updateCorrHist(int bonus, int depth, const Board& board, ExtMove followup, ExtMove counter)
 {
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
@@ -129,6 +130,12 @@ void History::updateCorrHist(int bonus, int depth, const Board& board)
 
     auto& majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
     majorPieceEntry.update(scaledBonus, weight);
+
+    if (followup != ExtMove() && counter != ExtMove())
+    {
+        auto& contEntry = m_ContCorrHist[static_cast<int>(getPieceType(followup.movingPiece()))][followup.toSq().value()][static_cast<int>(counter.movingPiece())][counter.toSq().value()];
+        contEntry.update(scaledBonus, weight);
+    }
 }
 
 int History::getMainHist(Bitboard threats, ExtMove move) const

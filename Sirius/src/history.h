@@ -8,11 +8,15 @@
 struct ExtMove : public Move
 {
 public:
+    ExtMove() = default;
     static ExtMove from(const Board& board, Move move);
 
     Piece movingPiece() const;
     Piece capturedPiece() const;
     Piece promotionPiece() const;
+
+    constexpr bool operator==(const ExtMove& other) const noexcept = default;
+    constexpr bool operator!=(const ExtMove& other) const noexcept = default;
 private:
     static Piece promotionPiece(Color sideToMove, Promotion promotion);
 
@@ -144,6 +148,7 @@ using NonPawnCorrHist = std::array<std::array<std::array<CorrHistEntry<MAX_CORR_
 using ThreatsCorrHist = std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, THREATS_CORR_HIST_ENTRIES>, 2>;
 using MinorPieceCorrHist = std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, MINOR_PIECE_CORR_HIST_ENTRIES>, 2>;
 using MajorPieceCorrHist = std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, MAJOR_PIECE_CORR_HIST_ENTRIES>, 2>;
+using ContCorrHist = std::array<std::array<std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, 64>, 16>, 64>, 6>;
 
 int historyBonus(int depth);
 int historyMalus(int depth);
@@ -165,12 +170,12 @@ public:
 
     int getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const;
     int getNoisyStats(ExtMove move) const;
-    int correctStaticEval(int staticEval, const Board& board) const;
+    int correctStaticEval(int staticEval, const Board& board, ExtMove followup, ExtMove counter) const;
 
     void clear();
     void updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus);
     void updateNoisyStats(ExtMove move, int bonus);
-    void updateCorrHist(int bonus, int depth, const Board& board);
+    void updateCorrHist(int bonus, int depth, const Board& board, ExtMove followup, ExtMove counter);
 private:
     int getMainHist(Bitboard threats, ExtMove move) const;
     int getContHist(const CHEntry* entry, ExtMove move) const;
@@ -189,4 +194,5 @@ private:
     ThreatsCorrHist m_ThreatsCorrHist;
     MinorPieceCorrHist m_MinorPieceCorrHist;
     MajorPieceCorrHist m_MajorPieceCorrHist;
+    ContCorrHist m_ContCorrHist;
 };

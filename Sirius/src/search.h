@@ -27,6 +27,7 @@ struct SearchStack
     Move bestMove;
     std::array<Move, 2> killers;
 
+    ExtMove playedMove;
     CHEntry* contHistEntry;
     int histScore;
 

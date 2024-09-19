@@ -49,6 +49,7 @@ void SearchThread::reset()
     for (int i = 0; i <= MAX_PLY; i++)
     {
         stack[i].killers[0] = stack[i].killers[1] = Move();
+        stack[i].playedMove = ExtMove();
         stack[i].excludedMove = Move();
         stack[i].multiExts = 0;
         stack[i].pv = {};
@@ -388,7 +389,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         else
         {
             rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
-            stack->staticEval = history.correctStaticEval(rawStaticEval, board);
+            stack->staticEval = history.correctStaticEval(
+                rawStaticEval, board,
+                rootPly > 1 ? stack[-2].playedMove : ExtMove(),
+                rootPly > 0 ? stack[-1].playedMove : ExtMove()
+            );
             stack->eval = stack->staticEval;
             if (ttHit && (
                 ttData.bound == TTEntry::Bound::EXACT ||
@@ -547,6 +552,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         stack->multiExts += extension >= 2;
 
         m_TT.prefetch(board.keyAfter(move));
+        stack->playedMove = ExtMove::from(board, move);
         stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
         stack->histScore = histScore;
 
@@ -603,6 +609,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         if (root && thread.isMainThread())
             m_TimeMan.updateNodes(move, thread.nodes - nodesBefore);
 
+        stack->playedMove = ExtMove();
         stack->contHistEntry = nullptr;
         stack->histScore = 0;
 
@@ -678,7 +685,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         if (!inCheck && (stack->bestMove == Move() || moveIsQuiet(board, stack->bestMove)) &&
             !(bound == TTEntry::Bound::LOWER_BOUND && stack->staticEval >= bestScore) &&
             !(bound == TTEntry::Bound::UPPER_BOUND && stack->staticEval <= bestScore))
-            history.updateCorrHist(bestScore - stack->staticEval, depth, board);
+            history.updateCorrHist(
+                bestScore - stack->staticEval, depth, board,
+                rootPly > 1 ? stack[-2].playedMove : ExtMove(),
+                rootPly > 0 ? stack[-1].playedMove : ExtMove()
+            );
 
         m_TT.store(board.zkey(), depth, rootPly, bestScore, rawStaticEval, stack->bestMove, ttPV, bound);
     }
@@ -720,7 +731,11 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     else
     {
         rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
-        stack->staticEval = inCheck ? SCORE_NONE : thread.history.correctStaticEval(rawStaticEval, board);
+        stack->staticEval = inCheck ? SCORE_NONE : thread.history.correctStaticEval(
+            rawStaticEval, board,
+            rootPly > 1 ? stack[-2].playedMove : ExtMove(),
+            rootPly > 0 ? stack[-1].playedMove : ExtMove()
+        );
 
         stack->eval = stack->staticEval;
         if (!inCheck && ttHit && (
@@ -763,12 +778,14 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
             bestScore = std::max(bestScore, futility);
             continue;
         }
+        stack->playedMove = ExtMove::from(board, move);
         movesPlayed++;
         board.makeMove(move, thread.evalState);
         thread.nodes.fetch_add(1, std::memory_order_relaxed);
         rootPly++;
         int score = -qsearch(thread, stack + 1, -beta, -alpha, pvNode);
         board.unmakeMove(thread.evalState);
+        stack->playedMove = ExtMove();
         rootPly--;
 
         if (score > bestScore)
