@@ -27,6 +27,8 @@ PackedScore PawnStructure::evaluate(const Board& board)
 template<Color us>
 PackedScore PawnStructure::evaluate(const Board& board)
 {
+    constexpr Color them = ~us;
+
     Bitboard ourPawns = board.pieces(us, PieceType::PAWN);
 
     PackedScore eval{0, 0};
@@ -40,6 +42,9 @@ PackedScore PawnStructure::evaluate(const Board& board)
         if (board.isIsolatedPawn(sq))
             eval += ISOLATED_PAWN[sq.file()];
     }
+
+    Bitboard backward = ourPawns & attacks::pawnPushes<them>(pawnAttacks[them]) & attacks::pawnPushes<them>(~pawnAttackSpans[us]);
+    eval += backward.popcount() * BACKWARD_PAWN;
 
     Bitboard phalanx = ourPawns & ourPawns.west();
     while (phalanx.any())
