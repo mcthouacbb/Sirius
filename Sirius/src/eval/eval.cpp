@@ -195,6 +195,7 @@ PackedScore evaluatePassedPawns(const Board& board, const PawnStructure& pawnStr
             bool blocked = board.pieceAt(pushSq) != Piece::NONE;
             bool controlled = (evalData.attacked[them] & Bitboard::fromSquare(pushSq)).any();
             eval += PASSED_PAWN[blocked][controlled][rank];
+            eval += PASSED_FILE[passer.file()];
 
             eval += OUR_PASSER_PROXIMITY[Square::chebyshev(ourKing, passer)];
             eval += THEIR_PASSER_PROXIMITY[Square::chebyshev(theirKing, passer)];
