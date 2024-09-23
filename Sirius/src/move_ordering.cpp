@@ -41,12 +41,12 @@ int MoveOrdering::scoreNoisy(Move move) const
 
     if (isCapture)
     {
-        int hist = m_History.getNoisyStats(ExtMove::from(m_Board, move));
+        int hist = m_History.getNoisyStats(m_Board.threats(), ExtMove::from(m_Board, move));
         return hist + CAPTURE_SCORE * m_Board.see(move, -hist / 32) + mvvLva(m_Board, move);
     }
     else
     {
-        return m_History.getNoisyStats(ExtMove::from(m_Board, move)) + PROMOTION_SCORE + promotionBonus(move);
+        return m_History.getNoisyStats(m_Board.threats(), ExtMove::from(m_Board, move)) + PROMOTION_SCORE + promotionBonus(move);
     }
 }
 
@@ -62,7 +62,7 @@ int MoveOrdering::scoreMoveQSearch(Move move) const
 {
     bool isCapture = moveIsCapture(m_Board, move);
     bool isPromotion = move.type() == MoveType::PROMOTION;
-    int score = m_History.getNoisyStats(ExtMove::from(m_Board, move));
+    int score = m_History.getNoisyStats(m_Board.threats(), ExtMove::from(m_Board, move));
     if (isCapture)
         score += mvvLva(m_Board, move);
     if (isPromotion)

@@ -67,9 +67,9 @@ int History::getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEnt
     return score;
 }
 
-int History::getNoisyStats(ExtMove move) const
+int History::getNoisyStats(Bitboard threats, ExtMove move) const
 {
-    return getCaptHist(move);
+    return getCaptHist(threats, move);
 }
 
 int History::correctStaticEval(int staticEval, const Board& board) const
@@ -97,9 +97,9 @@ void History::updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry
             updateContHist(entry, move, bonus);
 }
 
-void History::updateNoisyStats(ExtMove move, int bonus)
+void History::updateNoisyStats(Bitboard threats, ExtMove move, int bonus)
 {
-    updateCaptHist(move, bonus);
+    updateCaptHist(threats, move, bonus);
 }
 
 void History::updateCorrHist(int bonus, int depth, const Board& board)
@@ -143,9 +143,11 @@ int History::getContHist(const CHEntry* entry, ExtMove move) const
     return (*entry)[static_cast<int>(move.movingPiece())][move.toSq().value()];
 }
 
-int History::getCaptHist(ExtMove move) const
+int History::getCaptHist(Bitboard threats, ExtMove move) const
 {
-    return m_CaptHist[static_cast<int>(move.capturedPiece())][static_cast<int>(move.movingPiece())][move.toSq().value()];
+    bool srcThreat = (threats & Bitboard::fromSquare(move.fromSq())).any();
+    bool dstThreat = (threats & Bitboard::fromSquare(move.toSq())).any();
+    return m_CaptHist[static_cast<int>(move.capturedPiece())][static_cast<int>(move.movingPiece())][move.toSq().value()][srcThreat][dstThreat];
 }
 
 void History::updateMainHist(Bitboard threats, ExtMove move, int bonus)
@@ -160,7 +162,9 @@ void History::updateContHist(CHEntry* entry, ExtMove move, int bonus)
     (*entry)[static_cast<int>(move.movingPiece())][move.toSq().value()].update(bonus);
 }
 
-void History::updateCaptHist(ExtMove move, int bonus)
+void History::updateCaptHist(Bitboard threats, ExtMove move, int bonus)
 {
-    m_CaptHist[static_cast<int>(move.capturedPiece())][static_cast<int>(move.movingPiece())][move.toSq().value()].update(bonus);
+    bool srcThreat = (threats & Bitboard::fromSquare(move.fromSq())).any();
+    bool dstThreat = (threats & Bitboard::fromSquare(move.toSq())).any();
+    m_CaptHist[static_cast<int>(move.capturedPiece())][static_cast<int>(move.movingPiece())][move.toSq().value()][srcThreat][dstThreat].update(bonus);
 }
