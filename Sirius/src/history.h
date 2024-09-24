@@ -128,7 +128,7 @@ static constexpr int HISTORY_MAX = 16384;
 using MainHist = std::array<std::array<std::array<std::array<HistoryEntry<HISTORY_MAX>, 2>, 2>, 4096>, 2>;
 using CHEntry = std::array<std::array<HistoryEntry<HISTORY_MAX>, 64>, 16>;
 using ContHist = std::array<std::array<CHEntry, 64>, 16>;
-using CaptHist = std::array<std::array<std::array<HistoryEntry<HISTORY_MAX>, 64>, 16>, 16>;
+using CaptHist = std::array<std::array<std::array<std::array<std::array<HistoryEntry<HISTORY_MAX>, 2>, 2>, 64>, 16>, 16>;
 
 constexpr int CORR_HIST_SCALE = 256;
 constexpr int MAX_CORR_HIST = CORR_HIST_SCALE * 32;
@@ -164,21 +164,21 @@ public:
     }
 
     int getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const;
-    int getNoisyStats(ExtMove move) const;
+    int getNoisyStats(Bitboard threats, ExtMove move) const;
     int correctStaticEval(int staticEval, const Board& board) const;
 
     void clear();
     void updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus);
-    void updateNoisyStats(ExtMove move, int bonus);
+    void updateNoisyStats(Bitboard threats, ExtMove move, int bonus);
     void updateCorrHist(int bonus, int depth, const Board& board);
 private:
     int getMainHist(Bitboard threats, ExtMove move) const;
     int getContHist(const CHEntry* entry, ExtMove move) const;
-    int getCaptHist(ExtMove move) const;
+    int getCaptHist(Bitboard threats, ExtMove move) const;
 
     void updateMainHist(Bitboard threats, ExtMove move, int bonus);
     void updateContHist(CHEntry* entry, ExtMove move, int bonus);
-    void updateCaptHist(ExtMove move, int bonus);
+    void updateCaptHist(Bitboard threats, ExtMove move, int bonus);
 
     MainHist m_MainHist;
     ContHist m_ContHist;

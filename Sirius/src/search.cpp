@@ -477,7 +477,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         bool quietLosing = moveScore < MoveOrdering::KILLER_SCORE;
 
         int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
-        int histScore = quiet ? history.getQuietStats(threats, ExtMove::from(board, move), contHistEntries) : history.getNoisyStats(ExtMove::from(board, move));
+        int histScore = quiet ? history.getQuietStats(threats, ExtMove::from(board, move), contHistEntries) : history.getNoisyStats(threats, ExtMove::from(board, move));
         baseLMR -= histScore / (quiet ? lmrQuietHistDivisor : lmrNoisyHistDivisor);
 
         if (!root && quietLosing && bestScore > -SCORE_WIN)
@@ -652,13 +652,13 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 }
                 else
                 {
-                    history.updateNoisyStats(ExtMove::from(board, move), bonus);
+                    history.updateNoisyStats(threats, ExtMove::from(board, move), bonus);
                 }
 
                 for (Move noisyMove : noisiesTried)
                 {
                     if (noisyMove != move)
-                        history.updateNoisyStats(ExtMove::from(board, noisyMove), -malus);
+                        history.updateNoisyStats(threats, ExtMove::from(board, noisyMove), -malus);
                 }
                 bound = TTEntry::Bound::LOWER_BOUND;
                 break;
