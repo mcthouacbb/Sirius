@@ -283,7 +283,7 @@ int evaluate(const Board& board, search::SearchThread* thread)
 
     eval += evaluateKings<WHITE>(board, evalData) - evaluateKings<BLACK>(board, evalData);
     eval += evaluatePassedPawns<WHITE>(board, pawnStructure, evalData) - evaluatePassedPawns<BLACK>(board, pawnStructure, evalData);
-    eval += evaluateThreats<WHITE>(board, evalData) - evaluateThreats<BLACK>(board, evalData);
+    //eval += evaluateThreats<WHITE>(board, evalData) - evaluateThreats<BLACK>(board, evalData);
     eval += evaluateComplexity(board, pawnStructure, eval);
 
     int scale = evaluateScale(board, eval);
