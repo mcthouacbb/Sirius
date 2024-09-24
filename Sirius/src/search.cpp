@@ -491,10 +491,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 continue;
             }
 
-            if (!pvNode &&
-                !inCheck &&
+            if (!inCheck &&
                 depth <= lmpMaxDepth &&
-                movesPlayed >= lmpMinMovesBase + depth * depth / (improving ? 1 : 2))
+                movesPlayed >= lmpMinMovesBase + (depth + pvNode) * (depth + pvNode) / (improving ? 1 : 2))
                 break;
 
             int seeMargin = quiet ?
