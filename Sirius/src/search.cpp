@@ -323,7 +323,7 @@ BenchData Search::benchSearch(int depth, const Board& board)
 
 int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta, bool pvNode, bool cutnode)
 {
-    if (m_TimeMan.stopHard(thread.limits, thread.nodes))
+    if (thread.isMainThread() && m_TimeMan.stopHard(thread.limits, thread.nodes))
     {
         m_ShouldStop = true;
         return alpha;
