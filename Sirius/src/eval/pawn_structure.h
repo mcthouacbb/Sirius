@@ -15,6 +15,7 @@ struct PawnStructure
 
     ColorArray<Bitboard> pawnAttacks;
     ColorArray<Bitboard> pawnAttackSpans;
+    ColorArray<Bitboard> blockedPawns;
     Bitboard passedPawns;
     PackedScore score;
 private:

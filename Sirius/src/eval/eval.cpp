@@ -242,7 +242,7 @@ void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& p
     Square whiteKing = board.kingSq(WHITE);
     Square blackKing = board.kingSq(BLACK);
 
-    evalData.mobilityArea[WHITE] = ~pawnStructure.pawnAttacks[BLACK];
+    evalData.mobilityArea[WHITE] = ~pawnStructure.pawnAttacks[BLACK] & ~pawnStructure.blockedPawns[WHITE];
     evalData.attacked[WHITE] = evalData.attackedBy[WHITE][PAWN] = pawnStructure.pawnAttacks[WHITE];
 
     Bitboard whiteKingAtks = attacks::kingAttacks(whiteKing);
@@ -251,7 +251,7 @@ void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& p
     evalData.attacked[WHITE] |= whiteKingAtks;
     evalData.kingRing[WHITE] = (whiteKingAtks | whiteKingAtks.north()) & ~Bitboard::fromSquare(whiteKing);
 
-    evalData.mobilityArea[BLACK] = ~pawnStructure.pawnAttacks[WHITE];
+    evalData.mobilityArea[BLACK] = ~pawnStructure.pawnAttacks[WHITE] & ~pawnStructure.blockedPawns[BLACK];
     evalData.attacked[BLACK] = evalData.attackedBy[BLACK][PAWN] = pawnStructure.pawnAttacks[BLACK];
 
     Bitboard blackKingAtks = attacks::kingAttacks(blackKing);
