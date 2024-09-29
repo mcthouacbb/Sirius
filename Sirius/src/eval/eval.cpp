@@ -63,7 +63,6 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
     return eval;
 }
 
-// I'll figure out how to add the other pieces here later
 template<Color us>
 PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
 {
