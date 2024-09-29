@@ -2,8 +2,8 @@
 
 #include "defs.h"
 #include "bitboard.h"
+#include "util/multi_array.h"
 
-#include <array>
 #include <utility>
 
 namespace attacks
@@ -33,14 +33,14 @@ struct AttackData
         uint32_t shift;
     };
 
-    std::array<std::array<Bitboard, 64>, 64> inBetweenSquares;
-    std::array<std::array<Bitboard, 64>, 64> moveMasks;
-    std::array<std::array<Bitboard, 64>, 64> alignedSquares;
+    MultiArray<Bitboard, 64, 64> inBetweenSquares;
+    MultiArray<Bitboard, 64, 64> moveMasks;
+    MultiArray<Bitboard, 64, 64> alignedSquares;
 
-    std::array<std::array<Bitboard, 64>, 2> passedPawnMasks;
+    MultiArray<Bitboard, 2, 64> passedPawnMasks;
     std::array<Bitboard, 64> isolatedPawnMasks;
 
-    std::array<std::array<Bitboard, 64>, 2> pawnAttacks;
+    MultiArray<Bitboard, 2, 64> pawnAttacks;
     std::array<Bitboard, 64> kingAttacks;
     std::array<Bitboard, 64> knightAttacks;
 

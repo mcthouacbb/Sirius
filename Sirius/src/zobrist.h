@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include <array>
 #include "defs.h"
+#include "util/multi_array.h"
 #include "util/prng.h"
 
 namespace zobrist
@@ -11,7 +11,7 @@ namespace zobrist
 struct Keys
 {
     uint64_t blackToMove;
-    std::array<std::array<std::array<uint64_t, 64>, 6>, 2> pieceSquares;
+    MultiArray<uint64_t, 2, 6, 64> pieceSquares;
     std::array<uint64_t, 16> castlingRights;
     std::array<uint64_t, 8> epFiles;
 };

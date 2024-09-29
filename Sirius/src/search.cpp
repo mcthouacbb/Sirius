@@ -14,7 +14,7 @@
 namespace search
 {
 
-std::array<std::array<int, 64>, 64> genLMRTable()
+MultiArray<int, 64, 64> genLMRTable()
 {
     std::array<std::array<int, 64>, 64> lmrTable = {};
     for (int d = 1; d < 64; d++)
@@ -27,7 +27,7 @@ std::array<std::array<int, 64>, 64> genLMRTable()
     return lmrTable;
 }
 
-std::array<std::array<int, 64>, 64> lmrTable = {};
+MultiArray<int, 64, 64> lmrTable = {};
 
 void init()
 {

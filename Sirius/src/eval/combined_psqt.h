@@ -3,6 +3,7 @@
 #include "../defs.h"
 #include "combined_psqt.h"
 #include "eval_constants.h"
+#include "../util/multi_array.h"
 
 #include <array>
 
@@ -11,7 +12,7 @@ namespace eval
 
 constexpr auto init()
 {
-    std::array<std::array<std::array<std::array<PackedScore, 64>, 6>, 2>, 2> combined = {};
+    MultiArray<PackedScore, 2, 2, 6, 64> combined = {};
     for (int bucket = 0; bucket < 2; bucket++)
         for (int piece = 0; piece < 6; piece++)
             for (int sq = 0; sq < 64; sq++)

@@ -90,7 +90,9 @@ inline void HistoryEntry<MAX_VAL>::update(int bonus)
     m_Value += bonus - m_Value * std::abs(bonus) / MAX_VAL;
 }
 
-template<int MAX_VAL>
+constexpr int CORR_HIST_SCALE = 256;
+constexpr int MAX_CORR_HIST = CORR_HIST_SCALE * 32;
+
 struct CorrHistEntry
 {
 public:
@@ -104,46 +106,41 @@ private:
     int m_Value;
 };
 
-template<int MAX_VAL>
-inline CorrHistEntry<MAX_VAL>::CorrHistEntry(int value)
+inline CorrHistEntry::CorrHistEntry(int value)
 {
     m_Value = value;
 }
 
-template<int MAX_VAL>
-inline CorrHistEntry<MAX_VAL>::operator int() const
+inline CorrHistEntry::operator int() const
 {
     return m_Value;
 }
 
-template<int MAX_VAL>
-inline void CorrHistEntry<MAX_VAL>::update(int target, int weight)
+inline void CorrHistEntry::update(int target, int weight)
 {
     m_Value = (m_Value * (256 - weight) + target * weight) / 256;
-    m_Value = std::clamp(m_Value, -MAX_VAL, MAX_VAL);
+    m_Value = std::clamp(m_Value, -MAX_CORR_HIST, MAX_CORR_HIST);
 }
 
 static constexpr int HISTORY_MAX = 16384;
 
-using MainHist = std::array<std::array<std::array<std::array<HistoryEntry<HISTORY_MAX>, 2>, 2>, 4096>, 2>;
-using CHEntry = std::array<std::array<HistoryEntry<HISTORY_MAX>, 64>, 16>;
-using ContHist = std::array<std::array<CHEntry, 64>, 16>;
-using CaptHist = std::array<std::array<std::array<std::array<std::array<HistoryEntry<HISTORY_MAX>, 2>, 2>, 64>, 16>, 16>;
+using MainHist = MultiArray<HistoryEntry<HISTORY_MAX>, 2, 4096, 2, 2>;
+using CHEntry = MultiArray<HistoryEntry<HISTORY_MAX>, 16, 64>;
+using ContHist = MultiArray<CHEntry, 16, 64>;
+using CaptHist = MultiArray<HistoryEntry<HISTORY_MAX>, 16, 16, 64, 2, 2>;
 
-constexpr int CORR_HIST_SCALE = 256;
-constexpr int MAX_CORR_HIST = CORR_HIST_SCALE * 32;
 constexpr int PAWN_CORR_HIST_ENTRIES = 16384;
 constexpr int MATERIAL_CORR_HIST_ENTRIES = 32768;
 constexpr int NON_PAWN_CORR_HIST_ENTRIES = 16384;
 constexpr int THREATS_CORR_HIST_ENTRIES = 16384;
 constexpr int MINOR_PIECE_CORR_HIST_ENTRIES = 16384;
 constexpr int MAJOR_PIECE_CORR_HIST_ENTRIES = 16384;
-using PawnCorrHist = std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, PAWN_CORR_HIST_ENTRIES>, 2>;
-using MaterialCorrHist = std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, MATERIAL_CORR_HIST_ENTRIES>, 2>;
-using NonPawnCorrHist = std::array<std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, NON_PAWN_CORR_HIST_ENTRIES>, 2>, 2>;
-using ThreatsCorrHist = std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, THREATS_CORR_HIST_ENTRIES>, 2>;
-using MinorPieceCorrHist = std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, MINOR_PIECE_CORR_HIST_ENTRIES>, 2>;
-using MajorPieceCorrHist = std::array<std::array<CorrHistEntry<MAX_CORR_HIST>, MAJOR_PIECE_CORR_HIST_ENTRIES>, 2>;
+using PawnCorrHist = MultiArray<CorrHistEntry, 2, PAWN_CORR_HIST_ENTRIES>;
+using MaterialCorrHist = MultiArray<CorrHistEntry, 2, MATERIAL_CORR_HIST_ENTRIES>;
+using NonPawnCorrHist = MultiArray<CorrHistEntry, 2, 2, NON_PAWN_CORR_HIST_ENTRIES>;
+using ThreatsCorrHist = MultiArray<CorrHistEntry, 2, THREATS_CORR_HIST_ENTRIES>;
+using MinorPieceCorrHist = MultiArray<CorrHistEntry, 2, MINOR_PIECE_CORR_HIST_ENTRIES>;
+using MajorPieceCorrHist = MultiArray<CorrHistEntry, 2, MAJOR_PIECE_CORR_HIST_ENTRIES>;
 
 int historyBonus(int depth);
 int historyMalus(int depth);

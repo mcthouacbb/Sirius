@@ -11,8 +11,8 @@ void fillHistTable(std::array<HistoryEntry<MAX_VAL>, N>& arr, int value)
     std::fill(arr.begin(), arr.end(), value);
 }
 
-template<int MAX_VAL, size_t N>
-void fillHistTable(std::array<CorrHistEntry<MAX_VAL>, N>& arr, int value)
+template<size_t N>
+void fillHistTable(std::array<CorrHistEntry, N>& arr, int value)
 {
     std::fill(arr.begin(), arr.end(), value);
 }

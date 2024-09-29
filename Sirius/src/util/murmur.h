@@ -1,6 +1,6 @@
 #include <cstdint>
 
-inline uint64_t murmurHash3(uint64_t key)
+constexpr uint64_t murmurHash3(uint64_t key)
 {
     key ^= key >> 33;
     key *= 0xff51afd7ed558ccd;

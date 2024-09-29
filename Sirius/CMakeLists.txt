@@ -61,6 +61,7 @@ set(SRCS
     "src/comm/uci_option.h"
 
     "src/util/color_piece_array.h"
+    "src/util/multi_array.h"
     "src/util/murmur.h"
     "src/util/static_vector.h"
     "src/util/piece_set.h"
