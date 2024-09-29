@@ -27,7 +27,7 @@ struct BoardState
     int halfMoveClock;
     int pliesFromNull;
     int epSquare;
-    int castlingRights;
+    CastlingRights castlingRights;
     int repetitions;
     int lastRepetition;
     ZKey zkey;
@@ -163,7 +163,7 @@ public:
     int epSquare() const;
     int gamePly() const;
     int halfMoveClock() const;
-    int castlingRights() const;
+    CastlingRights castlingRights() const;
     int pliesFromNull() const;
     ZKey zkey() const;
     ZKey pawnKey() const;
@@ -305,7 +305,7 @@ inline int Board::pliesFromNull() const
     return currState().pliesFromNull;
 }
 
-inline int Board::castlingRights() const
+inline CastlingRights Board::castlingRights() const
 {
     return currState().castlingRights;
 }

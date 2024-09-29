@@ -51,7 +51,7 @@ struct ZKey
     void removePiece(PieceType piece, Color color, Square square);
     void movePiece(PieceType piece, Color color, Square src, Square dst);
 
-    void updateCastlingRights(uint32_t rights);
+    void updateCastlingRights(CastlingRights rights);
     void updateEP(uint32_t epFile);
 
     bool operator==(const ZKey& other) const = default;
@@ -78,9 +78,9 @@ inline void ZKey::movePiece(PieceType piece, Color color, Square src, Square dst
     value ^= zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][src.value()] ^ zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][dst.value()];
 }
 
-inline void ZKey::updateCastlingRights(uint32_t castlingRights)
+inline void ZKey::updateCastlingRights(CastlingRights castlingRights)
 {
-    value ^= zobrist::keys.castlingRights[castlingRights];
+    value ^= zobrist::keys.castlingRights[castlingRights.value()];
 }
 
 inline void ZKey::updateEP(uint32_t epFile)

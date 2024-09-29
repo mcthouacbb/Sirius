@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../board.h"
-#include "../util/color_piece_array.h"
+#include "../util/enum_array.h"
 
 namespace eval
 {

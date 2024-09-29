@@ -1,6 +1,6 @@
 #include "eval.h"
 #include "../attacks.h"
-#include "../util/color_piece_array.h"
+#include "../util/enum_array.h"
 #include "pawn_structure.h"
 
 namespace eval

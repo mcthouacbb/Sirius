@@ -284,6 +284,93 @@ inline bool isMateScore(int score)
     return std::abs(score) >= SCORE_MATE_IN_MAX;
 }
 
+struct CastlingRights
+{
+public:
+    enum class Internal : uint8_t
+    {
+        NONE = 0,
+        WHITE_KING_SIDE = 1,
+        WHITE_QUEEN_SIDE = 2,
+        BLACK_KING_SIDE = 4,
+        BLACK_QUEEN_SIDE = 8
+    };
+    static constexpr Internal NONE = Internal::NONE;
+    static constexpr Internal WHITE_KING_SIDE = Internal::WHITE_KING_SIDE;
+    static constexpr Internal WHITE_QUEEN_SIDE = Internal::WHITE_QUEEN_SIDE;
+    static constexpr Internal BLACK_KING_SIDE = Internal::BLACK_KING_SIDE;
+    static constexpr Internal BLACK_QUEEN_SIDE = Internal::BLACK_QUEEN_SIDE;
+
+    constexpr CastlingRights();
+    constexpr CastlingRights(Internal v);
+
+    constexpr CastlingRights& operator&=(const CastlingRights& other);
+    constexpr CastlingRights& operator|=(const CastlingRights& other);
+
+    constexpr CastlingRights operator&(const CastlingRights& other) const;
+    constexpr CastlingRights operator|(const CastlingRights& other) const;
+
+    constexpr bool has(Internal v) const;
+
+    constexpr int value() const;
+private:
+    Internal m_Value;
+};
+
+constexpr CastlingRights operator&(CastlingRights::Internal a, CastlingRights::Internal b)
+{
+    return CastlingRights(static_cast<CastlingRights::Internal>(static_cast<int>(a) & static_cast<int>(b)));
+}
+
+constexpr CastlingRights operator|(CastlingRights::Internal a, CastlingRights::Internal b)
+{
+    return CastlingRights(static_cast<CastlingRights::Internal>(static_cast<int>(a) | static_cast<int>(b)));
+}
+
+constexpr CastlingRights::CastlingRights()
+    : m_Value(Internal::NONE)
+{
+
+}
+
+constexpr CastlingRights::CastlingRights(Internal v)
+    : m_Value(v)
+{
+
+}
+
+constexpr CastlingRights& CastlingRights::operator&=(const CastlingRights& other)
+{
+    *this = *this & other;
+    return *this;
+}
+
+constexpr CastlingRights& CastlingRights::operator|=(const CastlingRights& other)
+{
+    *this = *this | other;
+    return *this;
+}
+
+constexpr CastlingRights CastlingRights::operator&(const CastlingRights& other) const
+{
+    return CastlingRights(m_Value & other.m_Value);
+}
+
+constexpr CastlingRights CastlingRights::operator|(const CastlingRights& other) const
+{
+    return CastlingRights(m_Value | other.m_Value);
+}
+
+constexpr bool CastlingRights::has(Internal v) const
+{
+    return static_cast<int>((m_Value & v).m_Value) != 0;
+}
+
+constexpr int CastlingRights::value() const
+{
+    return static_cast<int>(m_Value);
+}
+
 struct PackedScore
 {
 public:

@@ -146,9 +146,9 @@ inline Bitboard moveMask(Square king, Square checker)
     return attackData.moveMasks[king.value()][checker.value()];
 }
 
-inline int castleRightsMask(Square square)
+inline CastlingRights castleRightsMask(Square square)
 {
-    return attackData.castleRightsMasks[square.value()];
+    return CastlingRights(static_cast<CastlingRights::Internal>(attackData.castleRightsMasks[square.value()]));
 }
 
 inline Bitboard passedPawnMask(Color color, Square square)

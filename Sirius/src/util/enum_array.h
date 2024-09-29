@@ -2,21 +2,24 @@
 
 #include "../defs.h"
 
-template<typename T, size_t N>
+template<typename T, typename E, size_t N>
 struct EnumArray : public std::array<T, N>
 {
     using std::array<T, N>::operator[];
 
-    T& operator[](T p)
+    T& operator[](E p)
     {
         return (*this)[static_cast<int>(p)];
     }
 
-    const T& operator[](T p) const
+    const T& operator[](E p) const
     {
         return (*this)[static_cast<int>(p)];
     }
 };
 
-using ColorArray = EnumArray<Color, 2>;
-using PieceTypeArray = EnumArray<PieceType, 6>;
+template<typename T>
+using ColorArray = EnumArray<T, Color, 2>;
+
+template<typename T>
+using PieceTypeArray = EnumArray<T, PieceType, 6>;
