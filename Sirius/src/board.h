@@ -3,6 +3,7 @@
 #include "defs.h"
 #include "bitboard.h"
 #include "zobrist.h"
+#include "util/murmur.h"
 
 #include <string_view>
 #include <string>
