@@ -237,8 +237,6 @@ int evaluateScale(const Board& board, PackedScore eval)
 
 void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& pawnStructure)
 {
-    Bitboard whitePawns = board.pieces(WHITE, PAWN);
-    Bitboard blackPawns = board.pieces(BLACK, PAWN);
     Square whiteKing = board.kingSq(WHITE);
     Square blackKing = board.kingSq(BLACK);
 
