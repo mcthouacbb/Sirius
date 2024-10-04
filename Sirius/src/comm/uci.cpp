@@ -142,6 +142,9 @@ bool UCI::execCommand(const std::string& command)
             printBoard(m_Board);
             break;
         }
+        case Command::EVAL:
+            evalCommand();
+            break;
         case Command::BENCH:
             if (!m_Search.searching())
                 benchCommand();
@@ -170,6 +173,8 @@ UCI::Command UCI::getCommand(const std::string& command) const
         return Command::QUIT;
     else if (command == "d")
         return Command::DBG_PRINT;
+    else if (command == "eval")
+        return Command::EVAL;
     else if (command == "bench")
         return Command::BENCH;
 
@@ -357,6 +362,18 @@ void UCI::setOptionCommand(std::istringstream& stream)
         default:
             break;
     }
+}
+
+void UCI::evalCommand()
+{
+    auto lock = lockStdout();
+    if (m_Board.checkers().any())
+    {
+        std::cout << "static eval: none(in check)" << std::endl;
+        return;
+    }
+    int staticEval = eval::evaluateSingle(m_Board);
+    std::cout << "static eval: " << staticEval << "cp" << std::endl;
 }
 
 void UCI::benchCommand()

@@ -39,6 +39,7 @@ struct EvalState
 public:
     EvalState();
 
+    void initSingle(const Board& board);
     void init(const Board& board, PawnTable& pawnTable);
 
     void push(const Board& board, const EvalUpdates& updates);
@@ -48,6 +49,7 @@ public:
     const PawnStructure& pawnStructure() const;
     int phase() const;
 private:
+    void init(const Board& board, PawnTable* pawnTable);
     struct StackEntry
     {
         EvalUpdates updates;

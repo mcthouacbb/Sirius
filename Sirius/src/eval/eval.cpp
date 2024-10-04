@@ -258,6 +258,19 @@ void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& p
     evalData.kingRing[BLACK] = (blackKingAtks | blackKingAtks.south()) & ~Bitboard::fromSquare(blackKing);
 }
 
+void nonIncrementalEval(const Board& board, const PawnStructure& pawnStructure, EvalData& evalData, PackedScore& eval)
+{
+    eval += evaluatePieces<WHITE, KNIGHT>(board, evalData) - evaluatePieces<BLACK, KNIGHT>(board, evalData);
+    eval += evaluatePieces<WHITE, BISHOP>(board, evalData) - evaluatePieces<BLACK, BISHOP>(board, evalData);
+    eval += evaluatePieces<WHITE, ROOK>(board, evalData) - evaluatePieces<BLACK, ROOK>(board, evalData);
+    eval += evaluatePieces<WHITE, QUEEN>(board, evalData) - evaluatePieces<BLACK, QUEEN>(board, evalData);
+
+    eval += evaluateKings<WHITE>(board, evalData) - evaluateKings<BLACK>(board, evalData);
+    eval += evaluatePassedPawns<WHITE>(board, pawnStructure, evalData) - evaluatePassedPawns<BLACK>(board, pawnStructure, evalData);
+    eval += evaluateThreats<WHITE>(board, evalData) - evaluateThreats<BLACK>(board, evalData);
+    eval += evaluateComplexity(board, pawnStructure, eval);
+}
+
 int evaluate(const Board& board, search::SearchThread* thread)
 {
     if (!eval::canForceMate(board))
@@ -273,21 +286,40 @@ int evaluate(const Board& board, search::SearchThread* thread)
     EvalData evalData = {};
     initEvalData(board, evalData, pawnStructure);
 
-    eval += evaluatePieces<WHITE, KNIGHT>(board, evalData) - evaluatePieces<BLACK, KNIGHT>(board, evalData);
-    eval += evaluatePieces<WHITE, BISHOP>(board, evalData) - evaluatePieces<BLACK, BISHOP>(board, evalData);
-    eval += evaluatePieces<WHITE, ROOK>(board, evalData) - evaluatePieces<BLACK, ROOK>(board, evalData);
-    eval += evaluatePieces<WHITE, QUEEN>(board, evalData) - evaluatePieces<BLACK, QUEEN>(board, evalData);
-
-    eval += evaluateKings<WHITE>(board, evalData) - evaluateKings<BLACK>(board, evalData);
-    eval += evaluatePassedPawns<WHITE>(board, pawnStructure, evalData) - evaluatePassedPawns<BLACK>(board, pawnStructure, evalData);
-    eval += evaluateThreats<WHITE>(board, evalData) - evaluateThreats<BLACK>(board, evalData);
-    eval += evaluateComplexity(board, pawnStructure, eval);
+    nonIncrementalEval(board, pawnStructure, evalData, eval);
 
     int scale = evaluateScale(board, eval);
 
     eval += (color == WHITE ? TEMPO : -TEMPO);
 
     return (color == WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg() * scale / SCALE_FACTOR, thread->evalState.phase());
+}
+
+int evaluateSingle(const Board& board)
+{
+    if (!eval::canForceMate(board))
+        return SCORE_DRAW;
+
+    EvalState evalState;
+    evalState.initSingle(board);
+
+    constexpr int SCALE_FACTOR = 128;
+
+    Color color = board.sideToMove();
+    PackedScore eval = evalState.score(board);
+
+    const PawnStructure& pawnStructure = evalState.pawnStructure();
+
+    EvalData evalData = {};
+    initEvalData(board, evalData, pawnStructure);
+
+    nonIncrementalEval(board, pawnStructure, evalData, eval);
+
+    int scale = evaluateScale(board, eval);
+
+    eval += (color == WHITE ? TEMPO : -TEMPO);
+
+    return (color == WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg() * scale / SCALE_FACTOR, evalState.phase());
 }
 
 
