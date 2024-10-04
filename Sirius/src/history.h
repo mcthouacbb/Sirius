@@ -127,7 +127,7 @@ static constexpr int HISTORY_MAX = 16384;
 using MainHist = MultiArray<HistoryEntry<HISTORY_MAX>, 2, 4096, 2, 2>;
 using CHEntry = MultiArray<HistoryEntry<HISTORY_MAX>, 16, 64>;
 using ContHist = MultiArray<CHEntry, 16, 64>;
-using CaptHist = MultiArray<HistoryEntry<HISTORY_MAX>, 16, 16, 64, 2, 2>;
+using CaptHist = MultiArray<HistoryEntry<HISTORY_MAX>, 7, 16, 64, 2, 2>;
 
 constexpr int PAWN_CORR_HIST_ENTRIES = 16384;
 constexpr int MATERIAL_CORR_HIST_ENTRIES = 32768;
