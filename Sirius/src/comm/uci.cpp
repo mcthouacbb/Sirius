@@ -145,6 +145,12 @@ bool UCI::execCommand(const std::string& command)
         case Command::PERFT:
             perftCommand(stream);
             break;
+        case Command::RUN_PERFT_TESTS:
+        {
+            auto lock = lockStdout();
+            runTests(m_Board, false);
+            break;
+        }
         case Command::EVAL:
             evalCommand();
             break;
@@ -178,6 +184,8 @@ UCI::Command UCI::getCommand(const std::string& command) const
         return Command::DBG_PRINT;
     else if (command == "perft")
         return Command::PERFT;
+    else if (command == "perfttests")
+        return Command::RUN_PERFT_TESTS;
     else if (command == "eval")
         return Command::EVAL;
     else if (command == "bench")
@@ -371,6 +379,7 @@ void UCI::setOptionCommand(std::istringstream& stream)
 
 void UCI::perftCommand(std::istringstream& stream)
 {
+    auto lock = lockStdout();
     uint32_t depth;
     stream >> depth;
 

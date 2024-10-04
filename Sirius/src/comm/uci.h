@@ -29,6 +29,7 @@ public:
 
         DBG_PRINT,
         PERFT,
+        RUN_PERFT_TESTS,
         EVAL,
         BENCH
     };
