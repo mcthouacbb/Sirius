@@ -142,6 +142,9 @@ bool UCI::execCommand(const std::string& command)
             printBoard(m_Board);
             break;
         }
+        case Command::PERFT:
+            perftCommand(stream);
+            break;
         case Command::EVAL:
             evalCommand();
             break;
@@ -173,6 +176,8 @@ UCI::Command UCI::getCommand(const std::string& command) const
         return Command::QUIT;
     else if (command == "d")
         return Command::DBG_PRINT;
+    else if (command == "perft")
+        return Command::PERFT;
     else if (command == "eval")
         return Command::EVAL;
     else if (command == "bench")
@@ -362,6 +367,18 @@ void UCI::setOptionCommand(std::istringstream& stream)
         default:
             break;
     }
+}
+
+void UCI::perftCommand(std::istringstream& stream)
+{
+    uint32_t depth;
+    stream >> depth;
+
+    auto t1 = std::chrono::steady_clock::now();
+    uint64_t result = perft<true>(m_Board, depth);
+    auto t2 = std::chrono::steady_clock::now();
+    std::cout << "Nodes: " << result << std::endl;
+    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1).count() << std::endl;
 }
 
 void UCI::evalCommand()

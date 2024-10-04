@@ -28,6 +28,7 @@ public:
         QUIT,
 
         DBG_PRINT,
+        PERFT,
         EVAL,
         BENCH
     };
@@ -46,6 +47,7 @@ private:
     void goCommand(std::istringstream& stream);
     void setOptionCommand(std::istringstream& stream);
     void evalCommand();
+    void perftCommand(std::istringstream& stream);
     void benchCommand();
 
     std::unordered_map<std::string, UCIOption> m_Options;
