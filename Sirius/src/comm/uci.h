@@ -35,10 +35,13 @@ public:
     };
 
 
-    virtual void run() override;
+    void run(std::string cmd);
     virtual void reportSearchInfo(const SearchInfo& info) const override;
     virtual void reportBestMove(Move bestMove) const override;
 private:
+    void prettyPrintSearchInfo(const SearchInfo& info) const;
+    void printUCISearchInfo(const SearchInfo& info) const;
+
     bool execCommand(const std::string& command);
     Command getCommand(const std::string& command) const;
 

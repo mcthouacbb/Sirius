@@ -15,6 +15,7 @@ public:
     enum class Type
     {
         NONE,
+        BOOL, // check
         INT // spin
     };
 
@@ -26,19 +27,27 @@ public:
         int64_t maxValue;
     };
 
+    struct BoolData
+    {
+        bool value;
+    };
+
     UCIOption();
     UCIOption(std::string_view name, IntData data, Callback callback = Callback());
-    UCIOption& operator=(int64_t value);
+    UCIOption(std::string_view name, BoolData data, Callback callback = Callback());
+    void setIntValue(int64_t value);
+    void setBoolValue(bool value);
 
     Type type() const;
     int64_t intValue() const;
+    bool boolValue() const;
     const IntData& intData() const;
     const std::string& name() const;
 private:
     Type m_Type;
     std::string m_Name;
     Callback m_Callback;
-    std::variant<IntData> m_Data;
+    std::variant<IntData, BoolData> m_Data;
 };
 
 inline UCIOption::UCIOption()
@@ -53,13 +62,26 @@ inline UCIOption::UCIOption(std::string_view name, IntData data, Callback callba
 
 }
 
-inline UCIOption& UCIOption::operator=(int64_t value)
+inline UCIOption::UCIOption(std::string_view name, BoolData data, Callback callback)
+    : m_Type(Type::BOOL), m_Name(name), m_Callback(callback), m_Data(data)
+{
+
+}
+
+inline void UCIOption::setIntValue(int64_t value)
 {
     assert(m_Type == Type::INT);
     std::get<IntData>(m_Data).value = value;
     if (m_Callback)
         m_Callback(*this);
-    return *this;
+}
+
+inline void UCIOption::setBoolValue(bool value)
+{
+    assert(m_Type == Type::BOOL);
+    std::get<BoolData>(m_Data).value = value;
+    if (m_Callback)
+        m_Callback(*this);
 }
 
 inline UCIOption::Type UCIOption::type() const
@@ -71,6 +93,12 @@ inline int64_t UCIOption::intValue() const
 {
     assert(m_Type == Type::INT);
     return std::get<IntData>(m_Data).value;
+}
+
+inline bool UCIOption::boolValue() const
+{
+    assert(m_Type == Type::BOOL);
+    return std::get<BoolData>(m_Data).value;
 }
 
 inline const UCIOption::IntData& UCIOption::intData() const

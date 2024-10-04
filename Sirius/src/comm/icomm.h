@@ -21,7 +21,6 @@ public:
     void makeMove(Move move);
     void unmakeMove();
 
-    virtual void run() = 0;
     virtual void reportSearchInfo(const SearchInfo& info) const = 0;
     virtual void reportBestMove(Move bestMove) const = 0;
 private:

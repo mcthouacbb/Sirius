@@ -32,12 +32,6 @@ int main(int argc, char** argv)
         comm::currComm = &cmdLine;
         cmdLine.run();
     }
-    else if (mode == "uci")
-    {
-        comm::UCI uci;
-        comm::currComm = &uci;
-        uci.run();
-    }
 #ifdef EXTERNAL_TUNE
     else if (mode == "wfconfig")
     {
@@ -50,7 +44,9 @@ int main(int argc, char** argv)
 #endif
     else
     {
-        std::cout << "Unrecognized mode" << std::endl;
+        comm::UCI uci;
+        comm::currComm = &uci;
+        uci.run(mode);
     }
     return 0;
 }
