@@ -26,14 +26,18 @@ You can also play it on [Lichess](https://lichess.org/@/Sirius_Bot)(Though it's 
     - Hybrid pseudo-legal/legal move generation
 - Evaluation
     - Tapered Evaluation
+    - Incrementally updated evaluation
     - Tempo bonus
     - Material
     - Piece Square Tables
+      - Horizontally mirrored
     - Mobility
     - Threats
     - Knight outposts
     - Rook on semi-open/open file
+    - Minors behind pawns
     - Bishop pair
+    - Bishop same color pawns
     - Pawn Structure
         - Passed pawns
         - Isolated pawns
@@ -42,8 +46,10 @@ You can also play it on [Lichess](https://lichess.org/@/Sirius_Bot)(Though it's 
         - Passed pawn Distance to Kings
     - King Safety
         -  King-pawn storm/shield
-        -  Safe checks from enemy pieces
+        -  Safe and unsafe checks from enemy pieces
         -  King ring attacks
+    - Complexity eval
+    - Endgame scaling
     - Tuning via Texel's Tuning Method
         - [https://github.com/mcthouacbb/Sirius-Tune-2](https://github.com/mcthouacbb/Sirius-Tune-2)
 - Search
@@ -62,9 +68,14 @@ You can also play it on [Lichess](https://lichess.org/@/Sirius_Bot)(Though it's 
     - Quiescence Search
         - SEE Pruning
         - Quiescence Search Futility Pruning
+        - Quiescence Search Late Move Pruning
     - Transposition Table
     - Selectivity
-        - Check Extension
+        - Check Extensions
+        - Singular Extensions
+            - Multicut
+            - Double Extensions
+            - Negative Extensions
         - Principal Variation Search(PVS)
             - 3 Fold LMR
         - Reverse Futility Pruning
@@ -78,14 +89,21 @@ You can also play it on [Lichess](https://lichess.org/@/Sirius_Bot)(Though it's 
     - Miscellaneous
       	- Improving Heuristic
       	- Node count time management
+        - Best move stability time management
       	- tt score adjustment
-      	- Static evaluation correction histor
+      	- Various static evaluation correction histories
+        - TTPV
+        - Staged move generation
         - Lazy SMP
 
 ## Non-standard UCI commands
 - `"d"`
     - Prints a string representation of the board from white's perspective
     - Prints out various statistics about the board
+- `"perft <depth>"`
+    - Runs a perft, which counts the number of leaf nodes of a brute force depth <depth> search
+- `"eval"`
+    - Prints the static evaluation of the current position
 - `"bench"`
     - Runs an depth 15 search on a set of internal benchmark positions and prints out the number of nodes and number of nodes searched per second.
 
@@ -94,6 +112,8 @@ You can also play it on [Lichess](https://lichess.org/@/Sirius_Bot)(Though it's 
 |:-----------------|:-------:|:-------------:|:-------------------------:|:------------------------------------------------------------------------------------:|
 | Hash             | integer |      64       |        [1, 65536]         | Size of the transposition table in Megabytes.                                        |
 | Threads          | integer |       1       |         [1, 256]          | Number of threads used to search.                                                    |
+| MoveOverhead     | integer |      10       |         [1, 100]          | Amount of time subtracted to account for overhead between engine and gui.            |
+| PrettyPrint      | boolean |   false       |        true, false        | Whether to pretty print uci output. Defaults to true if UCI is not first command     |
 
 ## Building
 Do not use the Makefile, it is intended for building with OpenBench only
