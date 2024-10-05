@@ -277,6 +277,7 @@ void UCI::uciCommand() const
             {
                 std::cout << "check default " << std::boolalpha << option.second.boolValue()
                     << std::endl;
+                break;
             }
             default:
                 break;
