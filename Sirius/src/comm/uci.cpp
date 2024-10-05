@@ -273,6 +273,11 @@ void UCI::uciCommand() const
                     << std::endl;
                 break;
             }
+            case UCIOption::Type::BOOL:
+            {
+                std::cout << "check default " << std::boolalpha << option.second.boolValue()
+                    << std::endl;
+            }
             default:
                 break;
         }
