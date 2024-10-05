@@ -14,15 +14,15 @@ void printBoard(const Board& board)
     std::cout << "GamePly: " << board.gamePly() << std::endl;
     std::cout << "HalfMoveClock: " << board.halfMoveClock() << std::endl;
     std::cout << "CastlingRights: ";
-    if (board.castlingRights())
+    if (board.castlingRights().value() != 0)
     {
-        if (board.castlingRights() & 1)
+        if (board.castlingRights().has(CastlingRights::WHITE_KING_SIDE))
             std::cout << 'K';
-        if (board.castlingRights() & 2)
+        if (board.castlingRights().has(CastlingRights::WHITE_QUEEN_SIDE))
             std::cout << 'Q';
-        if (board.castlingRights() & 4)
+        if (board.castlingRights().has(CastlingRights::BLACK_KING_SIDE))
             std::cout << 'k';
-        if (board.castlingRights() & 8)
+        if (board.castlingRights().has(CastlingRights::BLACK_QUEEN_SIDE))
             std::cout << 'q';
     }
     else

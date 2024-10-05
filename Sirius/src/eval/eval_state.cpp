@@ -12,14 +12,24 @@ EvalState::EvalState()
     m_CurrEntry = &m_Stack[0];
 }
 
+void EvalState::initSingle(const Board& board)
+{
+    init(board, nullptr);
+}
+
 void EvalState::init(const Board& board, PawnTable& pawnTable)
+{
+    init(board, &pawnTable);
+}
+
+void EvalState::init(const Board& board, PawnTable* pawnTable)
 {
     using enum PieceType;
     using enum Color;
 
     std::fill(m_Stack.begin(), m_Stack.end(), StackEntry{});
     m_CurrEntry = &m_Stack[0];
-    m_PawnTable = &pawnTable;
+    m_PawnTable = pawnTable;
 
     currEntry().psqtState.init();
     for (Color c : {WHITE, BLACK})

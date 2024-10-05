@@ -98,7 +98,7 @@ done:
     }
 
     i += 2;
-    currState().castlingRights = 0;
+    currState().castlingRights = CastlingRights::NONE;
     if (fen[i] == '-')
     {
         i++;
@@ -108,25 +108,25 @@ done:
         if (fen[i] == 'K')
         {
             i++;
-            currState().castlingRights |= 1;
+            currState().castlingRights |= CastlingRights::WHITE_KING_SIDE;
         }
 
         if (fen[i] == 'Q')
         {
             i++;
-            currState().castlingRights |= 2;
+            currState().castlingRights |= CastlingRights::WHITE_QUEEN_SIDE;
         }
 
         if (fen[i] == 'k')
         {
             i++;
-            currState().castlingRights |= 4;
+            currState().castlingRights |= CastlingRights::BLACK_KING_SIDE;
         }
 
         if (fen[i] == 'q')
         {
             i++;
-            currState().castlingRights |= 8;
+            currState().castlingRights |= CastlingRights::BLACK_QUEEN_SIDE;
         }
     }
 
@@ -241,7 +241,7 @@ done:
     }
 
     i += 2;
-    currState().castlingRights = 0;
+    currState().castlingRights = CastlingRights::NONE;
     if (epd[i] == '-')
     {
         i++;
@@ -251,25 +251,25 @@ done:
         if (epd[i] == 'K')
         {
             i++;
-            currState().castlingRights |= 1;
+            currState().castlingRights |= CastlingRights::WHITE_KING_SIDE;
         }
 
         if (epd[i] == 'Q')
         {
             i++;
-            currState().castlingRights |= 2;
+            currState().castlingRights |= CastlingRights::WHITE_QUEEN_SIDE;
         }
 
         if (epd[i] == 'k')
         {
             i++;
-            currState().castlingRights |= 4;
+            currState().castlingRights |= CastlingRights::BLACK_KING_SIDE;
         }
 
         if (epd[i] == 'q')
         {
             i++;
-            currState().castlingRights |= 8;
+            currState().castlingRights |= CastlingRights::BLACK_QUEEN_SIDE;
         }
     }
 
@@ -353,17 +353,17 @@ std::string Board::fenStr() const
 
     fen += m_SideToMove == Color::WHITE ? "w " : "b ";
 
-    if (currState().castlingRights == 0)
+    if (currState().castlingRights.value() == 0)
         fen += '-';
     else
     {
-        if (currState().castlingRights & 1)
+        if (currState().castlingRights.has(CastlingRights::WHITE_KING_SIDE))
             fen += 'K';
-        if (currState().castlingRights & 2)
+        if (currState().castlingRights.has(CastlingRights::WHITE_QUEEN_SIDE))
             fen += 'Q';
-        if (currState().castlingRights & 4)
+        if (currState().castlingRights.has(CastlingRights::BLACK_KING_SIDE))
             fen += 'k';
-        if (currState().castlingRights & 8)
+        if (currState().castlingRights.has(CastlingRights::BLACK_QUEEN_SIDE))
             fen += 'q';
     }
 
@@ -415,17 +415,17 @@ std::string Board::epdStr() const
 
     epd += m_SideToMove == Color::WHITE ? "w " : "b ";
 
-    if (currState().castlingRights == 0)
+    if (currState().castlingRights.value() == 0)
         epd += '-';
     else
     {
-        if (currState().castlingRights & 1)
+        if (currState().castlingRights.has(CastlingRights::WHITE_KING_SIDE))
             epd += 'K';
-        if (currState().castlingRights & 2)
+        if (currState().castlingRights.has(CastlingRights::WHITE_QUEEN_SIDE))
             epd += 'Q';
-        if (currState().castlingRights & 4)
+        if (currState().castlingRights.has(CastlingRights::BLACK_KING_SIDE))
             epd += 'k';
-        if (currState().castlingRights & 8)
+        if (currState().castlingRights.has(CastlingRights::BLACK_QUEEN_SIDE))
             epd += 'q';
     }
 
@@ -879,7 +879,7 @@ bool Board::isPseudoLegal(Move move) const
             if (move.toSq() != move.fromSq() - 2)
                 return false;
             // queen side
-            if ((castlingRights() & (2 << 2 * static_cast<int>(m_SideToMove))) == 0)
+            if ((castlingRights().value() & (2 << 2 * static_cast<int>(m_SideToMove))) == 0)
                 return false;
             if (m_SideToMove == Color::WHITE)
                 return (attacks::qscBlockSquares<Color::WHITE>() & allPieces()).empty();
@@ -891,7 +891,7 @@ bool Board::isPseudoLegal(Move move) const
             if (move.toSq() != move.fromSq() + 2)
                 return false;
             // king side
-            if ((castlingRights() & (1 << 2 * static_cast<int>(m_SideToMove))) == 0)
+            if ((castlingRights().value() & (1 << 2 * static_cast<int>(m_SideToMove))) == 0)
                 return false;
             if (m_SideToMove == Color::WHITE)
                 return (attacks::kscBlockSquares<Color::WHITE>() & allPieces()).empty();
@@ -1062,7 +1062,7 @@ ZKey Board::keyAfter(Move move) const
 
     keyAfter.updateCastlingRights(currState().castlingRights);
 
-    int newCastlingRights =
+    CastlingRights newCastlingRights =
         currState().castlingRights &
         attacks::castleRightsMask(move.fromSq()) &
         attacks::castleRightsMask(move.toSq());

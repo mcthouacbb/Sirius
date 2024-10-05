@@ -1,4 +1,6 @@
 #include <string>
+#include <algorithm>
+#include <optional>
 
 #include "../sirius.h"
 #include "uci.h"
@@ -27,6 +29,7 @@ UCI::UCI()
         {"Hash", UCIOption("Hash", {64, 64, 1, 65536}, hashCallback)},
         {"Threads", UCIOption("Threads", {1, 1, 1, 256}, threadsCallback)},
         {"MoveOverhead", UCIOption("MoveOverhead", {10, 10, 1, 100})},
+        {"PrettyPrint", UCIOption("PrettyPrint", UCIOption::BoolData{true})}
     };
 #ifdef EXTERNAL_TUNE
     for (auto& param : search::searchParams())
@@ -41,9 +44,13 @@ UCI::UCI()
 #endif
 }
 
-void UCI::run()
+void UCI::run(std::string cmd)
 {
-    uciCommand();
+    if (cmd == "uci")
+        m_Options.at("PrettyPrint").setBoolValue(false);
+
+    if (execCommand(cmd))
+        return;
 
     while (true)
     {
@@ -57,6 +64,59 @@ void UCI::run()
 void UCI::reportSearchInfo(const SearchInfo& info) const
 {
     auto lock = lockStdout();
+    if (m_Options.at("PrettyPrint").boolValue())
+        prettyPrintSearchInfo(info);
+    else
+        printUCISearchInfo(info);
+}
+
+void UCI::prettyPrintSearchInfo(const SearchInfo& info) const
+{
+    std::cout << "  ";
+    // depth/seldepth
+    std::cout
+        << std::right << std::setw(3) << std::setfill(' ') << info.depth
+        << "/" << std::left << std::setw(3) << std::setfill(' ') << info.selDepth;
+    std::cout << "  ";
+
+    // time
+    if (info.time < Duration(1000))
+    {
+        std::cout << "    " << std::right << std::setw(3) << std::setfill(' ') << info.time.count() << "ms";
+    }
+    else
+    {
+        std::cout
+            << std::right << std::setw(4) << std::setfill(' ') << info.time.count() / 1000 << '.'
+            << std::right << std::setw(2) << std::setfill('0') << info.time.count() / 10 % 100 << "s ";
+    }
+    std::cout << "  ";
+
+    // nodes and nps
+    std::cout << std::right << std::setw(7) << std::setfill(' ') << info.nodes / 1000 << "kn  ";
+    uint64_t nps = info.nodes * 1000ULL / (info.time.count() < 1 ? 1 : info.time.count());
+    std::cout << std::right << std::setw(7) << std::setfill(' ') << nps / 1000 << "kn/s";
+    std::cout << "  ";
+
+    // score
+    std::cout << std::right << std::setw(5) << std::setfill(' ') << info.score << "cp  ";
+
+    Board board;
+    board.setToFen(m_Board.fenStr());
+
+    for (const Move* move = info.pvBegin; move != info.pvEnd; move++)
+    {
+        MoveList moves;
+        genMoves<MoveGenType::LEGAL>(board, moves);
+        std::cout << comm::convMoveToSAN(board, moves, *move) << ' ';
+        board.makeMove(*move);
+    }
+
+    std::cout << std::endl;
+}
+
+void UCI::printUCISearchInfo(const SearchInfo& info) const
+{
     std::cout << "info depth " << info.depth;
     std::cout << " seldepth " << info.selDepth;
     std::cout << " time " << info.time.count();
@@ -142,6 +202,18 @@ bool UCI::execCommand(const std::string& command)
             printBoard(m_Board);
             break;
         }
+        case Command::PERFT:
+            perftCommand(stream);
+            break;
+        case Command::RUN_PERFT_TESTS:
+        {
+            auto lock = lockStdout();
+            runTests(m_Board, false);
+            break;
+        }
+        case Command::EVAL:
+            evalCommand();
+            break;
         case Command::BENCH:
             if (!m_Search.searching())
                 benchCommand();
@@ -170,6 +242,12 @@ UCI::Command UCI::getCommand(const std::string& command) const
         return Command::QUIT;
     else if (command == "d")
         return Command::DBG_PRINT;
+    else if (command == "perft")
+        return Command::PERFT;
+    else if (command == "perfttests")
+        return Command::RUN_PERFT_TESTS;
+    else if (command == "eval")
+        return Command::EVAL;
     else if (command == "bench")
         return Command::BENCH;
 
@@ -329,8 +407,19 @@ void UCI::goCommand(std::istringstream& stream)
 
         }
     }
-
     m_Search.run(limits, m_Board);
+}
+
+// cursed function
+int parseBool(std::string str)
+{
+    for (char& c : str)
+        c = std::tolower(c);
+    if (str == "true")
+        return 1;
+    if (str == "false")
+        return 0;
+    return -1;
 }
 
 void UCI::setOptionCommand(std::istringstream& stream)
@@ -351,12 +440,46 @@ void UCI::setOptionCommand(std::istringstream& stream)
         {
             int value;
             stream >> value;
-            option = value;
+            option.setIntValue(value);
             break;
+        }
+        case UCIOption::Type::BOOL:
+        {
+            std::string str;
+            stream >> str;
+
+            int value = parseBool(str);
+            if (value != -1)
+                option.setBoolValue(static_cast<bool>(value));
         }
         default:
             break;
     }
+}
+
+void UCI::perftCommand(std::istringstream& stream)
+{
+    auto lock = lockStdout();
+    uint32_t depth;
+    stream >> depth;
+
+    auto t1 = std::chrono::steady_clock::now();
+    uint64_t result = perft<true>(m_Board, depth);
+    auto t2 = std::chrono::steady_clock::now();
+    std::cout << "Nodes: " << result << std::endl;
+    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1).count() << std::endl;
+}
+
+void UCI::evalCommand()
+{
+    auto lock = lockStdout();
+    if (m_Board.checkers().any())
+    {
+        std::cout << "static eval: none(in check)" << std::endl;
+        return;
+    }
+    int staticEval = eval::evaluateSingle(m_Board);
+    std::cout << "static eval: " << staticEval << "cp" << std::endl;
 }
 
 void UCI::benchCommand()

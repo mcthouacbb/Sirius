@@ -28,14 +28,20 @@ public:
         QUIT,
 
         DBG_PRINT,
+        PERFT,
+        RUN_PERFT_TESTS,
+        EVAL,
         BENCH
     };
 
 
-    virtual void run() override;
+    void run(std::string cmd);
     virtual void reportSearchInfo(const SearchInfo& info) const override;
     virtual void reportBestMove(Move bestMove) const override;
 private:
+    void prettyPrintSearchInfo(const SearchInfo& info) const;
+    void printUCISearchInfo(const SearchInfo& info) const;
+
     bool execCommand(const std::string& command);
     Command getCommand(const std::string& command) const;
 
@@ -44,6 +50,8 @@ private:
     void positionCommand(std::istringstream& stream);
     void goCommand(std::istringstream& stream);
     void setOptionCommand(std::istringstream& stream);
+    void evalCommand();
+    void perftCommand(std::istringstream& stream);
     void benchCommand();
 
     std::unordered_map<std::string, UCIOption> m_Options;

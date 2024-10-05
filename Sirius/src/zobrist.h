@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include <array>
 #include "defs.h"
+#include "util/multi_array.h"
 #include "util/prng.h"
 
 namespace zobrist
@@ -11,7 +11,7 @@ namespace zobrist
 struct Keys
 {
     uint64_t blackToMove;
-    std::array<std::array<std::array<uint64_t, 64>, 6>, 2> pieceSquares;
+    MultiArray<uint64_t, 2, 6, 64> pieceSquares;
     std::array<uint64_t, 16> castlingRights;
     std::array<uint64_t, 8> epFiles;
 };
@@ -51,7 +51,7 @@ struct ZKey
     void removePiece(PieceType piece, Color color, Square square);
     void movePiece(PieceType piece, Color color, Square src, Square dst);
 
-    void updateCastlingRights(uint32_t rights);
+    void updateCastlingRights(CastlingRights rights);
     void updateEP(uint32_t epFile);
 
     bool operator==(const ZKey& other) const = default;
@@ -78,22 +78,12 @@ inline void ZKey::movePiece(PieceType piece, Color color, Square src, Square dst
     value ^= zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][src.value()] ^ zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][dst.value()];
 }
 
-inline void ZKey::updateCastlingRights(uint32_t castlingRights)
+inline void ZKey::updateCastlingRights(CastlingRights castlingRights)
 {
-    value ^= zobrist::keys.castlingRights[castlingRights];
+    value ^= zobrist::keys.castlingRights[castlingRights.value()];
 }
 
 inline void ZKey::updateEP(uint32_t epFile)
 {
     value ^= zobrist::keys.epFiles[epFile];
 }
-
-inline uint64_t murmurHash3(uint64_t key)
-{
-    key ^= key >> 33;
-    key *= 0xff51afd7ed558ccd;
-    key ^= key >> 33;
-    key *= 0xc4ceb9fe1a85ec53;
-    key ^= key >> 33;
-    return key;
-};

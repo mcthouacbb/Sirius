@@ -5,12 +5,12 @@
 #endif
 
 #include <cmath>
-#include <array>
+#include "util/multi_array.h"
 
 namespace search
 {
 
-std::array<std::array<int, 64>, 64> genLMRTable();
+MultiArray<int, 64, 64> genLMRTable();
 
 #ifdef EXTERNAL_TUNE
 
@@ -62,7 +62,7 @@ void printOpenBenchConfig()
 
 #endif
 
-extern std::array<std::array<int, 64>, 64> lmrTable;
+extern MultiArray<int, 64, 64> lmrTable;
 
 void updateLmrTable()
 {
