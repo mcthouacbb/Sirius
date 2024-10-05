@@ -403,6 +403,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     bool improving = !inCheck && rootPly > 1 && stack->staticEval > stack[-2].staticEval;
     stack[1].killers = {};
 
+    Bitboard threats = board.threats();
+
     if (!pvNode && !inCheck && !excluded)
     {
         // reverse futility pruning
@@ -431,6 +433,45 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             if (nullScore >= beta)
                 return nullScore;
         }
+
+        int probcutBeta = beta + 200;
+        if (depth >= 5 &&
+            (!ttHit || ttData.depth <= depth - 4 || ttData.score >= probcutBeta || ttData.bound == TTEntry::Bound::LOWER_BOUND))
+        {
+            MoveOrdering ordering(
+                board,
+                ttData.move,
+                thread.history
+            );
+
+            ScoredMove scoredMove = {};
+            while ((scoredMove = ordering.selectMove()).score != MoveOrdering::NO_MOVE)
+            {
+                auto [move, moveScore] = scoredMove;
+                if (!board.isLegal(move))
+                    continue;
+
+                if (!board.see(move, probcutBeta - rawStaticEval))
+                    continue;
+
+                stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
+                stack->histScore = history.getNoisyStats(threats, ExtMove::from(board, move));
+
+                board.makeMove(move);
+
+                int score = -qsearch(thread, stack + 1, -probcutBeta, -probcutBeta + 1, false);
+                if (score >= probcutBeta)
+                    score = -search(thread, depth - 3, stack + 1, -probcutBeta, -probcutBeta + 1, false, !cutnode);
+
+                board.unmakeMove();
+
+                if (score >= probcutBeta)
+                {
+                    m_TT.store(board.zkey(), depth, rootPly, score, rawStaticEval, stack->bestMove, ttPV, TTEntry::Bound::LOWER_BOUND);
+                    return score;
+                }
+            }
+        }
     }
 
     std::array<CHEntry*, 3> contHistEntries = {
@@ -455,8 +496,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     MoveList quietsTried;
     MoveList noisiesTried;
-
-    Bitboard threats = board.threats();
 
     int bestScore = -SCORE_MAX;
     int movesPlayed = 0;
