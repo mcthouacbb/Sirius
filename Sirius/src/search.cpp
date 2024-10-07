@@ -406,7 +406,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     if (!pvNode && !inCheck && !excluded)
     {
         // reverse futility pruning
-        if (depth <= rfpMaxDepth && stack->eval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth + stack[-1].histScore / rfpHistDivisor)
+        if (!ttPV && depth <= rfpMaxDepth && stack->eval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth + stack[-1].histScore / rfpHistDivisor)
             return stack->eval;
 
         if (depth <= razoringMaxDepth && stack->eval <= alpha - razoringMargin * depth && alpha < 2000)
