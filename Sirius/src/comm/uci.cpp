@@ -1,6 +1,7 @@
 #include <string>
 #include <algorithm>
 #include <optional>
+#include <iomanip>
 
 #include "../sirius.h"
 #include "uci.h"
