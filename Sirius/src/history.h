@@ -91,7 +91,8 @@ inline void HistoryEntry<MAX_VAL>::update(int bonus)
 }
 
 constexpr int CORR_HIST_SCALE = 256;
-constexpr int MAX_CORR_HIST = CORR_HIST_SCALE * 32;
+constexpr int CORR_HIST_WEIGHT_SCALE = 1024;
+constexpr int MAX_CORR_HIST = CORR_HIST_SCALE * 64;
 
 struct CorrHistEntry
 {
@@ -118,7 +119,7 @@ inline CorrHistEntry::operator int() const
 
 inline void CorrHistEntry::update(int target, int weight)
 {
-    m_Value = (m_Value * (256 - weight) + target * weight) / 256;
+    m_Value = (m_Value * (CORR_HIST_WEIGHT_SCALE - weight) + target * weight) / CORR_HIST_WEIGHT_SCALE;
     m_Value = std::clamp(m_Value, -MAX_CORR_HIST, MAX_CORR_HIST);
 }
 
