@@ -100,7 +100,21 @@ void UCI::prettyPrintSearchInfo(const SearchInfo& info) const
     std::cout << "  ";
 
     // score
-    std::cout << std::right << std::setw(5) << std::setfill(' ') << info.score << "cp  ";
+    if (isMateScore(info.score))
+    {
+        if (info.score > 0)
+        {
+            std::cout << "    #" << std::left << std::setw(4) << std::setfill(' ') << ((SCORE_MATE - info.score) + 1) / 2;
+        }
+        else
+        {
+            std::cout << "   #-" << std::left << std::setw(4) << std::setfill(' ') << (info.score + SCORE_MATE) / 2;
+        }
+    }
+    else
+    {
+        std::cout << std::right << std::setw(5) << std::setfill(' ') << info.score << "cp  ";
+    }
 
     Board board;
     board.setToFen(m_Board.fenStr());
