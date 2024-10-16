@@ -85,7 +85,7 @@ int History::correctStaticEval(int staticEval, const Board& board) const
     int minorPieceEntry = m_MinorPieceCorrHist[static_cast<int>(stm)][board.minorPieceKey().value % MINOR_PIECE_CORR_HIST_ENTRIES];
     int majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
 
-    int corrected = staticEval + (pawnEntry + materialEntry + nonPawnEntry + threatsEntry + minorPieceEntry + majorPieceEntry) / CORR_HIST_SCALE;
+    int corrected = staticEval + (2 * pawnEntry + materialEntry + 2 * nonPawnEntry + threatsEntry + 2 * minorPieceEntry + majorPieceEntry) / (3 * CORR_HIST_SCALE);
     return std::clamp(corrected, -SCORE_MATE_IN_MAX, SCORE_MATE_IN_MAX);
 }
 
