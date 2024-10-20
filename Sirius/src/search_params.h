@@ -5,6 +5,8 @@
 #include <deque>
 #include <functional>
 
+#define EXTERNAL_TUNE
+
 namespace search
 {
 
