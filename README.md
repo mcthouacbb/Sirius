@@ -132,7 +132,7 @@ Do not use the Makefile, it is intended for building with OpenBench only
 
 ## Credits/Thanks
 - [Sebastian Lague](https://www.youtube.com/@SebastianLague), for getting me into chess programming
-- [The Chess Programming Wiki](https://www.chessprogramming.org/), a bit outdated but nonetheless an excellent resource
+- [The Chess Programming Wiki](https://www.chessprogramming.org/), very outdated but has some good ideas, especially for move generation/board representation
 - [OpenBench](https://github.com/AndyGrant/OpenBench), an very well made distributed SPRT testing framework for chess engines
 - [Stockfish](https://github.com/official-stockfish/Stockfish)
 - [Ethereal](https://github.com/AndyGrant/Ethereal), one of the best references for chess programming
