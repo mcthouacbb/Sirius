@@ -246,7 +246,7 @@ void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& p
     evalData.attackedBy[WHITE][KING] = whiteKingAtks;
     evalData.attackedBy2[WHITE] = evalData.attacked[WHITE] & whiteKingAtks;
     evalData.attacked[WHITE] |= whiteKingAtks;
-    evalData.kingRing[WHITE] = (whiteKingAtks | whiteKingAtks.north()) & ~Bitboard::fromSquare(whiteKing);
+    evalData.kingRing[WHITE] = (whiteKingAtks | whiteKingAtks.north()) & ~Bitboard::fromSquare(whiteKing) & ~pawnStructure.pawnDoubleAttacks[Color::WHITE];
 
     evalData.mobilityArea[BLACK] = ~pawnStructure.pawnAttacks[WHITE];
     evalData.attacked[BLACK] = evalData.attackedBy[BLACK][PAWN] = pawnStructure.pawnAttacks[BLACK];
@@ -255,7 +255,7 @@ void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& p
     evalData.attackedBy[BLACK][KING] = blackKingAtks;
     evalData.attackedBy2[BLACK] = evalData.attacked[BLACK] & blackKingAtks;
     evalData.attacked[BLACK] |= blackKingAtks;
-    evalData.kingRing[BLACK] = (blackKingAtks | blackKingAtks.south()) & ~Bitboard::fromSquare(blackKing);
+    evalData.kingRing[BLACK] = (blackKingAtks | blackKingAtks.south()) & ~Bitboard::fromSquare(blackKing) & ~pawnStructure.pawnDoubleAttacks[Color::BLACK];
 }
 
 void nonIncrementalEval(const Board& board, const PawnStructure& pawnStructure, EvalData& evalData, PackedScore& eval)
