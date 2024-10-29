@@ -575,28 +575,28 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             int reduction = baseLMR;
 
             if (!improving)
-                reduction += 1024;
+                reduction += lmrNonImpr;
 
             if (noisyTTMove)
-                reduction += 1024;
+                reduction += lmrNoisyTTMove;
 
             if (ttPV)
-                reduction -= 1024;
+                reduction -= lmrTTPV;
 
             if (givesCheck)
-                reduction -= 1024;
+                reduction -= lmrGivesCheck;
 
             if (inCheck)
-                reduction -= 1024;
+                reduction -= lmrInCheck;
 
             if (std::abs(stack->eval - rawStaticEval) > 80)
-                reduction -= 1024;
+                reduction -= lmrCorrplexity;
 
             if (cutnode)
-                reduction += 1024;
+                reduction += lmrCutnode;
 
             if (stack[1].failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin))
-                reduction += 1024;
+                reduction += lmrFailHighCount;
 
             reduction /= LMR_GRAIN;
 
