@@ -8,6 +8,8 @@
 namespace search
 {
 
+constexpr int LMR_GRAIN = 1024;
+
 #ifdef EXTERNAL_TUNE
 
 
@@ -114,8 +116,8 @@ SEARCH_PARAM(lmrMinMovesNonPv, 3, 1, 6, 1);
 SEARCH_PARAM(lmrMinMovesPv, 4, 2, 8, 1);
 SEARCH_PARAM(lmrFailHighCountMargin, 2, 2, 12, 1);
 
-SEARCH_PARAM_CALLBACK(lmrBase, 71, -50, 200, 10, updateLmrTable);
-SEARCH_PARAM_CALLBACK(lmrDivisor, 224, 180, 320, 10, updateLmrTable);
+SEARCH_PARAM_CALLBACK(lmrBase, 727, -512, 2048, 10, updateLmrTable);
+SEARCH_PARAM_CALLBACK(lmrCoeff, 457, 320, 570, 10, updateLmrTable);
 SEARCH_PARAM(lmrQuietHistDivisor, 9124, 4096, 16384, 512);
 SEARCH_PARAM(lmrNoisyHistDivisor, 6036, 2048, 16384, 512);
 
