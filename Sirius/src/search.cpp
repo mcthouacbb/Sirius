@@ -589,7 +589,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             if (inCheck)
                 reduction -= lmrInCheck;
 
-            if (std::abs(stack->eval - rawStaticEval) > 80)
+            if (std::abs(stack->eval - rawStaticEval) >= lmrCorrplexityMargin)
                 reduction -= lmrCorrplexity;
 
             if (cutnode)

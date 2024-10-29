@@ -124,12 +124,13 @@ SEARCH_PARAM(lmrTTPV, 1024, 256, 4096, 256);
 SEARCH_PARAM(lmrGivesCheck, 1024, 256, 4096, 256);
 SEARCH_PARAM(lmrInCheck, 1024, 256, 4096, 256);
 SEARCH_PARAM(lmrCorrplexity, 1024, 256, 4096, 256);
+SEARCH_PARAM(lmrCorrplexityMargin, 81, 40, 150, 10);
 SEARCH_PARAM(lmrCutnode, 1024, 256, 4096, 256);
 SEARCH_PARAM(lmrFailHighCount, 1024, 256, 4096, 256);
 
 
-SEARCH_PARAM_CALLBACK(lmrBase, 727, -512, 2048, 10, updateLmrTable);
-SEARCH_PARAM_CALLBACK(lmrCoeff, 457, 320, 570, 10, updateLmrTable);
+SEARCH_PARAM_CALLBACK(lmrBase, 727, -512, 2048, 100, updateLmrTable);
+SEARCH_PARAM_CALLBACK(lmrCoeff, 457, 320, 570, 50, updateLmrTable);
 SEARCH_PARAM(lmrQuietHistDivisor, 9124, 4096, 16384, 512);
 SEARCH_PARAM(lmrNoisyHistDivisor, 6036, 2048, 16384, 512);
 
