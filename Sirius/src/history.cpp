@@ -74,7 +74,9 @@ int History::getNoisyStats(Bitboard threats, ExtMove move) const
 
 int History::correctStaticEval(int staticEval, const Board& board) const
 {
-    Color stm = board.sideToMove();
+    return staticEval;
+
+    /*Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
     int pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % PAWN_CORR_HIST_ENTRIES];
     int materialEntry = m_MaterialCorrHist[static_cast<int>(stm)][board.materialKey() % MATERIAL_CORR_HIST_ENTRIES];
@@ -94,7 +96,7 @@ int History::correctStaticEval(int staticEval, const Board& board) const
     correction += search::majorCorrWeight * majorPieceEntry;
 
     int corrected = staticEval + correction / (256 * CORR_HIST_SCALE);
-    return std::clamp(corrected, -SCORE_MATE_IN_MAX, SCORE_MATE_IN_MAX);
+    return std::clamp(corrected, -SCORE_MATE_IN_MAX, SCORE_MATE_IN_MAX);*/
 }
 
 void History::updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus)
@@ -112,7 +114,9 @@ void History::updateNoisyStats(Bitboard threats, ExtMove move, int bonus)
 
 void History::updateCorrHist(int bonus, int depth, const Board& board)
 {
-    Color stm = board.sideToMove();
+    return;
+
+    /*Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
     int scaledBonus = bonus * CORR_HIST_SCALE;
     int weight = std::min(1 + depth, 16);
@@ -136,7 +140,7 @@ void History::updateCorrHist(int bonus, int depth, const Board& board)
     minorPieceEntry.update(scaledBonus, weight);
 
     auto& majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
-    majorPieceEntry.update(scaledBonus, weight);
+    majorPieceEntry.update(scaledBonus, weight);*/
 }
 
 int History::getMainHist(Bitboard threats, ExtMove move) const
