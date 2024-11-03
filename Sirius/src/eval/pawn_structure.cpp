@@ -47,10 +47,7 @@ PackedScore PawnStructure::evaluate(const Board& board)
         if (board.isPassedPawn(sq))
             passedPawns |= Bitboard::fromSquare(sq);
         else if ((passedMask & theirPawns) == (threats | pushThreats) && phalanx.popcount() >= pushThreats.popcount())
-        {
             eval += CANDIDATE_PASSER[defenders.popcount() >= threats.popcount()][sq.rank()];
-            TRACE_INC(candidatePasser[defenders.popcount() >= threats.popcount()][sq.rank()]);
-        }
 
         if (threats.empty() && board.isIsolatedPawn(sq))
             eval += ISOLATED_PAWN[sq.file()];
