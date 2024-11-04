@@ -46,6 +46,7 @@ public:
     void pop();
 
     PackedScore score(const Board& board) const;
+    PackedScore kpScore() const;
     const PawnStructure& pawnStructure() const;
     int phase() const;
 private:

@@ -137,7 +137,7 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
 }
 
 template<Color us>
-PackedScore evaluateKings(const Board& board, const EvalData& evalData)
+PackedScore evaluateKings(const Board& board, const EvalState& evalState, const EvalData& evalData)
 {
     constexpr Color them = ~us;
 
@@ -169,7 +169,10 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
     int attackCount = std::min(evalData.attackCount[us], 13);
     eval += KING_ATTACKS[attackCount];
 
-    return eval;
+    eval += evalState.kpScore();
+    eval += SAFETY_OFFSET;
+
+    return PackedScore(std::max(eval.mg(), 0) * eval.mg() / 100, std::max(eval.eg(), 0));
 }
 
 template<Color us>
@@ -266,14 +269,14 @@ void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& p
         evalData.kingRing[BLACK] |= evalData.kingRing[BLACK].east();
 }
 
-void nonIncrementalEval(const Board& board, const PawnStructure& pawnStructure, EvalData& evalData, PackedScore& eval)
+void nonIncrementalEval(const Board& board, const PawnStructure& pawnStructure, const EvalState& evalState, EvalData& evalData, PackedScore& eval)
 {
     eval += evaluatePieces<WHITE, KNIGHT>(board, evalData) - evaluatePieces<BLACK, KNIGHT>(board, evalData);
     eval += evaluatePieces<WHITE, BISHOP>(board, evalData) - evaluatePieces<BLACK, BISHOP>(board, evalData);
     eval += evaluatePieces<WHITE, ROOK>(board, evalData) - evaluatePieces<BLACK, ROOK>(board, evalData);
     eval += evaluatePieces<WHITE, QUEEN>(board, evalData) - evaluatePieces<BLACK, QUEEN>(board, evalData);
 
-    eval += evaluateKings<WHITE>(board, evalData) - evaluateKings<BLACK>(board, evalData);
+    eval += evaluateKings<WHITE>(board, evalState, evalData) - evaluateKings<BLACK>(board, evalState, evalData);
     eval += evaluatePassedPawns<WHITE>(board, pawnStructure, evalData) - evaluatePassedPawns<BLACK>(board, pawnStructure, evalData);
     eval += evaluateThreats<WHITE>(board, evalData) - evaluateThreats<BLACK>(board, evalData);
     eval += evaluateComplexity(board, pawnStructure, eval);
@@ -294,7 +297,7 @@ int evaluate(const Board& board, search::SearchThread* thread)
     EvalData evalData = {};
     initEvalData(board, evalData, pawnStructure);
 
-    nonIncrementalEval(board, pawnStructure, evalData, eval);
+    nonIncrementalEval(board, pawnStructure, thread->evalState, evalData, eval);
 
     int scale = evaluateScale(board, eval);
 
@@ -321,7 +324,7 @@ int evaluateSingle(const Board& board)
     EvalData evalData = {};
     initEvalData(board, evalData, pawnStructure);
 
-    nonIncrementalEval(board, pawnStructure, evalData, eval);
+    nonIncrementalEval(board, pawnStructure, evalState, evalData, eval);
 
     int scale = evaluateScale(board, eval);
 

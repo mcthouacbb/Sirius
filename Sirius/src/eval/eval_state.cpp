@@ -117,11 +117,15 @@ PackedScore EvalState::score(const Board& board) const
     return
         currEntry().psqtState.evaluate(board) +
         currEntry().pawnStructure.score +
-        currEntry().pawnShieldStorm +
         currEntry().knightOutposts +
         currEntry().bishopPawns +
         currEntry().rookOpen +
         currEntry().minorBehindPawn;
+}
+
+PackedScore EvalState::kpScore() const
+{
+    return currEntry().pawnShieldStorm;
 }
 
 const PawnStructure& EvalState::pawnStructure() const
