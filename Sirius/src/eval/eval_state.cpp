@@ -91,6 +91,13 @@ void EvalState::push(const Board& board, const EvalUpdates& updates)
     else
         currEntry().knightOutposts = oldEntry.knightOutposts;
 
+    if (updates.changedPieces.hasAny(eval_terms::bishopOutposts.deps))
+        currEntry().bishopOutposts =
+        evaluateBishopOutposts<Color::WHITE>(board, currEntry().pawnStructure) -
+        evaluateBishopOutposts<Color::BLACK>(board, currEntry().pawnStructure);
+    else
+        currEntry().bishopOutposts = oldEntry.knightOutposts;
+
     if (updates.changedPieces.hasAny(eval_terms::bishopPawns.deps))
         currEntry().bishopPawns = evaluateBishopPawns<Color::WHITE>(board) - evaluateBishopPawns<Color::BLACK>(board);
     else
@@ -119,6 +126,7 @@ PackedScore EvalState::score(const Board& board) const
         currEntry().pawnStructure.score +
         currEntry().pawnShieldStorm +
         currEntry().knightOutposts +
+        currEntry().bishopOutposts +
         currEntry().bishopPawns +
         currEntry().rookOpen +
         currEntry().minorBehindPawn;

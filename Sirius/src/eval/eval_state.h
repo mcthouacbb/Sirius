@@ -58,6 +58,7 @@ private:
         PawnStructure pawnStructure;
         PackedScore pawnShieldStorm;
         PackedScore knightOutposts;
+        PackedScore bishopOutposts;
         PackedScore bishopPawns;
         PackedScore rookOpen;
         PackedScore minorBehindPawn;

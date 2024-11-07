@@ -86,6 +86,15 @@ PackedScore evaluateKnightOutposts(const Board& board, const PawnStructure& pawn
 }
 
 template<Color us>
+PackedScore evaluateBishopOutposts(const Board& board, const PawnStructure& pawnStructure)
+{
+    constexpr Color them = ~us;
+    Bitboard outpostRanks = RANK_4_BB | RANK_5_BB | (us == Color::WHITE ? RANK_6_BB : RANK_3_BB);
+    Bitboard outposts = outpostRanks & ~pawnStructure.pawnAttackSpans[them] & pawnStructure.pawnAttacks[us];
+    return BISHOP_OUTPOST * (board.pieces(us, PieceType::BISHOP) & outposts).popcount();
+}
+
+template<Color us>
 PackedScore evaluateBishopPawns(const Board& board)
 {
     Bitboard bishops = board.pieces(us, PieceType::BISHOP);
@@ -137,6 +146,9 @@ template PackedScore evaluateStormShield<Color::BLACK>(const Board& board);
 
 template PackedScore evaluateKnightOutposts<Color::WHITE>(const Board& board, const PawnStructure& pawnStructure);
 template PackedScore evaluateKnightOutposts<Color::BLACK>(const Board& board, const PawnStructure& pawnStructure);
+
+template PackedScore evaluateBishopOutposts<Color::WHITE>(const Board& board, const PawnStructure& pawnStructure);
+template PackedScore evaluateBishopOutposts<Color::BLACK>(const Board& board, const PawnStructure& pawnStructure);
 
 template PackedScore evaluateBishopPawns<Color::WHITE>(const Board& board);
 template PackedScore evaluateBishopPawns<Color::BLACK>(const Board& board);
