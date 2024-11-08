@@ -509,6 +509,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 depth <= maxHistPruningDepth &&
                 histScore < -histPruningMargin * depth)
                 break;
+
+            if (!quiet &&
+                depth <= 4 &&
+                histScore < -1000 * depth * depth - 1000)
+                break;
         }
 
         bool doSE = !root &&
