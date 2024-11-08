@@ -39,8 +39,15 @@ PackedScore PawnStructure::evaluate(const Board& board)
         Square sq = pawns.poplsb();
         Bitboard attacks = attacks::pawnAttacks(us, sq);
         Bitboard threats = attacks & theirPawns;
+
+        bool doubled = (Bitboard::fromSquare(sq + attacks::pawnPushOffset<us>()) & ourPawns).any();
+
         if (board.isPassedPawn(sq))
             passedPawns |= Bitboard::fromSquare(sq);
+
+        if (doubled)
+            eval += DOUBLED_PAWN[sq.file()];
+
         if (threats.empty() && board.isIsolatedPawn(sq))
             eval += ISOLATED_PAWN[sq.file()];
     }
