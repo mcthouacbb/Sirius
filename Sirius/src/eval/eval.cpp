@@ -58,6 +58,13 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
             evalData.attackWeight[us] += KING_ATTACKER_WEIGHT[static_cast<int>(piece) - static_cast<int>(KNIGHT)];
             evalData.attackCount[us] += kingRingAtks.popcount();
         }
+
+        if constexpr (piece == PieceType::KNIGHT)
+        {
+            int kingDist = std::min(Square::chebyshev(sq, board.kingSq(Color::WHITE)), Square::chebyshev(sq, board.kingSq(Color::BLACK)));
+            if (kingDist >= 4)
+                eval += LOST_KNIGHT[kingDist - 4];
+        }
     }
 
     return eval;
