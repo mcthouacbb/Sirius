@@ -133,6 +133,13 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
 
     Bitboard pushThreats = attacks::pawnAttacks<us>(pushes & safe) & nonPawnEnemies;
     eval += PUSH_THREAT * pushThreats.popcount();
+
+    Bitboard restricted =
+        evalData.attacked[them] &
+        ~defendedBB &
+        evalData.attacked[us];
+    eval += RESTRICTED_PIECE * restricted.popcount();
+
     return eval;
 }
 
