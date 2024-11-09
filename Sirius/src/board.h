@@ -35,6 +35,8 @@ struct BoardState
     ZKey minorPieceKey;
     ZKey majorPieceKey;
     ZKey pawnKey;
+    ZKey lightSquareKey;
+    ZKey darkSquareKey;
     CheckInfo checkInfo;
     Bitboard threats;
 
@@ -56,6 +58,14 @@ struct BoardState
                 minorPieceKey.addPiece(pieceType, color, pos);
             if (pieceType == PieceType::ROOK || pieceType == PieceType::QUEEN || pieceType == PieceType::KING)
                 majorPieceKey.addPiece(pieceType, color, pos);
+        }
+
+        if (pieceType == PieceType::BISHOP || pieceType == PieceType::QUEEN || pieceType == PieceType::PAWN)
+        {
+            if ((LIGHT_SQUARES_BB & Bitboard::fromSquare(pos)).any())
+                lightSquareKey.addPiece(pieceType, color, pos);
+            else
+                darkSquareKey.addPiece(pieceType, color, pos);
         }
     }
 
@@ -79,6 +89,14 @@ struct BoardState
             if (pieceType == PieceType::ROOK || pieceType == PieceType::QUEEN || pieceType == PieceType::KING)
                 majorPieceKey.addPiece(pieceType, color, pos);
         }
+
+        if (pieceType == PieceType::BISHOP || pieceType == PieceType::QUEEN || pieceType == PieceType::PAWN)
+        {
+            if ((LIGHT_SQUARES_BB & Bitboard::fromSquare(pos)).any())
+                lightSquareKey.addPiece(pieceType, color, pos);
+            else
+                darkSquareKey.addPiece(pieceType, color, pos);
+        }
     }
 
     void removePiece(Square pos)
@@ -101,6 +119,14 @@ struct BoardState
                 minorPieceKey.removePiece(pieceType, color, pos);
             if (pieceType == PieceType::ROOK || pieceType == PieceType::QUEEN || pieceType == PieceType::KING)
                 majorPieceKey.removePiece(pieceType, color, pos);
+        }
+
+        if (pieceType == PieceType::BISHOP || pieceType == PieceType::QUEEN || pieceType == PieceType::PAWN)
+        {
+            if ((LIGHT_SQUARES_BB & Bitboard::fromSquare(pos)).any())
+                lightSquareKey.removePiece(pieceType, color, pos);
+            else
+                darkSquareKey.removePiece(pieceType, color, pos);
         }
     }
 
@@ -128,6 +154,19 @@ struct BoardState
                 minorPieceKey.movePiece(pieceType, color, src, dst);
             if (pieceType == PieceType::ROOK || pieceType == PieceType::QUEEN || pieceType == PieceType::KING)
                 majorPieceKey.movePiece(pieceType, color, src, dst);
+        }
+
+        if (pieceType == PieceType::BISHOP || pieceType == PieceType::QUEEN || pieceType == PieceType::PAWN)
+        {
+            if ((LIGHT_SQUARES_BB & Bitboard::fromSquare(src)).any())
+                lightSquareKey.removePiece(pieceType, color, src);
+            else
+                darkSquareKey.removePiece(pieceType, color, src);
+
+            if ((LIGHT_SQUARES_BB & Bitboard::fromSquare(dst)).any())
+                lightSquareKey.addPiece(pieceType, color, dst);
+            else
+                darkSquareKey.addPiece(pieceType, color, dst);
         }
     }
 };
@@ -170,6 +209,8 @@ public:
     ZKey nonPawnKey(Color color) const;
     ZKey minorPieceKey() const;
     ZKey majorPieceKey() const;
+    ZKey lightSquareKey() const;
+    ZKey darkSquareKey() const;
     uint64_t materialKey() const;
 
     bool isDraw(int searchPly);
@@ -333,6 +374,16 @@ inline ZKey Board::minorPieceKey() const
 inline ZKey Board::majorPieceKey() const
 {
     return currState().majorPieceKey;
+}
+
+inline ZKey Board::lightSquareKey() const
+{
+    return currState().lightSquareKey;
+}
+
+inline ZKey Board::darkSquareKey() const
+{
+    return currState().darkSquareKey;
 }
 
 // yoinked from motor, which I think yoinked from Caissa

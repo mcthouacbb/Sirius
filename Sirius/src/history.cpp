@@ -56,6 +56,7 @@ void History::clear()
     fillHistTable(m_ThreatsCorrHist, 0);
     fillHistTable(m_MinorPieceCorrHist, 0);
     fillHistTable(m_MajorPieceCorrHist, 0);
+    fillHistTable(m_ColorComplexCorrHists, 0);
 }
 
 int History::getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const
@@ -83,6 +84,8 @@ int History::correctStaticEval(int staticEval, const Board& board) const
     int threatsEntry = m_ThreatsCorrHist[static_cast<int>(stm)][threatsKey % THREATS_CORR_HIST_ENTRIES];
     int minorPieceEntry = m_MinorPieceCorrHist[static_cast<int>(stm)][board.minorPieceKey().value % MINOR_PIECE_CORR_HIST_ENTRIES];
     int majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
+    int lightSquareEntry = m_LightSquareCorrHist[static_cast<int>(stm)][board.lightSquareKey().value % COLOR_COMPLEX_CORR_HIST_ENTRIES];
+    int darkSquareEntry = m_DarkSquareCorrHist[static_cast<int>(stm)][board.darkSquareKey().value % COLOR_COMPLEX_CORR_HIST_ENTRIES];
 
     int correction = 0;
     correction += search::pawnCorrWeight * pawnEntry;
@@ -92,6 +95,8 @@ int History::correctStaticEval(int staticEval, const Board& board) const
     correction += search::threatsCorrWeight * threatsEntry;
     correction += search::minorCorrWeight * minorPieceEntry;
     correction += search::majorCorrWeight * majorPieceEntry;
+    correction += 256 * lightSquareEntry;
+    correction += 256 * darkSquareEntry;
 
     int corrected = staticEval + correction / (256 * CORR_HIST_SCALE);
     return std::clamp(corrected, -SCORE_MATE_IN_MAX, SCORE_MATE_IN_MAX);
@@ -137,6 +142,12 @@ void History::updateCorrHist(int bonus, int depth, const Board& board)
 
     auto& majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
     majorPieceEntry.update(scaledBonus, weight);
+
+    auto& lightSquareEntry = m_LightSquareCorrHist[static_cast<int>(stm)][board.lightSquareKey().value % COLOR_COMPLEX_CORR_HIST_ENTRIES];
+    lightSquareEntry.update(scaledBonus, weight);
+
+    auto& darkSquareEntry = m_DarkSquareCorrHist[static_cast<int>(stm)][board.darkSquareKey().value % COLOR_COMPLEX_CORR_HIST_ENTRIES];
+    darkSquareEntry.update(scaledBonus, weight);
 }
 
 int History::getMainHist(Bitboard threats, ExtMove move) const

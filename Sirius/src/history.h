@@ -135,12 +135,14 @@ constexpr int NON_PAWN_CORR_HIST_ENTRIES = 16384;
 constexpr int THREATS_CORR_HIST_ENTRIES = 16384;
 constexpr int MINOR_PIECE_CORR_HIST_ENTRIES = 16384;
 constexpr int MAJOR_PIECE_CORR_HIST_ENTRIES = 16384;
+constexpr int COLOR_COMPLEX_CORR_HIST_ENTRIES = 16384;
 using PawnCorrHist = MultiArray<CorrHistEntry, 2, PAWN_CORR_HIST_ENTRIES>;
 using MaterialCorrHist = MultiArray<CorrHistEntry, 2, MATERIAL_CORR_HIST_ENTRIES>;
 using NonPawnCorrHist = MultiArray<CorrHistEntry, 2, 2, NON_PAWN_CORR_HIST_ENTRIES>;
 using ThreatsCorrHist = MultiArray<CorrHistEntry, 2, THREATS_CORR_HIST_ENTRIES>;
 using MinorPieceCorrHist = MultiArray<CorrHistEntry, 2, MINOR_PIECE_CORR_HIST_ENTRIES>;
 using MajorPieceCorrHist = MultiArray<CorrHistEntry, 2, MAJOR_PIECE_CORR_HIST_ENTRIES>;
+using ColorComplexCorrHist = MultiArray<CorrHistEntry, 2, COLOR_COMPLEX_CORR_HIST_ENTRIES>;
 
 int historyBonus(int depth);
 int historyMalus(int depth);
@@ -186,4 +188,5 @@ private:
     ThreatsCorrHist m_ThreatsCorrHist;
     MinorPieceCorrHist m_MinorPieceCorrHist;
     MajorPieceCorrHist m_MajorPieceCorrHist;
+    ColorComplexCorrHist m_LightSquareCorrHist, m_DarkSquareCorrHist;
 };
