@@ -56,7 +56,8 @@ void History::clear()
     fillHistTable(m_ThreatsCorrHist, 0);
     fillHistTable(m_MinorPieceCorrHist, 0);
     fillHistTable(m_MajorPieceCorrHist, 0);
-    fillHistTable(m_ColorComplexCorrHists, 0);
+    fillHistTable(m_LightSquareCorrHist, 0);
+    fillHistTable(m_DarkSquareCorrHist, 0);
 }
 
 int History::getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const
