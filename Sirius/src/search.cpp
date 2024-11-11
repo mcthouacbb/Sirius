@@ -691,6 +691,8 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
 {
     auto& rootPly = thread.rootPly;
     auto& board = thread.board;
+    auto& history = thread.history;
+
     stack->pvLength = 0;
     if (eval::isImmediateDraw(board))
         return SCORE_DRAW;
@@ -737,13 +739,25 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     if (stack->eval > alpha)
         alpha = stack->eval;
 
-    int bestScore = inCheck ? -SCORE_MATE : stack->eval;
-    int futility = inCheck ? -SCORE_MATE : stack->eval + qsFpMargin;
+    int bestScore = inCheck ? -SCORE_MAX : stack->eval;
+    int futility = inCheck ? -SCORE_MAX : stack->eval + qsFpMargin;
 
     if (rootPly >= MAX_PLY)
         return alpha;
+        
+    std::array<CHEntry*, 3> contHistEntries = {
+        rootPly > 0 ? stack[-1].contHistEntry : nullptr,
+        rootPly > 1 ? stack[-2].contHistEntry : nullptr,
+        rootPly > 3 ? stack[-4].contHistEntry : nullptr
+    };
 
-    MoveOrdering ordering(board, ttData.move, thread.history);
+    MoveOrdering ordering = [&]()
+    {
+        if (inCheck)
+            return MoveOrdering(board, ttData.move, stack->killers, contHistEntries, history);
+        else
+            return MoveOrdering(board, ttData.move, history);
+    }();
 
     TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
     stack->bestMove = Move();
@@ -765,11 +779,15 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
             continue;
         }
         movesPlayed++;
+        stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
         board.makeMove(move, thread.evalState);
         thread.nodes.fetch_add(1, std::memory_order_relaxed);
         rootPly++;
+
         int score = -qsearch(thread, stack + 1, -beta, -alpha, pvNode);
+        
         board.unmakeMove(thread.evalState);
+        stack->contHistEntry = nullptr;
         rootPly--;
 
         if (score > bestScore)
@@ -796,6 +814,9 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
             }
         }
     }
+
+    if (inCheck && movesPlayed == 0)
+        return -SCORE_MATE + rootPly;
 
     m_TT.store(board.zkey(), 0, rootPly, bestScore, rawStaticEval, stack->bestMove, ttPV, bound);
 
