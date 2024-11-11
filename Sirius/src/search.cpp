@@ -540,6 +540,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             }
             else if (sBeta >= beta)
                 return sBeta;
+            else if (cutnode)
+                extension = -2;
             else if (ttData.score >= beta)
                 extension = -1;
         }
