@@ -66,7 +66,7 @@ int History::getQuietStats(int ply, Bitboard threats, ExtMove move, std::span<co
         if (entry)
             score += getContHist(entry, move);
     if (ply < 4)
-        score += getLowPlyHist(ply, move);
+        score += (8 - 2 * ply) * getLowPlyHist(ply, move);
     return score;
 }
 
