@@ -402,7 +402,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     bool ttPV = pvNode || (ttHit && ttData.pv);
     bool improving = !inCheck && rootPly > 1 && stack->staticEval > stack[-2].staticEval;
     stack[1].killers = {};
-
+    Bitboard threats = board.threats();
+    
     if (!pvNode && !inCheck && !excluded)
     {
         // reverse futility pruning
@@ -448,7 +449,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 if (!board.see(move, seeThreshold))
                     continue;
 
-                int history = history.getNoisyStats(threats, ExtMove::from(board, move));
+                int histScore = history.getNoisyStats(threats, ExtMove::from(board, move));
                 
                 m_TT.prefetch(board.keyAfter(move));
                 stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
@@ -497,8 +498,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     MoveList quietsTried;
     MoveList noisiesTried;
-
-    Bitboard threats = board.threats();
 
     int bestScore = -SCORE_MAX;
     int movesPlayed = 0;
