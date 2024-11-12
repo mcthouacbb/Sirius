@@ -43,7 +43,7 @@ public:
     static constexpr int CAPTURE_SCORE = 500000;
 
     MoveOrdering(const Board& board, Move ttMove, const History& history);
-    MoveOrdering(const Board& board, Move hashMove, const std::array<Move, 2>& killers, std::span<const CHEntry* const> contHistEntries, const History& history);
+    MoveOrdering(const Board& board, int ply, Move hashMove, const std::array<Move, 2>& killers, std::span<const CHEntry* const> contHistEntries, const History& history);
 
     ScoredMove selectMove();
     ScoredMove selectHighest();
@@ -53,6 +53,7 @@ private:
     int scoreMoveQSearch(Move move) const;
 
     const Board& m_Board;
+    int m_Ply;
     MoveList m_Moves;
     Move m_TTMove;
     const History& m_History;

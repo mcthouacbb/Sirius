@@ -441,6 +441,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     MoveOrdering ordering(
         board,
+        rootPly,
         ttData.move,
         stack->killers,
         contHistEntries,
@@ -477,7 +478,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         bool quietLosing = moveScore < MoveOrdering::KILLER_SCORE;
 
         int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
-        int histScore = quiet ? history.getQuietStats(threats, ExtMove::from(board, move), contHistEntries) : history.getNoisyStats(threats, ExtMove::from(board, move));
+        int histScore = quiet ? history.getQuietStats(rootPly, threats, ExtMove::from(board, move), contHistEntries) : history.getNoisyStats(threats, ExtMove::from(board, move));
         baseLMR -= histScore / (quiet ? lmrQuietHistDivisor : lmrNoisyHistDivisor);
 
         if (!root && quietLosing && bestScore > -SCORE_WIN)
@@ -644,11 +645,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 int malus = historyMalus(depth);
                 if (quiet)
                 {
-                    history.updateQuietStats(threats, ExtMove::from(board, move), contHistEntries, bonus);
+                    history.updateQuietStats(rootPly, threats, ExtMove::from(board, move), contHistEntries, bonus);
                     for (Move quietMove : quietsTried)
                     {
                         if (quietMove != move)
-                            history.updateQuietStats(threats, ExtMove::from(board, quietMove), contHistEntries, -malus);
+                            history.updateQuietStats(rootPly, threats, ExtMove::from(board, quietMove), contHistEntries, -malus);
                     }
                 }
                 else
@@ -754,7 +755,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     MoveOrdering ordering = [&]()
     {
         if (inCheck)
-            return MoveOrdering(board, ttData.move, stack->killers, contHistEntries, history);
+            return MoveOrdering(board, rootPly, ttData.move, stack->killers, contHistEntries, history);
         else
             return MoveOrdering(board, ttData.move, history);
     }();

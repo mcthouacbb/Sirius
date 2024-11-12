@@ -125,6 +125,7 @@ inline void CorrHistEntry::update(int target, int weight)
 static constexpr int HISTORY_MAX = 16384;
 
 using MainHist = MultiArray<HistoryEntry<HISTORY_MAX>, 2, 4096, 2, 2>;
+using LowPlyHist = MultiArray<HistoryEntry<HISTORY_MAX>, 4, 4096>;
 using CHEntry = MultiArray<HistoryEntry<HISTORY_MAX>, 16, 64>;
 using ContHist = MultiArray<CHEntry, 16, 64>;
 using CaptHist = MultiArray<HistoryEntry<HISTORY_MAX>, 7, 16, 64, 2, 2>;
@@ -160,24 +161,27 @@ public:
         return m_ContHist[static_cast<int>(move.movingPiece())][move.toSq().value()];
     }
 
-    int getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const;
+    int getQuietStats(int ply, Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const;
     int getNoisyStats(Bitboard threats, ExtMove move) const;
     int correctStaticEval(int staticEval, const Board& board) const;
 
     void clear();
-    void updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus);
+    void updateQuietStats(int ply, Bitboard threats, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus);
     void updateNoisyStats(Bitboard threats, ExtMove move, int bonus);
     void updateCorrHist(int bonus, int depth, const Board& board);
 private:
     int getMainHist(Bitboard threats, ExtMove move) const;
     int getContHist(const CHEntry* entry, ExtMove move) const;
+    int getLowPlyHist(int ply, ExtMove move) const;
     int getCaptHist(Bitboard threats, ExtMove move) const;
 
     void updateMainHist(Bitboard threats, ExtMove move, int bonus);
+    void updateLowPlyHist(int ply, ExtMove move, int bonus);
     void updateContHist(CHEntry* entry, ExtMove move, int bonus);
     void updateCaptHist(Bitboard threats, ExtMove move, int bonus);
 
     MainHist m_MainHist;
+    LowPlyHist m_LowPlyHist;
     ContHist m_ContHist;
     CaptHist m_CaptHist;
     PawnCorrHist m_PawnCorrHist;

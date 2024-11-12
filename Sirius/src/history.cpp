@@ -48,6 +48,7 @@ int historyMalus(int depth)
 void History::clear()
 {
     fillHistTable(m_MainHist, 0);
+    fillHistTable(m_LowPlyHist, 0);
     fillHistTable(m_ContHist, 0);
     fillHistTable(m_CaptHist, 0);
     fillHistTable(m_PawnCorrHist, 0);
@@ -58,12 +59,14 @@ void History::clear()
     fillHistTable(m_MajorPieceCorrHist, 0);
 }
 
-int History::getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const
+int History::getQuietStats(int ply, Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const
 {
     int score = getMainHist(threats, move);
     for (auto entry : contHistEntries)
         if (entry)
             score += getContHist(entry, move);
+    if (ply < 4)
+        score += getLowPlyHist(ply, move);
     return score;
 }
 
@@ -97,12 +100,15 @@ int History::correctStaticEval(int staticEval, const Board& board) const
     return std::clamp(corrected, -SCORE_MATE_IN_MAX, SCORE_MATE_IN_MAX);
 }
 
-void History::updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus)
+void History::updateQuietStats(int ply, Bitboard threats, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus)
 {
     updateMainHist(threats, move, bonus);
     for (auto entry : contHistEntries)
         if (entry)
             updateContHist(entry, move, bonus);
+
+    if (ply < 4)
+        updateLowPlyHist(ply, move, bonus);
 }
 
 void History::updateNoisyStats(Bitboard threats, ExtMove move, int bonus)
@@ -146,6 +152,11 @@ int History::getMainHist(Bitboard threats, ExtMove move) const
     return m_MainHist[static_cast<int>(getPieceColor(move.movingPiece()))][move.fromTo()][srcThreat][dstThreat];
 }
 
+int History::getLowPlyHist(int ply, ExtMove move) const
+{
+    return m_LowPlyHist[ply][move.fromTo()];
+}
+
 int History::getContHist(const CHEntry* entry, ExtMove move) const
 {
     return (*entry)[static_cast<int>(move.movingPiece())][move.toSq().value()];
@@ -163,6 +174,11 @@ void History::updateMainHist(Bitboard threats, ExtMove move, int bonus)
     bool srcThreat = (threats & Bitboard::fromSquare(move.fromSq())).any();
     bool dstThreat = (threats & Bitboard::fromSquare(move.toSq())).any();
     m_MainHist[static_cast<int>(getPieceColor(move.movingPiece()))][move.fromTo()][srcThreat][dstThreat].update(bonus);
+}
+
+void History::updateLowPlyHist(int ply, ExtMove move, int bonus)
+{
+    m_LowPlyHist[ply][move.fromTo()].update(bonus);
 }
 
 void History::updateContHist(CHEntry* entry, ExtMove move, int bonus)

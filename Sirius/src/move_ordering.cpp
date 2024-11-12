@@ -55,7 +55,7 @@ int MoveOrdering::scoreQuiet(Move move) const
     if (move == m_Killers[0] || move == m_Killers[1])
         return KILLER_SCORE + (move == m_Killers[0]);
     else
-        return m_History.getQuietStats(m_Board.threats(), ExtMove::from(m_Board, move), m_ContHistEntries);
+        return m_History.getQuietStats(m_Ply, m_Board.threats(), ExtMove::from(m_Board, move), m_ContHistEntries);
 }
 
 int MoveOrdering::scoreMoveQSearch(Move move) const
@@ -72,12 +72,12 @@ int MoveOrdering::scoreMoveQSearch(Move move) const
 }
 
 MoveOrdering::MoveOrdering(const Board& board, Move ttMove, const History& history)
-    : m_Board(board), m_TTMove(ttMove), m_History(history), m_Curr(0), m_Stage(MovePickStage::QS_TT_MOVE)
+    : m_Board(board), m_Ply(0), m_TTMove(ttMove), m_History(history), m_Curr(0), m_Stage(MovePickStage::QS_TT_MOVE)
 {
 }
 
-MoveOrdering::MoveOrdering(const Board& board, Move ttMove, const std::array<Move, 2>& killers, std::span<const CHEntry* const> contHistEntries, const History& history)
-    : m_Board(board), m_TTMove(ttMove),
+MoveOrdering::MoveOrdering(const Board& board, int ply, Move ttMove, const std::array<Move, 2>& killers, std::span<const CHEntry* const> contHistEntries, const History& history)
+    : m_Board(board), m_Ply(ply), m_TTMove(ttMove),
     m_History(history), m_ContHistEntries(contHistEntries), m_Killers(killers),
     m_Curr(0), m_Stage(MovePickStage::TT_MOVE)
 {
