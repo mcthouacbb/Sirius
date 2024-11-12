@@ -435,13 +435,14 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         int probcutBeta = beta + 200;
         if (depth >= 5 &&
             !isMateScore(beta) &&
-            (!ttHit || ttData.value >= probcutBeta || ttData.depth + 3 < depth))
+            (!ttHit || ttData.score >= probcutBeta || ttData.depth + 3 < depth))
         {
             MoveOrdering ordering(board, ttData.move, thread.history);
-            ScoredMove move = {};
+            ScoredMove scoredMove = {};
             int seeThreshold = probcutBeta - stack->staticEval;
             while ((scoredMove = ordering.selectMove()).score != MoveOrdering::NO_MOVE)
             {
+                auto [move, moveScore] = scoredMove;
                 if (!board.isLegal(move))
                     continue;
                 if (!board.see(move, seeThreshold))
@@ -467,7 +468,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
                 if (score >= probcutBeta)
                 {
-                    m_TT.store(board.zkey(), depth - 3, rootPly, bestScore, rawStaticEval, move, ttPV, TTEntry::Bound::LOWER_BOUND);
+                    m_TT.store(board.zkey(), depth - 3, rootPly, score, rawStaticEval, move, ttPV, TTEntry::Bound::LOWER_BOUND);
                     return score;
                 }
             }
