@@ -431,6 +431,47 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             if (nullScore >= beta)
                 return nullScore;
         }
+
+        int probcutBeta = beta + 200;
+        if (depth >= 5 &&
+            !isMateScore(beta) &&
+            (!ttHit || ttData.value >= probcutBeta || ttData.depth + 3 < depth))
+        {
+            MoveOrdering ordering(board, ttData.move, thread.history);
+            ScoredMove move = {};
+            int seeThreshold = probcutBeta - stack->staticEval;
+            while ((scoredMove = ordering.selectMove()).score != MoveOrdering::NO_MOVE)
+            {
+                if (!board.isLegal(move))
+                    continue;
+                if (!board.see(move, seeThreshold))
+                    continue;
+
+                int history = history.getNoisyStats(threats, ExtMove::from(board, move));
+                
+                m_TT.prefetch(board.keyAfter(move));
+                stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
+                stack->histScore = histScore;
+                rootPly++;
+                board.makeMove(move, thread.evalState);
+                thread.nodes.fetch_add(1, std::memory_order_relaxed);
+
+                int score = -qsearch(thread, stack + 1, -probcutBeta, -probcutBeta + 1, false);
+                if (score >= probcutBeta)
+                    score = -search(thread, depth - 4, stack + 1, -probcutBeta, -probcutBeta + 1, false, !cutnode);
+
+                rootPly--;
+                board.unmakeMove(thread.evalState);
+                stack->contHistEntry = nullptr;
+                stack->histScore = 0;
+
+                if (score >= probcutBeta)
+                {
+                    m_TT.store(board.zkey(), depth - 3, rootPly, bestScore, rawStaticEval, move, ttPV, TTEntry::Bound::LOWER_BOUND);
+                    return score;
+                }
+            }
+        }
     }
 
     std::array<CHEntry*, 3> contHistEntries = {
