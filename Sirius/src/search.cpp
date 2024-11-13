@@ -403,7 +403,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     bool improving = !inCheck && rootPly > 1 && stack->staticEval > stack[-2].staticEval;
     stack[1].killers = {};
     Bitboard threats = board.threats();
-    
+
     if (!pvNode && !inCheck && !excluded)
     {
         // reverse futility pruning
@@ -433,14 +433,15 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 return nullScore;
         }
 
-        int probcutBeta = beta + 200;
-        if (depth >= 5 &&
+        int probcutBeta = beta + probcutBetaMargin;
+        if (depth >= probcutMinDepth &&
             !isMateScore(beta) &&
             (!ttHit || ttData.score >= probcutBeta || ttData.depth + 3 < depth))
         {
             MoveOrdering ordering(board, ttData.move, thread.history);
             ScoredMove scoredMove = {};
             int seeThreshold = probcutBeta - stack->staticEval;
+            int probcutDepth = depth - probcutReduction;
             while ((scoredMove = ordering.selectMove()).score != MoveOrdering::NO_MOVE)
             {
                 auto [move, moveScore] = scoredMove;
@@ -450,7 +451,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                     continue;
 
                 int histScore = history.getNoisyStats(threats, ExtMove::from(board, move));
-                
+
                 m_TT.prefetch(board.keyAfter(move));
                 stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
                 stack->histScore = histScore;
@@ -459,8 +460,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 thread.nodes.fetch_add(1, std::memory_order_relaxed);
 
                 int score = -qsearch(thread, stack + 1, -probcutBeta, -probcutBeta + 1, false);
-                if (score >= probcutBeta)
-                    score = -search(thread, depth - 4, stack + 1, -probcutBeta, -probcutBeta + 1, false, !cutnode);
+                if (score >= probcutBeta && probcutDepth >= 0)
+                    score = -search(thread, probcutDepth, stack + 1, -probcutBeta, -probcutBeta + 1, false, !cutnode);
 
                 rootPly--;
                 board.unmakeMove(thread.evalState);
@@ -469,7 +470,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
                 if (score >= probcutBeta)
                 {
-                    m_TT.store(board.zkey(), depth - 3, rootPly, score, rawStaticEval, move, ttPV, TTEntry::Bound::LOWER_BOUND);
+                    m_TT.store(board.zkey(), probcutDepth + 1, rootPly, score, rawStaticEval, move, ttPV, TTEntry::Bound::LOWER_BOUND);
                     return score;
                 }
             }
@@ -785,7 +786,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
 
     if (rootPly >= MAX_PLY)
         return alpha;
-        
+
     std::array<CHEntry*, 3> contHistEntries = {
         rootPly > 0 ? stack[-1].contHistEntry : nullptr,
         rootPly > 1 ? stack[-2].contHistEntry : nullptr,
@@ -826,7 +827,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         rootPly++;
 
         int score = -qsearch(thread, stack + 1, -beta, -alpha, pvNode);
-        
+
         board.unmakeMove(thread.evalState);
         stack->contHistEntry = nullptr;
         rootPly--;
