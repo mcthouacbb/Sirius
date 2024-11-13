@@ -87,6 +87,10 @@ SEARCH_PARAM(nmpDepthReductionScale, 4, 3, 6, 1);
 SEARCH_PARAM(nmpEvalReductionScale, 210, 50, 300, 10);
 SEARCH_PARAM(nmpMaxEvalReduction, 4, 2, 5, 1);
 
+SEARCH_PARAM(probcutMinDepth, 5, 4, 7, 1);
+SEARCH_PARAM(probcutBetaMargin, 200, 100, 300, 15);
+SEARCH_PARAM(probcutReduction, 4, 3, 6, 1);
+
 SEARCH_PARAM(fpBaseMargin, 160, 60, 360, 12);
 SEARCH_PARAM(fpDepthMargin, 124, 10, 180, 12);
 SEARCH_PARAM(fpMaxDepth, 4, 4, 9, 1);
