@@ -547,10 +547,10 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 !board.see(move, seeMargin))
                 continue;
 
-            if (quiet &&
+            /*if (quiet &&
                 depth <= maxHistPruningDepth &&
                 histScore < -histPruningMargin * depth)
-                break;
+                break;*/
         }
 
         bool doSE = !root &&
