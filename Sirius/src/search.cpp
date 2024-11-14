@@ -367,6 +367,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     if (!excluded)
     {
         ttHit = m_TT.probe(board.zkey(), rootPly, ttData);
+        ttData.move = Move();
 
         if (ttHit)
         {
@@ -745,6 +746,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
 
     ProbedTTData ttData = {};
     bool ttHit = m_TT.probe(board.zkey(), rootPly, ttData);
+    ttData.move = Move();
     bool ttPV = pvNode || (ttHit && ttData.pv);
 
     if (ttHit && !pvNode)
