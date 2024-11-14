@@ -522,7 +522,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         int histScore = quiet ? history.getQuietStats(threats, ExtMove::from(board, move), contHistEntries) : history.getNoisyStats(threats, ExtMove::from(board, move));
         baseLMR -= histScore / (quiet ? lmrQuietHistDivisor : lmrNoisyHistDivisor);
 
-        if (!root && quietLosing && bestScore > -SCORE_WIN)
+        /*if (!root && quietLosing && bestScore > -SCORE_WIN)
         {
             int lmrDepth = std::max(depth - baseLMR, 0);
             if (lmrDepth <= fpMaxDepth &&
@@ -551,7 +551,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 depth <= maxHistPruningDepth &&
                 histScore < -histPruningMargin * depth)
                 break;
-        }
+        }*/
 
         bool doSE = !root &&
             !excluded &&
