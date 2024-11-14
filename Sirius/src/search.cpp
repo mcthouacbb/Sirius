@@ -524,14 +524,14 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         if (!root && quietLosing && bestScore > -SCORE_WIN)
         {
-            int lmrDepth = std::max(depth - baseLMR, 0);
+            /*int lmrDepth = std::max(depth - baseLMR, 0);
             if (lmrDepth <= fpMaxDepth &&
                 !inCheck &&
                 alpha < SCORE_WIN &&
                 stack->eval + fpBaseMargin + fpDepthMargin * lmrDepth <= alpha)
             {
                 continue;
-            }
+            }*/
 
             if (!pvNode &&
                 !inCheck &&
