@@ -60,16 +60,18 @@ void History::clear()
 
 int History::getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const
 {
-    int score = getMainHist(threats, move);
+    return 0;
+    /*int score = getMainHist(threats, move);
     for (auto entry : contHistEntries)
         if (entry)
             score += getContHist(entry, move);
-    return score;
+    return score;*/
 }
 
 int History::getNoisyStats(Bitboard threats, ExtMove move) const
 {
-    return getCaptHist(threats, move);
+    return 0;
+    //return getCaptHist(threats, move);
 }
 
 int History::correctStaticEval(int staticEval, const Board& board) const
@@ -99,15 +101,15 @@ int History::correctStaticEval(int staticEval, const Board& board) const
 
 void History::updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus)
 {
-    updateMainHist(threats, move, bonus);
-    for (auto entry : contHistEntries)
-        if (entry)
-            updateContHist(entry, move, bonus);
+    //updateMainHist(threats, move, bonus);
+    //for (auto entry : contHistEntries)
+        //if (entry)
+            //updateContHist(entry, move, bonus);
 }
 
 void History::updateNoisyStats(Bitboard threats, ExtMove move, int bonus)
 {
-    updateCaptHist(threats, move, bonus);
+    //updateCaptHist(threats, move, bonus);
 }
 
 void History::updateCorrHist(int bonus, int depth, const Board& board)
