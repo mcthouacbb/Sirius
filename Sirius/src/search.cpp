@@ -777,6 +777,8 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
             stack->eval = ttData.score;
     }
 
+    return stack->eval;
+
     if (stack->eval >= beta)
         return stack->eval;
     if (stack->eval > alpha)
