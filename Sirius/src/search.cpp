@@ -266,11 +266,11 @@ int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prev
     int beta = SCORE_MAX;
     int aspDepth = depth;
 
-    if (depth >= minAspDepth)
-    {
-        alpha = prevScore - delta;
-        beta = prevScore + delta;
-    }
+    // if (depth >= minAspDepth)
+    // {
+    //     alpha = prevScore - delta;
+    //     beta = prevScore + delta;
+    // }
 
     while (true)
     {
