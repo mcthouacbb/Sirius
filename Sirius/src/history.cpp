@@ -74,6 +74,7 @@ int History::getNoisyStats(Bitboard threats, ExtMove move) const
 
 int History::correctStaticEval(int staticEval, const Board& board) const
 {
+    return staticEval;
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
     int pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % PAWN_CORR_HIST_ENTRIES];
@@ -112,6 +113,7 @@ void History::updateNoisyStats(Bitboard threats, ExtMove move, int bonus)
 
 void History::updateCorrHist(int bonus, int depth, const Board& board)
 {
+    return;
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
     int scaledBonus = bonus * CORR_HIST_SCALE;
