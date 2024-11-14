@@ -169,7 +169,9 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
     int attackCount = std::min(evalData.attackCount[us], 13);
     eval += KING_ATTACKS[attackCount];
 
-    return eval;
+    eval += SAFETY_OFFSET;
+
+    return PackedScore(std::max(eval.mg(), 0), std::max(eval.eg(), 0));
 }
 
 template<Color us>
