@@ -69,7 +69,8 @@ int History::getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEnt
 
 int History::getNoisyStats(Bitboard threats, ExtMove move) const
 {
-    return getCaptHist(threats, move);
+    return 0;
+    //return getCaptHist(threats, move);
 }
 
 int History::correctStaticEval(int staticEval, const Board& board) const
@@ -107,7 +108,8 @@ void History::updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry
 
 void History::updateNoisyStats(Bitboard threats, ExtMove move, int bonus)
 {
-    updateCaptHist(threats, move, bonus);
+    return;
+    //updateCaptHist(threats, move, bonus);
 }
 
 void History::updateCorrHist(int bonus, int depth, const Board& board)
