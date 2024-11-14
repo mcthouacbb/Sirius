@@ -404,78 +404,78 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     stack[1].killers = {};
     Bitboard threats = board.threats();
 
-    if (!pvNode && !inCheck && !excluded)
-    {
-        // reverse futility pruning
-        if (depth <= rfpMaxDepth && stack->eval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth + stack[-1].histScore / rfpHistDivisor)
-            return stack->eval;
+    // if (!pvNode && !inCheck && !excluded)
+    // {
+    //     // reverse futility pruning
+    //     if (depth <= rfpMaxDepth && stack->eval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth + stack[-1].histScore / rfpHistDivisor)
+    //         return stack->eval;
 
-        if (depth <= razoringMaxDepth && stack->eval <= alpha - razoringMargin * depth && alpha < 2000)
-        {
-            int score = qsearch(thread, stack, alpha, beta, pvNode);
-            if (score <= alpha)
-                return score;
-        }
+    //     if (depth <= razoringMaxDepth && stack->eval <= alpha - razoringMargin * depth && alpha < 2000)
+    //     {
+    //         int score = qsearch(thread, stack, alpha, beta, pvNode);
+    //         if (score <= alpha)
+    //             return score;
+    //     }
 
-        // null move pruning
-        Bitboard nonPawns = board.pieces(board.sideToMove()) ^ board.pieces(board.sideToMove(), PieceType::PAWN);
-        if (board.pliesFromNull() > 0 && depth >= nmpMinDepth &&
-            stack->eval >= beta && stack->staticEval >= beta + nmpEvalBaseMargin - nmpEvalDepthMargin * depth &&
-            nonPawns.multiple())
-        {
-            int r = nmpBaseReduction + depth / nmpDepthReductionScale + std::min((stack->eval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
-            board.makeNullMove();
-            rootPly++;
-            int nullScore = -search(thread, depth - r, stack + 1, -beta, -beta + 1, false, !cutnode);
-            rootPly--;
-            board.unmakeNullMove();
-            if (nullScore >= beta)
-                return nullScore;
-        }
+    //     // null move pruning
+    //     Bitboard nonPawns = board.pieces(board.sideToMove()) ^ board.pieces(board.sideToMove(), PieceType::PAWN);
+    //     if (board.pliesFromNull() > 0 && depth >= nmpMinDepth &&
+    //         stack->eval >= beta && stack->staticEval >= beta + nmpEvalBaseMargin - nmpEvalDepthMargin * depth &&
+    //         nonPawns.multiple())
+    //     {
+    //         int r = nmpBaseReduction + depth / nmpDepthReductionScale + std::min((stack->eval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
+    //         board.makeNullMove();
+    //         rootPly++;
+    //         int nullScore = -search(thread, depth - r, stack + 1, -beta, -beta + 1, false, !cutnode);
+    //         rootPly--;
+    //         board.unmakeNullMove();
+    //         if (nullScore >= beta)
+    //             return nullScore;
+    //     }
 
-        int probcutBeta = beta + probcutBetaMargin;
-        if (depth >= probcutMinDepth &&
-            !isMateScore(beta) &&
-            (!ttHit || ttData.score >= probcutBeta || ttData.depth + 3 < depth))
-        {
-            MoveOrdering ordering(board, ttData.move, thread.history);
-            ScoredMove scoredMove = {};
-            int seeThreshold = probcutBeta - stack->staticEval;
-            int probcutDepth = depth - probcutReduction;
-            while ((scoredMove = ordering.selectMove()).score != MoveOrdering::NO_MOVE)
-            {
-                auto [move, moveScore] = scoredMove;
-                if (!board.isLegal(move))
-                    continue;
-                if (!board.see(move, seeThreshold))
-                    continue;
+    //     int probcutBeta = beta + probcutBetaMargin;
+    //     if (depth >= probcutMinDepth &&
+    //         !isMateScore(beta) &&
+    //         (!ttHit || ttData.score >= probcutBeta || ttData.depth + 3 < depth))
+    //     {
+    //         MoveOrdering ordering(board, ttData.move, thread.history);
+    //         ScoredMove scoredMove = {};
+    //         int seeThreshold = probcutBeta - stack->staticEval;
+    //         int probcutDepth = depth - probcutReduction;
+    //         while ((scoredMove = ordering.selectMove()).score != MoveOrdering::NO_MOVE)
+    //         {
+    //             auto [move, moveScore] = scoredMove;
+    //             if (!board.isLegal(move))
+    //                 continue;
+    //             if (!board.see(move, seeThreshold))
+    //                 continue;
 
-                int histScore = history.getNoisyStats(threats, ExtMove::from(board, move));
+    //             int histScore = history.getNoisyStats(threats, ExtMove::from(board, move));
 
-                m_TT.prefetch(board.keyAfter(move));
-                stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
-                stack->histScore = histScore;
-                rootPly++;
-                board.makeMove(move, thread.evalState);
-                thread.nodes.fetch_add(1, std::memory_order_relaxed);
+    //             m_TT.prefetch(board.keyAfter(move));
+    //             stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
+    //             stack->histScore = histScore;
+    //             rootPly++;
+    //             board.makeMove(move, thread.evalState);
+    //             thread.nodes.fetch_add(1, std::memory_order_relaxed);
 
-                int score = -qsearch(thread, stack + 1, -probcutBeta, -probcutBeta + 1, false);
-                if (score >= probcutBeta && probcutDepth >= 0)
-                    score = -search(thread, probcutDepth, stack + 1, -probcutBeta, -probcutBeta + 1, false, !cutnode);
+    //             int score = -qsearch(thread, stack + 1, -probcutBeta, -probcutBeta + 1, false);
+    //             if (score >= probcutBeta && probcutDepth >= 0)
+    //                 score = -search(thread, probcutDepth, stack + 1, -probcutBeta, -probcutBeta + 1, false, !cutnode);
 
-                rootPly--;
-                board.unmakeMove(thread.evalState);
-                stack->contHistEntry = nullptr;
-                stack->histScore = 0;
+    //             rootPly--;
+    //             board.unmakeMove(thread.evalState);
+    //             stack->contHistEntry = nullptr;
+    //             stack->histScore = 0;
 
-                if (score >= probcutBeta)
-                {
-                    m_TT.store(board.zkey(), probcutDepth + 1, rootPly, score, rawStaticEval, move, ttPV, TTEntry::Bound::LOWER_BOUND);
-                    return score;
-                }
-            }
-        }
-    }
+    //             if (score >= probcutBeta)
+    //             {
+    //                 m_TT.store(board.zkey(), probcutDepth + 1, rootPly, score, rawStaticEval, move, ttPV, TTEntry::Bound::LOWER_BOUND);
+    //                 return score;
+    //             }
+    //         }
+    //     }
+    // }
 
     std::array<CHEntry*, 3> contHistEntries = {
         rootPly > 0 ? stack[-1].contHistEntry : nullptr,
