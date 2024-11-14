@@ -281,7 +281,15 @@ void nonIncrementalEval(const Board& board, const PawnStructure& pawnStructure, 
 
 int evaluate(const Board& board, search::SearchThread* thread)
 {
-    if (!eval::canForceMate(board))
+    auto stm = board.sideToMove();
+    return
+        board.zkey().value % 8 +
+        100 * (board.pieces(stm, PAWN).popcount() - board.pieces(~stm, PAWN).popcount()) +
+        300 * (board.pieces(stm, KNIGHT).popcount() - board.pieces(~stm, KNIGHT).popcount()) +
+        300 * (board.pieces(stm, BISHOP).popcount() - board.pieces(~stm, BISHOP).popcount()) +
+        500 * (board.pieces(stm, ROOK).popcount() - board.pieces(~stm, ROOK).popcount()) +
+        900 * (board.pieces(stm, QUEEN).popcount() - board.pieces(~stm, QUEEN).popcount());
+    /*if (!eval::canForceMate(board))
         return SCORE_DRAW;
 
     constexpr int SCALE_FACTOR = 128;
@@ -300,7 +308,7 @@ int evaluate(const Board& board, search::SearchThread* thread)
 
     eval += (color == WHITE ? TEMPO : -TEMPO);
 
-    return (color == WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg() * scale / SCALE_FACTOR, thread->evalState.phase());
+    return (color == WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg() * scale / SCALE_FACTOR, thread->evalState.phase());*/
 }
 
 int evaluateSingle(const Board& board)
