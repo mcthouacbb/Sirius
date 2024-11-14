@@ -390,12 +390,12 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
             stack->staticEval = history.correctStaticEval(rawStaticEval, board);
             stack->eval = stack->staticEval;
-            if (ttHit && (
-                ttData.bound == TTEntry::Bound::EXACT ||
-                (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= stack->eval) ||
-                (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= stack->eval)
-            ))
-                stack->eval = ttData.score;
+            // if (ttHit && (
+            //     ttData.bound == TTEntry::Bound::EXACT ||
+            //     (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= stack->eval) ||
+            //     (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= stack->eval)
+            // ))
+            //     stack->eval = ttData.score;
         }
     }
 
@@ -769,12 +769,12 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         stack->staticEval = inCheck ? SCORE_NONE : thread.history.correctStaticEval(rawStaticEval, board);
 
         stack->eval = stack->staticEval;
-        if (!inCheck && ttHit && (
-            ttData.bound == TTEntry::Bound::EXACT ||
-            (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= stack->eval) ||
-            (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= stack->eval)
-        ))
-            stack->eval = ttData.score;
+        // if (!inCheck && ttHit && (
+        //     ttData.bound == TTEntry::Bound::EXACT ||
+        //     (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= stack->eval) ||
+        //     (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= stack->eval)
+        // ))
+        //     stack->eval = ttData.score;
     }
 
     if (stack->eval >= beta)
