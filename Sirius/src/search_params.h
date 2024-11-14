@@ -57,6 +57,8 @@ SEARCH_PARAM(histMalusQuadratic, 5, 1, 8, 1);
 SEARCH_PARAM(histMalusLinear, 243, 64, 384, 32);
 SEARCH_PARAM(histMalusOffset, 66, 64, 768, 64);
 
+SEARCH_PARAM(histBetaMargin, 50, 30, 120, 5);
+
 SEARCH_PARAM(pawnCorrWeight, 295, 96, 768, 64);
 SEARCH_PARAM(materialCorrWeight, 292, 96, 768, 64);
 SEARCH_PARAM(nonPawnStmCorrWeight, 316, 96, 768, 64);

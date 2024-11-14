@@ -682,7 +682,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                     }
                 }
 
-                int histDepth = depth + (bestScore > beta + 50);
+                int histDepth = depth + (bestScore > beta + histBetaMargin);
                 int bonus = historyBonus(histDepth);
                 int malus = historyMalus(histDepth);
                 if (quiet)
