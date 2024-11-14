@@ -370,12 +370,12 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         if (ttHit)
         {
-            if (!pvNode && ttData.depth >= depth && (
-                ttData.bound == TTEntry::Bound::EXACT ||
-                (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta) ||
-                (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)
-            ))
-                return ttData.score;
+            // if (!pvNode && ttData.depth >= depth && (
+            //     ttData.bound == TTEntry::Bound::EXACT ||
+            //     (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta) ||
+            //     (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)
+            // ))
+            //     return ttData.score;
         }
         else if (depth >= minIIRDepth)
             depth--;
@@ -749,11 +749,11 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
 
     if (ttHit && !pvNode)
     {
-        if (ttData.bound == TTEntry::Bound::EXACT ||
-            (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta) ||
-            (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)
-        )
-            return ttData.score;
+        // if (ttData.bound == TTEntry::Bound::EXACT ||
+        //     (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta) ||
+        //     (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)
+        // )
+        //     return ttData.score;
     }
 
     bool inCheck = board.checkers().any();
