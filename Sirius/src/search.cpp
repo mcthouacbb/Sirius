@@ -377,8 +377,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             ))
                 return ttData.score;
         }
-        else if (depth >= minIIRDepth)
-            depth--;
+        // else if (depth >= minIIRDepth)
+            // depth--;
 
         if (inCheck)
         {
