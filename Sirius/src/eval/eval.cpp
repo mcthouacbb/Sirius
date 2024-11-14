@@ -171,7 +171,7 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
 
     eval += SAFETY_OFFSET;
 
-    return PackedScore(std::max(eval.mg(), 0), std::max(eval.eg(), 0));
+    return PackedScore(std::max(eval.mg(), 0) * eval.mg() / 100, std::max(eval.eg(), 0) * eval.eg() / 100);
 }
 
 template<Color us>
