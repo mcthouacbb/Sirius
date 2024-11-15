@@ -814,13 +814,13 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         auto [move, moveScore] = scoredMove;
         if (!board.isLegal(move))
             continue;
-        if (!board.see(move, 0))
-            continue;
-        if (!inCheck && futility <= alpha && !board.see(move, 1))
-        {
-            bestScore = std::max(bestScore, futility);
-            continue;
-        }
+        // if (!board.see(move, 0))
+        //     continue;
+        // if (!inCheck && futility <= alpha && !board.see(move, 1))
+        // {
+        //     bestScore = std::max(bestScore, futility);
+        //     continue;
+        // }
         movesPlayed++;
         stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
         board.makeMove(move, thread.evalState);
