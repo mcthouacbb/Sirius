@@ -400,14 +400,14 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     }
 
     bool ttPV = pvNode || (ttHit && ttData.pv);
-    bool improving = !inCheck && rootPly > 1 && stack->staticEval > stack[-2].staticEval;
+    // bool improving = !inCheck && rootPly > 1 && stack->staticEval > stack[-2].staticEval;
     stack[1].killers = {};
     Bitboard threats = board.threats();
 
     if (!pvNode && !inCheck && !excluded)
     {
         // reverse futility pruning
-        if (depth <= rfpMaxDepth && stack->eval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth + stack[-1].histScore / rfpHistDivisor)
+        if (depth <= rfpMaxDepth && stack->eval >= beta + rfpMargin * depth + stack[-1].histScore / rfpHistDivisor)
             return stack->eval;
 
         if (depth <= razoringMaxDepth && stack->eval <= alpha - razoringMargin * depth && alpha < 2000)
@@ -536,7 +536,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             if (!pvNode &&
                 !inCheck &&
                 depth <= lmpMaxDepth &&
-                movesPlayed >= lmpMinMovesBase + depth * depth / (improving ? 1 : 2))
+                movesPlayed >= lmpMinMovesBase + depth * depth)
                 break;
 
             int seeMargin = quiet ?
@@ -616,7 +616,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         {
             int reduction = baseLMR;
 
-            reduction += !improving;
             reduction += noisyTTMove;
             reduction -= ttPV;
             reduction -= givesCheck;
