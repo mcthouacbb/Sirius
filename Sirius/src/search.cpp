@@ -809,8 +809,8 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     ScoredMove scoredMove = {};
     while ((scoredMove = ordering.selectMove()).score != MoveOrdering::NO_MOVE)
     {
-        if (!inCheck && movesPlayed >= 2)
-            break;
+        //if (!inCheck && movesPlayed >= 2)
+            //break;
         auto [move, moveScore] = scoredMove;
         if (!board.isLegal(move))
             continue;
