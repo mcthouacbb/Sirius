@@ -14,8 +14,7 @@
                 "CMAKE_CXX_COMPILER": "clang++",
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_CXX_FLAGS_INIT": "-Wall",
-                "CMAKE_CXX_FLAGS_RELEASE_INIT": "-march=x86-64",
-                "CMAKE_EXE_LINKER_FLAGS": "-flto",
+                "CMAKE_CXX_FLAGS_RELEASE_INIT": "-march=x86-64 -flto",
                 "SIRIUS_EXE_EXTENSION" : "x86-64-v1"
             }
         },
@@ -27,8 +26,7 @@
                 "CMAKE_CXX_COMPILER": "clang++",
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_CXX_FLAGS_INIT": "-Wall",
-                "CMAKE_CXX_FLAGS_RELEASE_INIT": "-march=x86-64-v2",
-                "CMAKE_EXE_LINKER_FLAGS": "-flto",
+                "CMAKE_CXX_FLAGS_RELEASE_INIT": "-march=x86-64-v2 -flto",
                 "SIRIUS_EXE_EXTENSION" : "x86-64-v2"
             }
         },
@@ -40,8 +38,7 @@
                 "CMAKE_CXX_COMPILER": "clang++",
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_CXX_FLAGS_INIT": "-Wall",
-                "CMAKE_CXX_FLAGS_RELEASE_INIT": "-march=x86-64-v3",
-                "CMAKE_EXE_LINKER_FLAGS": "-flto",
+                "CMAKE_CXX_FLAGS_RELEASE_INIT": "-march=x86-64-v3 -flto",
                 "SIRIUS_EXE_EXTENSION" : "x86-64-v3"
             }
         },
@@ -53,9 +50,20 @@
                 "CMAKE_CXX_COMPILER": "clang++",
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_CXX_FLAGS_INIT": "-Wall",
-                "CMAKE_CXX_FLAGS_RELEASE_INIT": "-march=x86-64-v4",
-                "CMAKE_EXE_LINKER_FLAGS": "-flto",
+                "CMAKE_CXX_FLAGS_RELEASE_INIT": "-march=x86-64-v4 -flto",
                 "SIRIUS_EXE_EXTENSION" : "x86-64-v4"
+            }
+        },
+        {
+            "name": "ninja-clang-native",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/native",
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_FLAGS_INIT": "-Wall",
+                "CMAKE_CXX_FLAGS_RELEASE_INIT": "-march=native -flto",
+                "SIRIUS_EXE_EXTENSION" : "native"
             }
         }
     ]
