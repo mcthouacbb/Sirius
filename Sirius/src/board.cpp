@@ -684,6 +684,7 @@ Bitboard Board::pinnersBlockers(Square square, Bitboard attackers, Bitboard& pin
 // mostly from stockfish
 bool Board::see(Move move, int margin) const
 {
+    return true;
     Square src = move.fromSq();
     Square dst = move.toSq();
 
