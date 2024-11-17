@@ -52,10 +52,10 @@ int MoveOrdering::scoreNoisy(Move move) const
 
 int MoveOrdering::scoreQuiet(Move move) const
 {
-    if (move == m_Killers[0] || move == m_Killers[1])
-        return KILLER_SCORE + (move == m_Killers[0]);
-    else
-        return m_History.getQuietStats(m_Board.threats(), ExtMove::from(m_Board, move), m_ContHistEntries);
+    //if (move == m_Killers[0] || move == m_Killers[1])
+        //return KILLER_SCORE + (move == m_Killers[0]);
+    //else
+    return m_History.getQuietStats(m_Board.threats(), ExtMove::from(m_Board, move), m_ContHistEntries);
 }
 
 int MoveOrdering::scoreMoveQSearch(Move move) const
