@@ -39,7 +39,7 @@ void updateLmrTable();
 #define SEARCH_PARAM_CALLBACK(name, val, min, max, step, callback) SEARCH_PARAM(name, val, min, max, step)
 #endif
 
-SEARCH_PARAM(hardTimeScale, 62, 20, 100, 5);
+SEARCH_PARAM(hardTimeScale, 6, 20, 100, 5);
 SEARCH_PARAM(softTimeScale, 62, 30, 100, 5);
 SEARCH_PARAM(incrementScale, 88, 25, 100, 5);
 SEARCH_PARAM(baseTimeScale, 21, 8, 40, 1);

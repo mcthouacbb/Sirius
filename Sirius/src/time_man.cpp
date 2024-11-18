@@ -56,6 +56,7 @@ bool TimeManager::stopHard(const SearchLimits& searchLimits, uint64_t nodes)
 
 bool TimeManager::stopSoft(Move bestMove, uint64_t totalNodes, const SearchLimits& searchLimits)
 {
+    return false;
     if (bestMove == m_PrevBestMove)
         m_Stability++;
     else
