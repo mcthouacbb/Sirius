@@ -596,8 +596,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         board.makeMove(move, thread.evalState);
         thread.nodes.fetch_add(1, std::memory_order_relaxed);
         bool givesCheck = board.checkers().any();
-        if (!doSE && givesCheck)
-            extension = 1;
+        // if (!doSE && givesCheck)
+            // extension = 1;
 
         if (quiet)
             quietsTried.push_back(move);
