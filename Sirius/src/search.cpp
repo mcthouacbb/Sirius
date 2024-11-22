@@ -607,7 +607,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         rootPly++;
         movesPlayed++;
 
-        int newDepth = depth + extension - 1;
+        int newDepth = depth/* + extension*/ - 1;
         int score = 0;
 
         if (movesPlayed >= (pvNode ? lmrMinMovesPv : lmrMinMovesNonPv) &&
