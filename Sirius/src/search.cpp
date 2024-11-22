@@ -377,7 +377,10 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             ))
                 return ttData.score;
         }
-        else if (depth >= minIIRDepth)
+
+        if (pvNode && ttData.move == Move() && depth >= 3)
+            depth--;
+        if (cutnode && ttData.move == Move() && depth >= 3)
             depth--;
 
         if (inCheck)
