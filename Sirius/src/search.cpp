@@ -259,6 +259,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
     return score;
 }
 
+// Aspiration windows(~108 elo)
 int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prevScore)
 {
     int delta = aspInitDelta;
@@ -370,6 +371,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         if (ttHit)
         {
+            // TT Cutoffs(~101 elo)
             if (!pvNode && ttData.depth >= depth && (
                 ttData.bound == TTEntry::Bound::EXACT ||
                 (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta) ||
@@ -377,7 +379,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             ))
                 return ttData.score;
         }
-
+        // Internal Iterative Reductions(~23 elo)
         if (pvNode && ttData.move == Move() && depth >= 3)
             depth--;
         if (cutnode && ttData.move == Move() && depth >= 3)
@@ -391,8 +393,10 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         else
         {
             rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
+            // Correction history(~91 elo)
             stack->staticEval = history.correctStaticEval(rawStaticEval, board);
             stack->eval = stack->staticEval;
+            // use tt score as a better eval(~8 elo)
             if (ttHit && (
                 ttData.bound == TTEntry::Bound::EXACT ||
                 (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= stack->eval) ||
@@ -403,16 +407,19 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     }
 
     bool ttPV = pvNode || (ttHit && ttData.pv);
+    // Improving heuristic(~31 elo)
     bool improving = !inCheck && rootPly > 1 && stack->staticEval > stack[-2].staticEval;
     stack[1].killers = {};
     Bitboard threats = board.threats();
 
+    // whole node pruning(~228 elo)
     if (!pvNode && !inCheck && !excluded)
     {
-        // reverse futility pruning
+        // reverse futility pruning(~86 elo)
         if (depth <= rfpMaxDepth && stack->eval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth + stack[-1].histScore / rfpHistDivisor)
             return stack->eval;
 
+        // razoring(~6 elo)
         if (depth <= razoringMaxDepth && stack->eval <= alpha - razoringMargin * depth && alpha < 2000)
         {
             int score = qsearch(thread, stack, alpha, beta, pvNode);
@@ -420,7 +427,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 return score;
         }
 
-        // null move pruning
+        // null move pruning(~31 elo)
         Bitboard nonPawns = board.pieces(board.sideToMove()) ^ board.pieces(board.sideToMove(), PieceType::PAWN);
         if (board.pliesFromNull() > 0 && depth >= nmpMinDepth &&
             stack->eval >= beta && stack->staticEval >= beta + nmpEvalBaseMargin - nmpEvalDepthMargin * depth &&
@@ -436,6 +443,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 return nullScore;
         }
 
+        // probcut(~3 elo)
         int probcutBeta = beta + probcutBetaMargin;
         if (depth >= probcutMinDepth &&
             !isMateScore(beta) &&
@@ -480,6 +488,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         }
     }
 
+    // continuation history(~40 elo)
     std::array<CHEntry*, 3> contHistEntries = {
         rootPly > 0 ? stack[-1].contHistEntry : nullptr,
         rootPly > 1 ? stack[-2].contHistEntry : nullptr,
@@ -525,8 +534,10 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         int histScore = quiet ? history.getQuietStats(threats, ExtMove::from(board, move), contHistEntries) : history.getNoisyStats(threats, ExtMove::from(board, move));
         baseLMR -= histScore / (quiet ? lmrQuietHistDivisor : lmrNoisyHistDivisor);
 
+        // move loop pruning(~184 elo)
         if (!root && quietLosing && bestScore > -SCORE_WIN)
         {
+            // futility pruning(~1 elo)
             int lmrDepth = std::max(depth - baseLMR, 0);
             if (lmrDepth <= fpMaxDepth &&
                 !inCheck &&
@@ -536,12 +547,14 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 continue;
             }
 
+            // late move pruning(~23 elo)
             if (!pvNode &&
                 !inCheck &&
                 depth <= lmpMaxDepth &&
                 movesPlayed >= lmpMinMovesBase + depth * depth / (improving ? 1 : 2))
                 break;
 
+            // static exchange evaluation pruning(~5 elo)
             int seeMargin = quiet ?
                 depth * seePruneMarginQuiet :
                 depth * seePruneMarginNoisy - std::clamp(histScore / seeCaptHistDivisor, -seeCaptHistMax * depth, seeCaptHistMax * depth);
@@ -550,6 +563,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 !board.see(move, seeMargin))
                 continue;
 
+            // history pruning(~14 elo)
             if (quiet &&
                 depth <= maxHistPruningDepth &&
                 histScore < -histPruningMargin * depth)
@@ -566,6 +580,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         int extension = 0;
 
+        // singular extensions(~73 elo)
         if (doSE)
         {
             int sBeta = std::max(-SCORE_MATE, ttData.score - sBetaScale * depth / 16);
@@ -599,6 +614,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         board.makeMove(move, thread.evalState);
         thread.nodes.fetch_add(1, std::memory_order_relaxed);
         bool givesCheck = board.checkers().any();
+        // check extensions(~13 elo)
         if (!doSE && givesCheck)
             extension = 1;
 
@@ -613,6 +629,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         int newDepth = depth + extension - 1;
         int score = 0;
 
+        // late move reductions(~111 elo)
         if (movesPlayed >= (pvNode ? lmrMinMovesPv : lmrMinMovesNonPv) &&
             depth >= lmrMinDepth &&
             quietLosing)
@@ -676,6 +693,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             if (bestScore >= beta)
             {
                 stack->failHighCount++;
+                // killer moves(~6 elo)
                 if (quiet)
                 {
                     if (stack->killers[0] != move)
@@ -685,6 +703,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                     }
                 }
 
+                // history(~527 elo)
                 int histDepth = depth + (bestScore > beta + histBetaMargin);
                 int bonus = historyBonus(histDepth);
                 int malus = historyMalus(histDepth);
@@ -733,6 +752,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     return bestScore;
 }
 
+// quiescence search(~187 elo)
 int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int beta, bool pvNode)
 {
     auto& rootPly = thread.rootPly;
@@ -750,6 +770,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     bool ttHit = m_TT.probe(board.zkey(), rootPly, ttData);
     bool ttPV = pvNode || (ttHit && ttData.pv);
 
+    // tt cutoffs(~101 elo)
     if (ttHit && !pvNode)
     {
         if (ttData.bound == TTEntry::Bound::EXACT ||
@@ -771,6 +792,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
         stack->staticEval = inCheck ? SCORE_NONE : thread.history.correctStaticEval(rawStaticEval, board);
 
+        // use tt score as a better eval(~8 elo)
         stack->eval = stack->staticEval;
         if (!inCheck && ttHit && (
             ttData.bound == TTEntry::Bound::EXACT ||
@@ -812,6 +834,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     ScoredMove scoredMove = {};
     while ((scoredMove = ordering.selectMove()).score != MoveOrdering::NO_MOVE)
     {
+        // quiescence search pruning(~55 elo)
         if (!inCheck && movesPlayed >= 2)
             break;
         auto [move, moveScore] = scoredMove;

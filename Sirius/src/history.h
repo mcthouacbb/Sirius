@@ -124,11 +124,15 @@ inline void CorrHistEntry::update(int target, int weight)
 
 static constexpr int HISTORY_MAX = 16384;
 
+// main history(~29 elo)
 using MainHist = MultiArray<HistoryEntry<HISTORY_MAX>, 2, 4096, 2, 2>;
+// continuation history(~40 elo)
 using CHEntry = MultiArray<HistoryEntry<HISTORY_MAX>, 16, 64>;
 using ContHist = MultiArray<CHEntry, 16, 64>;
+// capture history(~19 elo)
 using CaptHist = MultiArray<HistoryEntry<HISTORY_MAX>, 7, 16, 64, 2, 2>;
 
+// correction history(~91 elo)
 constexpr int PAWN_CORR_HIST_ENTRIES = 16384;
 constexpr int MATERIAL_CORR_HIST_ENTRIES = 32768;
 constexpr int NON_PAWN_CORR_HIST_ENTRIES = 16384;
