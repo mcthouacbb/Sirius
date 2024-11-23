@@ -380,9 +380,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 return ttData.score;
         }
         // Internal Iterative Reductions(~23 elo)
-        if (pvNode && ttData.move == Move() && depth >= 3)
+        if (pvNode && ttData.move == Move() && depth >= minIIRPvNodeDepth)
             depth--;
-        if (cutnode && ttData.move == Move() && depth >= 3)
+        if (cutnode && ttData.move == Move() && depth >= minIIRCutnodeDepth)
             depth--;
 
         if (inCheck)
@@ -641,7 +641,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             reduction -= ttPV;
             reduction -= givesCheck;
             reduction -= inCheck;
-            reduction -= std::abs(stack->eval - rawStaticEval) > 80;
+            reduction -= std::abs(stack->eval - rawStaticEval) > lmrCorrplexityMargin;
             reduction += cutnode;
             reduction += stack[1].failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin);
 
@@ -649,8 +649,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             score = -search(thread, reduced, stack + 1, -alpha - 1, -alpha, false, true);
             if (score > alpha && reduced < newDepth)
             {
-                bool doDeeper = score > bestScore + 35 + 2 * newDepth;
-                bool doShallower = score < bestScore + 8;
+                bool doDeeper = score > bestScore + doDeeperMarginBase + doDeeperMarginDepth * newDepth / 16;
+                bool doShallower = score < bestScore + doShallowerMargin;
                 newDepth += doDeeper - doShallower;
                 score = -search(thread, newDepth, stack + 1, -alpha - 1, -alpha, false, !cutnode);
             }

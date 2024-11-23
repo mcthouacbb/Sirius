@@ -71,7 +71,8 @@ SEARCH_PARAM(aspInitDelta, 9, 8, 30, 4);
 SEARCH_PARAM(minAspDepth, 5, 3, 7, 1);
 SEARCH_PARAM(aspWideningFactor, 5, 1, 32, 2);
 
-SEARCH_PARAM(minIIRDepth, 2, 2, 9, 1);
+SEARCH_PARAM(minIIRPvNodeDepth, 3, 2, 9, 1);
+SEARCH_PARAM(minIIRCutnodeDepth, 3, 2, 9, 1);
 
 SEARCH_PARAM(rfpMaxDepth, 8, 4, 10, 1);
 SEARCH_PARAM(rfpImprovingMargin, 32, 30, 80, 8);
@@ -119,11 +120,17 @@ SEARCH_PARAM(lmrMinDepth, 3, 2, 5, 1);
 SEARCH_PARAM(lmrMinMovesNonPv, 3, 1, 6, 1);
 SEARCH_PARAM(lmrMinMovesPv, 4, 2, 8, 1);
 SEARCH_PARAM(lmrFailHighCountMargin, 2, 2, 12, 1);
+SEARCH_PARAM(lmrCorrplexityMargin, 80, 40, 120, 5);
 
 SEARCH_PARAM_CALLBACK(lmrBase, 71, -50, 200, 10, updateLmrTable);
 SEARCH_PARAM_CALLBACK(lmrDivisor, 224, 180, 320, 10, updateLmrTable);
 SEARCH_PARAM(lmrQuietHistDivisor, 9124, 4096, 16384, 512);
 SEARCH_PARAM(lmrNoisyHistDivisor, 6036, 2048, 16384, 512);
+
+SEARCH_PARAM(doDeeperMarginBase, 35, 15, 55, 5);
+SEARCH_PARAM(doDeeperMarginDepth, 32, 8, 96, 5);
+
+SEARCH_PARAM(doShallowerMargin, 8, 2, 15, 1);
 
 SEARCH_PARAM(qsFpMargin, 68, 0, 250, 16);
 
