@@ -138,6 +138,7 @@ Do not use the Makefile, it is intended for building with OpenBench only
 - [Ethereal](https://github.com/AndyGrant/Ethereal), one of the best references for chess programming
 - [Berserk](https://github.com/jhonnold/berserk), another good reference engine
 - [Weiss](https://github.com/TerjeKir/Weiss)
+- [Stash](https://github.com/mhouppin/stash-bot)
 - Crafty
 - Zurichess
 - The Engine Programming Discord Server, and the people in it
