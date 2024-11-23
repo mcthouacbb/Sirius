@@ -4,6 +4,7 @@
 #include "bitboard.h"
 #include "zobrist.h"
 #include "util/murmur.h"
+#include "util/enum_array.h"
 
 #include <string_view>
 #include <string>

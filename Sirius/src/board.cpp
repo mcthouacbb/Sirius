@@ -25,8 +25,8 @@ void Board::setToFen(const std::string_view& fen)
 
     currState().zkey.value = 0;
     currState().pawnKey.value = 0;
-    currState().nonPawnKey[static_cast<int>(Color::WHITE)].value = 0;
-    currState().nonPawnKey[static_cast<int>(Color::BLACK)].value = 0;
+    currState().nonPawnKeys[Color::WHITE].value = 0;
+    currState().nonPawnKeys[Color::BLACK].value = 0;
     currState().minorPieceKey.value = 0;
 
     int i = 0;
@@ -169,8 +169,8 @@ void Board::setToEpd(const std::string_view& epd)
 
     currState().zkey.value = 0;
     currState().pawnKey.value = 0;
-    currState().nonPawnKey[static_cast<int>(Color::WHITE)].value = 0;
-    currState().nonPawnKey[static_cast<int>(Color::BLACK)].value = 0;
+    currState().nonPawnKeys[Color::WHITE].value = 0;
+    currState().nonPawnKeys[Color::BLACK].value = 0;
     currState().minorPieceKey.value = 0;
 
     int i = 0;
