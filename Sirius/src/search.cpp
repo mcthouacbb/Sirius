@@ -642,7 +642,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             reduction -= givesCheck;
             reduction -= inCheck;
             reduction -= std::abs(stack->eval - rawStaticEval) > 80;
-            reduction += cutnode;
+            reduction += 2 * cutnode;
             reduction += stack[1].failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin);
 
             int reduced = std::min(std::max(newDepth - reduction, 1), newDepth);
