@@ -133,7 +133,7 @@ inline constexpr Bitboard qscBlockSquares()
 
 inline bool aligned(Square a, Square b, Square c)
 {
-    return (attackData.alignedSquares[a.value()][b.value()] & Bitboard::fromSquare(c)).any();
+    return attackData.alignedSquares[a.value()][b.value()].has(c);
 }
 
 inline Bitboard inBetweenSquares(Square src, Square dst)

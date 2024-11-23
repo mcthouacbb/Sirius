@@ -25,8 +25,8 @@ void Board::setToFen(const std::string_view& fen)
 
     currState().zkey.value = 0;
     currState().pawnKey.value = 0;
-    currState().nonPawnKey[static_cast<int>(Color::WHITE)].value = 0;
-    currState().nonPawnKey[static_cast<int>(Color::BLACK)].value = 0;
+    currState().nonPawnKeys[Color::WHITE].value = 0;
+    currState().nonPawnKeys[Color::BLACK].value = 0;
     currState().minorPieceKey.value = 0;
 
     int i = 0;
@@ -169,8 +169,8 @@ void Board::setToEpd(const std::string_view& epd)
 
     currState().zkey.value = 0;
     currState().pawnKey.value = 0;
-    currState().nonPawnKey[static_cast<int>(Color::WHITE)].value = 0;
-    currState().nonPawnKey[static_cast<int>(Color::BLACK)].value = 0;
+    currState().nonPawnKeys[Color::WHITE].value = 0;
+    currState().nonPawnKeys[Color::BLACK].value = 0;
     currState().minorPieceKey.value = 0;
 
     int i = 0;
@@ -844,7 +844,7 @@ bool Board::isLegal(Move move) const
 
     // pinned pieces
     return
-        (checkBlockers(m_SideToMove) & Bitboard::fromSquare(move.fromSq())).empty() ||
+        !checkBlockers(m_SideToMove).has(move.fromSq()) ||
         attacks::aligned(kingSq(m_SideToMove), move.fromSq(), move.toSq());
 }
 
@@ -871,7 +871,7 @@ bool Board::isPseudoLegal(Move move) const
             return false;
 
         Bitboard firstRank = m_SideToMove == Color::WHITE ? Bitboard::nthRank<Color::WHITE, 0>() : Bitboard::nthRank<Color::BLACK, 0>();
-        if ((Bitboard::fromSquare(move.fromSq()) & firstRank).empty() || (Bitboard::fromSquare(move.toSq()) & firstRank).empty())
+        if (!firstRank.has(move.fromSq()) || !firstRank.has(move.toSq()))
             return false;
 
         if (move.fromSq() > move.toSq())
@@ -908,7 +908,7 @@ bool Board::isPseudoLegal(Move move) const
 
     Bitboard moveMask = checkers().any() && srcPieceType != PieceType::KING ? attacks::moveMask(kingSq(m_SideToMove), checkers().lsb()) : Bitboard(~0ull);
 
-    if (move.type() != MoveType::ENPASSANT && (Bitboard::fromSquare(move.toSq()) & moveMask).empty())
+    if (move.type() != MoveType::ENPASSANT && !moveMask.has(move.toSq()))
         return false;
 
     if (srcPieceType == PieceType::PAWN)
@@ -918,9 +918,9 @@ bool Board::isPseudoLegal(Move move) const
         {
             if (move.toSq().value() != epSquare())
                 return false;
-            if ((attacks::pawnAttacks(m_SideToMove, move.fromSq()) & Bitboard::fromSquare(move.toSq())).empty())
+            if (!attacks::pawnAttacks(m_SideToMove, move.fromSq()).has(move.toSq()))
                 return false;
-            return checkers().empty() || (moveMask & Bitboard::fromSquare(Square(epSquare() - pushOffset))).any();
+            return checkers().empty() || moveMask.has(Square(epSquare() - pushOffset));
         }
 
         if (dstPieceType == PieceType::NONE)
@@ -933,11 +933,11 @@ bool Board::isPseudoLegal(Move move) const
 
                 if (move.type() == MoveType::PROMOTION)
                 {
-                    return (Bitboard::fromSquare(move.fromSq()) & seventhRank).any();
+                    return seventhRank.has(move.fromSq());
                 }
                 else
                 {
-                    return move.fromSq().value() >= 8 && move.fromSq().value() < 56 && (Bitboard::fromSquare(move.fromSq()) & seventhRank).empty();
+                    return move.fromSq().value() >= 8 && move.fromSq().value() < 56 && !seventhRank.has(move.fromSq());
                 }
             }
             else if (move.toSq() - move.fromSq() == pushOffset * 2)
@@ -948,7 +948,7 @@ bool Board::isPseudoLegal(Move move) const
                     return false;
                 // double
                 Bitboard secondRank = m_SideToMove == Color::WHITE ? Bitboard::nthRank<Color::WHITE, 1>() : Bitboard::nthRank<Color::BLACK, 1>();
-                return (Bitboard::fromSquare(move.fromSq()) & secondRank).any();
+                return secondRank.has(move.fromSq());
             }
             else
                 return false;
@@ -956,18 +956,18 @@ bool Board::isPseudoLegal(Move move) const
         else
         {
             // must be a capture
-            if ((attacks::pawnAttacks(m_SideToMove, move.fromSq()) & Bitboard::fromSquare(move.toSq())).empty())
+            if (!attacks::pawnAttacks(m_SideToMove, move.fromSq()).has(move.toSq()))
                 return false;
 
             Bitboard seventhRank = m_SideToMove == Color::WHITE ? Bitboard::nthRank<Color::WHITE, 6>() : Bitboard::nthRank<Color::BLACK, 6>();
 
             if (move.type() == MoveType::PROMOTION)
             {
-                return (Bitboard::fromSquare(move.fromSq()) & seventhRank).any();
+                return seventhRank.has(move.fromSq());
             }
             else
             {
-                return move.fromSq().value() >= 8 && move.fromSq().value() < 56 && (Bitboard::fromSquare(move.fromSq()) & seventhRank).empty();
+                return move.fromSq().value() >= 8 && move.fromSq().value() < 56 && !seventhRank.has(move.fromSq());
             }
         }
     }
@@ -995,7 +995,7 @@ bool Board::isPseudoLegal(Move move) const
             break;
     }
 
-    return (pieceAttacks & Bitboard::fromSquare(move.toSq())).any();
+    return pieceAttacks.has(move.toSq());
 }
 
 ZKey Board::keyAfter(Move move) const

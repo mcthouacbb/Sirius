@@ -44,7 +44,7 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
     {
         Square sq = pieces.poplsb();
         Bitboard attacks = attacks::pieceAttacks<piece>(sq, occupancy);
-        if ((board.checkBlockers(us) & Bitboard::fromSquare(sq)).any())
+        if (board.checkBlockers(us).has(sq))
             attacks &= attacks::inBetweenSquares(sq, board.kingSq(us));
 
         evalData.attackedBy[us][piece] |= attacks;
@@ -87,7 +87,7 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
     {
         Square threat = knightThreats.poplsb();
         PieceType threatened = getPieceType(board.pieceAt(threat));
-        bool defended = (defendedBB & Bitboard::fromSquare(threat)).any();
+        bool defended = defendedBB.has(threat);
         eval += THREAT_BY_KNIGHT[defended][static_cast<int>(threatened)];
     }
 
@@ -96,7 +96,7 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
     {
         Square threat = bishopThreats.poplsb();
         PieceType threatened = getPieceType(board.pieceAt(threat));
-        bool defended = (defendedBB & Bitboard::fromSquare(threat)).any();
+        bool defended = defendedBB.has(threat);
         eval += THREAT_BY_BISHOP[defended][static_cast<int>(threatened)];
     }
 
@@ -105,7 +105,7 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
     {
         Square threat = rookThreats.poplsb();
         PieceType threatened = getPieceType(board.pieceAt(threat));
-        bool defended = (defendedBB & Bitboard::fromSquare(threat)).any();
+        bool defended = defendedBB.has(threat);
         eval += THREAT_BY_ROOK[defended][static_cast<int>(threatened)];
     }
 
@@ -114,7 +114,7 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
     {
         Square threat = queenThreats.poplsb();
         PieceType threatened = getPieceType(board.pieceAt(threat));
-        bool defended = (defendedBB & Bitboard::fromSquare(threat)).any();
+        bool defended = defendedBB.has(threat);
         eval += THREAT_BY_QUEEN[defended][static_cast<int>(threatened)];
     }
 
@@ -192,7 +192,7 @@ PackedScore evaluatePassedPawns(const Board& board, const PawnStructure& pawnStr
             Square pushSq = passer + attacks::pawnPushOffset<us>();
 
             bool blocked = board.pieceAt(pushSq) != Piece::NONE;
-            bool controlled = (evalData.attacked[them] & Bitboard::fromSquare(pushSq)).any();
+            bool controlled = evalData.attacked[them].has(pushSq);
             eval += PASSED_PAWN[blocked][controlled][rank];
 
             eval += OUR_PASSER_PROXIMITY[Square::chebyshev(ourKing, passer)];
@@ -247,9 +247,9 @@ void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& p
     evalData.attackedBy2[WHITE] = evalData.attacked[WHITE] & whiteKingAtks;
     evalData.attacked[WHITE] |= whiteKingAtks;
     evalData.kingRing[WHITE] = (whiteKingAtks | whiteKingAtks.north()) & ~Bitboard::fromSquare(whiteKing);
-    if ((Bitboard::fromSquare(whiteKing) & FILE_H_BB).any())
+    if (FILE_H_BB.has(whiteKing))
         evalData.kingRing[WHITE] |= evalData.kingRing[WHITE].west();
-    if ((Bitboard::fromSquare(whiteKing) & FILE_A_BB).any())
+    if (FILE_A_BB.has(whiteKing))
         evalData.kingRing[WHITE] |= evalData.kingRing[WHITE].east();
 
     evalData.mobilityArea[BLACK] = ~pawnStructure.pawnAttacks[WHITE];
@@ -260,9 +260,9 @@ void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& p
     evalData.attackedBy2[BLACK] = evalData.attacked[BLACK] & blackKingAtks;
     evalData.attacked[BLACK] |= blackKingAtks;
     evalData.kingRing[BLACK] = (blackKingAtks | blackKingAtks.south()) & ~Bitboard::fromSquare(blackKing);
-    if ((Bitboard::fromSquare(blackKing) & FILE_H_BB).any())
+    if (FILE_H_BB.has(blackKing))
         evalData.kingRing[BLACK] |= evalData.kingRing[BLACK].west();
-    if ((Bitboard::fromSquare(blackKing) & FILE_A_BB).any())
+    if (FILE_A_BB.has(blackKing))
         evalData.kingRing[BLACK] |= evalData.kingRing[BLACK].east();
 }
 

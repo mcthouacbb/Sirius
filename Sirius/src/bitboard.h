@@ -49,6 +49,7 @@ public:
     Square msb() const;
     uint32_t popcount() const;
     Square poplsb();
+    constexpr bool has(Square sq) const;
     constexpr bool any() const;
     constexpr bool empty() const;
     constexpr bool multiple() const;
@@ -269,6 +270,11 @@ inline Square Bitboard::poplsb()
     Square b = lsb();
     m_Value &= m_Value - 1;
     return b;
+}
+
+constexpr bool Bitboard::has(Square sq) const
+{
+    return ((m_Value >> sq.value()) & 1) > 0;
 }
 
 constexpr bool Bitboard::any() const

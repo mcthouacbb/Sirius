@@ -4,6 +4,7 @@
 #include "bitboard.h"
 #include "zobrist.h"
 #include "util/murmur.h"
+#include "util/enum_array.h"
 
 #include <string_view>
 #include <string>
@@ -31,7 +32,7 @@ struct BoardState
     int repetitions;
     int lastRepetition;
     ZKey zkey;
-    std::array<ZKey, 2> nonPawnKey;
+    ColorArray<ZKey> nonPawnKeys;
     ZKey minorPieceKey;
     ZKey majorPieceKey;
     ZKey pawnKey;
@@ -51,7 +52,7 @@ struct BoardState
             pawnKey.addPiece(pieceType, color, pos);
         else
         {
-            nonPawnKey[static_cast<int>(color)].addPiece(pieceType, color, pos);
+            nonPawnKeys[color].addPiece(pieceType, color, pos);
             if (pieceType == PieceType::BISHOP || pieceType == PieceType::KNIGHT || pieceType == PieceType::KING)
                 minorPieceKey.addPiece(pieceType, color, pos);
             if (pieceType == PieceType::ROOK || pieceType == PieceType::QUEEN || pieceType == PieceType::KING)
@@ -73,7 +74,7 @@ struct BoardState
             pawnKey.addPiece(pieceType, color, pos);
         else
         {
-            nonPawnKey[static_cast<int>(color)].addPiece(pieceType, color, pos);
+            nonPawnKeys[color].addPiece(pieceType, color, pos);
             if (pieceType == PieceType::BISHOP || pieceType == PieceType::KNIGHT || pieceType == PieceType::KING)
                 minorPieceKey.addPiece(pieceType, color, pos);
             if (pieceType == PieceType::ROOK || pieceType == PieceType::QUEEN || pieceType == PieceType::KING)
@@ -96,7 +97,7 @@ struct BoardState
             pawnKey.removePiece(pieceType, color, pos);
         else
         {
-            nonPawnKey[static_cast<int>(color)].removePiece(pieceType, color, pos);
+            nonPawnKeys[color].removePiece(pieceType, color, pos);
             if (pieceType == PieceType::BISHOP || pieceType == PieceType::KNIGHT || pieceType == PieceType::KING)
                 minorPieceKey.removePiece(pieceType, color, pos);
             if (pieceType == PieceType::ROOK || pieceType == PieceType::QUEEN || pieceType == PieceType::KING)
@@ -123,7 +124,7 @@ struct BoardState
             pawnKey.movePiece(pieceType, color, src, dst);
         else
         {
-            nonPawnKey[static_cast<int>(color)].movePiece(pieceType, color, src, dst);
+            nonPawnKeys[color].movePiece(pieceType, color, src, dst);
             if (pieceType == PieceType::BISHOP || pieceType == PieceType::KNIGHT || pieceType == PieceType::KING)
                 minorPieceKey.movePiece(pieceType, color, src, dst);
             if (pieceType == PieceType::ROOK || pieceType == PieceType::QUEEN || pieceType == PieceType::KING)
@@ -322,7 +323,7 @@ inline ZKey Board::pawnKey() const
 
 inline ZKey Board::nonPawnKey(Color color) const
 {
-    return currState().nonPawnKey[static_cast<int>(color)];
+    return currState().nonPawnKeys[color];
 }
 
 inline ZKey Board::minorPieceKey() const
