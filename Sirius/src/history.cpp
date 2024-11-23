@@ -141,8 +141,8 @@ void History::updateCorrHist(int bonus, int depth, const Board& board)
 
 int History::getMainHist(Bitboard threats, ExtMove move) const
 {
-    bool srcThreat = (threats & Bitboard::fromSquare(move.fromSq())).any();
-    bool dstThreat = (threats & Bitboard::fromSquare(move.toSq())).any();
+    bool srcThreat = threats.has(move.fromSq());
+    bool dstThreat = threats.has(move.toSq());
     return m_MainHist[static_cast<int>(getPieceColor(move.movingPiece()))][move.fromTo()][srcThreat][dstThreat];
 }
 
@@ -153,15 +153,15 @@ int History::getContHist(const CHEntry* entry, ExtMove move) const
 
 int History::getCaptHist(Bitboard threats, ExtMove move) const
 {
-    bool srcThreat = (threats & Bitboard::fromSquare(move.fromSq())).any();
-    bool dstThreat = (threats & Bitboard::fromSquare(move.toSq())).any();
+    bool srcThreat = threats.has(move.fromSq());
+    bool dstThreat = threats.has(move.toSq());
     return m_CaptHist[static_cast<int>(getPieceType(move.capturedPiece()))][static_cast<int>(move.movingPiece())][move.toSq().value()][srcThreat][dstThreat];
 }
 
 void History::updateMainHist(Bitboard threats, ExtMove move, int bonus)
 {
-    bool srcThreat = (threats & Bitboard::fromSquare(move.fromSq())).any();
-    bool dstThreat = (threats & Bitboard::fromSquare(move.toSq())).any();
+    bool srcThreat = threats.has(move.fromSq());
+    bool dstThreat = threats.has(move.toSq());
     m_MainHist[static_cast<int>(getPieceColor(move.movingPiece()))][move.fromTo()][srcThreat][dstThreat].update(bonus);
 }
 
@@ -172,7 +172,7 @@ void History::updateContHist(CHEntry* entry, ExtMove move, int bonus)
 
 void History::updateCaptHist(Bitboard threats, ExtMove move, int bonus)
 {
-    bool srcThreat = (threats & Bitboard::fromSquare(move.fromSq())).any();
-    bool dstThreat = (threats & Bitboard::fromSquare(move.toSq())).any();
+    bool srcThreat = threats.has(move.fromSq());
+    bool dstThreat = threats.has(move.toSq());
     m_CaptHist[static_cast<int>(getPieceType(move.capturedPiece()))][static_cast<int>(move.movingPiece())][move.toSq().value()][srcThreat][dstThreat].update(bonus);
 }

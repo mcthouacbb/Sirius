@@ -216,7 +216,7 @@ void genPawnMoves(const Board& board, MoveList& moves, Bitboard moveMask)
 
 
     Bitboard eastCaptures = attacks::pawnEastAttacks<color>(pawns);
-    if (board.epSquare() != -1 && (eastCaptures & Bitboard::fromSquare(Square(board.epSquare()))).any() && (Bitboard::fromSquare(Square(board.epSquare()) - attacks::pawnPushOffset<color>()) & moveMask).any())
+    if (board.epSquare() != -1 && eastCaptures.has(Square(board.epSquare())) && moveMask.has(Square(board.epSquare()) - attacks::pawnPushOffset<color>()))
         moves.push_back(Move(Square(board.epSquare()) - attacks::pawnPushOffset<color>() - 1, Square(board.epSquare()), MoveType::ENPASSANT));
 
     eastCaptures &= oppBB;
@@ -242,7 +242,7 @@ void genPawnMoves(const Board& board, MoveList& moves, Bitboard moveMask)
 
 
     Bitboard westCaptures = attacks::pawnWestAttacks<color>(pawns);
-    if (board.epSquare() != -1 && (westCaptures & Bitboard::fromSquare(Square(board.epSquare()))).any() && (Bitboard::fromSquare(Square(board.epSquare()) - attacks::pawnPushOffset<color>()) & moveMask).any())
+    if (board.epSquare() != -1 && westCaptures.has(Square(board.epSquare())) && moveMask.has(Square(board.epSquare()) - attacks::pawnPushOffset<color>()))
         moves.push_back(Move(Square(board.epSquare()) - attacks::pawnPushOffset<color>() + 1, Square(board.epSquare()), MoveType::ENPASSANT));
 
     westCaptures &= oppBB;

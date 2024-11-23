@@ -46,7 +46,7 @@ PackedScore evalKingPawnFile(uint32_t file, Bitboard ourPawns, Bitboard theirPaw
         int rank = filePawns.any() ?
             (us == Color::WHITE ? filePawns.msb() : filePawns.lsb()).relativeRank<them>() :
             0;
-        bool blocked = (theirPawns & Bitboard::fromSquare(Square(rank + attacks::pawnPushOffset<us>(), file))).any();
+        bool blocked = theirPawns.has(Square(rank + attacks::pawnPushOffset<us>(), file));
         eval += PAWN_STORM[blocked][edgeDist][rank];
     }
     {
@@ -94,7 +94,7 @@ PackedScore evaluateBishopPawns(const Board& board)
     while (bishops.any())
     {
         Square sq = bishops.poplsb();
-        bool lightSquare = (Bitboard::fromSquare(sq) & LIGHT_SQUARES_BB).any();
+        bool lightSquare = LIGHT_SQUARES_BB.has(sq);
         Bitboard sameColorPawns = board.pieces(us, PieceType::PAWN) & (lightSquare ? LIGHT_SQUARES_BB : DARK_SQUARES_BB);
         eval += BISHOP_PAWNS[std::min(sameColorPawns.popcount(), 6u)];
     }
