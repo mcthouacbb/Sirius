@@ -166,8 +166,14 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
     eval += UNSAFE_QUEEN_CHECK * (queenChecks & ~safe).popcount();
 
     eval += evalData.attackWeight[us];
+
     int attackCount = std::min(evalData.attackCount[us], 13);
     eval += KING_ATTACKS[attackCount];
+
+    Bitboard theirBackRank = Bitboard::nthRank<us, 7>();
+    int virtualMob = (~theirBackRank & attacks::queenAttacks(theirKing, board.pieces(them) | board.pieces(PieceType::PAWN))).popcount();
+
+    eval += VIRTUAL_MOBILITY[virtualMob];
 
     return eval;
 }
