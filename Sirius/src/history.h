@@ -63,17 +63,17 @@ struct HistoryEntry
 {
 public:
     HistoryEntry() = default;
-    HistoryEntry(int value);
+    HistoryEntry(int16_t value);
 
     operator int() const;
 
     void update(int bonus);
 private:
-    int m_Value;
+    int16_t m_Value;
 };
 
 template<int MAX_VAL>
-inline HistoryEntry<MAX_VAL>::HistoryEntry(int value)
+inline HistoryEntry<MAX_VAL>::HistoryEntry(int16_t value)
 {
     m_Value = value;
 }
@@ -97,16 +97,16 @@ struct CorrHistEntry
 {
 public:
     CorrHistEntry() = default;
-    CorrHistEntry(int value);
+    CorrHistEntry(int16_t value);
 
     operator int() const;
 
     void update(int target, int weight);
 private:
-    int m_Value;
+    int16_t m_Value;
 };
 
-inline CorrHistEntry::CorrHistEntry(int value)
+inline CorrHistEntry::CorrHistEntry(int16_t value)
 {
     m_Value = value;
 }
@@ -118,8 +118,8 @@ inline CorrHistEntry::operator int() const
 
 inline void CorrHistEntry::update(int target, int weight)
 {
-    m_Value = (m_Value * (256 - weight) + target * weight) / 256;
-    m_Value = std::clamp(m_Value, -MAX_CORR_HIST, MAX_CORR_HIST);
+    int newValue = (m_Value * (256 - weight) + target * weight) / 256;
+    m_Value = static_cast<int16_t>(std::clamp(newValue, -MAX_CORR_HIST, MAX_CORR_HIST));
 }
 
 static constexpr int HISTORY_MAX = 16384;
