@@ -431,7 +431,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         Bitboard nonPawns = board.pieces(board.sideToMove()) ^ board.pieces(board.sideToMove(), PieceType::PAWN);
         if (board.pliesFromNull() > 0 && depth >= nmpMinDepth &&
             stack->eval >= beta && stack->staticEval >= beta + nmpEvalBaseMargin - nmpEvalDepthMargin * depth &&
-            nonPawns.multiple())
+            nonPawns.multiple() && stack[-1].histScore < 25000)
         {
             int r = nmpBaseReduction + depth / nmpDepthReductionScale + std::min((stack->eval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
             board.makeNullMove();
