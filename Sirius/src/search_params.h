@@ -106,6 +106,8 @@ SEARCH_PARAM(seePruneMarginNoisy, -99, -120, -30, 6);
 SEARCH_PARAM(seePruneMarginQuiet, -64, -120, -30, 6);
 SEARCH_PARAM(seeCaptHistMax, 98, 50, 200, 6);
 SEARCH_PARAM(seeCaptHistDivisor, 32, 16, 96, 2);
+SEARCH_PARAM(seeQuietHistMax, 63, 50, 200, 6);
+SEARCH_PARAM(seeQuietHistDivisor, 192, 16, 96, 2);
 
 SEARCH_PARAM(maxHistPruningDepth, 5, 2, 8, 1);
 SEARCH_PARAM(histPruningMargin, 1768, 512, 4096, 128);
