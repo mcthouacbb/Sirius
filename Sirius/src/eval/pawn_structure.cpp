@@ -39,7 +39,7 @@ PackedScore PawnStructure::evaluate(const Board& board)
         Square sq = pawns.poplsb();
         Bitboard attacks = attacks::pawnAttacks(us, sq);
         Bitboard threats = attacks & theirPawns;
-        Bitboard pushThreats = attacks::pawnPushes<us>(threats);
+        Bitboard pushThreats = attacks::pawnPushes<us>(attacks) & theirPawns;
 
         bool doubled = ourPawns.has(sq + attacks::pawnPushOffset<us>());
 
