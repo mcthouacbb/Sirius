@@ -170,6 +170,9 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
     int attackCount = std::min(evalData.attackCount[us], 13);
     eval += KING_ATTACKS[attackCount];
 
+    int weakSquares = std::min((evalData.kingRing[them] & weak).popcount(), 8u);
+    eval += WEAK_KING_RING[weakSquares];
+
     return eval;
 }
 
