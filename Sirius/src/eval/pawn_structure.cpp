@@ -46,6 +46,7 @@ PackedScore PawnStructure::evaluate(const Board& board)
         bool blocked = theirPawns.has(push);
         bool doubled = ourPawns.has(push);
         bool backwards = (blocked || pushThreats.any()) && support.empty();
+        bool opposed = (theirPawns & attacks::fillUp<Color::WHITE>(Bitboard::fromSquare(sq))).any();
 
         if (board.isPassedPawn(sq))
             passedPawns |= Bitboard::fromSquare(sq);
@@ -56,7 +57,7 @@ PackedScore PawnStructure::evaluate(const Board& board)
         if (threats.empty() && board.isIsolatedPawn(sq))
             eval += ISOLATED_PAWN[sq.file()];
         else if (backwards)
-            eval += BACKWARDS_PAWN[sq.relativeRank<us>()];
+            eval += BACKWARDS_PAWN[opposed][sq.relativeRank<us>()];
     }
 
     Bitboard phalanx = ourPawns & ourPawns.west();
