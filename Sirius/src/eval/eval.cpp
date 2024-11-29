@@ -231,10 +231,10 @@ int evaluateScale(const Board& board, const PawnStructure& pawnStructure, Packed
     Color strongSide = eval.eg() > 0 ? WHITE : BLACK;
     Color weakSide = ~strongSide;
 
-    Bitboard queens = board.pieces(PieceType::QUEEN);
-    Bitboard rooks = board.pieces(PieceType::ROOK);
-    Bitboard bishops = board.pieces(PieceType::BISHOP);
-    Bitboard knights = board.pieces(PieceType::KNIGHT);
+    Bitboard queens = board.pieces(QUEEN);
+    Bitboard rooks = board.pieces(ROOK);
+    Bitboard bishops = board.pieces(BISHOP);
+    Bitboard knights = board.pieces(KNIGHT);
     Bitboard minors = knights | bishops;
 
     int strongPawns = board.pieces(strongSide, PAWN).popcount();
