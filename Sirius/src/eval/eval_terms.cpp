@@ -88,6 +88,8 @@ PackedScore evaluateKnightOutposts(const Board& board, const PawnStructure& pawn
 template<Color us>
 PackedScore evaluateBishopPawns(const Board& board)
 {
+    constexpr Color them = ~us;
+
     Bitboard bishops = board.pieces(us, PieceType::BISHOP);
 
     PackedScore eval{0, 0};
@@ -97,6 +99,9 @@ PackedScore evaluateBishopPawns(const Board& board)
         bool lightSquare = LIGHT_SQUARES_BB.has(sq);
         Bitboard sameColorPawns = board.pieces(us, PieceType::PAWN) & (lightSquare ? LIGHT_SQUARES_BB : DARK_SQUARES_BB);
         eval += BISHOP_PAWNS[std::min(sameColorPawns.popcount(), 6u)];
+
+        Bitboard oppSameColorPawns = board.pieces(them, PieceType::PAWN) & (lightSquare ? LIGHT_SQUARES_BB : DARK_SQUARES_BB);
+        eval += BISHOP_OPP_PAWNS[std::min(oppSameColorPawns.popcount(), 6u)];
     }
     return eval;
 }
