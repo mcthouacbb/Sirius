@@ -226,11 +226,39 @@ PackedScore evaluateComplexity(const Board& board, const PawnStructure& pawnStru
     return PackedScore(0, egSign * egComplexity);
 }
 
-int evaluateScale(const Board& board, PackedScore eval)
+int evaluateScale(const Board& board, const PawnStructure& pawnStructure, PackedScore eval)
 {
     Color strongSide = eval.eg() > 0 ? WHITE : BLACK;
+    Color weakSide = ~strongSide;
+
+    Bitboard queens = board.pieces(PieceType::QUEEN);
+    Bitboard rooks = board.pieces(PieceType::ROOK);
+    Bitboard bishops = board.pieces(PieceType::BISHOP);
+    Bitboard knights = board.pieces(PieceType::KNIGHT);
+    Bitboard minors = knights | bishops;
 
     int strongPawns = board.pieces(strongSide, PAWN).popcount();
+
+    bool ocb =
+        board.pieces(strongSide, BISHOP).one() &&
+        board.pieces(weakSide, BISHOP).one() &&
+        (bishops & LIGHT_SQUARES_BB).any() &&
+        (bishops & DARK_SQUARES_BB).any();
+
+    if (ocb)
+    {
+        if (queens.empty() && rooks.empty() && knights.empty())
+        {
+            return 32;
+        }
+    }
+
+    // K + minor is never won except in very rare situations
+    if (board.pieces(strongSide).popcount() == 2 &&
+        (board.pieces(strongSide) & minors).any())
+    {
+        return 0;
+    }
 
     return 80 + strongPawns * 7;
 }
@@ -297,7 +325,7 @@ int evaluate(const Board& board, search::SearchThread* thread)
 
     nonIncrementalEval(board, pawnStructure, evalData, eval);
 
-    int scale = evaluateScale(board, eval);
+    int scale = evaluateScale(board, pawnStructure, eval);
 
     eval += (color == WHITE ? TEMPO : -TEMPO);
 
@@ -324,7 +352,7 @@ int evaluateSingle(const Board& board)
 
     nonIncrementalEval(board, pawnStructure, evalData, eval);
 
-    int scale = evaluateScale(board, eval);
+    int scale = evaluateScale(board, pawnStructure, eval);
 
     eval += (color == WHITE ? TEMPO : -TEMPO);
 
