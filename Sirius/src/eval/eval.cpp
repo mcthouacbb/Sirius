@@ -226,7 +226,7 @@ PackedScore evaluateComplexity(const Board& board, const PawnStructure& pawnStru
     return PackedScore(0, egSign * egComplexity);
 }
 
-int evaluateScale(const Board& board, const PawnStructure& pawnStructure, PackedScore eval)
+int evaluateScale(const Board& board, PackedScore eval)
 {
     Color strongSide = eval.eg() > 0 ? WHITE : BLACK;
     Color weakSide = ~strongSide;
