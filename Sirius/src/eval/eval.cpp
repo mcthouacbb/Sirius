@@ -237,6 +237,8 @@ int evaluateScale(const Board& board, PackedScore eval)
 
 void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& pawnStructure)
 {
+    Bitboard whitePawns = board.pieces(WHITE, PAWN);
+    Bitboard blackPawns = board.pieces(BLACK, PAWN);
     Square whiteKing = board.kingSq(WHITE);
     Square blackKing = board.kingSq(BLACK);
 
@@ -252,6 +254,9 @@ void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& p
         evalData.kingRing[WHITE] |= evalData.kingRing[WHITE].west();
     if (FILE_A_BB.has(whiteKing))
         evalData.kingRing[WHITE] |= evalData.kingRing[WHITE].east();
+    Bitboard wDblPawnAttacks = attacks::pawnWestAttacks<WHITE>(whitePawns) & attacks::pawnEastAttacks<WHITE>(whitePawns);
+    evalData.kingRing[WHITE] &= ~wDblPawnAttacks;
+
 
     evalData.mobilityArea[BLACK] = ~pawnStructure.pawnAttacks[WHITE];
     evalData.attacked[BLACK] = evalData.attackedBy[BLACK][PAWN] = pawnStructure.pawnAttacks[BLACK];
@@ -265,6 +270,8 @@ void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& p
         evalData.kingRing[BLACK] |= evalData.kingRing[BLACK].west();
     if (FILE_A_BB.has(blackKing))
         evalData.kingRing[BLACK] |= evalData.kingRing[BLACK].east();
+    Bitboard bDblPawnAttacks = attacks::pawnWestAttacks<BLACK>(blackPawns) & attacks::pawnEastAttacks<BLACK>(blackPawns);
+    evalData.kingRing[BLACK] &= ~bDblPawnAttacks;
 }
 
 void nonIncrementalEval(const Board& board, const PawnStructure& pawnStructure, EvalData& evalData, PackedScore& eval)
