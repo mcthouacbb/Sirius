@@ -380,9 +380,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 return ttData.score;
         }
         // Internal Iterative Reductions(~23 elo)
-        if (pvNode && ttData.move == Move() && depth >= minIIRPvNodeDepth)
+        if (pvNode && depth >= minIIRPvNodeDepth && (ttData.move == Move() || ttData.depth <= depth - 4))
             depth--;
-        if (cutnode && ttData.move == Move() && depth >= minIIRCutnodeDepth)
+        if (cutnode && depth >= minIIRCutnodeDepth && (ttData.move == Move() || ttData.depth <= depth - 4))
             depth--;
 
         if (inCheck)
