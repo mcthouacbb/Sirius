@@ -655,7 +655,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 newDepth += doDeeper - doShallower;
                 score = -search(thread, newDepth, stack + 1, -alpha - 1, -alpha, false, !cutnode);
 
-                if (quiet && score <= alpha || score >= beta)
+                if (quiet && (score <= alpha || score >= beta))
                 {
                     int bonus = score >= beta ? historyBonus(depth) : -historyMalus(depth);
                     history.updateContHist(extMove, contHistEntries, bonus);
