@@ -531,7 +531,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         bool quietLosing = moveScore < MoveOrdering::KILLER_SCORE;
 
         int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
-        int histScore = quiet ? history.getQuietStats(threats, ExtMove::from(board, move), contHistEntries) : history.getNoisyStats(threats, ExtMove::from(board, move));
+        ExtMove extMove = ExtMove::from(board, move);
+        int histScore = quiet ? history.getQuietStats(threats, extMove, contHistEntries) : history.getNoisyStats(threats, extMove);
         baseLMR -= histScore / (quiet ? lmrQuietHistDivisor : lmrNoisyHistDivisor);
 
         // move loop pruning(~184 elo)
@@ -607,7 +608,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         stack->multiExts += extension >= 2;
 
         m_TT.prefetch(board.keyAfter(move));
-        stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
+        stack->contHistEntry = &history.contHistEntry(extMove);
         stack->histScore = histScore;
 
         uint64_t nodesBefore = thread.nodes;
@@ -653,6 +654,12 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 bool doShallower = score < bestScore + doShallowerMargin;
                 newDepth += doDeeper - doShallower;
                 score = -search(thread, newDepth, stack + 1, -alpha - 1, -alpha, false, !cutnode);
+
+                if (quiet && score <= alpha || score >= beta)
+                {
+                    int bonus = score >= beta ? historyBonus(depth) : -historyMalus(depth);
+                    history.updateContHist(extMove, contHistEntries, bonus);
+                }
             }
         }
         else if (!pvNode || movesPlayed > 1)

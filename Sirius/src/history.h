@@ -170,6 +170,7 @@ public:
 
     void clear();
     void updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus);
+    void updateContHist(ExtMove move, std::span<CHEntry*> contHistEntries, int bonus);
     void updateNoisyStats(Bitboard threats, ExtMove move, int bonus);
     void updateCorrHist(int bonus, int depth, const Board& board);
 private:
