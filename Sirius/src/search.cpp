@@ -635,22 +635,22 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         int newDepth = depth + extension - 1;
         int score = 0;
 
+        int reduction = baseLMR;
+
+        reduction += !improving;
+        reduction += noisyTTMove;
+        reduction -= ttPV;
+        reduction -= givesCheck;
+        reduction -= inCheck;
+        reduction -= std::abs(stack->eval - rawStaticEval) > lmrCorrplexityMargin;
+        reduction += cutnode;
+        reduction += stack[1].failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin);
+
         // late move reductions(~111 elo)
         if (movesPlayed >= (pvNode ? lmrMinMovesPv : lmrMinMovesNonPv) &&
             depth >= lmrMinDepth &&
             quietLosing)
         {
-            int reduction = baseLMR;
-
-            reduction += !improving;
-            reduction += noisyTTMove;
-            reduction -= ttPV;
-            reduction -= givesCheck;
-            reduction -= inCheck;
-            reduction -= std::abs(stack->eval - rawStaticEval) > lmrCorrplexityMargin;
-            reduction += cutnode;
-            reduction += stack[1].failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin);
-
             int reduced = std::min(std::max(newDepth - reduction, 1), newDepth);
             score = -search(thread, reduced, stack + 1, -alpha - 1, -alpha, false, true);
             if (score > alpha && reduced < newDepth)
@@ -668,7 +668,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             }
         }
         else if (!pvNode || movesPlayed > 1)
-            score = -search(thread, newDepth, stack + 1, -alpha - 1, -alpha, false, !cutnode);
+            score = -search(thread, newDepth - (reduction > 3), stack + 1, -alpha - 1, -alpha, false, !cutnode);
 
         if (pvNode && (movesPlayed == 1 || score > alpha))
             score = -search(thread, newDepth, stack + 1, -beta, -alpha, true, false);
