@@ -545,6 +545,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             // futility pruning(~1 elo)
             int lmrDepth = std::max(depth - baseLMR, 0);
             if (lmrDepth <= fpMaxDepth &&
+                quiet &&
                 !inCheck &&
                 alpha < SCORE_WIN &&
                 stack->eval + fpBaseMargin + fpDepthMargin * lmrDepth <= alpha)
