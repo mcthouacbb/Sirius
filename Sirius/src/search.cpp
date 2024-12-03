@@ -433,7 +433,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             stack->eval >= beta && stack->staticEval >= beta + nmpEvalBaseMargin - nmpEvalDepthMargin * depth &&
             nonPawns.multiple())
         {
-            int r = nmpBaseReduction + depth / nmpDepthReductionScale + std::min((stack->eval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
+            int r =
+                improving +
+                nmpBaseReduction +
+                depth / nmpDepthReductionScale +
+                std::min((stack->eval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
             board.makeNullMove();
             rootPly++;
             int nullScore = -search(thread, depth - r, stack + 1, -beta, -beta + 1, false, !cutnode);
