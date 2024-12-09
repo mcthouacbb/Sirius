@@ -10,7 +10,7 @@ All features tested against commit a049bb98 or functionally equivalent commits e
 ### In "proper" order
 - Aspiration windows: ~108 elo https://mcthouacbb.pythonanywhere.com/test/358/
 - TT Cutoffs: ~101 elo https://mcthouacbb.pythonanywhere.com/test/360/
-- **Internal iterative reductions**: ~23 elo https://mcthouacbb.pythonanywhere.com/test/396/
+- **Internal iterative reductions**: ~8 elo https://mcthouacbb.pythonanywhere.com/test/460/
 - Improving: ~31 elo https://mcthouacbb.pythonanywhere.com/test/381/
 - TT Eval adjustment: ~8 elo https://mcthouacbb.pythonanywhere.com/test/363/
 - Correction history: ~91 elo https://mcthouacbb.pythonanywhere.com/test/318/
@@ -60,10 +60,10 @@ All features tested against commit a049bb98 or functionally equivalent commits e
 - Improving: ~31 elo
 - Quiet history: ~30 elo
 - Late move pruning: ~23 elo
-- **Internal iterative reductions**: ~23 elo
 - Capture history: ~19 elo
 - History pruning: ~14 elo
 - Check extensions: ~13 elo
+- **Internal iterative reductions**: ~8 elo
 - TT Eval adjustment: ~8 elo
 - Killers: ~6 elo
 - **Razoring**: ~6 elo
