@@ -564,9 +564,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 continue;
 
             // history pruning(~14 elo)
-            if (quiet &&
-                depth <= maxHistPruningDepth &&
-                histScore < -histPruningMargin * depth)
+            int histMargin = quiet ?
+                -histPruningMargin * depth :
+                -1000 - 1000 * depth * depth;
+            if (depth <= maxHistPruningDepth &&
+                histScore < histMargin)
                 break;
         }
 
