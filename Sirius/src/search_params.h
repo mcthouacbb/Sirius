@@ -71,8 +71,7 @@ SEARCH_PARAM(aspInitDelta, 9, 8, 30, 4);
 SEARCH_PARAM(minAspDepth, 5, 3, 7, 1);
 SEARCH_PARAM(aspWideningFactor, 5, 1, 32, 2);
 
-SEARCH_PARAM(minIIRPvNodeDepth, 3, 2, 9, 1);
-SEARCH_PARAM(minIIRCutnodeDepth, 3, 2, 9, 1);
+SEARCH_PARAM(minIIRDepth, 4, 2, 9, 1);
 
 SEARCH_PARAM(rfpMaxDepth, 8, 4, 10, 1);
 SEARCH_PARAM(rfpImprovingMargin, 32, 30, 80, 8);

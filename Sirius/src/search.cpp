@@ -483,7 +483,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         }
     }
 
-    if (depth >= 4 && !inCheck && !excluded && !ttHit)
+    if (depth >= minIIRDepth && !inCheck && !excluded && !ttHit)
         depth--;
 
     // continuation history(~40 elo)
