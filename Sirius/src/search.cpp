@@ -483,6 +483,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         }
     }
 
+    if (depth >= 4 && !inCheck && !excluded && !ttHit)
+        depth--;
+
     // continuation history(~40 elo)
     std::array<CHEntry*, 3> contHistEntries = {
         rootPly > 0 ? stack[-1].contHistEntry : nullptr,
