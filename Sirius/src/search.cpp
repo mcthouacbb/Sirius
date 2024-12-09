@@ -710,7 +710,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 }
 
                 // history(~527 elo)
-                int histDepth = depth + (bestScore > beta + histBetaMargin);
+                int histDepth = depth + (stack->staticEval <= alpha) + (bestScore > beta + histBetaMargin);
                 int bonus = historyBonus(histDepth);
                 int malus = historyMalus(histDepth);
                 if (quiet)
