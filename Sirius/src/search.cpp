@@ -694,6 +694,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                     for (int i = 0; i < stack[1].pvLength; i++)
                         stack->pv[i + 1] = stack[1].pv[i];
                 }
+
+                if (bestScore < beta && depth > 4 && depth < 10 && !isMateScore(beta) && !isMateScore(alpha))
+                    depth--;
             }
 
             if (bestScore >= beta)
