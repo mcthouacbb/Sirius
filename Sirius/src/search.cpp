@@ -542,7 +542,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 quiet &&
                 !inCheck &&
                 alpha < SCORE_WIN &&
-                stack->eval + fpBaseMargin + fpDepthMargin * lmrDepth <= alpha)
+                stack->eval + fpBaseMargin + fpDepthMargin * lmrDepth + histScore / 200 <= alpha)
             {
                 continue;
             }
