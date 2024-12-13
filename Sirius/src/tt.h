@@ -51,12 +51,11 @@ struct TTEntry
 static_assert(sizeof(TTEntry) == 10, "TTEntry must be 10 bytes");
 static_assert(alignof(TTEntry) == 2, "TTEntry must have 2 byte alignment");
 
-static constexpr int ENTRY_COUNT = 3;
+static constexpr int ENTRY_COUNT = 1;
 
-struct alignas(32) TTBucket
+struct TTBucket
 {
     std::array<TTEntry, ENTRY_COUNT> entries;
-    char padding[2];
 };
 
 struct ProbedTTData
