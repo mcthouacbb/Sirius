@@ -150,6 +150,7 @@ void TT::store(ZKey key, int depth, int ply, int score, int staticEval, Move mov
     // if (bound == TTEntry::Bound::EXACT ||
         //replace.key16 != key16 ||
         //depth >= replace.depth - 2 - 2 * pv)
+    if (depth >= replace.depth)
     {
         replace.key16 = key16;
         replace.staticEval = staticEval;
