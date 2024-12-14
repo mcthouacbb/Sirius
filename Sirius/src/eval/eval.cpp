@@ -187,6 +187,7 @@ PackedScore evaluatePassedPawns(const Board& board, const PawnStructure& pawnStr
     Square theirKing = board.kingSq(them);
 
     Bitboard passers = pawnStructure.passedPawns & board.pieces(us);
+    Bitboard enemyNonPawns = board.pieces(them) & ~board.pieces(PieceType::PAWN);
 
     PackedScore eval{0, 0};
 
@@ -204,6 +205,15 @@ PackedScore evaluatePassedPawns(const Board& board, const PawnStructure& pawnStr
 
             eval += OUR_PASSER_PROXIMITY[Square::chebyshev(ourKing, passer)];
             eval += THEIR_PASSER_PROXIMITY[Square::chebyshev(theirKing, passer)];
+
+            Square promoSquare = us == Color::WHITE ?
+                Bitboard::fileBB(passer.file()).msb() :
+                Bitboard::fileBB(passer.file()).lsb();
+
+            int promoDist = Square::chebyshev(promoSquare, passer);
+            int enemyKingDist = Square::chebyshev(promoSquare, theirKing);
+            if (!enemyNonPawns.multiple() && promoDist < enemyKingDist - (board.sideToMove() == them))
+                eval += UNSTOPPABLE_PASSER;
         }
     }
 
