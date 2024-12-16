@@ -448,6 +448,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             ScoredMove scoredMove = {};
             int seeThreshold = probcutBeta - stack->staticEval;
             int probcutDepth = depth - probcutReduction;
+            int movesPlayed = 0;
             while ((scoredMove = ordering.selectMove()).score != MoveOrdering::NO_MOVE)
             {
                 auto [move, moveScore] = scoredMove;
@@ -464,10 +465,14 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 rootPly++;
                 board.makeMove(move, thread.evalState);
                 thread.nodes.fetch_add(1, std::memory_order_relaxed);
+                movesPlayed++;
 
                 int score = -qsearch(thread, stack + 1, -probcutBeta, -probcutBeta + 1, false);
-                if (score >= probcutBeta && probcutDepth >= 0)
-                    score = -search(thread, probcutDepth, stack + 1, -probcutBeta, -probcutBeta + 1, false, !cutnode);
+                int newDepth = probcutDepth;
+                if (movesPlayed > 1 && histScore < -6144)
+                    newDepth--;
+                if (score >= probcutBeta && newDepth >= 0)
+                    score = -search(thread, newDepth, stack + 1, -probcutBeta, -probcutBeta + 1, false, !cutnode);
 
                 rootPly--;
                 board.unmakeMove(thread.evalState);
@@ -476,7 +481,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
                 if (score >= probcutBeta)
                 {
-                    m_TT.store(board.zkey(), probcutDepth + 1, rootPly, score, rawStaticEval, move, ttPV, TTEntry::Bound::LOWER_BOUND);
+                    m_TT.store(board.zkey(), newDepth + 1, rootPly, score, rawStaticEval, move, ttPV, TTEntry::Bound::LOWER_BOUND);
                     return score;
                 }
             }
