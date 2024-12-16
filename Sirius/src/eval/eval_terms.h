@@ -49,7 +49,7 @@ template<Color us>
 PackedScore evaluateBishopPawns(const Board& board);
 
 template<Color us>
-PackedScore evaluateRookOpen(const Board& board);
+PackedScore evaluateRookOpen(const Board& board, const PawnStructure& pawnStructure);
 
 template<Color us>
 PackedScore evaluateMinorBehindPawn(const Board& board);

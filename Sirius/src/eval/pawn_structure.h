@@ -16,6 +16,7 @@ struct PawnStructure
     ColorArray<Bitboard> pawnAttacks;
     ColorArray<Bitboard> pawnAttackSpans;
     Bitboard passedPawns;
+    Bitboard frozenPawns;
     PackedScore score;
 private:
     template<Color us>

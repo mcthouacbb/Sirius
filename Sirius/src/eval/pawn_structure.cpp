@@ -12,10 +12,10 @@ PawnStructure::PawnStructure(const Board& board)
     pawnAttacks[Color::WHITE] = attacks::pawnAttacks<Color::WHITE>(wpawns);
     pawnAttackSpans[Color::WHITE] = attacks::fillUp<Color::WHITE>(pawnAttacks[Color::WHITE]);
     passedPawns = Bitboard(0);
+    frozenPawns = Bitboard(0);
 
     pawnAttacks[Color::BLACK] = attacks::pawnAttacks<Color::BLACK>(bpawns);
     pawnAttackSpans[Color::BLACK] = attacks::fillUp<Color::BLACK>(pawnAttacks[Color::BLACK]);
-    passedPawns = Bitboard(0);
 }
 
 PackedScore PawnStructure::evaluate(const Board& board)
@@ -46,6 +46,9 @@ PackedScore PawnStructure::evaluate(const Board& board)
         bool blocked = theirPawns.has(push);
         bool doubled = ourPawns.has(push);
         bool backwards = (blocked || pushThreats.any()) && support.empty();
+
+        if (threats.empty() && (backwards || blocked))
+            frozenPawns |= Bitboard::fromSquare(sq);
 
         if (board.isPassedPawn(sq))
             passedPawns |= Bitboard::fromSquare(sq);

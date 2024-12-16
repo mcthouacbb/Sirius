@@ -102,7 +102,7 @@ PackedScore evaluateBishopPawns(const Board& board)
 }
 
 template<Color us>
-PackedScore evaluateRookOpen(const Board& board)
+PackedScore evaluateRookOpen(const Board& board, const PawnStructure& pawnStructure)
 {
     constexpr Color them = ~us;
     Bitboard ourPawns = board.pieces(us, PieceType::PAWN);
@@ -112,9 +112,16 @@ PackedScore evaluateRookOpen(const Board& board)
     PackedScore eval{0, 0};
     while (rooks.any())
     {
-        Bitboard fileBB = Bitboard::fileBB(rooks.poplsb().file());
+        Square rookSq = rooks.poplsb();
+        Bitboard fileBB = Bitboard::fileBB(rookSq.file());
         if ((ourPawns & fileBB).empty())
             eval += (theirPawns & fileBB).any() ? ROOK_OPEN[1] : ROOK_OPEN[0];
+        else if (Bitboard frozenPawns = (ourPawns & fileBB & pawnStructure.frozenPawns); frozenPawns.any())
+        {
+            Square frozen = us == Color::WHITE ? frozenPawns.msb() : frozenPawns.lsb();
+            if (frozen.relativeRank<us>() > rookSq.relativeRank<us>())
+                eval += BLOCKED_ROOK;
+        }
     }
     return eval;
 }
@@ -141,8 +148,8 @@ template PackedScore evaluateKnightOutposts<Color::BLACK>(const Board& board, co
 template PackedScore evaluateBishopPawns<Color::WHITE>(const Board& board);
 template PackedScore evaluateBishopPawns<Color::BLACK>(const Board& board);
 
-template PackedScore evaluateRookOpen<Color::WHITE>(const Board& board);
-template PackedScore evaluateRookOpen<Color::BLACK>(const Board& board);
+template PackedScore evaluateRookOpen<Color::WHITE>(const Board& board, const PawnStructure& pawnStructure);
+template PackedScore evaluateRookOpen<Color::BLACK>(const Board& board, const PawnStructure& pawnStructure);
 
 template PackedScore evaluateMinorBehindPawn<Color::WHITE>(const Board& board);
 template PackedScore evaluateMinorBehindPawn<Color::BLACK>(const Board& board);

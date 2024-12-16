@@ -48,7 +48,9 @@ void EvalState::init(const Board& board, PawnTable* pawnTable)
         evaluateKnightOutposts<Color::WHITE>(board, currEntry().pawnStructure) -
         evaluateKnightOutposts<Color::BLACK>(board, currEntry().pawnStructure);
     currEntry().bishopPawns = evaluateBishopPawns<Color::WHITE>(board) - evaluateBishopPawns<Color::BLACK>(board);
-    currEntry().rookOpen = evaluateRookOpen<Color::WHITE>(board) - evaluateRookOpen<Color::BLACK>(board);
+    currEntry().rookOpen =
+        evaluateRookOpen<Color::WHITE>(board, currEntry().pawnStructure) -
+        evaluateRookOpen<Color::BLACK>(board, currEntry().pawnStructure);
     currEntry().minorBehindPawn = evaluateMinorBehindPawn<Color::WHITE>(board) - evaluateMinorBehindPawn<Color::BLACK>(board);
 }
 
@@ -97,7 +99,9 @@ void EvalState::push(const Board& board, const EvalUpdates& updates)
         currEntry().bishopPawns = oldEntry.bishopPawns;
 
     if (updates.changedPieces.hasAny(eval_terms::rookOpen.deps))
-        currEntry().rookOpen = evaluateRookOpen<Color::WHITE>(board) - evaluateRookOpen<Color::BLACK>(board);
+        currEntry().rookOpen =
+            evaluateRookOpen<Color::WHITE>(board, currEntry().pawnStructure) -
+            evaluateRookOpen<Color::BLACK>(board, currEntry().pawnStructure);
     else
         currEntry().rookOpen = oldEntry.rookOpen;
 
