@@ -13,7 +13,7 @@ MoveStrFind findMoveFromPCN(const MoveList& legalMoves, const char* moveStr)
 
     Promotion promotion = Promotion(-1);
     bool isPromotion = false;
-    switch (tolower(moveStr[4]))
+    switch (std::tolower(moveStr[4]))
     {
         case 'q':
             promotion = Promotion::QUEEN;
@@ -429,7 +429,7 @@ std::string convMoveToPCN(Move move)
     str[3] = static_cast<char>((move.dstPos() >> 3) + '1');
     if (move.type() == MoveType::PROMOTION)
     {
-        str[4] = promoChars[(static_cast<int>(move.promotion()) >> 14)];
+        str[4] = std::tolower(promoChars[(static_cast<int>(move.promotion()) >> 14)]);
     }
     return str;
 }
