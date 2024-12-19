@@ -625,11 +625,25 @@ bool Board::is50MoveDraw() const
 
 bool Board::hasUpcomingRepetition(int searchPly) const
 {
+    const auto S = [this](int d)
+    {
+        return m_States[m_States.size() - 1 - d].zkey.value;
+    };
+
     int reversible = std::min(currState().halfMoveClock, currState().pliesFromNull);
+    if (reversible < 3)
+        return false;
+
+    uint64_t currKey = S(0);
+    uint64_t other = ~(currKey ^ S(1));
     for (int i = 3; i <= reversible; i += 2)
     {
-        ZKey prevKey = m_States[m_States.size() - 1 - i].zkey;
-        uint64_t keyDiff = currState().zkey.value ^ prevKey.value;
+        uint64_t prevKey = S(i);
+        other ^= ~(prevKey ^ S(i - 1));
+        if (other != 0)
+            continue;
+
+        uint64_t keyDiff = currKey ^ prevKey;
 
         uint32_t slot = cuckoo::H1(keyDiff);
         if (keyDiff != cuckoo::keyDiffs[slot])
@@ -643,12 +657,10 @@ bool Board::hasUpcomingRepetition(int searchPly) const
         if ((allPieces() & attacks::inBetweenSquares(move.fromSq(), move.toSq())).any())
             continue;
 
-        // move is illegal if the piece is not ours or doesn't exist
-        Piece movingPiece = pieceAt(move.fromSq());
-        if (movingPiece == Piece::NONE || getPieceColor(movingPiece) != sideToMove())
-            continue;
+        if (searchPly > i)
+            return true;
 
-        if (searchPly > i || m_States[m_States.size() - 1 - i].repetitions > 0)
+        if (m_States[m_States.size() - 1 - i].repetitions > 0)
             return true;
     }
 
