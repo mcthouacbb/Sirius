@@ -354,7 +354,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     if (eval::isImmediateDraw(board) || board.isDraw(rootPly))
         return SCORE_DRAW;
 
-    if (board.halfMoveClock() >= 3 && alpha < 0 && board.hasUpcomingRepetition(rootPly))
+    if (!root && board.halfMoveClock() >= 3 && alpha < 0 && board.hasUpcomingRepetition(rootPly))
     {
         alpha = SCORE_DRAW;
         if (alpha >= beta)
