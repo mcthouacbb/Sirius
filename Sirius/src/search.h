@@ -21,12 +21,15 @@ struct SearchStack
     std::array<Move, MAX_PLY + 1> pv;
     int pvLength;
 
+    Move playedMove;
+    Piece movedPiece;
     Move excludedMove;
     int multiExts;
 
     Move bestMove;
     std::array<Move, 2> killers;
 
+    ContCorrEntry* contCorrEntry;
     CHEntry* contHistEntry;
     int histScore;
 

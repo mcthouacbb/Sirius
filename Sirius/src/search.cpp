@@ -48,6 +48,8 @@ void SearchThread::reset()
 
     for (int i = 0; i <= MAX_PLY; i++)
     {
+        stack[i].playedMove = Move();
+        stack[i].movedPiece = Piece::NONE;
         stack[i].killers[0] = stack[i].killers[1] = Move();
         stack[i].excludedMove = Move();
         stack[i].multiExts = 0;
@@ -371,6 +373,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     bool ttHit = false;
 
     int rawStaticEval = SCORE_NONE;
+    Move prevMove = rootPly > 0 ? stack[-1].playedMove : Move();
+    Piece prevPiece = rootPly > 0 ? stack[-1].movedPiece : Piece::NONE;
+    ContCorrEntry* contCorr2 = rootPly > 1 ? stack[-2].contCorrEntry : nullptr;
 
     if (!excluded)
     {
@@ -393,7 +398,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         {
             rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
             // Correction history(~91 elo)
-            stack->staticEval = history.correctStaticEval(board, rawStaticEval);
+            stack->staticEval = history.correctStaticEval(board, rawStaticEval, prevMove, prevPiece, contCorr2);
             stack->eval = stack->staticEval;
             // use tt score as a better eval(~8 elo)
             if (ttHit && (
@@ -439,11 +444,13 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             nonPawns.multiple())
         {
             int r = nmpBaseReduction + depth / nmpDepthReductionScale + std::min((stack->eval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
+            stack->contCorrEntry = &history.contCorrEntry(board, Move());
             board.makeNullMove();
             rootPly++;
             int nullScore = -search(thread, depth - r, stack + 1, -beta, -beta + 1, false, !cutnode);
             rootPly--;
             board.unmakeNullMove();
+            stack->contCorrEntry = nullptr;
             if (nullScore >= beta)
                 return nullScore;
         }
@@ -471,6 +478,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 m_TT.prefetch(board.keyAfter(move));
                 stack->contHistEntry = &history.contHistEntry(board, move);
                 stack->histScore = histScore;
+                stack->playedMove = move;
+                stack->movedPiece = movingPiece(board, move);
+                stack->contCorrEntry = &history.contCorrEntry(board, move);
                 rootPly++;
                 board.makeMove(move, thread.evalState);
                 thread.nodes.fetch_add(1, std::memory_order_relaxed);
@@ -486,6 +496,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 board.unmakeMove(thread.evalState);
                 stack->contHistEntry = nullptr;
                 stack->histScore = 0;
+                stack->playedMove = Move();
+                stack->movedPiece = Piece::NONE;
+                stack->contCorrEntry = nullptr;
 
                 if (score >= probcutBeta)
                 {
@@ -623,6 +636,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         m_TT.prefetch(board.keyAfter(move));
         stack->contHistEntry = &history.contHistEntry(board, move);
         stack->histScore = histScore;
+        stack->playedMove = move;
+        stack->movedPiece = movedPiece;
+        stack->contCorrEntry = &history.contCorrEntry(board, move);
 
         uint64_t nodesBefore = thread.nodes;
         board.makeMove(move, thread.evalState);
@@ -688,6 +704,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         stack->contHistEntry = nullptr;
         stack->histScore = 0;
+        stack->playedMove = Move();
+        stack->movedPiece = Piece::NONE;
+        stack->contCorrEntry = nullptr;
 
         if (m_ShouldStop)
             return alpha;
@@ -764,7 +783,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         if (!inCheck && (stack->bestMove == Move() || moveIsQuiet(board, stack->bestMove)) &&
             !(bound == TTEntry::Bound::LOWER_BOUND && stack->staticEval >= bestScore) &&
             !(bound == TTEntry::Bound::UPPER_BOUND && stack->staticEval <= bestScore))
-            history.updateCorrHist(board, bestScore - stack->staticEval, depth);
+            history.updateCorrHist(board, bestScore - stack->staticEval, depth, prevMove, prevPiece, contCorr2);
 
         m_TT.store(board.zkey(), depth, rootPly, bestScore, rawStaticEval, stack->bestMove, ttPV, bound);
     }
@@ -800,6 +819,10 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
 
     bool inCheck = board.checkers().any();
     int rawStaticEval = SCORE_NONE;
+    Move prevMove = rootPly > 0 ? stack[-1].playedMove : Move();
+    Piece prevPiece = rootPly > 0 ? stack[-1].movedPiece : Piece::NONE;
+    ContCorrEntry* contCorr2 = rootPly > 1 ? stack[-2].contCorrEntry : nullptr;
+
     if (inCheck)
     {
         stack->staticEval = SCORE_NONE;
@@ -808,7 +831,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     else
     {
         rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
-        stack->staticEval = thread.history.correctStaticEval(board, rawStaticEval);
+        stack->staticEval = inCheck ? SCORE_NONE : thread.history.correctStaticEval(board, rawStaticEval, prevMove, prevPiece, contCorr2);
 
         // use tt score as a better eval(~8 elo)
         stack->eval = stack->staticEval;
@@ -867,6 +890,9 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         }
         movesPlayed++;
         stack->contHistEntry = &history.contHistEntry(board, move);
+        stack->playedMove = move;
+        stack->movedPiece = movingPiece(board, move);
+        stack->contCorrEntry = &history.contCorrEntry(board, move);
         board.makeMove(move, thread.evalState);
         thread.nodes.fetch_add(1, std::memory_order_relaxed);
         rootPly++;
@@ -875,6 +901,9 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
 
         board.unmakeMove(thread.evalState);
         stack->contHistEntry = nullptr;
+        stack->playedMove = Move();
+        stack->movedPiece = Piece::NONE;
+        stack->contCorrEntry = nullptr;
         rootPly--;
 
         if (score > bestScore)

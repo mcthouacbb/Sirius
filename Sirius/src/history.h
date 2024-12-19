@@ -118,6 +118,8 @@ using NonPawnCorrHist = MultiArray<CorrHistEntry, 2, 2, NON_PAWN_CORR_HIST_ENTRI
 using ThreatsCorrHist = MultiArray<CorrHistEntry, 2, THREATS_CORR_HIST_ENTRIES>;
 using MinorPieceCorrHist = MultiArray<CorrHistEntry, 2, MINOR_PIECE_CORR_HIST_ENTRIES>;
 using MajorPieceCorrHist = MultiArray<CorrHistEntry, 2, MAJOR_PIECE_CORR_HIST_ENTRIES>;
+using ContCorrEntry = MultiArray<CorrHistEntry, 12, 64>;
+using ContCorrHist = MultiArray<ContCorrEntry, 12, 64>;
 
 int historyBonus(int depth);
 int historyMalus(int depth);
@@ -137,15 +139,29 @@ public:
         return m_ContHist[packPieceIndices(movingPiece(board, move))][move.toSq().value()];
     }
 
+    ContCorrEntry& contCorrEntry(const Board& board, Move move)
+    {
+        if (move == Move())
+            return m_ContCorrHist[packPieceIndices(makePiece(PieceType::PAWN, board.sideToMove()))][move.toSq().value()];
+        return m_ContCorrHist[packPieceIndices(movingPiece(board, move))][move.toSq().value()];
+    }
+
+    const ContCorrEntry& contCorrEntry(const Board& board, Move move) const
+    {
+        if (move == Move())
+            return m_ContCorrHist[packPieceIndices(makePiece(PieceType::PAWN, board.sideToMove()))][move.toSq().value()];
+        return m_ContCorrHist[packPieceIndices(movingPiece(board, move))][move.toSq().value()];
+    }
+
     int getQuietStats(Move move, Bitboard threats, Piece movingPiece, std::span<const CHEntry* const> contHistEntries) const;
     int getNoisyStats(const Board& board, Move move) const;
-    int correctStaticEval(const Board& board, int staticEval) const;
+    int correctStaticEval(const Board& board, int staticEval, Move prevMove, Piece prevPiece, const ContCorrEntry* contCorr2) const;
 
     void clear();
     void updateQuietStats(const Board& board, Move move, std::span<CHEntry*> contHistEntries, int bonus);
     void updateContHist(Move move, Piece movingPiece, std::span<CHEntry*> contHistEntries, int bonus);
     void updateNoisyStats(const Board& board, Move move, int bonus);
-    void updateCorrHist(const Board& board, int bonus, int depth);
+    void updateCorrHist(const Board& board, int bonus, int depth, Move prevMove, Piece prevPiece, ContCorrEntry* contCorr2);
 private:
     int getMainHist(Move move, Bitboard threats, Color color) const;
     int getContHist(Move move, Piece movingPiece, const CHEntry* entry) const;
@@ -163,4 +179,5 @@ private:
     ThreatsCorrHist m_ThreatsCorrHist;
     MinorPieceCorrHist m_MinorPieceCorrHist;
     MajorPieceCorrHist m_MajorPieceCorrHist;
+    ContCorrHist m_ContCorrHist;
 };
