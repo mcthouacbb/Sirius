@@ -1154,7 +1154,8 @@ void Board::calcThreats()
 void Board::calcRepetitions()
 {
     int reversible = std::min(currState().halfMoveClock, currState().pliesFromNull);
-    for (int i = 2; i <= reversible; i += 2) {
+    for (int i = 4; i <= reversible; i += 2)
+    {
         BoardState& state = m_States[m_States.size() - 1 - i];
         if (state.zkey == currState().zkey)
         {
