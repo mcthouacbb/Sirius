@@ -1,6 +1,7 @@
 #include "board.h"
 #include "attacks.h"
 #include "eval/eval_state.h"
+#include "movegen.h"
 
 #include <cstring>
 #include <charconv>
@@ -604,6 +605,21 @@ void Board::unmakeNullMove()
     m_GamePly--;
 
     m_SideToMove = ~m_SideToMove;
+}
+
+
+bool Board::is50MoveDraw() const
+{
+    if (halfMoveClock() < 100)
+        return false;
+    if (checkers().empty())
+        return true;
+    
+    MoveList moves;
+    genMoves<MoveGenType::LEGAL>(*this, moves);
+    if (moves.size() == 0)
+        return false;
+    return true;
 }
 
 bool Board::squareAttacked(Color color, Square square, Bitboard blockers) const

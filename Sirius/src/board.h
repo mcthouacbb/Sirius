@@ -173,9 +173,9 @@ public:
     ZKey majorPieceKey() const;
     uint64_t materialKey() const;
 
-    bool isDraw(int searchPly);
-    bool is3FoldDraw(int searchPly);
-    bool is50MoveDraw();
+    bool isDraw(int searchPly) const;
+    bool is3FoldDraw(int searchPly) const;
+    bool is50MoveDraw() const;
 
     Piece pieceAt(Square square) const;
     Bitboard pieces(PieceType type) const;
@@ -266,19 +266,14 @@ inline BoardState& Board::currState()
     return m_States.back();
 }
 
-inline bool Board::isDraw(int searchPly)
+inline bool Board::isDraw(int searchPly) const
 {
     return is50MoveDraw() || is3FoldDraw(searchPly);
 }
 
-inline bool Board::is3FoldDraw(int searchPly)
+inline bool Board::is3FoldDraw(int searchPly) const
 {
     return currState().repetitions > 1 || (currState().repetitions == 1 && currState().lastRepetition < searchPly);
-}
-
-inline bool Board::is50MoveDraw()
-{
-    return currState().halfMoveClock >= 100;
 }
 
 inline Color Board::sideToMove() const
