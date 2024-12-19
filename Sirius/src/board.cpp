@@ -623,6 +623,7 @@ bool Board::is50MoveDraw() const
     return true;
 }
 
+// see comment in cuckoo.cpp
 bool Board::hasUpcomingRepetition(int searchPly) const
 {
     const auto S = [this](int d)

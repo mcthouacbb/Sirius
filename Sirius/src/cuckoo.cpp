@@ -5,8 +5,10 @@
 namespace cuckoo
 {
 
-// implementation based on https://github.com/aronpetko/integral/commit/3c09d3fcff3bb520fca58608c41ffcf7832534f6
-// and https://web.archive.org/web/20201107002606/https://marcelk.net/2013-04-06/paper/upcoming-rep-v2.pdf
+// implementation based on Integral's https://github.com/aronpetko/integral/commit/3c09d3fcff3bb520fca58608c41ffcf7832534f6
+// and Stormphrax's https://github.com/Ciekce/Stormphrax/commit/a0ee2dac3e4fe27870a6a2ef7e1567f2345a64da
+// and Stockfish's implementation https://github.com/official-stockfish/Stockfish/blob/master/src/position.cpp
+// and the original paper https://web.archive.org/web/20201107002606/https://marcelk.net/2013-04-06/paper/upcoming-rep-v2.pdf
 
 void init()
 {
