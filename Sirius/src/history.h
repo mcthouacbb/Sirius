@@ -8,11 +8,15 @@
 struct ExtMove : public Move
 {
 public:
+    ExtMove() = default;
     static ExtMove from(const Board& board, Move move);
 
     Piece movingPiece() const;
     Piece capturedPiece() const;
     Piece promotionPiece() const;
+
+    constexpr bool operator==(const ExtMove& other) const noexcept = default;
+    constexpr bool operator!=(const ExtMove& other) const noexcept = default;
 private:
     static Piece promotionPiece(Color sideToMove, Promotion promotion);
 
@@ -145,6 +149,8 @@ using NonPawnCorrHist = MultiArray<CorrHistEntry, 2, 2, NON_PAWN_CORR_HIST_ENTRI
 using ThreatsCorrHist = MultiArray<CorrHistEntry, 2, THREATS_CORR_HIST_ENTRIES>;
 using MinorPieceCorrHist = MultiArray<CorrHistEntry, 2, MINOR_PIECE_CORR_HIST_ENTRIES>;
 using MajorPieceCorrHist = MultiArray<CorrHistEntry, 2, MAJOR_PIECE_CORR_HIST_ENTRIES>;
+using ContCorrEntry = MultiArray<CorrHistEntry, 16, 64>;
+using ContCorrHist = MultiArray<ContCorrEntry, 16, 64>;
 
 int historyBonus(int depth);
 int historyMalus(int depth);
@@ -164,15 +170,25 @@ public:
         return m_ContHist[static_cast<int>(move.movingPiece())][move.toSq().value()];
     }
 
+    ContCorrEntry& contCorrEntry(ExtMove move)
+    {
+        return m_ContCorrHist[static_cast<int>(move.movingPiece())][move.toSq().value()];
+    }
+
+    const ContCorrEntry& contCorrEntry(ExtMove move) const
+    {
+        return m_ContCorrHist[static_cast<int>(move.movingPiece())][move.toSq().value()];
+    }
+
     int getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const;
     int getNoisyStats(Bitboard threats, ExtMove move) const;
-    int correctStaticEval(int staticEval, const Board& board) const;
+    int correctStaticEval(int staticEval, const Board& board, ExtMove prevMove, const ContCorrEntry* contCorr2) const;
 
     void clear();
     void updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus);
     void updateContHist(ExtMove move, std::span<CHEntry*> contHistEntries, int bonus);
     void updateNoisyStats(Bitboard threats, ExtMove move, int bonus);
-    void updateCorrHist(int bonus, int depth, const Board& board);
+    void updateCorrHist(int bonus, int depth, const Board& board, ExtMove prevMove, ContCorrEntry* contCorr2);
 private:
     int getMainHist(Bitboard threats, ExtMove move) const;
     int getContHist(const CHEntry* entry, ExtMove move) const;
@@ -191,4 +207,5 @@ private:
     ThreatsCorrHist m_ThreatsCorrHist;
     MinorPieceCorrHist m_MinorPieceCorrHist;
     MajorPieceCorrHist m_MajorPieceCorrHist;
+    ContCorrHist m_ContCorrHist;
 };

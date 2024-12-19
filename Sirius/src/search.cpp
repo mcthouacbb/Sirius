@@ -48,6 +48,7 @@ void SearchThread::reset()
 
     for (int i = 0; i <= MAX_PLY; i++)
     {
+        stack[i].playedMove = ExtMove();
         stack[i].killers[0] = stack[i].killers[1] = Move();
         stack[i].excludedMove = Move();
         stack[i].multiExts = 0;
@@ -364,6 +365,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     bool ttHit = false;
 
     int rawStaticEval = SCORE_NONE;
+    ExtMove prevMove = rootPly > 0 ? stack[-1].playedMove : ExtMove();
+    ContCorrEntry* contCorr2 = rootPly > 1 ? stack[-2].contCorrEntry : nullptr;
 
     if (!excluded)
     {
@@ -389,7 +392,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         {
             rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
             // Correction history(~91 elo)
-            stack->staticEval = history.correctStaticEval(rawStaticEval, board);
+            stack->staticEval = history.correctStaticEval(rawStaticEval, board, prevMove, contCorr2);
             stack->eval = stack->staticEval;
             // use tt score as a better eval(~8 elo)
             if (ttHit && (
@@ -609,6 +612,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         m_TT.prefetch(board.keyAfter(move));
         stack->contHistEntry = &history.contHistEntry(extMove);
         stack->histScore = histScore;
+        stack->playedMove = extMove;
+        stack->contCorrEntry = &history.contCorrEntry(extMove);
 
         uint64_t nodesBefore = thread.nodes;
         board.makeMove(move, thread.evalState);
@@ -674,6 +679,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         stack->contHistEntry = nullptr;
         stack->histScore = 0;
+        stack->playedMove = ExtMove();
+        stack->contCorrEntry = nullptr;
 
         if (m_ShouldStop)
             return alpha;
@@ -750,7 +757,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         if (!inCheck && (stack->bestMove == Move() || moveIsQuiet(board, stack->bestMove)) &&
             !(bound == TTEntry::Bound::LOWER_BOUND && stack->staticEval >= bestScore) &&
             !(bound == TTEntry::Bound::UPPER_BOUND && stack->staticEval <= bestScore))
-            history.updateCorrHist(bestScore - stack->staticEval, depth, board);
+            history.updateCorrHist(bestScore - stack->staticEval, depth, board, prevMove, contCorr2);
 
         m_TT.store(board.zkey(), depth, rootPly, bestScore, rawStaticEval, stack->bestMove, ttPV, bound);
     }
@@ -788,6 +795,9 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
 
     bool inCheck = board.checkers().any();
     int rawStaticEval = SCORE_NONE;
+    ExtMove prevMove = rootPly > 0 ? stack[-1].playedMove : ExtMove();
+    ContCorrEntry* contCorr2 = rootPly > 1 ? stack[-2].contCorrEntry : nullptr;
+
     if (inCheck)
     {
         stack->staticEval = SCORE_NONE;
@@ -796,7 +806,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     else
     {
         rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
-        stack->staticEval = inCheck ? SCORE_NONE : thread.history.correctStaticEval(rawStaticEval, board);
+        stack->staticEval = inCheck ? SCORE_NONE : thread.history.correctStaticEval(rawStaticEval, board, prevMove, contCorr2);
 
         // use tt score as a better eval(~8 elo)
         stack->eval = stack->staticEval;
