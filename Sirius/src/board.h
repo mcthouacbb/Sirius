@@ -176,6 +176,7 @@ public:
     bool isDraw(int searchPly) const;
     bool is3FoldDraw(int searchPly) const;
     bool is50MoveDraw() const;
+    bool hasUpcomingRepetition(int searchPly) const;
 
     Piece pieceAt(Square square) const;
     Bitboard pieces(PieceType type) const;
