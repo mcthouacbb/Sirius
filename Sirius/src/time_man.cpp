@@ -59,7 +59,11 @@ bool TimeManager::stopSoft(Move bestMove, uint64_t totalNodes, const SearchLimit
     if (bestMove == m_PrevBestMove)
         m_Stability++;
     else
+    {
         m_Stability = 0;
+        // uncertainty tm, idea from weiss
+        return false;
+    }
     m_PrevBestMove = bestMove;
 
     double bmNodes = static_cast<double>(m_NodeCounts[bestMove.fromTo()]) / static_cast<double>(totalNodes);
