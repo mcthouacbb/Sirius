@@ -351,15 +351,15 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     bool inCheck = board.checkers().any();
     bool excluded = stack->excludedMove != Move();
 
-    if (eval::isImmediateDraw(board) || board.isDraw(rootPly))
-        return SCORE_DRAW;
-
     if (!root && board.halfMoveClock() >= 3 && alpha < 0 && board.hasUpcomingRepetition(rootPly))
     {
         alpha = SCORE_DRAW;
         if (alpha >= beta)
             return alpha;
     }
+
+    if (eval::isImmediateDraw(board) || board.isDraw(rootPly))
+        return SCORE_DRAW;
 
     if (rootPly >= MAX_PLY)
         return eval::evaluate(board, &thread);
