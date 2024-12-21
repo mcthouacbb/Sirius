@@ -383,7 +383,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 ttData.bound == TTEntry::Bound::EXACT ||
                 (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta) ||
                 (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)
-            ))
+                ))
                 return ttData.score;
         }
 
@@ -403,7 +403,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 ttData.bound == TTEntry::Bound::EXACT ||
                 (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= stack->eval) ||
                 (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= stack->eval)
-            ))
+                ))
                 stack->eval = ttData.score;
         }
     }
@@ -490,7 +490,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         }
     }
 
-    if (depth >= minIIRDepth && !inCheck && !excluded && !ttHit)
+    if (depth >= minIIRDepth && !inCheck && !excluded && (!ttHit || ttData.depth <= depth - 5))
         depth--;
 
     // continuation history(~40 elo)
