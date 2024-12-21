@@ -351,6 +351,13 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     bool inCheck = board.checkers().any();
     bool excluded = stack->excludedMove != Move();
 
+    if (!root && board.halfMoveClock() >= 3 && alpha < 0 && board.hasUpcomingRepetition(rootPly))
+    {
+        alpha = SCORE_DRAW;
+        if (alpha >= beta)
+            return alpha;
+    }
+
     if (eval::isImmediateDraw(board) || board.isDraw(rootPly))
         return SCORE_DRAW;
 
@@ -894,7 +901,6 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         return -SCORE_MATE + rootPly;
 
     m_TT.store(board.zkey(), 0, rootPly, bestScore, rawStaticEval, stack->bestMove, ttPV, bound);
-
 
     return bestScore;
 }

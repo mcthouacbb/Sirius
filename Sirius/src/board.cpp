@@ -2,6 +2,7 @@
 #include "attacks.h"
 #include "eval/eval_state.h"
 #include "movegen.h"
+#include "cuckoo.h"
 
 #include <cstring>
 #include <charconv>
@@ -620,6 +621,51 @@ bool Board::is50MoveDraw() const
     if (moves.size() == 0)
         return false;
     return true;
+}
+
+// see comment in cuckoo.cpp
+bool Board::hasUpcomingRepetition(int searchPly) const
+{
+    const auto S = [this](int d)
+    {
+        return m_States[m_States.size() - 1 - d].zkey.value;
+    };
+
+    int reversible = std::min(currState().halfMoveClock, currState().pliesFromNull);
+    if (reversible < 3)
+        return false;
+
+    uint64_t currKey = S(0);
+    uint64_t other = ~(currKey ^ S(1));
+    for (int i = 3; i <= reversible; i += 2)
+    {
+        uint64_t prevKey = S(i);
+        other ^= ~(prevKey ^ S(i - 1));
+        if (other != 0)
+            continue;
+
+        uint64_t keyDiff = currKey ^ prevKey;
+
+        uint32_t slot = cuckoo::H1(keyDiff);
+        if (keyDiff != cuckoo::keyDiffs[slot])
+            slot = cuckoo::H2(keyDiff);
+
+        if (keyDiff != cuckoo::keyDiffs[slot])
+            continue;
+
+        Move move = cuckoo::moves[slot];
+        // move is obviously illegal if it goes through a piece
+        if ((allPieces() & attacks::inBetweenSquares(move.fromSq(), move.toSq())).any())
+            continue;
+
+        if (searchPly > i)
+            return true;
+
+        if (m_States[m_States.size() - 1 - i].repetitions > 0)
+            return true;
+    }
+
+    return false;
 }
 
 bool Board::squareAttacked(Color color, Square square, Bitboard blockers) const

@@ -5,6 +5,7 @@
 #include "comm/icomm.h"
 #include "comm/cmdline.h"
 #include "comm/uci.h"
+#include "cuckoo.h"
 #include "eval/eval.h"
 #include "search_params.h"
 #include "bench.h"
@@ -13,6 +14,7 @@
 int main(int argc, char** argv)
 {
     attacks::init();
+    cuckoo::init();
     search::init();
 
     if (argc > 1 && std::string(argv[1]) == "bench")
