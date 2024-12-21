@@ -112,9 +112,16 @@ PackedScore evaluateRookOpen(const Board& board)
     PackedScore eval{0, 0};
     while (rooks.any())
     {
-        Bitboard fileBB = Bitboard::fileBB(rooks.poplsb().file());
+        Square rookSq = rooks.poplsb();
+        Bitboard fileBB = Bitboard::fileBB(rookSq.file());
         if ((ourPawns & fileBB).empty())
             eval += (theirPawns & fileBB).any() ? ROOK_OPEN[1] : ROOK_OPEN[0];
+        else if (Bitboard blockedPawns = ourPawns & fileBB & attacks::pawnPushes<them>(board.allPieces()); blockedPawns.any())
+        {
+            Square blocked = us == Color::WHITE ? blockedPawns.msb() : blockedPawns.lsb();
+            if (blocked.relativeRank<us>() > rookSq.relativeRank<us>())
+                eval += BLOCKED_ROOK;
+        }
     }
     return eval;
 }
