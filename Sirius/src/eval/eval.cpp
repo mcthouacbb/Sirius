@@ -24,6 +24,7 @@ template<Color us, PieceType piece>
 PackedScore evaluatePieces(const Board& board, EvalData& evalData)
 {
     constexpr Color them = ~us;
+    constexpr Bitboard CENTER_SQUARES = (RANK_4_BB | RANK_5_BB) & (FILE_D_BB | FILE_E_BB);
 
     PackedScore eval{0, 0};
     Bitboard pieces = board.pieces(us, piece);
@@ -58,6 +59,9 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
             evalData.attackWeight[us] += KING_ATTACKER_WEIGHT[static_cast<int>(piece) - static_cast<int>(KNIGHT)];
             evalData.attackCount[us] += kingRingAtks.popcount();
         }
+
+        if (piece == PieceType::BISHOP && (attacks & CENTER_SQUARES).multiple())
+            eval += LONG_DIAG_BISHOP;
     }
 
     return eval;
