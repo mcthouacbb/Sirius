@@ -93,6 +93,8 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
         PieceType threatened = getPieceType(board.pieceAt(threat));
         bool defended = defendedBB.has(threat);
         eval += THREAT_BY_KNIGHT[defended][static_cast<int>(threatened)];
+        if (threatened != PieceType::PAWN)
+            eval += THREAT_BY_RANK[threat.relativeRank<us>()];
     }
 
     Bitboard bishopThreats = evalData.attackedBy[us][BISHOP] & board.pieces(them);
@@ -102,6 +104,8 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
         PieceType threatened = getPieceType(board.pieceAt(threat));
         bool defended = defendedBB.has(threat);
         eval += THREAT_BY_BISHOP[defended][static_cast<int>(threatened)];
+        if (threatened != PieceType::PAWN)
+            eval += THREAT_BY_RANK[threat.relativeRank<us>()];
     }
 
     Bitboard rookThreats = evalData.attackedBy[us][ROOK] & board.pieces(them);
@@ -111,6 +115,8 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
         PieceType threatened = getPieceType(board.pieceAt(threat));
         bool defended = defendedBB.has(threat);
         eval += THREAT_BY_ROOK[defended][static_cast<int>(threatened)];
+        if (threatened != PieceType::PAWN)
+            eval += THREAT_BY_RANK[threat.relativeRank<us>()];
     }
 
     Bitboard queenThreats = evalData.attackedBy[us][QUEEN] & board.pieces(them);
