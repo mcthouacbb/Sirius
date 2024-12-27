@@ -39,9 +39,12 @@ PackedScore PawnStructure::evaluate(const Board& board)
         Square sq = pawns.poplsb();
         Square push = sq + attacks::pawnPushOffset<us>();
         Bitboard attacks = attacks::pawnAttacks(us, sq);
+        Bitboard support = attacks::passedPawnMask(them, push) & attacks::isolatedPawnMask(sq) & ourPawns;
         Bitboard threats = attacks & theirPawns;
         Bitboard pushThreats = attacks::pawnPushes<us>(attacks) & theirPawns;
-        Bitboard support = attacks::passedPawnMask(them, push) & attacks::isolatedPawnMask(sq) & ourPawns;
+        Bitboard defenders = attacks::pawnAttacks(them, sq) & ourPawns;
+        Bitboard phalanx = attacks::pawnAttacks(them, push) & ourPawns;
+        Bitboard stoppers = attacks::passedPawnMask(us, sq) & theirPawns;
 
         bool blocked = theirPawns.has(push);
         bool doubled = ourPawns.has(push);
@@ -49,6 +52,11 @@ PackedScore PawnStructure::evaluate(const Board& board)
 
         if (board.isPassedPawn(sq))
             passedPawns |= Bitboard::fromSquare(sq);
+        else if (stoppers == (pushThreats | threats) && phalanx.popcount() >= pushThreats.popcount())
+        {
+            bool defended = defenders.popcount() >= threats.popcount();
+            eval += CANDIDATE_PASSER[defended][sq.relativeRank<us>()];
+        }
 
         if (doubled && threats.empty())
             eval += DOUBLED_PAWN[sq.file()];
