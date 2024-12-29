@@ -50,12 +50,15 @@ PackedScore PawnStructure::evaluate(const Board& board)
         bool doubled = ourPawns.has(push);
         bool backwards = (blocked || pushThreats.any()) && support.empty();
 
-        if (board.isPassedPawn(sq))
-            passedPawns |= Bitboard::fromSquare(sq);
-        else if (stoppers == (pushThreats | threats) && phalanx.popcount() >= pushThreats.popcount())
+        if (!doubled)
         {
-            bool defended = defenders.popcount() >= threats.popcount();
-            eval += CANDIDATE_PASSER[defended][sq.relativeRank<us>()];
+            if (board.isPassedPawn(sq))
+                passedPawns |= Bitboard::fromSquare(sq);
+            else if (stoppers == (pushThreats | threats) && phalanx.popcount() >= pushThreats.popcount())
+            {
+                bool defended = defenders.popcount() >= threats.popcount();
+                eval += CANDIDATE_PASSER[defended][sq.relativeRank<us>()];
+            }
         }
 
         if (doubled && threats.empty())
