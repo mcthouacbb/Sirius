@@ -296,6 +296,7 @@ done:
 
     updateCheckInfo();
     calcThreats();
+    updateKingRingKeys();
 }
 
 constexpr std::array<char, 16> pieceChars = {
