@@ -83,6 +83,8 @@ int History::correctStaticEval(int staticEval, const Board& board) const
     int threatsEntry = m_ThreatsCorrHist[static_cast<int>(stm)][threatsKey % THREATS_CORR_HIST_ENTRIES];
     int minorPieceEntry = m_MinorPieceCorrHist[static_cast<int>(stm)][board.minorPieceKey().value % MINOR_PIECE_CORR_HIST_ENTRIES];
     int majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
+    int kingRingStmEntry = m_KingRingCorrHist[static_cast<int>(stm)][static_cast<int>(stm)][board.kingRingKey(stm).value % 16384];
+    int kingRingNstmEntry = m_KingRingCorrHist[static_cast<int>(stm)][static_cast<int>(~stm)][board.kingRingKey(~stm).value % 16384];
 
     int correction = 0;
     correction += search::pawnCorrWeight * pawnEntry;
@@ -92,6 +94,8 @@ int History::correctStaticEval(int staticEval, const Board& board) const
     correction += search::threatsCorrWeight * threatsEntry;
     correction += search::minorCorrWeight * minorPieceEntry;
     correction += search::majorCorrWeight * majorPieceEntry;
+    correction += 256 * kingRingStmEntry;
+    correction += 256 * kingRingNstmEntry;
 
     int corrected = staticEval + correction / (256 * CORR_HIST_SCALE);
     return std::clamp(corrected, -SCORE_MATE_IN_MAX, SCORE_MATE_IN_MAX);
@@ -142,6 +146,12 @@ void History::updateCorrHist(int bonus, int depth, const Board& board)
 
     auto& majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
     majorPieceEntry.update(scaledBonus, weight);
+
+    auto& kingRingWhiteEntry = m_KingRingCorrHist[static_cast<int>(stm)][static_cast<int>(Color::WHITE)][board.kingRingKey(Color::WHITE).value % 16384];
+    kingRingWhiteEntry.update(scaledBonus, weight);
+
+    auto& kingRingBlackEntry = m_KingRingCorrHist[static_cast<int>(stm)][static_cast<int>(Color::BLACK)][board.kingRingKey(Color::BLACK).value % 16384];
+    kingRingBlackEntry.update(scaledBonus, weight);
 }
 
 int History::getMainHist(Bitboard threats, ExtMove move) const

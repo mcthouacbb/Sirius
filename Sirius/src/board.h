@@ -35,6 +35,7 @@ struct BoardState
     ColorArray<ZKey> nonPawnKeys;
     ZKey minorPieceKey;
     ZKey majorPieceKey;
+    ColorArray<ZKey> kingRingKeys;
     ZKey pawnKey;
     CheckInfo checkInfo;
     Bitboard threats;
@@ -171,6 +172,7 @@ public:
     ZKey nonPawnKey(Color color) const;
     ZKey minorPieceKey() const;
     ZKey majorPieceKey() const;
+    ZKey kingRingKey(Color color) const;
     uint64_t materialKey() const;
 
     bool isDraw(int searchPly) const;
@@ -219,6 +221,7 @@ private:
     void updateCheckInfo();
     void calcThreats();
     void calcRepetitions();
+    void updateKingRingKeys();
     void addPiece(Square pos, Color color, PieceType pieceType, eval::EvalUpdates& updates);
     void addPiece(Square pos, Piece piece, eval::EvalUpdates& updates);
     void removePiece(Square pos, eval::EvalUpdates& updates);
@@ -330,6 +333,11 @@ inline ZKey Board::minorPieceKey() const
 inline ZKey Board::majorPieceKey() const
 {
     return currState().majorPieceKey;
+}
+
+inline ZKey Board::kingRingKey(Color color) const
+{
+    return currState().kingRingKeys[color];
 }
 
 // yoinked from motor, which I think yoinked from Caissa

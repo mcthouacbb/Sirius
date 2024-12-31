@@ -145,6 +145,7 @@ using NonPawnCorrHist = MultiArray<CorrHistEntry, 2, 2, NON_PAWN_CORR_HIST_ENTRI
 using ThreatsCorrHist = MultiArray<CorrHistEntry, 2, THREATS_CORR_HIST_ENTRIES>;
 using MinorPieceCorrHist = MultiArray<CorrHistEntry, 2, MINOR_PIECE_CORR_HIST_ENTRIES>;
 using MajorPieceCorrHist = MultiArray<CorrHistEntry, 2, MAJOR_PIECE_CORR_HIST_ENTRIES>;
+using KingRingCorrHist = MultiArray<CorrHistEntry, 2, 2, 16384>;
 
 int historyBonus(int depth);
 int historyMalus(int depth);
@@ -191,4 +192,5 @@ private:
     ThreatsCorrHist m_ThreatsCorrHist;
     MinorPieceCorrHist m_MinorPieceCorrHist;
     MajorPieceCorrHist m_MajorPieceCorrHist;
+    KingRingCorrHist m_KingRingCorrHist;
 };

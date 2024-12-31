@@ -550,6 +550,7 @@ void Board::makeMove(Move move, eval::EvalState* evalState)
     updateCheckInfo();
     calcThreats();
     calcRepetitions();
+    updateKingRingKeys();
 
     if constexpr (updateEval)
         evalState->push(*this, updates);
@@ -1212,6 +1213,22 @@ void Board::calcRepetitions()
     }
     currState().repetitions = 0;
     currState().lastRepetition = 0;
+}
+
+void Board::updateKingRingKeys()
+{
+    currState().kingRingKeys.fill({});
+    for (Color c : {Color::WHITE, Color::BLACK})
+    {
+        Bitboard kingRing = attacks::kingRing(c, kingSq(c));
+        Bitboard pieces = kingRing & allPieces();
+        while (pieces.any())
+        {
+            Square sq = pieces.poplsb();
+            Piece piece = pieceAt(sq);
+            currState().kingRingKeys[c].addPiece(getPieceType(piece), getPieceColor(piece), sq);
+        }
+    }
 }
 
 void Board::addPiece(Square pos, Color color, PieceType pieceType, eval::EvalUpdates& updates)
