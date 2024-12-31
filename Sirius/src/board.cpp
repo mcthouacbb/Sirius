@@ -154,6 +154,7 @@ done:
 
     updateCheckInfo();
     calcThreats();
+    updateKingRingKeys();
 }
 
 void Board::setToEpd(const std::string_view& epd)
