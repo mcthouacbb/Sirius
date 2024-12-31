@@ -378,6 +378,25 @@ void init()
         attackData.pawnAttacks[static_cast<int>(Color::BLACK)][square] = pawnAttacks<Color::BLACK>(bb);
     }
 
+    for (uint32_t square = 0; square < 64; square++)
+    {
+        Bitboard kingAtks = attackData.kingAttacks[square];
+        Bitboard whiteKingRing = (kingAtks | kingAtks.north()) & ~Bitboard::fromSquare(Square(square));
+        if (FILE_H_BB.has(Square(square)))
+            whiteKingRing |= whiteKingRing.west();
+        if (FILE_A_BB.has(Square(square)))
+            whiteKingRing |= whiteKingRing.east();
+
+        Bitboard blackKingRing = (kingAtks | kingAtks.south()) & ~Bitboard::fromSquare(Square(square));
+        if (FILE_H_BB.has(Square(square)))
+            blackKingRing |= blackKingRing.west();
+        if (FILE_A_BB.has(Square(square)))
+            blackKingRing |= blackKingRing.east();
+
+        attackData.kingRings[static_cast<int>(Color::WHITE)][square] = whiteKingRing;
+        attackData.kingRings[static_cast<int>(Color::BLACK)][square] = blackKingRing;
+    }
+
     Direction allDirs[] = {
         Direction::NORTH,
         Direction::SOUTH,

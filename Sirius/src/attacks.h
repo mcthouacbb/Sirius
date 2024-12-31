@@ -44,6 +44,8 @@ struct AttackData
     std::array<Bitboard, 64> kingAttacks;
     std::array<Bitboard, 64> knightAttacks;
 
+    MultiArray<Bitboard, 2, 64> kingRings;
+
     std::array<int, 64> castleRightsMasks;
 
     Magic bishopTable[64];
@@ -159,6 +161,11 @@ inline Bitboard passedPawnMask(Color color, Square square)
 inline Bitboard isolatedPawnMask(Square square)
 {
     return attackData.isolatedPawnMasks[square.value()];
+}
+
+inline Bitboard kingRing(Color color, Square square)
+{
+    return attackData.kingRings[static_cast<int>(color)][square.value()];
 }
 
 inline Bitboard pawnAttacks(Color color, Square square)
