@@ -860,6 +860,8 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
             bestScore = std::max(bestScore, futility);
             continue;
         }
+        if (!inCheck && stack->eval + 1000 >= beta && board.see(move, 80 + beta - stack->eval))
+            return beta;
         movesPlayed++;
         stack->contHistEntry = &history.contHistEntry(ExtMove::from(board, move));
         board.makeMove(move, thread.evalState);
