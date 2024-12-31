@@ -604,6 +604,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                     extension = 2;
                 else
                     extension = 1;
+
+                depth += !pvNode && depth < 10;
             }
             else if (sBeta >= beta)
                 return sBeta;
