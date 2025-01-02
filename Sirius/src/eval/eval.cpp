@@ -80,6 +80,8 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
         (evalData.attacked[them] & ~evalData.attackedBy2[us]);
 
     Bitboard pawnThreats = evalData.attackedBy[us][PAWN] & board.pieces(them);
+    uint32_t hangingNonpawns = (pawnThreats & ~board.pieces(PieceType::PAWN)).popcount();
+
     while (pawnThreats.any())
     {
         PieceType threatened = getPieceType(board.pieceAt(pawnThreats.poplsb()));
@@ -92,6 +94,8 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
         Square threat = knightThreats.poplsb();
         PieceType threatened = getPieceType(board.pieceAt(threat));
         bool defended = defendedBB.has(threat);
+        if (!defended && threatened != PieceType::PAWN)
+            hangingNonpawns++;
         eval += THREAT_BY_KNIGHT[defended][static_cast<int>(threatened)];
     }
 
@@ -101,6 +105,8 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
         Square threat = bishopThreats.poplsb();
         PieceType threatened = getPieceType(board.pieceAt(threat));
         bool defended = defendedBB.has(threat);
+        if (!defended && threatened != PieceType::PAWN)
+            hangingNonpawns++;
         eval += THREAT_BY_BISHOP[defended][static_cast<int>(threatened)];
     }
 
@@ -110,6 +116,8 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
         Square threat = rookThreats.poplsb();
         PieceType threatened = getPieceType(board.pieceAt(threat));
         bool defended = defendedBB.has(threat);
+        if (!defended && threatened != PieceType::PAWN)
+            hangingNonpawns++;
         eval += THREAT_BY_ROOK[defended][static_cast<int>(threatened)];
     }
 
@@ -119,6 +127,8 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
         Square threat = queenThreats.poplsb();
         PieceType threatened = getPieceType(board.pieceAt(threat));
         bool defended = defendedBB.has(threat);
+        if (!defended && threatened != PieceType::PAWN)
+            hangingNonpawns++;
         eval += THREAT_BY_QUEEN[defended][static_cast<int>(threatened)];
     }
 
@@ -128,6 +138,9 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
         PieceType threatened = getPieceType(board.pieceAt(kingThreats.poplsb()));
         eval += THREAT_BY_KING[static_cast<int>(threatened)];
     }
+
+    if (hangingNonpawns > 0)
+        eval += THREAT_NONPAWN_HANGING[std::min(hangingNonpawns, 4u)];
 
     Bitboard nonPawnEnemies = board.pieces(them) & ~board.pieces(PAWN);
 
