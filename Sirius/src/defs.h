@@ -120,7 +120,11 @@ public:
     template<Color c>
     constexpr int relativeRank() const;
 
+    constexpr bool darkSquare() const;
+    constexpr bool lightSquare() const;
+
     static constexpr int chebyshev(Square a, Square b);
+    static constexpr int manhattan(Square a, Square b);
     static constexpr Square average(Square a, Square b);
 private:
     uint8_t m_Value;
@@ -196,6 +200,16 @@ constexpr int Square::relativeRank() const
     return rank();
 }
 
+constexpr bool Square::darkSquare() const
+{
+    return (rank() + file()) % 2 == 0;
+}
+
+constexpr bool Square::lightSquare() const
+{
+    return !darkSquare();
+}
+
 constexpr int Square::chebyshev(Square a, Square b)
 {
     // hack cus std::abs isn't constexpr
@@ -204,6 +218,16 @@ constexpr int Square::chebyshev(Square a, Square b)
     int fileDiff = a.file() - b.file();
     fileDiff = fileDiff < 0 ? -fileDiff : fileDiff;
     return std::max(rankDiff, fileDiff);
+}
+
+constexpr int Square::manhattan(Square a, Square b)
+{
+    // hack cus std::abs isn't constexpr
+    int rankDiff = a.rank() - b.rank();
+    rankDiff = rankDiff < 0 ? -rankDiff : rankDiff;
+    int fileDiff = a.file() - b.file();
+    fileDiff = fileDiff < 0 ? -fileDiff : fileDiff;
+    return rankDiff + fileDiff;
 }
 
 constexpr Square Square::average(Square a, Square b)

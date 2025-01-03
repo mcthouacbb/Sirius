@@ -2,6 +2,7 @@
 #include "../attacks.h"
 #include "../util/enum_array.h"
 #include "pawn_structure.h"
+#include "endgame.h"
 
 namespace eval
 {
@@ -296,8 +297,9 @@ void nonIncrementalEval(const Board& board, const PawnStructure& pawnStructure, 
 
 int evaluate(const Board& board, search::SearchThread* thread)
 {
-    if (!eval::canForceMate(board))
-        return SCORE_DRAW;
+    auto endgame = endgames::probe(board);
+    if (endgame != nullptr)
+        return (*endgame)(board);
 
     constexpr int SCALE_FACTOR = 128;
 
@@ -320,8 +322,9 @@ int evaluate(const Board& board, search::SearchThread* thread)
 
 int evaluateSingle(const Board& board)
 {
-    if (!eval::canForceMate(board))
-        return SCORE_DRAW;
+    auto endgame = endgames::probe(board);
+    if (endgame != nullptr)
+        return (*endgame)(board);
 
     EvalState evalState;
     evalState.initSingle(board);
