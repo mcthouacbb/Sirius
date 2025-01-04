@@ -7,13 +7,18 @@ using EndgameFunc = int(const Board& board, Color strongSide);
 
 struct Endgame
 {
+    Endgame()
+        : func(nullptr), strongSide(Color::WHITE), materialKey(0)
+    {
+
+    }
     explicit Endgame(Color c, EndgameFunc* func)
-        : strongSide(c), func(func)
+        : func(func), strongSide(c)
     {
 
     }
 
-    int operator()(const Board& board)
+    int operator()(const Board& board) const
     {
         int result = (*func)(board, strongSide);
         return strongSide == board.sideToMove() ? result : -result;
@@ -21,9 +26,10 @@ struct Endgame
 
     EndgameFunc* func;
     Color strongSide;
+    uint64_t materialKey;
 };
 
 void init();
-Endgame* probe(const Board& board);
+const Endgame* probe(const Board& board);
 
 }
