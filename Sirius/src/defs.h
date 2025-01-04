@@ -119,6 +119,7 @@ public:
     constexpr int file() const;
     template<Color c>
     constexpr int relativeRank() const;
+    constexpr int relativeRank(Color c) const;
 
     constexpr bool darkSquare() const;
     constexpr bool lightSquare() const;
@@ -196,6 +197,13 @@ template<Color c>
 constexpr int Square::relativeRank() const
 {
     if constexpr (c == Color::BLACK)
+        return rank() ^ 7;
+    return rank();
+}
+
+constexpr int Square::relativeRank(Color c) const
+{
+    if (c == Color::BLACK)
         return rank() ^ 7;
     return rank();
 }
