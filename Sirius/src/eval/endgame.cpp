@@ -90,6 +90,20 @@ int evalKQvKP(const Board& board, const EvalState& evalState, Color strongSide)
     return eval;
 }
 
+int evalKQvKR(const Board& board, const EvalState& evalState, Color strongSide)
+{
+    Color weakSide = ~strongSide;
+
+    Square ourKing = board.kingSq(strongSide);
+    Square theirKing = board.kingSq(weakSide);
+    Square rook = board.pieces(weakSide, PieceType::ROOK).lsb();
+
+    int cornerDist = distToAnyCorner(theirKing);
+    int kingDist = Square::manhattan(ourKing, theirKing);
+
+    return evalState.psqtScore(board, strongSide).eg() + 13 * 20 - 20 * kingDist - 20 * cornerDist;
+}
+
 int scaleKPsvK(const Board& board, const EvalState&, Color strongSide)
 {
     Bitboard strongPawns = board.pieces(strongSide, PieceType::PAWN);
@@ -244,6 +258,7 @@ void init()
     addEndgameEval("KBN", "K", &evalKBNvK);
 
     addEndgameEval("KQ", "KP", &evalKQvKP);
+    addEndgameEval("KQ", "KR", &evalKQvKR);
 }
 
 
