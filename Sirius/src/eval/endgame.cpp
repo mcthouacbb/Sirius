@@ -15,25 +15,12 @@ int distToAnyCorner(Square sq)
     return rankDist + fileDist;
 }
 
-int endgameMaterial(const Board& board, Color c)
-{
-    int mat = 0;
-    Bitboard pieces = board.pieces(c) & ~board.pieces(PieceType::KING);
-    while (pieces.any())
-    {
-        PieceType type = getPieceType(board.pieceAt(pieces.poplsb()));
-        mat += MATERIAL[static_cast<int>(type)].eg();
-    }
-
-    return mat;
-}
-
-int trivialDraw(const Board&, Color)
+int trivialDraw(const Board&, const EvalState&, Color)
 {
     return 0;
 }
 
-int KXvK(const Board& board, Color strongSide)
+int KXvK(const Board& board, const EvalState& evalState, Color strongSide)
 {
     Color weakSide = ~strongSide;
 
@@ -45,7 +32,7 @@ int KXvK(const Board& board, Color strongSide)
     int cornerDist = distToAnyCorner(theirKing);
     int kingDist = Square::manhattan(ourKing, theirKing);
 
-    int result = endgameMaterial(board, strongSide) + 13 * 20 - 20 * kingDist - 20 * cornerDist;
+    int result = evalState.psqtScore(board).eg() + 13 * 20 - 20 * kingDist - 20 * cornerDist;
     
     if (board.pieces(PieceType::QUEEN).any() ||
         board.pieces(PieceType::ROOK).any() ||
@@ -56,7 +43,7 @@ int KXvK(const Board& board, Color strongSide)
     return result;
 }
 
-int KBNvK(const Board& board, Color strongSide)
+int KBNvK(const Board& board, const EvalState&, Color strongSide)
 {
     Color weakSide = ~strongSide;
     Square bishop = board.pieces(strongSide, PieceType::BISHOP).lsb();

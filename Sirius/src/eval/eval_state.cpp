@@ -124,6 +124,11 @@ PackedScore EvalState::score(const Board& board) const
         currEntry().minorBehindPawn;
 }
 
+PackedScore EvalState::psqtScore(const Board& board) const
+{
+    return currEntry().psqtState.evaluate(board);
+}
+
 const PawnStructure& EvalState::pawnStructure() const
 {
     return currEntry().pawnStructure;
