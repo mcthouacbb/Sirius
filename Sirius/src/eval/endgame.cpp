@@ -72,7 +72,7 @@ int evalKQvKP(const Board& board, const EvalState& evalState, Color strongSide)
 
     int kpDist = Square::chebyshev(ourKing, pawn);
 
-    int eval = 175 - 25 * kpDist;
+    int eval = 140 - 20 * kpDist;
 
     Bitboard queeningSquares = attacks::fillUp(Bitboard::fromSquare(pawn), weakSide);
     // if queen or king is blocking pawn it is guaranteed win
@@ -82,10 +82,9 @@ int evalKQvKP(const Board& board, const EvalState& evalState, Color strongSide)
 
     if (pawn.relativeRank(weakSide) < RANK_7 ||
         (FILE_B_BB | FILE_D_BB | FILE_E_BB | FILE_G_BB).has(pawn) ||
-        (Square::chebyshev(theirKing, pawn) > 1) ||
         eval >= 10000)
     {
-        eval += evalState.psqtScore(board, strongSide).eg();
+        eval += MATERIAL[static_cast<int>(PieceType::QUEEN)].eg() - MATERIAL[static_cast<int>(PieceType::PAWN)].eg();
     }
 
     return eval;
