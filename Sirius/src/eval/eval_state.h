@@ -46,7 +46,7 @@ public:
     void pop();
 
     PackedScore score(const Board& board) const;
-    PackedScore psqtScore(const Board& board) const;
+    PackedScore psqtScore(const Board& board, Color c) const;
     const PawnStructure& pawnStructure() const;
     int phase() const;
 private:

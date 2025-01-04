@@ -1,5 +1,6 @@
 #include "endgame.h"
 #include "eval_constants.h"
+#include "../attacks.h"
 
 #include <algorithm>
 #include <unordered_map>
@@ -26,13 +27,13 @@ int evalKXvK(const Board& board, const EvalState& evalState, Color strongSide)
 
     assert(!board.pieces(weakSide).multiple());
 
-    Square ourKing = board.pieces(strongSide, PieceType::KING).lsb();
-    Square theirKing = board.pieces(weakSide, PieceType::KING).lsb();
+    Square ourKing = board.kingSq(strongSide);
+    Square theirKing = board.kingSq(weakSide);
 
     int cornerDist = distToAnyCorner(theirKing);
     int kingDist = Square::manhattan(ourKing, theirKing);
 
-    int result = evalState.psqtScore(board).eg() + 13 * 20 - 20 * kingDist - 20 * cornerDist;
+    int result = evalState.psqtScore(board, strongSide).eg() + 13 * 20 - 20 * kingDist - 20 * cornerDist;
     
     if (board.pieces(PieceType::QUEEN).any() ||
         board.pieces(PieceType::ROOK).any() ||
@@ -47,8 +48,8 @@ int evalKBNvK(const Board& board, const EvalState&, Color strongSide)
 {
     Color weakSide = ~strongSide;
     Square bishop = board.pieces(strongSide, PieceType::BISHOP).lsb();
-    Square ourKing = board.pieces(strongSide, PieceType::KING).lsb();
-    Square theirKing = board.pieces(weakSide, PieceType::KING).lsb();
+    Square ourKing = board.kingSq(strongSide);
+    Square theirKing = board.kingSq(weakSide);
 
     int correctCornerDist = std::abs(7 - theirKing.rank() - theirKing.file());
     if (bishop.darkSquare())
@@ -59,6 +60,35 @@ int evalKBNvK(const Board& board, const EvalState&, Color strongSide)
     int kingDist = Square::manhattan(ourKing, theirKing);
 
     return 10000 - kingDist * 20 - cornerDist * 20 - correctCornerDist * 200;
+}
+
+int evalKQvKP(const Board& board, const EvalState& evalState, Color strongSide)
+{
+    Color weakSide = ~strongSide;
+    Square queen = board.pieces(strongSide, PieceType::QUEEN).lsb();
+    Square pawn = board.pieces(weakSide, PieceType::PAWN).lsb();
+    Square ourKing = board.kingSq(strongSide);
+    Square theirKing = board.kingSq(weakSide);
+
+    int kpDist = Square::chebyshev(ourKing, pawn);
+
+    int eval = 175 - 25 * kpDist;
+
+    Bitboard queeningSquares = attacks::fillUp(Bitboard::fromSquare(pawn), weakSide);
+    // if queen or king is blocking pawn it is guaranteed win
+    // the king can't be attacking the queen since then it would be in check, and eval is not called in check
+    if (queeningSquares.has(queen) || queeningSquares.has(ourKing))
+        eval += 10000;
+
+    if (pawn.relativeRank(weakSide) < RANK_7 ||
+        (FILE_B_BB | FILE_D_BB | FILE_E_BB | FILE_G_BB).has(pawn) ||
+        (Square::chebyshev(theirKing, pawn) > 1) ||
+        eval >= 10000)
+    {
+        eval += evalState.psqtScore(board, strongSide).eg();
+    }
+
+    return eval;
 }
 
 int scaleKPsvK(const Board& board, const EvalState&, Color strongSide)
@@ -213,6 +243,8 @@ void init()
     addEndgameEval("KNN", "K", &trivialDraw);
 
     addEndgameEval("KBN", "K", &evalKBNvK);
+
+    addEndgameEval("KQ", "KP", &evalKQvKP);
 }
 
 
