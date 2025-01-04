@@ -99,12 +99,26 @@ Key genMaterialKey(std::string white, std::string black)
     return board.materialKey();
 }
 
-Map map;
+constexpr size_t ENDGAME_TABLE_SIZE = 2048;
+std::array<Endgame, ENDGAME_TABLE_SIZE> endgameTable;
 
-void addEndgameFunc(Map& map, const std::string& strongCode, const std::string& weakCode, EndgameFunc* func)
+void insertEndgame(uint64_t key, Endgame endgame)
 {
-    map.insert({genMaterialKey(strongCode, weakCode), Endgame(Color::WHITE, func)});
-    map.insert({genMaterialKey(weakCode, strongCode), Endgame(Color::BLACK, func)});
+    size_t idx = key % ENDGAME_TABLE_SIZE;
+    if (endgameTable[idx].func != nullptr)
+    {
+        std::cerr << "Endgame table collision" << std::endl;
+        throw std::runtime_error("Endgame table collision");
+    }
+    endgame.materialKey = key;
+    endgameTable[idx] = endgame;
+}
+
+void addEndgameFunc(const std::string& strongCode, const std::string& weakCode, EndgameFunc* func)
+{
+    insertEndgame(genMaterialKey(strongCode, weakCode), Endgame(Color::WHITE, func));
+    if (strongCode != weakCode)
+        insertEndgame(genMaterialKey(weakCode, strongCode), Endgame(Color::BLACK, func));
 }
 
 bool isKXvK(const Board& board, Color strongSide)
@@ -123,11 +137,12 @@ Endgame KXvKEndgames[] = {
     Endgame(Color::WHITE, &KXvK), Endgame(Color::BLACK, &KXvK)
 };
 
-Endgame* probe(const Board& board)
+const Endgame* probe(const Board& board)
 {
-    auto it = map.find(board.materialKey());
-    if (it != map.end())
-        return &it->second;
+    uint64_t materialKey = board.materialKey();
+    size_t idx = materialKey % ENDGAME_TABLE_SIZE;
+    if (endgameTable[idx].materialKey == materialKey)
+        return &endgameTable[idx];
 
     for (Color c : {Color::WHITE, Color::BLACK})
     {
@@ -140,14 +155,14 @@ Endgame* probe(const Board& board)
 
 void init()
 {
-    addEndgameFunc(map, "K", "K", trivialDraw);
-    addEndgameFunc(map, "KN", "K", trivialDraw);
-    addEndgameFunc(map, "KB", "K", trivialDraw);
-    addEndgameFunc(map, "KN", "KN", trivialDraw);
-    addEndgameFunc(map, "KB", "KN", trivialDraw);
-    addEndgameFunc(map, "KNN", "K", trivialDraw);
+    addEndgameFunc("K", "K", trivialDraw);
+    addEndgameFunc("KN", "K", trivialDraw);
+    addEndgameFunc("KB", "K", trivialDraw);
+    addEndgameFunc("KN", "KN", trivialDraw);
+    addEndgameFunc("KB", "KN", trivialDraw);
+    addEndgameFunc("KNN", "K", trivialDraw);
 
-    addEndgameFunc(map, "KBN", "K", KBNvK);
+    addEndgameFunc("KBN", "K", KBNvK);
 }
 
 
