@@ -299,7 +299,7 @@ int evaluate(const Board& board, search::SearchThread* thread)
 {
     auto endgame = endgames::probe(board);
     if (endgame != nullptr)
-        return (*endgame)(board);
+        return (*endgame)(board, thread->evalState);
 
     constexpr int SCALE_FACTOR = 128;
 
@@ -322,12 +322,12 @@ int evaluate(const Board& board, search::SearchThread* thread)
 
 int evaluateSingle(const Board& board)
 {
-    auto endgame = endgames::probe(board);
-    if (endgame != nullptr)
-        return (*endgame)(board);
-
     EvalState evalState;
     evalState.initSingle(board);
+
+    auto endgame = endgames::probe(board);
+    if (endgame != nullptr)
+        return (*endgame)(board, evalState);
 
     constexpr int SCALE_FACTOR = 128;
 

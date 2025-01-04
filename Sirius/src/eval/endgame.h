@@ -1,9 +1,10 @@
 #include "../board.h"
+#include "eval_state.h"
 
 namespace eval::endgames
 {
 
-using EndgameFunc = int(const Board& board, Color strongSide);
+using EndgameFunc = int(const Board&, const EvalState&, Color);
 
 struct Endgame
 {
@@ -18,9 +19,9 @@ struct Endgame
 
     }
 
-    int operator()(const Board& board) const
+    int operator()(const Board& board, const EvalState& evalState) const
     {
-        int result = (*func)(board, strongSide);
+        int result = (*func)(board, evalState, strongSide);
         return strongSide == board.sideToMove() ? result : -result;
     }
 
