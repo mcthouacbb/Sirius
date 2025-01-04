@@ -237,12 +237,19 @@ PackedScore evaluateComplexity(const Board& board, const PawnStructure& pawnStru
     return PackedScore(0, egSign * egComplexity);
 }
 
-int evaluateScale(const Board& board, PackedScore eval)
+int evaluateScale(const Board& board, PackedScore eval, const EvalState& evalState)
 {
+    int scaleFactor = SCALE_FACTOR_NORMAL;
     Color strongSide = eval.eg() > 0 ? WHITE : BLACK;
 
-    int strongPawns = board.pieces(strongSide, PAWN).popcount();
+    auto endgameScale = endgames::probeScaleFunc(board, strongSide);
+    if (endgameScale != nullptr)
+        scaleFactor = (*endgameScale)(board, evalState);
 
+    if (scaleFactor != SCALE_FACTOR_NORMAL)
+        return scaleFactor;
+
+    int strongPawns = board.pieces(strongSide, PAWN).popcount();
     return 80 + strongPawns * 7;
 }
 
@@ -297,11 +304,9 @@ void nonIncrementalEval(const Board& board, const PawnStructure& pawnStructure, 
 
 int evaluate(const Board& board, search::SearchThread* thread)
 {
-    auto endgame = endgames::probe(board);
-    if (endgame != nullptr)
-        return (*endgame)(board, thread->evalState);
-
-    constexpr int SCALE_FACTOR = 128;
+    auto endgameEval = endgames::probeEvalFunc(board);
+    if (endgameEval != nullptr)
+        return (*endgameEval)(board, thread->evalState);
 
     Color color = board.sideToMove();
     PackedScore eval = thread->evalState.score(board);
@@ -313,11 +318,11 @@ int evaluate(const Board& board, search::SearchThread* thread)
 
     nonIncrementalEval(board, pawnStructure, evalData, eval);
 
-    int scale = evaluateScale(board, eval);
+    int scale = evaluateScale(board, eval, thread->evalState);
 
     eval += (color == WHITE ? TEMPO : -TEMPO);
 
-    return (color == WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg() * scale / SCALE_FACTOR, thread->evalState.phase());
+    return (color == WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg() * scale / SCALE_FACTOR_NORMAL, thread->evalState.phase());
 }
 
 int evaluateSingle(const Board& board)
@@ -325,11 +330,9 @@ int evaluateSingle(const Board& board)
     EvalState evalState;
     evalState.initSingle(board);
 
-    auto endgame = endgames::probe(board);
+    auto endgame = endgames::probeEvalFunc(board);
     if (endgame != nullptr)
         return (*endgame)(board, evalState);
-
-    constexpr int SCALE_FACTOR = 128;
 
     Color color = board.sideToMove();
     PackedScore eval = evalState.score(board);
@@ -341,11 +344,11 @@ int evaluateSingle(const Board& board)
 
     nonIncrementalEval(board, pawnStructure, evalData, eval);
 
-    int scale = evaluateScale(board, eval);
+    int scale = evaluateScale(board, eval, evalState);
 
     eval += (color == WHITE ? TEMPO : -TEMPO);
 
-    return (color == WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg() * scale / SCALE_FACTOR, evalState.phase());
+    return (color == WHITE ? 1 : -1) * eval::getFullEval(eval.mg(), eval.eg() * scale / SCALE_FACTOR_NORMAL, evalState.phase());
 }
 
 

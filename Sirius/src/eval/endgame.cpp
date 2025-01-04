@@ -20,7 +20,7 @@ int trivialDraw(const Board&, const EvalState&, Color)
     return 0;
 }
 
-int KXvK(const Board& board, const EvalState& evalState, Color strongSide)
+int evalKXvK(const Board& board, const EvalState& evalState, Color strongSide)
 {
     Color weakSide = ~strongSide;
 
@@ -43,7 +43,7 @@ int KXvK(const Board& board, const EvalState& evalState, Color strongSide)
     return result;
 }
 
-int KBNvK(const Board& board, const EvalState&, Color strongSide)
+int evalKBNvK(const Board& board, const EvalState&, Color strongSide)
 {
     Color weakSide = ~strongSide;
     Square bishop = board.pieces(strongSide, PieceType::BISHOP).lsb();
@@ -59,6 +59,23 @@ int KBNvK(const Board& board, const EvalState&, Color strongSide)
     int kingDist = Square::manhattan(ourKing, theirKing);
 
     return 10000 - kingDist * 20 - cornerDist * 20 - correctCornerDist * 200;
+}
+
+
+int scaleKBPsvK(const Board& board, const EvalState&, Color strongSide)
+{
+    Bitboard strongPawns = board.pieces(strongSide, PieceType::PAWN);
+    Square bishop = board.pieces(strongSide, PieceType::BISHOP).lsb();
+    Square weakKing = board.kingSq(~strongSide);
+    int queeningRank = strongSide == Color::WHITE ? RANK_8 : RANK_1;
+
+    if ((strongPawns & ~FILE_A_BB).empty() || (strongPawns & ~FILE_H_BB).empty())
+    {
+        Square queeningSquare = Square(queeningRank, strongPawns.lsb().file());
+        if (queeningSquare.darkSquare() != bishop.darkSquare() && Square::chebyshev(weakKing, queeningSquare) <= 1)
+            return SCALE_FACTOR_DRAW;
+    }
+    return SCALE_FACTOR_NORMAL;
 }
 
 using Key = uint64_t;
@@ -87,25 +104,25 @@ Key genMaterialKey(std::string white, std::string black)
 }
 
 constexpr size_t ENDGAME_TABLE_SIZE = 2048;
-std::array<Endgame, ENDGAME_TABLE_SIZE> endgameTable;
+std::array<Endgame, ENDGAME_TABLE_SIZE> endgameEvalTable;
 
 void insertEndgame(uint64_t key, Endgame endgame)
 {
     size_t idx = key % ENDGAME_TABLE_SIZE;
-    if (endgameTable[idx].func != nullptr)
+    if (endgameEvalTable[idx].func != nullptr)
     {
         std::cerr << "Endgame table collision" << std::endl;
         throw std::runtime_error("Endgame table collision");
     }
-    endgame.materialKey = key;
-    endgameTable[idx] = endgame;
+    endgame.key = key;
+    endgameEvalTable[idx] = endgame;
 }
 
-void addEndgameFunc(const std::string& strongCode, const std::string& weakCode, EndgameFunc* func)
+void addEndgameEval(const std::string& strongCode, const std::string& weakCode, EndgameFunc* func)
 {
-    insertEndgame(genMaterialKey(strongCode, weakCode), Endgame(Color::WHITE, func));
+    insertEndgame(genMaterialKey(strongCode, weakCode), Endgame(Color::WHITE, func, EndgameType::EVAL));
     if (strongCode != weakCode)
-        insertEndgame(genMaterialKey(weakCode, strongCode), Endgame(Color::BLACK, func));
+        insertEndgame(genMaterialKey(weakCode, strongCode), Endgame(Color::BLACK, func, EndgameType::EVAL));
 }
 
 bool isKXvK(const Board& board, Color strongSide)
@@ -120,36 +137,58 @@ bool isKXvK(const Board& board, Color strongSide)
         minors.multiple();
 }
 
-Endgame KXvKEndgames[] = {
-    Endgame(Color::WHITE, &KXvK), Endgame(Color::BLACK, &KXvK)
+bool isKBPsvK(const Board& board, Color strongSide)
+{
+    Bitboard bishops = board.pieces(strongSide, PieceType::BISHOP);
+    Bitboard pawns = board.pieces(strongSide, PieceType::PAWN);
+    return (board.pieces(strongSide) ^ bishops ^ pawns).one() && bishops.one() && pawns.any();
+}
+
+ColorArray<Endgame> evalKXvKEndgames = {
+    Endgame(Color::WHITE, &evalKXvK, EndgameType::EVAL), Endgame(Color::BLACK, &evalKXvK, EndgameType::EVAL)
 };
 
-const Endgame* probe(const Board& board)
+ColorArray<Endgame> scaleKBPsvKEndgames = {
+    Endgame(Color::WHITE, &scaleKBPsvK, EndgameType::SCALE), Endgame(Color::BLACK, &scaleKBPsvK, EndgameType::SCALE)
+};
+
+const Endgame* probeEvalFunc(const Board& board)
 {
     uint64_t materialKey = board.materialKey();
     size_t idx = materialKey % ENDGAME_TABLE_SIZE;
-    if (endgameTable[idx].materialKey == materialKey)
-        return &endgameTable[idx];
+    if (endgameEvalTable[idx].func != nullptr && endgameEvalTable[idx].key == materialKey)
+        return &endgameEvalTable[idx];
 
     for (Color c : {Color::WHITE, Color::BLACK})
     {
         if (isKXvK(board, c))
-            return &KXvKEndgames[static_cast<int>(c)];
+            return &evalKXvKEndgames[c];
     }
 
     return nullptr;
 }
 
+const Endgame* probeScaleFunc(const Board& board, Color strongSide)
+{
+    //if (isKPsvK(board, strongSide))
+    //    return &scaleKPsvKEndgames[strongSide];
+
+    if (isKBPsvK(board, strongSide))
+        return &scaleKBPsvKEndgames[strongSide];
+    return nullptr;
+}
+
 void init()
 {
-    addEndgameFunc("K", "K", trivialDraw);
-    addEndgameFunc("KN", "K", trivialDraw);
-    addEndgameFunc("KB", "K", trivialDraw);
-    addEndgameFunc("KN", "KN", trivialDraw);
-    addEndgameFunc("KB", "KN", trivialDraw);
-    addEndgameFunc("KNN", "K", trivialDraw);
+    addEndgameEval("K", "K", &trivialDraw);
+    addEndgameEval("KN", "K", &trivialDraw);
+    addEndgameEval("KB", "K", &trivialDraw);
+    addEndgameEval("KN", "KN", &trivialDraw);
+    addEndgameEval("KB", "KN", &trivialDraw);
+    addEndgameEval("KB", "KB", &trivialDraw);
+    addEndgameEval("KNN", "K", &trivialDraw);
 
-    addEndgameFunc("KBN", "K", KBNvK);
+    addEndgameEval("KBN", "K", &evalKBNvK);
 }
 
 
