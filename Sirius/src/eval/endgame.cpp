@@ -61,6 +61,20 @@ int evalKBNvK(const Board& board, const EvalState&, Color strongSide)
     return 10000 - kingDist * 20 - cornerDist * 20 - correctCornerDist * 200;
 }
 
+int scaleKPsvK(const Board& board, const EvalState&, Color strongSide)
+{
+    Bitboard strongPawns = board.pieces(strongSide, PieceType::PAWN);
+    Square weakKing = board.kingSq(~strongSide);
+    int queeningRank = strongSide == Color::WHITE ? RANK_8 : RANK_1;
+
+    if ((strongPawns & ~FILE_A_BB).empty() || (strongPawns & ~FILE_H_BB).empty())
+    {
+        Square queeningSquare = Square(queeningRank, strongPawns.lsb().file());
+        if (Square::chebyshev(weakKing, queeningSquare) <= 1)
+            return SCALE_FACTOR_DRAW;
+    }
+    return SCALE_FACTOR_NORMAL;
+}
 
 int scaleKBPsvK(const Board& board, const EvalState&, Color strongSide)
 {
@@ -137,6 +151,12 @@ bool isKXvK(const Board& board, Color strongSide)
         minors.multiple();
 }
 
+bool isKPsvK(const Board& board, Color strongSide)
+{
+    Bitboard pawns = board.pieces(strongSide, PieceType::PAWN);
+    return (board.pieces(strongSide) ^ pawns).one() && pawns.any();
+}
+
 bool isKBPsvK(const Board& board, Color strongSide)
 {
     Bitboard bishops = board.pieces(strongSide, PieceType::BISHOP);
@@ -150,6 +170,10 @@ ColorArray<Endgame> evalKXvKEndgames = {
 
 ColorArray<Endgame> scaleKBPsvKEndgames = {
     Endgame(Color::WHITE, &scaleKBPsvK, EndgameType::SCALE), Endgame(Color::BLACK, &scaleKBPsvK, EndgameType::SCALE)
+};
+
+ColorArray<Endgame> scaleKPsvKEndgames = {
+    Endgame(Color::WHITE, &scaleKPsvK, EndgameType::SCALE), Endgame(Color::BLACK, &scaleKPsvK, EndgameType::SCALE)
 };
 
 const Endgame* probeEvalFunc(const Board& board)
@@ -170,8 +194,8 @@ const Endgame* probeEvalFunc(const Board& board)
 
 const Endgame* probeScaleFunc(const Board& board, Color strongSide)
 {
-    //if (isKPsvK(board, strongSide))
-    //    return &scaleKPsvKEndgames[strongSide];
+    if (isKPsvK(board, strongSide))
+        return &scaleKPsvKEndgames[strongSide];
 
     if (isKBPsvK(board, strongSide))
         return &scaleKBPsvKEndgames[strongSide];
