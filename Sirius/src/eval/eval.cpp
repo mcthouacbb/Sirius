@@ -240,6 +240,18 @@ int evaluateScale(const Board& board, PackedScore eval)
 {
     Color strongSide = eval.eg() > 0 ? WHITE : BLACK;
 
+    Bitboard knights = board.pieces(KNIGHT);
+    Bitboard bishops = board.pieces(BISHOP);
+    Bitboard rooks = board.pieces(ROOK);
+    Bitboard queens = board.pieces(QUEEN);
+    Bitboard strong = board.pieces(strongSide);
+    Bitboard weak = board.pieces(~strongSide);
+
+    Bitboard nbr = knights | bishops | rooks;
+
+    if (queens.one() && (queens & strong).any() && (nbr & strong).empty() && nbr.multiple())
+        return 75;
+
     int strongPawns = board.pieces(strongSide, PAWN).popcount();
 
     return 80 + strongPawns * 7;
