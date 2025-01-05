@@ -60,7 +60,7 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
             evalData.attackCount[us] += kingRingAtks.popcount();
         }
 
-        if (piece == PieceType::BISHOP && (attacks & CENTER_SQUARES).multiple())
+        if (piece == BISHOP && (attacks & CENTER_SQUARES).multiple())
             eval += LONG_DIAG_BISHOP;
     }
 
@@ -131,7 +131,7 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
 
     Bitboard nonPawnEnemies = board.pieces(them) & ~board.pieces(PAWN);
 
-    Bitboard safe = ~defendedBB | (evalData.attacked[us] & ~evalData.attackedBy[them][PieceType::PAWN] & ~evalData.attackedBy2[them]);
+    Bitboard safe = ~defendedBB | (evalData.attacked[us] & ~evalData.attackedBy[them][PAWN] & ~evalData.attackedBy2[them]);
     Bitboard pushes = attacks::pawnPushes<us>(board.pieces(us, PAWN)) & ~board.allPieces();
     pushes |= attacks::pawnPushes<us>(pushes & Bitboard::nthRank<us, RANK_3>()) & ~board.allPieces();
 
@@ -157,7 +157,7 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
     Bitboard rookChecks = evalData.attackedBy[us][ROOK] & rookCheckSquares;
     Bitboard queenChecks = evalData.attackedBy[us][QUEEN] & (bishopCheckSquares | rookCheckSquares);
 
-    Bitboard weak = ~evalData.attacked[them] | (~evalData.attackedBy2[them] & evalData.attackedBy[them][PieceType::KING]);
+    Bitboard weak = ~evalData.attacked[them] | (~evalData.attackedBy2[them] & evalData.attackedBy[them][KING]);
     Bitboard safe = ~board.allPieces() & ~evalData.attacked[them] | (weak & evalData.attackedBy2[us]);
 
     eval += SAFE_KNIGHT_CHECK * (knightChecks & safe).popcount();
@@ -245,40 +245,27 @@ int evaluateScale(const Board& board, PackedScore eval)
     return 80 + strongPawns * 7;
 }
 
+template<Color us>
 void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& pawnStructure)
 {
-    Bitboard whitePawns = board.pieces(WHITE, PAWN);
-    Bitboard blackPawns = board.pieces(BLACK, PAWN);
-    Bitboard blockedWhitePawns = whitePawns & blackPawns.south();
-    Bitboard blockedBlackPawns = blackPawns & whitePawns.north();
-    Square whiteKing = board.kingSq(WHITE);
-    Square blackKing = board.kingSq(BLACK);
+    constexpr Color them = ~us;
+    Bitboard ourPawns = board.pieces(us, PAWN);
+    Bitboard theirPawns = board.pieces(them, PAWN);
+    Bitboard blockedPawns = ourPawns & attacks::pawnPushes<them>(theirPawns);
+    Square ourKing = board.kingSq(us);
 
-    evalData.mobilityArea[WHITE] = ~pawnStructure.pawnAttacks[BLACK] & ~Bitboard::fromSquare(whiteKing) & ~blockedWhitePawns;
-    evalData.attacked[WHITE] = evalData.attackedBy[WHITE][PAWN] = pawnStructure.pawnAttacks[WHITE];
+    evalData.mobilityArea[us] = ~pawnStructure.pawnAttacks[them] & ~Bitboard::fromSquare(ourKing) & ~blockedPawns;
+    evalData.attacked[us] = evalData.attackedBy[us][PAWN] = pawnStructure.pawnAttacks[us];
 
-    Bitboard whiteKingAtks = attacks::kingAttacks(whiteKing);
-    evalData.attackedBy[WHITE][KING] = whiteKingAtks;
-    evalData.attackedBy2[WHITE] = evalData.attacked[WHITE] & whiteKingAtks;
-    evalData.attacked[WHITE] |= whiteKingAtks;
-    evalData.kingRing[WHITE] = (whiteKingAtks | whiteKingAtks.north()) & ~Bitboard::fromSquare(whiteKing);
-    if (FILE_H_BB.has(whiteKing))
-        evalData.kingRing[WHITE] |= evalData.kingRing[WHITE].west();
-    if (FILE_A_BB.has(whiteKing))
-        evalData.kingRing[WHITE] |= evalData.kingRing[WHITE].east();
-
-    evalData.mobilityArea[BLACK] = ~pawnStructure.pawnAttacks[WHITE] & ~Bitboard::fromSquare(blackKing) & ~blockedBlackPawns;
-    evalData.attacked[BLACK] = evalData.attackedBy[BLACK][PAWN] = pawnStructure.pawnAttacks[BLACK];
-
-    Bitboard blackKingAtks = attacks::kingAttacks(blackKing);
-    evalData.attackedBy[BLACK][KING] = blackKingAtks;
-    evalData.attackedBy2[BLACK] = evalData.attacked[BLACK] & blackKingAtks;
-    evalData.attacked[BLACK] |= blackKingAtks;
-    evalData.kingRing[BLACK] = (blackKingAtks | blackKingAtks.south()) & ~Bitboard::fromSquare(blackKing);
-    if (FILE_H_BB.has(blackKing))
-        evalData.kingRing[BLACK] |= evalData.kingRing[BLACK].west();
-    if (FILE_A_BB.has(blackKing))
-        evalData.kingRing[BLACK] |= evalData.kingRing[BLACK].east();
+    Bitboard ourKingAtks = attacks::kingAttacks(ourKing);
+    evalData.attackedBy[us][KING] = ourKingAtks;
+    evalData.attackedBy2[us] = evalData.attacked[us] & ourKingAtks;
+    evalData.attacked[us] |= ourKingAtks;
+    evalData.kingRing[us] = (ourKingAtks | attacks::pawnPushes<us>(ourKingAtks)) & ~Bitboard::fromSquare(ourKing);
+    if (FILE_H_BB.has(ourKing))
+        evalData.kingRing[us] |= evalData.kingRing[us].west();
+    if (FILE_A_BB.has(ourKing))
+        evalData.kingRing[us] |= evalData.kingRing[us].east();
 }
 
 void nonIncrementalEval(const Board& board, const PawnStructure& pawnStructure, EvalData& evalData, PackedScore& eval)
@@ -307,7 +294,8 @@ int evaluate(const Board& board, search::SearchThread* thread)
     const PawnStructure& pawnStructure = thread->evalState.pawnStructure();
 
     EvalData evalData = {};
-    initEvalData(board, evalData, pawnStructure);
+    initEvalData<WHITE>(board, evalData, pawnStructure);
+    initEvalData<BLACK>(board, evalData, pawnStructure);
 
     nonIncrementalEval(board, pawnStructure, evalData, eval);
 
@@ -334,7 +322,8 @@ int evaluateSingle(const Board& board)
     const PawnStructure& pawnStructure = evalState.pawnStructure();
 
     EvalData evalData = {};
-    initEvalData(board, evalData, pawnStructure);
+    initEvalData<WHITE>(board, evalData, pawnStructure);
+    initEvalData<BLACK>(board, evalData, pawnStructure);
 
     nonIncrementalEval(board, pawnStructure, evalData, eval);
 

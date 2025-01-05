@@ -94,7 +94,7 @@ int History::correctStaticEval(int staticEval, const Board& board) const
     correction += search::majorCorrWeight * majorPieceEntry;
 
     int corrected = staticEval + correction / (256 * CORR_HIST_SCALE);
-    return std::clamp(corrected, -SCORE_MATE_IN_MAX, SCORE_MATE_IN_MAX);
+    return std::clamp(corrected, -SCORE_MATE_IN_MAX + 1, SCORE_MATE_IN_MAX - 1);
 }
 
 void History::updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus)

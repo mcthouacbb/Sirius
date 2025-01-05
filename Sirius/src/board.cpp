@@ -16,20 +16,8 @@ void Board::setToFen(const std::string_view& fen)
 {
     m_States.clear();
     m_States.push_back(BoardState{});
-    currState().pliesFromNull = 0;
-    currState().repetitions = 0;
-    currState().lastRepetition = 0;
-
 
     currState().squares.fill(Piece::NONE);
-    currState().pieces = {};
-    currState().colors = {};
-
-    currState().zkey.value = 0;
-    currState().pawnKey.value = 0;
-    currState().nonPawnKeys[Color::WHITE].value = 0;
-    currState().nonPawnKeys[Color::BLACK].value = 0;
-    currState().minorPieceKey.value = 0;
 
     int i = 0;
     int sq = 56;
@@ -161,19 +149,7 @@ void Board::setToEpd(const std::string_view& epd)
     m_States.clear();
     m_States.push_back(BoardState{});
 
-    currState().pliesFromNull = 0;
-    currState().repetitions = 0;
-    currState().lastRepetition = 0;
-
     currState().squares.fill(Piece::NONE);
-    currState().pieces = {};
-    currState().colors = {};
-
-    currState().zkey.value = 0;
-    currState().pawnKey.value = 0;
-    currState().nonPawnKeys[Color::WHITE].value = 0;
-    currState().nonPawnKeys[Color::BLACK].value = 0;
-    currState().minorPieceKey.value = 0;
 
     int i = 0;
     int sq = 56;
@@ -1130,8 +1106,6 @@ ZKey Board::keyAfter(Move move) const
         attacks::castleRightsMask(move.toSq());
 
     keyAfter.updateCastlingRights(newCastlingRights);
-
-
 
     if (epSquare == currState().epSquare)
         epSquare = -1;

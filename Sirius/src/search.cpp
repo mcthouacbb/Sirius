@@ -337,8 +337,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     auto& board = thread.board;
     auto& history = thread.history;
 
-    if (rootPly > thread.selDepth)
-        thread.selDepth = rootPly;
+    if (rootPly + 1 > thread.selDepth)
+        thread.selDepth = rootPly + 1;
 
     alpha = std::max(alpha, -SCORE_MATE + rootPly);
     beta = std::min(beta, SCORE_MATE - rootPly);
@@ -376,16 +376,13 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     {
         ttHit = m_TT.probe(board.zkey(), rootPly, ttData);
 
-        if (ttHit)
-        {
-            // TT Cutoffs(~101 elo)
-            if (!pvNode && ttData.depth >= depth && (
-                ttData.bound == TTEntry::Bound::EXACT ||
-                (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta) ||
-                (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)
-            ))
-                return ttData.score;
-        }
+        // TT Cutoffs(~101 elo)
+        if (ttHit && !pvNode && ttData.depth >= depth && (
+            ttData.bound == TTEntry::Bound::EXACT ||
+            (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta) ||
+            (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)
+        ))
+            return ttData.score;
 
         if (inCheck)
         {
@@ -490,6 +487,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         }
     }
 
+    // internal iterative reductions(~8 elo)
     if (depth >= minIIRDepth && !inCheck && !excluded && !ttHit)
         depth--;
 
@@ -776,22 +774,20 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     if (eval::isImmediateDraw(board))
         return SCORE_DRAW;
 
-    if (rootPly > thread.selDepth)
-        thread.selDepth = rootPly;
+    if (rootPly + 1 > thread.selDepth)
+        thread.selDepth = rootPly + 1;
 
     ProbedTTData ttData = {};
     bool ttHit = m_TT.probe(board.zkey(), rootPly, ttData);
     bool ttPV = pvNode || (ttHit && ttData.pv);
 
     // tt cutoffs(~101 elo)
-    if (ttHit && !pvNode)
-    {
-        if (ttData.bound == TTEntry::Bound::EXACT ||
-            (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta) ||
-            (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)
-        )
-            return ttData.score;
-    }
+    if (ttHit && !pvNode && (
+        ttData.bound == TTEntry::Bound::EXACT ||
+        (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta) ||
+        (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)
+    ))
+        return ttData.score;
 
     bool inCheck = board.checkers().any();
     int rawStaticEval = SCORE_NONE;
