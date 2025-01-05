@@ -59,6 +59,16 @@ public:
         return begin() + m_Size;
     }
 
+    auto begin() const
+    {
+        return cbegin();
+    }
+
+    auto end() const
+    {
+        return cend();
+    }
+
     auto cbegin() const
     {
         return m_Data.cbegin();
