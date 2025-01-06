@@ -62,7 +62,7 @@ int evalKBNvK(const Board& board, const EvalState&, Color strongSide)
     return 10000 - kingDist * 20 - cornerDist * 20 - correctCornerDist * 200;
 }
 
-int evalKQvKP(const Board& board, const EvalState& evalState, Color strongSide)
+int evalKQvKP(const Board& board, const EvalState&, Color strongSide)
 {
     Color weakSide = ~strongSide;
     Square queen = board.pieces(strongSide, PieceType::QUEEN).lsb();
@@ -221,10 +221,13 @@ ColorArray<Endgame> scaleKPsvKEndgames = {
 
 const Endgame* probeEvalFunc(const Board& board)
 {
-    uint64_t materialKey = board.materialKey();
-    size_t idx = materialKey % ENDGAME_TABLE_SIZE;
-    if (endgameEvalTable[idx].func != nullptr && endgameEvalTable[idx].key == materialKey)
-        return &endgameEvalTable[idx];
+    if (!board.pieces(PieceType::PAWN).multiple())
+    {
+        uint64_t materialKey = board.materialKey();
+        size_t idx = materialKey % ENDGAME_TABLE_SIZE;
+        if (endgameEvalTable[idx].func != nullptr && endgameEvalTable[idx].key == materialKey)
+            return &endgameEvalTable[idx];
+    }
 
     for (Color c : {Color::WHITE, Color::BLACK})
     {
@@ -242,6 +245,7 @@ const Endgame* probeScaleFunc(const Board& board, Color strongSide)
 
     if (isKBPsvK(board, strongSide))
         return &scaleKBPsvKEndgames[strongSide];
+
     return nullptr;
 }
 
