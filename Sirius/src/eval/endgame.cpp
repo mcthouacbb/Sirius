@@ -3,7 +3,6 @@
 #include "../attacks.h"
 
 #include <algorithm>
-#include <unordered_map>
 
 namespace eval::endgames
 {
@@ -34,7 +33,7 @@ int evalKXvK(const Board& board, const EvalState& evalState, Color strongSide)
     int kingDist = Square::manhattan(ourKing, theirKing);
 
     int result = evalState.psqtScore(board, strongSide).eg() + 13 * 20 - 20 * kingDist - 20 * cornerDist;
-    
+
     if (board.pieces(PieceType::QUEEN).any() ||
         board.pieces(PieceType::ROOK).any() ||
         (board.pieces(PieceType::BISHOP).any() && board.pieces(PieceType::KNIGHT).any()) ||
@@ -136,7 +135,6 @@ int scaleKBPsvK(const Board& board, const EvalState&, Color strongSide)
 }
 
 using Key = uint64_t;
-using Map = std::unordered_map<Key, Endgame>;
 
 Key genMaterialKey(std::string white, std::string black)
 {
