@@ -5,6 +5,7 @@
 #include "comm/move.h"
 #include "comm/icomm.h"
 #include "search_params.h"
+#include "eval/eval_constants.h"
 
 #include <cstring>
 #include <climits>
@@ -551,6 +552,13 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             {
                 continue;
             }
+
+            if (lmrDepth <= 5 &&
+                !inCheck &&
+                moveIsCapture(board, move) &&
+                alpha < SCORE_WIN &&
+                stack->eval + 200 + 150 * depth + eval::MATERIAL[static_cast<int>(extMove.capturedPiece())].eg() <= alpha)
+                continue;
 
             // late move pruning(~23 elo)
             if (!pvNode &&
