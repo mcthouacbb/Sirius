@@ -650,7 +650,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             reduction += cutnode;
             reduction += stack[1].failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin);
 
-            int reduced = std::min(std::max(newDepth - reduction, 1), newDepth);
+            int reduced = std::min(std::max(newDepth - reduction, 1), newDepth + (pvNode || cutnode));
             score = -search(thread, reduced, stack + 1, -alpha - 1, -alpha, false, true);
             if (score > alpha && reduced < newDepth)
             {
