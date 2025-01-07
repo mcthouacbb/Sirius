@@ -7,6 +7,7 @@
 #include "comm/uci.h"
 #include "cuckoo.h"
 #include "eval/eval.h"
+#include "eval/endgame.h"
 #include "search_params.h"
 #include "bench.h"
 #include "sirius.h"
@@ -16,6 +17,7 @@ int main(int argc, char** argv)
     attacks::init();
     cuckoo::init();
     search::init();
+    eval::endgames::init();
 
     if (argc > 1 && std::string(argv[1]) == "bench")
     {

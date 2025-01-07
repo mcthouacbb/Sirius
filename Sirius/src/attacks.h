@@ -107,6 +107,14 @@ inline Bitboard fillUp(Bitboard bb)
     }
 }
 
+inline Bitboard fillUp(Bitboard bb, Color c)
+{
+    if (c == Color::WHITE)
+        return attacks::fillUp<Color::WHITE>(bb);
+    else
+        return attacks::fillUp<Color::BLACK>(bb);
+}
+
 template<Color c>
 inline constexpr int pawnPushOffset()
 {

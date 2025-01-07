@@ -176,6 +176,7 @@ public:
     bool isDraw(int searchPly) const;
     bool is3FoldDraw(int searchPly) const;
     bool is50MoveDraw() const;
+    bool isInsufMaterialDraw() const;
     bool hasUpcomingRepetition(int searchPly) const;
 
     Piece pieceAt(Square square) const;
@@ -269,7 +270,7 @@ inline BoardState& Board::currState()
 
 inline bool Board::isDraw(int searchPly) const
 {
-    return is50MoveDraw() || is3FoldDraw(searchPly);
+    return is50MoveDraw() || isInsufMaterialDraw() || is3FoldDraw(searchPly);
 }
 
 inline bool Board::is3FoldDraw(int searchPly) const

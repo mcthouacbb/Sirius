@@ -358,7 +358,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             return alpha;
     }
 
-    if (eval::isImmediateDraw(board) || board.isDraw(rootPly))
+    if (board.isDraw(rootPly))
         return SCORE_DRAW;
 
     if (rootPly >= MAX_PLY)
@@ -771,7 +771,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     auto& history = thread.history;
 
     stack->pvLength = 0;
-    if (eval::isImmediateDraw(board))
+    if (board.isInsufMaterialDraw())
         return SCORE_DRAW;
 
     if (rootPly + 1 > thread.selDepth)
