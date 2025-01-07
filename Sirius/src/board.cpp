@@ -599,6 +599,34 @@ bool Board::is50MoveDraw() const
     return true;
 }
 
+bool Board::isInsufMaterialDraw() const
+{
+    Bitboard nonMinorPcs =
+        pieces(PieceType::QUEEN) |
+        pieces(PieceType::ROOK) |
+        pieces(PieceType::PAWN);
+
+    if (nonMinorPcs.any())
+        return false;
+
+    switch (allPieces().popcount())
+    {
+        case 2:
+            return true;
+        case 3:
+            return true;
+        case 4:
+        {
+            Bitboard bishops = pieces(PieceType::BISHOP);
+            if (bishops.popcount() == 2 && ((bishops & LIGHT_SQUARES_BB).popcount() == 2 || (bishops & LIGHT_SQUARES_BB).empty()))
+                return true;
+            return false;
+        }
+        default:
+            return false;
+    }
+}
+
 // see comment in cuckoo.cpp
 bool Board::hasUpcomingRepetition(int searchPly) const
 {

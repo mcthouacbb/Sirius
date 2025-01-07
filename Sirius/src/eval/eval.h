@@ -1,7 +1,6 @@
 #pragma once
 
 #include "phase.h"
-#include "draw.h"
 #include "../search.h"
 #include "../board.h"
 
