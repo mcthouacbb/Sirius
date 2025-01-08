@@ -557,7 +557,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 !inCheck &&
                 moveIsCapture(board, move) &&
                 alpha < SCORE_WIN &&
-                stack->eval + 200 + 150 * depth + eval::MATERIAL[static_cast<int>(extMove.capturedPiece())].eg() <= alpha)
+                stack->eval + 200 + 150 * depth + eval::MATERIAL[static_cast<int>(getPieceType(extMove.capturedPiece()))].eg() <= alpha)
                 continue;
 
             // late move pruning(~23 elo)
