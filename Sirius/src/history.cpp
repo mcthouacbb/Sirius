@@ -74,6 +74,11 @@ int History::getNoisyStats(Bitboard threats, ExtMove move) const
 
 int History::correctStaticEval(int staticEval, const Board& board) const
 {
+    Bitboard pawns = board.pieces(PieceType::PAWN);
+    Bitboard nonpawns = board.allPieces() ^ pawns ^ board.pieces(PieceType::KING);
+    if (pawns.popcount() <= 2 && nonpawns.popcount() <= 2)
+        return staticEval;
+
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
     int pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % PAWN_CORR_HIST_ENTRIES];
