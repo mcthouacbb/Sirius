@@ -380,9 +380,19 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         if (ttHit && !pvNode && ttData.depth >= depth && (
             ttData.bound == TTEntry::Bound::EXACT ||
             (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta) ||
-            (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)
-        ))
+            (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)))
+        {
+            if (ttData.move != Move() && ttData.score >= beta && board.isPseudoLegal(ttData.move) && moveIsQuiet(board, ttData.move))
+            {
+                std::array<CHEntry*, 3> contHistEntries = {
+                    rootPly > 0 ? stack[-1].contHistEntry : nullptr,
+                    rootPly > 1 ? stack[-2].contHistEntry : nullptr,
+                    rootPly > 3 ? stack[-4].contHistEntry : nullptr
+                };
+                history.updateQuietStats(board.threats(), ExtMove::from(board, ttData.move), contHistEntries, historyBonus(depth));
+            }
             return ttData.score;
+        }
 
         if (inCheck)
         {
@@ -785,8 +795,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     if (ttHit && !pvNode && (
         ttData.bound == TTEntry::Bound::EXACT ||
         (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta) ||
-        (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)
-    ))
+        (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)))
         return ttData.score;
 
     bool inCheck = board.checkers().any();
