@@ -410,12 +410,15 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     bool improving = !inCheck && rootPly > 1 && stack->staticEval > stack[-2].staticEval;
     stack[1].killers = {};
     Bitboard threats = board.threats();
+    bool noisyTTMove = ttData.move != Move() && !moveIsQuiet(board, ttData.move);
 
     // whole node pruning(~228 elo)
     if (!pvNode && !inCheck && !excluded)
     {
         // reverse futility pruning(~86 elo)
-        if (depth <= rfpMaxDepth && stack->eval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth + stack[-1].histScore / rfpHistDivisor)
+        if (depth <= rfpMaxDepth &&
+            (ttData.move == Move() || noisyTTMove) &&
+            stack->eval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth + stack[-1].histScore / rfpHistDivisor)
             return stack->eval;
 
         // razoring(~6 elo)
@@ -517,7 +520,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     int bestScore = -SCORE_MAX;
     int movesPlayed = 0;
-    bool noisyTTMove = ttData.move != Move() && !moveIsQuiet(board, ttData.move);
 
     if (!root)
         stack->multiExts = stack[-1].multiExts;
