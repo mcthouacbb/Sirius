@@ -408,6 +408,10 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     bool ttPV = pvNode || (ttHit && ttData.pv);
     // Improving heuristic(~31 elo)
     bool improving = !inCheck && rootPly > 1 && stack->staticEval > stack[-2].staticEval;
+    bool oppWorsening =
+        !inCheck && rootPly > 0 &&
+        stack[-1].staticEval != SCORE_NONE && stack->staticEval > -stack[-1].staticEval + 1;
+
     stack[1].killers = {};
     Bitboard threats = board.threats();
 
@@ -415,7 +419,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     if (!pvNode && !inCheck && !excluded)
     {
         // reverse futility pruning(~86 elo)
-        if (depth <= rfpMaxDepth && stack->eval >= beta + (improving ? rfpImprovingMargin : rfpMargin) * depth + stack[-1].histScore / rfpHistDivisor)
+        int rfpMargin = (improving ? rfpImpMargin : rfpNImpMargin) * depth - 20 * oppWorsening + stack[-1].histScore / rfpHistDivisor;
+        if (depth <= rfpMaxDepth &&
+            stack->eval >= std::max(rfpMargin, 20) + beta)
             return stack->eval;
 
         // razoring(~6 elo)
