@@ -207,6 +207,15 @@ PackedScore evaluatePassedPawns(const Board& board, const PawnStructure& pawnStr
             bool controlled = evalData.attacked[them].has(pushSq);
             eval += PASSED_PAWN[blocked][controlled][rank];
 
+            Bitboard stopSquares = board.allPieces() |
+                (~evalData.attackedBy[us][PieceType::PAWN] & ((~evalData.attacked[us] & evalData.attacked[them]) | evalData.attackedBy2[them]));
+            Bitboard queeningPath = attacks::fillUp<us>(Bitboard::fromSquare(pushSq));
+
+            int freeAdvance = (queeningPath & ~attacks::fillUp<us>(stopSquares & queeningPath)).popcount();
+            // passed pawn table already gives implicit bonus for freeAdvance on the push square
+            if (freeAdvance > 1)
+                eval += PASSED_PATH_ADVANCE * (freeAdvance - 1);
+
             eval += OUR_PASSER_PROXIMITY[Square::chebyshev(ourKing, passer)];
             eval += THEIR_PASSER_PROXIMITY[Square::chebyshev(theirKing, passer)];
         }
