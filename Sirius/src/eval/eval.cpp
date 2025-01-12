@@ -204,7 +204,8 @@ PackedScore evaluatePassedPawns(const Board& board, const PawnStructure& pawnStr
             Square pushSq = passer + attacks::pawnPushOffset<us>();
 
             bool blocked = board.pieceAt(pushSq) != Piece::NONE;
-            bool controlled = evalData.attacked[them].has(pushSq);
+            Bitboard unsafeSquares = (~evalData.attackedBy[us][PieceType::PAWN] & ((~evalData.attacked[us] & evalData.attacked[them]) | evalData.attackedBy2[them]));
+            bool controlled = unsafeSquares.has(pushSq);
             eval += PASSED_PAWN[blocked][controlled][rank];
 
             eval += OUR_PASSER_PROXIMITY[Square::chebyshev(ourKing, passer)];
