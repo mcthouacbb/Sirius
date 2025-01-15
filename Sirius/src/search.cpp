@@ -616,6 +616,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         }
 
         stack->multiExts += extension >= 2;
+        if (extension < 0)
+            cutnode = true;
 
         m_TT.prefetch(board.keyAfter(move));
         stack->contHistEntry = &history.contHistEntry(extMove);
