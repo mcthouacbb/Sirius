@@ -808,11 +808,11 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     else
     {
         rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
-        stack->staticEval = inCheck ? SCORE_NONE : thread.history.correctStaticEval(rawStaticEval, board);
+        stack->staticEval = thread.history.correctStaticEval(rawStaticEval, board);
 
         // use tt score as a better eval(~8 elo)
         stack->eval = stack->staticEval;
-        if (!inCheck && ttHit && (
+        if (ttHit && (
             ttData.bound == TTEntry::Bound::EXACT ||
             (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= stack->eval) ||
             (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= stack->eval)
