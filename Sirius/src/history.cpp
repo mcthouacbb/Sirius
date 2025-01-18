@@ -58,21 +58,21 @@ void History::clear()
     fillHistTable(m_MajorPieceCorrHist, 0);
 }
 
-int History::getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const
+int History::getQuietStats(const Board& board, Move move, std::span<const CHEntry* const> contHistEntries) const
 {
-    int score = getMainHist(threats, move);
+    int score = getMainHist(board, move);
     for (auto entry : contHistEntries)
         if (entry)
-            score += getContHist(entry, move);
+            score += getContHist(board, move, entry);
     return score;
 }
 
-int History::getNoisyStats(Bitboard threats, ExtMove move) const
+int History::getNoisyStats(const Board& board, Move move) const
 {
-    return getCaptHist(threats, move);
+    return getCaptHist(board, move);
 }
 
-int History::correctStaticEval(int staticEval, const Board& board) const
+int History::correctStaticEval(const Board& board, int staticEval) const
 {
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
@@ -97,25 +97,25 @@ int History::correctStaticEval(int staticEval, const Board& board) const
     return std::clamp(corrected, -SCORE_MATE_IN_MAX + 1, SCORE_MATE_IN_MAX - 1);
 }
 
-void History::updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus)
+void History::updateQuietStats(const Board& board, Move move, std::span<CHEntry*> contHistEntries, int bonus)
 {
-    updateMainHist(threats, move, bonus);
-    updateContHist(move, contHistEntries, bonus);
+    updateMainHist(board, move, bonus);
+    updateContHist(move, movingPiece(board, move), contHistEntries, bonus);
 }
 
-void History::updateContHist(ExtMove move, std::span<CHEntry*> contHistEntries, int bonus)
+void History::updateContHist(Move move, Piece movingPiece, std::span<CHEntry*> contHistEntries, int bonus)
 {
     for (auto entry : contHistEntries)
         if (entry)
-            updateContHist(entry, move, bonus);
+            updateContHist(move, movingPiece, entry, bonus);
 }
 
-void History::updateNoisyStats(Bitboard threats, ExtMove move, int bonus)
+void History::updateNoisyStats(const Board& board, Move move, int bonus)
 {
-    updateCaptHist(threats, move, bonus);
+    updateCaptHist(board, move, bonus);
 }
 
-void History::updateCorrHist(int bonus, int depth, const Board& board)
+void History::updateCorrHist(const Board& board, int bonus, int depth)
 {
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
@@ -144,40 +144,42 @@ void History::updateCorrHist(int bonus, int depth, const Board& board)
     majorPieceEntry.update(scaledBonus, weight);
 }
 
-int History::getMainHist(Bitboard threats, ExtMove move) const
+int History::getMainHist(const Board& board, Move move) const
 {
-    bool srcThreat = threats.has(move.fromSq());
-    bool dstThreat = threats.has(move.toSq());
-    return m_MainHist[static_cast<int>(getPieceColor(move.movingPiece()))][move.fromTo()][srcThreat][dstThreat];
+    bool srcThreat = board.threats().has(move.fromSq());
+    bool dstThreat = board.threats().has(move.toSq());
+    return m_MainHist[static_cast<int>(board.sideToMove())][move.fromTo()][srcThreat][dstThreat];
 }
 
-int History::getContHist(const CHEntry* entry, ExtMove move) const
+int History::getContHist(const Board& board, Move move, const CHEntry* entry) const
 {
-    return (*entry)[static_cast<int>(move.movingPiece())][move.toSq().value()];
+    return (*entry)[packPieceIndices(movingPiece(board, move))][move.toSq().value()];
 }
 
-int History::getCaptHist(Bitboard threats, ExtMove move) const
+int History::getCaptHist(const Board& board, Move move) const
 {
-    bool srcThreat = threats.has(move.fromSq());
-    bool dstThreat = threats.has(move.toSq());
-    return m_CaptHist[static_cast<int>(getPieceType(move.capturedPiece()))][static_cast<int>(move.movingPiece())][move.toSq().value()][srcThreat][dstThreat];
+    bool srcThreat = board.threats().has(move.fromSq());
+    bool dstThreat = board.threats().has(move.toSq());
+    PieceType capturedPT = getPieceType(capturedPiece(board, move));
+    return m_CaptHist[static_cast<int>(capturedPT)][packPieceIndices(movingPiece(board, move))][move.toSq().value()][srcThreat][dstThreat];
 }
 
-void History::updateMainHist(Bitboard threats, ExtMove move, int bonus)
+void History::updateMainHist(const Board& board, Move move, int bonus)
 {
-    bool srcThreat = threats.has(move.fromSq());
-    bool dstThreat = threats.has(move.toSq());
-    m_MainHist[static_cast<int>(getPieceColor(move.movingPiece()))][move.fromTo()][srcThreat][dstThreat].update(bonus);
+    bool srcThreat = board.threats().has(move.fromSq());
+    bool dstThreat = board.threats().has(move.toSq());
+    m_MainHist[static_cast<int>(board.sideToMove())][move.fromTo()][srcThreat][dstThreat].update(bonus);
 }
 
-void History::updateContHist(CHEntry* entry, ExtMove move, int bonus)
+void History::updateContHist(Move move, Piece movingPiece, CHEntry* entry, int bonus)
 {
-    (*entry)[static_cast<int>(move.movingPiece())][move.toSq().value()].update(bonus);
+    (*entry)[packPieceIndices(movingPiece)][move.toSq().value()].update(bonus);
 }
 
-void History::updateCaptHist(Bitboard threats, ExtMove move, int bonus)
+void History::updateCaptHist(const Board& board, Move move, int bonus)
 {
-    bool srcThreat = threats.has(move.fromSq());
-    bool dstThreat = threats.has(move.toSq());
-    m_CaptHist[static_cast<int>(getPieceType(move.capturedPiece()))][static_cast<int>(move.movingPiece())][move.toSq().value()][srcThreat][dstThreat].update(bonus);
+    bool srcThreat = board.threats().has(move.fromSq());
+    bool dstThreat = board.threats().has(move.toSq());
+    PieceType capturedPT = getPieceType(capturedPiece(board, move));
+    m_CaptHist[static_cast<int>(capturedPT)][packPieceIndices(movingPiece(board, move))][move.toSq().value()][srcThreat][dstThreat].update(bonus);
 }
