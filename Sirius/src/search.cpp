@@ -479,6 +479,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 if (score >= probcutBeta && probcutDepth >= 0)
                     score = -search(thread, probcutDepth, stack + 1, -probcutBeta, -probcutBeta + 1, false, !cutnode);
 
+                if (m_ShouldStop)
+                    return alpha;
+
                 rootPly--;
                 board.unmakeMove(thread.evalState);
                 stack->contHistEntry = nullptr;
