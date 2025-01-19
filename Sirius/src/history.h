@@ -139,7 +139,7 @@ public:
         return m_ContHist[packPieceIndices(movingPiece(board, move))][move.toSq().value()];
     }
 
-    int getQuietStats(const Board& board, Move move, std::span<const CHEntry* const> contHistEntries) const;
+    int getQuietStats(Move move, Bitboard threats, Piece movingPiece, std::span<const CHEntry* const> contHistEntries) const;
     int getNoisyStats(const Board& board, Move move) const;
     int correctStaticEval(const Board& board, int staticEval) const;
 
@@ -149,8 +149,8 @@ public:
     void updateNoisyStats(const Board& board, Move move, int bonus);
     void updateCorrHist(const Board& board, int bonus, int depth);
 private:
-    int getMainHist(const Board& board, Move move) const;
-    int getContHist(const Board& board, Move move, const CHEntry* entry) const;
+    int getMainHist(Move move, Bitboard threats, Color color) const;
+    int getContHist(Move move, Piece movingPiece, const CHEntry* entry) const;
     int getCaptHist(const Board& board, Move move) const;
 
     void updateMainHist(const Board& board, Move move, int bonus);

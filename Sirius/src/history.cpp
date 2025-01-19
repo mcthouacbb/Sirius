@@ -58,12 +58,12 @@ void History::clear()
     fillHistTable(m_MajorPieceCorrHist, 0);
 }
 
-int History::getQuietStats(const Board& board, Move move, std::span<const CHEntry* const> contHistEntries) const
+int History::getQuietStats(Move move, Bitboard threats, Piece movingPiece, std::span<const CHEntry* const> contHistEntries) const
 {
-    int score = getMainHist(board, move);
+    int score = getMainHist(move, threats, getPieceColor(movingPiece));
     for (auto entry : contHistEntries)
         if (entry)
-            score += getContHist(board, move, entry);
+            score += getContHist(move, movingPiece, entry);
     return score;
 }
 
@@ -144,16 +144,16 @@ void History::updateCorrHist(const Board& board, int bonus, int depth)
     majorPieceEntry.update(scaledBonus, weight);
 }
 
-int History::getMainHist(const Board& board, Move move) const
+int History::getMainHist(Move move, Bitboard threats, Color color) const
 {
-    bool srcThreat = board.threats().has(move.fromSq());
-    bool dstThreat = board.threats().has(move.toSq());
-    return m_MainHist[static_cast<int>(board.sideToMove())][move.fromTo()][srcThreat][dstThreat];
+    bool srcThreat = threats.has(move.fromSq());
+    bool dstThreat = threats.has(move.toSq());
+    return m_MainHist[static_cast<int>(color)][move.fromTo()][srcThreat][dstThreat];
 }
 
-int History::getContHist(const Board& board, Move move, const CHEntry* entry) const
+int History::getContHist(Move move, Piece movingPiece, const CHEntry* entry) const
 {
-    return (*entry)[packPieceIndices(movingPiece(board, move))][move.toSq().value()];
+    return (*entry)[packPieceIndices(movingPiece)][move.toSq().value()];
 }
 
 int History::getCaptHist(const Board& board, Move move) const

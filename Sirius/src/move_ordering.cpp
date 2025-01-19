@@ -55,7 +55,7 @@ int MoveOrdering::scoreQuiet(Move move) const
     if (move == m_Killers[0] || move == m_Killers[1])
         return KILLER_SCORE + (move == m_Killers[0]);
     else
-        return m_History.getQuietStats(m_Board, move, m_ContHistEntries);
+        return m_History.getQuietStats(move, m_Board.threats(), movingPiece(m_Board, move), m_ContHistEntries);
 }
 
 int MoveOrdering::scoreMoveQSearch(Move move) const

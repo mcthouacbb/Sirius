@@ -413,6 +413,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         stack[-1].staticEval != SCORE_NONE && stack->staticEval > -stack[-1].staticEval + 1;
 
     stack[1].killers = {};
+    Bitboard threats = board.threats();
 
     // whole node pruning(~228 elo)
     if (!pvNode && !inCheck && !excluded)
@@ -541,8 +542,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         bool quiet = moveIsQuiet(board, move);
         bool quietLosing = moveScore < MoveOrdering::KILLER_SCORE;
 
+        Piece movedPiece = movingPiece(board, move);
         int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
-        int histScore = quiet ? history.getQuietStats(board, move, contHistEntries) : history.getNoisyStats(board, move);
+        int histScore = quiet ? history.getQuietStats(move, threats, movedPiece, contHistEntries) : history.getNoisyStats(board, move);
         baseLMR -= histScore / (quiet ? lmrQuietHistDivisor : lmrNoisyHistDivisor);
 
         // move loop pruning(~184 elo)
@@ -619,7 +621,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         stack->multiExts += extension >= 2;
 
         m_TT.prefetch(board.keyAfter(move));
-        Piece movedPiece = movingPiece(board, move);
         stack->contHistEntry = &history.contHistEntry(board, move);
         stack->histScore = histScore;
 
