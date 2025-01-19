@@ -122,17 +122,36 @@ inline void CorrHistEntry::update(int target, int weight)
     m_Value = static_cast<int16_t>(std::clamp(newValue, -MAX_CORR_HIST, MAX_CORR_HIST));
 }
 
+// History tables accumulate information from the search that can be used to
+// assist in future searches. Main History, Continuation History, and Capture History
+// store whether a move was historically good, which can be used to improve move ordering
+// in future searches. Correction history stores how off the static evaluation was from
+// the search score, which can be used to make future evaluations more accurate.
+
 static constexpr int HISTORY_MAX = 16384;
 
-// main history(~29 elo)
+// Main History(~29 elo)
+// The main history is a history table indexed by stm, from square, and to square.
+// It is only used to score quiet moves
 using MainHist = MultiArray<HistoryEntry<HISTORY_MAX>, 2, 4096, 2, 2>;
-// continuation history(~40 elo)
+// Continuation History(~40 elo)
+// Continuation History is a hisory table indexed by a current move and a previous move
+// n plies back in the search. The current move is restricted to quiets, but the previous move
+// can be a quiet or capture. Currently, 1 ply, 2 ply, and 4 ply continuations are used
+// The table is shared for all plies of continuations
 using CHEntry = MultiArray<HistoryEntry<HISTORY_MAX>, 16, 64>;
 using ContHist = MultiArray<CHEntry, 16, 64>;
-// capture history(~19 elo)
+// Capture History(~19 elo)
+// Capture History is a history table indexed by the captured piece, moving piece, and to square
+// It is only used to score noisy moves(captures and promotions)
 using CaptHist = MultiArray<HistoryEntry<HISTORY_MAX>, 7, 16, 64, 2, 2>;
 
-// correction history(~91 elo)
+// Correction History(~91 elo)
+// During the search, the static evaluation is usually off by some error from the final search score
+// Correction History accumulates this error in certain types of positions, and is used
+// to adjust the static evaluation of future positions. This allows the search to adjust for
+// errors in the static evaluation
+// Common features to correct on include pawn structure, material, and positions of certain pieces
 constexpr int PAWN_CORR_HIST_ENTRIES = 16384;
 constexpr int MATERIAL_CORR_HIST_ENTRIES = 32768;
 constexpr int NON_PAWN_CORR_HIST_ENTRIES = 16384;

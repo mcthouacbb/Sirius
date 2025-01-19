@@ -259,7 +259,16 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
     return score;
 }
 
-// Aspiration windows(~108 elo)
+// Aspiration Windows(~108 elo)
+// Typically, the search score between depths is quite stable. So we take advantage of this
+// and search on a window of (prevScore - delta, prevScore + delta), where prevScore is
+// the score of the previous depth, and delta is some constant. If the search score falls
+// within this window, then we can use it directly. However, if the search score is outside
+// the window, then we must expand the window and search again. This process is repeated
+// until we get a score which falls inside the window. The benefit of this is that a
+// tighter alpha-beta window causes much more beta cutoffs So we get to search more efficiently.
+// However, if the score is too unstable, then the extra researches outweigh the benefits.
+// We avoid Aspiration Windows at low depths, since those scores can be quite volatile
 int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prevScore)
 {
     int delta = aspInitDelta;
@@ -296,6 +305,8 @@ int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prev
             else
                 return searchScore;
         }
+
+        // Expand the window in an exponential fashion
         delta += delta * aspWideningFactor / 16;
     }
 }
@@ -340,6 +351,10 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     if (rootPly + 1 > thread.selDepth)
         thread.selDepth = rootPly + 1;
 
+    // Mate Distance Pruning
+    // A theoretically sound pruning technique where we prune if it is completely
+    // impossible for us to find a shorter mate even if we checkmate on this move
+    // This has little effect on playing strength, but massively speeds up matefinding
     alpha = std::max(alpha, -SCORE_MATE + rootPly);
     beta = std::min(beta, SCORE_MATE - rootPly);
     if (alpha >= beta)
@@ -351,6 +366,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     bool inCheck = board.checkers().any();
     bool excluded = stack->excludedMove != Move();
 
+    // Detect upcoming repetitions in the search
+    // More info in cuckoo.cpp
     if (!root && board.halfMoveClock() >= 3 && alpha < 0 && board.hasUpcomingRepetition(rootPly))
     {
         alpha = SCORE_DRAW;
@@ -364,6 +381,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     if (rootPly >= MAX_PLY)
         return eval::evaluate(board, &thread);
 
+    // Do a quiescence search at depth 0 to get a suitable score for the position
     if (depth <= 0)
         return qsearch(thread, stack, alpha, beta, pvNode);
 
@@ -374,9 +392,18 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     if (!excluded)
     {
+        // Probe the transposition table
         ttHit = m_TT.probe(board.zkey(), rootPly, ttData);
 
         // TT Cutoffs(~101 elo)
+        // If a previous search at an equal or higher depth was already done and saved in the TT,
+        // Cutoff using the score of that search. The bounds checks are required because
+        // most scores in the search are not exact and cannot simply be returned whenever
+        // the same position is reached
+
+        // TT Cutoffs are avoided in PV nodes because
+        // 1. We want to actually do a search on PV nodes and avoid a cutoff
+        // 2. Cutting off in pv nodes can create issues with repetition detection
         if (ttHit && !pvNode && ttData.depth >= depth && (
             ttData.bound == TTEntry::Bound::EXACT ||
             (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta) ||
@@ -384,6 +411,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         ))
             return ttData.score;
 
+        // Avoid using eval in check
         if (inCheck)
         {
             stack->staticEval = SCORE_NONE;
@@ -392,10 +420,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         else
         {
             rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
-            // Correction history(~91 elo)
+            // Correction History(~91 elo)
             stack->staticEval = history.correctStaticEval(rawStaticEval, board);
             stack->eval = stack->staticEval;
-            // use tt score as a better eval(~8 elo)
+
+            // Use the TT Score as a Better Eval(~8 elo)
             if (ttHit && (
                 ttData.bound == TTEntry::Bound::EXACT ||
                 (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= stack->eval) ||
@@ -406,25 +435,42 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     }
 
     bool ttPV = pvNode || (ttHit && ttData.pv);
+
     // Improving heuristic(~31 elo)
+    // The improving heuristic relies is based on the idea that if the static evaluation
+    // improved since the last time it was our turn, we are more confident that the position
+    // is good and less confident that the position is bad. Thus, when we are improving we
+    // 1. prune more aggressively on fail highs(e.g. RFP, NMP, Probcut)
+    // 2. prune/reduce less agressively on fail lows(e.g. Futility Pruning, LMP, LMR)
     bool improving = !inCheck && rootPly > 1 && stack->staticEval > stack[-2].staticEval;
     bool oppWorsening =
         !inCheck && rootPly > 0 &&
         stack[-1].staticEval != SCORE_NONE && stack->staticEval > -stack[-1].staticEval + 1;
 
+    // Clear killer moves for all child nodes
+    // Killer moves eventually degrade to noise if they are left too long
+    // And the search as entered too different of a branch
     stack[1].killers = {};
     Bitboard threats = board.threats();
 
-    // whole node pruning(~228 elo)
+    // Whole Node Pruning(~228 elo)
+    // Prune the whole node based on certain conditions
     if (!pvNode && !inCheck && !excluded)
     {
-        // reverse futility pruning(~86 elo)
+        // Reverse Futility Pruning(~86 elo)
+        // If the static evaluation is very far above beta, then it is extremely likely
+        // that the search will fail high, so we prune and return a fail high. This relies
+        // on the Null Move Observation, the fact that in almost every position there is at
+        // least one move that is better than doing nothing
         int rfpMargin = (improving ? rfpImpMargin : rfpNonImpMargin) * depth - 20 * oppWorsening + stack[-1].histScore / rfpHistDivisor;
         if (depth <= rfpMaxDepth &&
             stack->eval >= std::max(rfpMargin, 20) + beta)
             return stack->eval;
 
-        // razoring(~6 elo)
+        // Razoring(~6 elo)
+        // If the static evaluation is very far below alpha, then do a quiescence search
+        // on the current position. If the quiescence search also fails low, then assume
+        // the current search will fail low and prune
         if (depth <= razoringMaxDepth && stack->eval <= alpha - razoringMargin * depth && alpha < 2000)
         {
             int score = qsearch(thread, stack, alpha, beta, pvNode);
@@ -432,7 +478,10 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 return score;
         }
 
-        // null move pruning(~31 elo)
+        // Null Move Pruning(~31 elo)
+        // Based on the Null Move Observation, there is almost always at least one move that
+        // is better than doing nothing. So if we make a null move, and a reduced depth search
+        // fails high then it is likely that this search will also fail high
         Bitboard nonPawns = board.pieces(board.sideToMove()) ^ board.pieces(board.sideToMove(), PieceType::PAWN);
         if (board.pliesFromNull() > 0 && depth >= nmpMinDepth &&
             stack->eval >= beta && stack->staticEval >= beta + nmpEvalBaseMargin - nmpEvalDepthMargin * depth &&
@@ -448,7 +497,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 return nullScore;
         }
 
-        // probcut(~3 elo)
+        // Probcut(~3 elo)
+        // If a capture with good SEE is able to fail high on a slightly reduced search,
+        // then assume the search would have failed high and prune
         int probcutBeta = beta + probcutBetaMargin;
         if (depth >= probcutMinDepth &&
             !isMateScore(beta) &&
@@ -493,7 +544,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         }
     }
 
-    // internal iterative reductions(~8 elo)
+    // Internal Iterative Reductions(~8 elo)
+    // If the search has no tt entry at high depth
+    // 1. This search will likely take a very long time, as we cannot do tt move ordering
+    // 2. This position is probably not very good anyways
+    // So we reduce the depth
     if (depth >= minIIRDepth && !inCheck && !excluded && !ttHit)
         depth--;
 
@@ -544,10 +599,14 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         int histScore = quiet ? history.getQuietStats(threats, extMove, contHistEntries) : history.getNoisyStats(threats, extMove);
         baseLMR -= histScore / (quiet ? lmrQuietHistDivisor : lmrNoisyHistDivisor);
 
-        // move loop pruning(~184 elo)
+        // Move Loop Pruning(~184 elo)
+        // Prune moves at shallow depth based on certain conditions
         if (!root && quietLosing && bestScore > -SCORE_WIN)
         {
-            // futility pruning(~1 elo)
+            // Futility Pruning(~1 elo)
+            // If the static evaluation is very far below alpha and this move is quiet,
+            // it will likely not be able to improve the static evaluation enough
+            // to raise alpha. So prune the move
             int lmrDepth = std::max(depth - baseLMR, 0);
             if (lmrDepth <= fpMaxDepth &&
                 quiet &&
@@ -558,14 +617,18 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 continue;
             }
 
-            // late move pruning(~23 elo)
+            // Late Move Pruning(~23 elo)
+            // After searching a certain amount of moves at low depth, prune the rest
+            // This assumes that move ordering is good and that later moves
+            // are not better than early ones
             if (!pvNode &&
                 !inCheck &&
                 depth <= lmpMaxDepth &&
                 movesPlayed >= lmpMinMovesBase + depth * depth / (improving ? 1 : 2))
                 break;
 
-            // static exchange evaluation pruning(~5 elo)
+            // Static Exchange Evaluation Pruning(~5 elo)
+            // If the move loses a large amount of material based on SEE, then prune the move
             int seeMargin = quiet ?
                 depth * seePruneMarginQuiet :
                 depth * seePruneMarginNoisy - std::clamp(histScore / seeCaptHistDivisor, -seeCaptHistMax * depth, seeCaptHistMax * depth);
@@ -574,7 +637,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 !board.see(move, seeMargin))
                 continue;
 
-            // history pruning(~14 elo)
+            // History Pruning(~14 elo)
+            // Prune moves that have a very low history at low depth
             if (quiet &&
                 depth <= maxHistPruningDepth &&
                 histScore < -histPruningMargin * depth)
@@ -591,7 +655,12 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         int extension = 0;
 
-        // singular extensions(~73 elo)
+        // Singular Extensions(~73 elo)
+        // Extend when a move seems to be much better than all other moves in a position
+        // To detect this, we search around a zero window of (ttScore - margin), with the tt move
+        // excluded from this search. If this search fails low, and the tt score indicates that
+        // the tt move failed high or is exact, then the tt move is considered singular,
+        // and we extend it
         if (doSE)
         {
             int sBeta = std::max(-SCORE_MATE, ttData.score - sBetaScale * depth / 16);
@@ -604,13 +673,25 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
             if (score < sBeta)
             {
+                // Double extensions
+                // If the score is below singular beta by a large margin, then the tt move is very singular
+                // and we extend by 2 plies
                 if (!pvNode && stack->multiExts < maxMultiExts && score < sBeta - doubleExtMargin)
                     extension = 2;
                 else
                     extension = 1;
             }
+
+            // Multicut
+            // If the singular search failed high and singular beta is above beta
+            // There are likely multiple moves in this position that would cause a fail high
             else if (sBeta >= beta)
                 return sBeta;
+
+            // Negative Extensions
+            // We can't do multicut, but the singular search indicates that other moves are
+            // potentially as good or better than the tt move. So we reduce the depth
+            // of the tt move in favor of other moves
             else if (ttData.score >= beta)
                 extension = -2 + pvNode;
         }
@@ -640,7 +721,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         int newDepth = depth + extension - 1;
         int score = 0;
 
-        // late move reductions(~111 elo)
+        // Late Move Reductions(~111 elo)
+        // If move ordering is good, then later moves are likely much worse than earlier moves
+        // So we search these moves at a reduced depth, and save a ton of time doing so
+        // If the reduced search is able to raise alpha against our expectations
+        // We do a research at full depth
         if (movesPlayed >= (pvNode ? lmrMinMovesPv : lmrMinMovesNonPv) &&
             depth >= lmrMinDepth &&
             quietLosing)
@@ -710,7 +795,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             if (bestScore >= beta)
             {
                 stack->failHighCount++;
-                // killer moves(~6 elo)
+                // Killer Moves(~6 elo)
+                // If a quiet move causes a beta cutoff in this node
+                // It will probably also work in other nodes at the same ply
                 if (quiet)
                 {
                     if (stack->killers[0] != move)
@@ -721,12 +808,16 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 }
 
                 // history(~527 elo)
+                // Updates the history tables
+                // The move which failed high gets a bonus to its history
+                // and moves which were unable to cause a cutoff get a penalty
                 int histDepth = depth + (bestScore > beta + histBetaMargin);
                 int bonus = historyBonus(histDepth);
                 int malus = historyMalus(histDepth);
                 if (quiet)
                 {
                     history.updateQuietStats(threats, ExtMove::from(board, move), contHistEntries, bonus);
+                    // Only punish quiets if the cutoff move was quiet
                     for (Move quietMove : quietsTried)
                     {
                         if (quietMove != move)
@@ -738,6 +829,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                     history.updateNoisyStats(threats, ExtMove::from(board, move), bonus);
                 }
 
+                // unconditionally punish capture moves
                 for (Move noisyMove : noisiesTried)
                 {
                     if (noisyMove != move)
@@ -749,6 +841,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         }
     }
 
+    // check for mates
     if (movesPlayed == 0)
     {
         if (inCheck)
@@ -756,20 +849,29 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         return SCORE_DRAW;
     }
 
+    // Avoid updating correction history and the transposition table in singular searches
+    // In a singular search, we are specifically avoiding the likely best move
+    // so the score and best move of the singular search are useless for normal searches
     if (!excluded)
     {
+        // update correction histories
         if (!inCheck && (stack->bestMove == Move() || moveIsQuiet(board, stack->bestMove)) &&
             !(bound == TTEntry::Bound::LOWER_BOUND && stack->staticEval >= bestScore) &&
             !(bound == TTEntry::Bound::UPPER_BOUND && stack->staticEval <= bestScore))
             history.updateCorrHist(bestScore - stack->staticEval, depth, board);
 
+        // Store the search results to the TT
         m_TT.store(board.zkey(), depth, rootPly, bestScore, rawStaticEval, stack->bestMove, ttPV, bound);
     }
 
     return bestScore;
 }
 
-// quiescence search(~187 elo)
+// Quiescence Search(~187 elo)
+// The evaluation function does not work well when the position has lots of good captures
+// So, a quiescence search is used to evaluate nodes near the leaves of the search tree.
+// A qsearch is a search that only looks to resolve captures and evaluate quiet positions
+// to get a more accurate and stable score
 int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int beta, bool pvNode)
 {
     auto& rootPly = thread.rootPly;
@@ -787,7 +889,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     bool ttHit = m_TT.probe(board.zkey(), rootPly, ttData);
     bool ttPV = pvNode || (ttHit && ttData.pv);
 
-    // tt cutoffs(~101 elo)
+    // TT Cutoffs(~101 elo)
     if (ttHit && !pvNode && (
         ttData.bound == TTEntry::Bound::EXACT ||
         (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta) ||
@@ -805,9 +907,10 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     else
     {
         rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
+        // Correction History(~91 elo)
         stack->staticEval = inCheck ? SCORE_NONE : thread.history.correctStaticEval(rawStaticEval, board);
 
-        // use tt score as a better eval(~8 elo)
+        // Use the TT Score as a Better Eval(~8 elo)
         stack->eval = stack->staticEval;
         if (!inCheck && ttHit && (
             ttData.bound == TTEntry::Bound::EXACT ||
@@ -836,6 +939,8 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
 
     MoveOrdering ordering = [&]()
     {
+        // Generate all moves when in check, instead of just captures
+        // This helps the quiescence search resolve checks more accurately
         if (inCheck)
             return MoveOrdering(board, ttData.move, stack->killers, contHistEntries, history);
         else
@@ -850,13 +955,24 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     while ((scoredMove = ordering.selectMove()).score != MoveOrdering::NO_MOVE)
     {
         // quiescence search pruning(~55 elo)
+
+        // QSearch LMP
+        // Capture move ordering is usually very good so late moves are likely not very good
         if (!inCheck && movesPlayed >= 2)
             break;
         auto [move, moveScore] = scoredMove;
         if (!board.isLegal(move))
             continue;
+
+        // QSearch SEE Pruning
+        // If this move loses material according to SEE
+        // It is likely not going to cause a cutoff or raise alpha
         if (bestScore > -SCORE_WIN && !board.see(move, 0))
             continue;
+
+        // QSearch Futility Pruning
+        // If the static evaluation is far below alpha, and this move does not win material
+        // It is unlikely that it will be able to raise alpha or cause a cutoff
         if (!inCheck && futility <= alpha && !board.see(move, 1))
         {
             bestScore = std::max(bestScore, futility);
@@ -899,6 +1015,9 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         }
     }
 
+    // Check for mate
+    // We can only consider checkmates, since, when not in check, we only generate captures
+    // Thus, we have no idea whether there are any legal quiet moves
     if (inCheck && movesPlayed == 0)
         return -SCORE_MATE + rootPly;
 

@@ -56,12 +56,21 @@ bool TimeManager::stopHard(const SearchLimits& searchLimits, uint64_t nodes)
 
 bool TimeManager::stopSoft(Move bestMove, uint64_t totalNodes, const SearchLimits& searchLimits)
 {
+    // Best Move Stability
+    // If the best move stays the same for many iterations, then it is likely
+    // the true best move, and thus we reduce time usage
     if (bestMove == m_PrevBestMove)
         m_Stability++;
     else
         m_Stability = 0;
     m_PrevBestMove = bestMove;
 
+    // Node Time Management
+    // The amount of nodes spent searching a node is strongly correlated with how good the move is
+    // Thus, if the large majority of total node searched is spent on the best move
+    // It is likely to be the true best move, and we reduce time usage
+    // Inversely, if the search does not spend very many nodes on the best move
+    // We are less confident that it is the true best move and thus increase time usage
     double bmNodes = static_cast<double>(m_NodeCounts[bestMove.fromTo()]) / static_cast<double>(totalNodes);
     double scale = ((search::nodeTMBase / 100.0) - bmNodes) * (search::nodeTMScale / 100.0);
 
