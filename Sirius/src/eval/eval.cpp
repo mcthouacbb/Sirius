@@ -61,6 +61,9 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
             evalData.attackCount[us] += kingRingAtks.popcount();
         }
 
+        int tropism = Square::chebyshev(sq, board.kingSq(us));
+        eval += tropism * OUR_TROPISM[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)];
+
         if (piece == BISHOP && (attacks & CENTER_SQUARES).multiple())
             eval += LONG_DIAG_BISHOP;
     }
