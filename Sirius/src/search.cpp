@@ -608,7 +608,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             if (score < sBeta)
             {
                 if (!pvNode && stack->multiExts < maxMultiExts && score < sBeta - doubleExtMargin)
-                    extension = 2;
+                    extension = 2 + (!noisyTTMove && score < sBeta - 80);
                 else
                     extension = 1;
             }
