@@ -118,7 +118,7 @@ SEARCH_PARAM(doubleExtMargin, 14, 0, 40, 2);
 SEARCH_PARAM(lmrMinDepth, 3, 2, 5, 1);
 SEARCH_PARAM(lmrMinMovesNonPv, 3, 1, 6, 1);
 SEARCH_PARAM(lmrMinMovesPv, 4, 2, 8, 1);
-SEARCH_PARAM(lmrFailHighCountMargin, 2, 2, 12, 1);
+SEARCH_PARAM(lmrFailHighCountMargin, 4, 2, 12, 1);
 SEARCH_PARAM(lmrCorrplexityMargin, 80, 40, 120, 5);
 
 SEARCH_PARAM_CALLBACK(lmrBase, 71, -50, 200, 10, updateLmrTable);
