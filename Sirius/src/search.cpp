@@ -607,7 +607,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
             if (score < sBeta)
             {
-                if (!pvNode && stack->multiExts < maxMultiExts && score < sBeta - doubleExtMargin)
+                int doubleMargin = doubleExtMargin - std::abs(stack->eval - rawStaticEval) / 3;
+                if (!pvNode && stack->multiExts < maxMultiExts && score < sBeta - doubleMargin)
                     extension = 2;
                 else
                     extension = 1;
