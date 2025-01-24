@@ -63,6 +63,9 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
 
         if (piece == BISHOP && (attacks & CENTER_SQUARES).multiple())
             eval += LONG_DIAG_BISHOP;
+
+        int tropism = Square::chebyshev(sq, board.kingSq(them));
+        eval += tropism * THEIR_TROPISM[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)];
     }
 
     return eval;
