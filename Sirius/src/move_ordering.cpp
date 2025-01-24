@@ -41,12 +41,12 @@ int MoveOrdering::scoreNoisy(Move move) const
 
     if (isCapture)
     {
-        int hist = m_History.getNoisyStats(m_Board.threats(), ExtMove::from(m_Board, move));
+        int hist = m_History.getNoisyStats(m_Board, move);
         return hist + CAPTURE_SCORE * m_Board.see(move, -hist / 32) + mvvLva(m_Board, move);
     }
     else
     {
-        return m_History.getNoisyStats(m_Board.threats(), ExtMove::from(m_Board, move)) + PROMOTION_SCORE + promotionBonus(move);
+        return m_History.getNoisyStats(m_Board, move) + PROMOTION_SCORE + promotionBonus(move);
     }
 }
 
@@ -55,14 +55,14 @@ int MoveOrdering::scoreQuiet(Move move) const
     if (move == m_Killers[0] || move == m_Killers[1])
         return KILLER_SCORE + (move == m_Killers[0]);
     else
-        return m_History.getQuietStats(m_Board.threats(), ExtMove::from(m_Board, move), m_ContHistEntries);
+        return m_History.getQuietStats(move, m_Board.threats(), movingPiece(m_Board, move), m_ContHistEntries);
 }
 
 int MoveOrdering::scoreMoveQSearch(Move move) const
 {
     bool isCapture = moveIsCapture(m_Board, move);
     bool isPromotion = move.type() == MoveType::PROMOTION;
-    int score = m_History.getNoisyStats(m_Board.threats(), ExtMove::from(m_Board, move));
+    int score = m_History.getNoisyStats(m_Board, move);
     if (isCapture)
         score += mvvLva(m_Board, move);
     if (isPromotion)
@@ -91,7 +91,7 @@ ScoredMove MoveOrdering::selectMove()
         case TT_MOVE:
             ++m_Stage;
             if (m_TTMove != Move() && m_Board.isPseudoLegal(m_TTMove))
-                return ScoredMove(m_TTMove, 10000000);
+                return ScoredMove{m_TTMove, 10000000};
 
             // fallthrough
         case GEN_NOISY:
@@ -133,13 +133,13 @@ ScoredMove MoveOrdering::selectMove()
                 if (scoredMove.move != m_TTMove)
                     return scoredMove;
             }
-            return {Move(), NO_MOVE};
+            return ScoredMove{Move(), NO_MOVE};
 
 
         case QS_TT_MOVE:
             ++m_Stage;
             if (m_TTMove != Move() && m_Board.isPseudoLegal(m_TTMove) && !moveIsQuiet(m_Board, m_TTMove))
-                return ScoredMove(m_TTMove, 10000000);
+                return ScoredMove{m_TTMove, 10000000};
 
             // fallthrough
         case QS_GEN_NOISIES:
@@ -156,7 +156,7 @@ ScoredMove MoveOrdering::selectMove()
                 if (scoredMove.move != m_TTMove)
                     return scoredMove;
             }
-            return {Move(), NO_MOVE};
+            return ScoredMove{Move(), NO_MOVE};
     }
     if (m_Curr >= m_Moves.size())
         return {Move(), NO_MOVE};

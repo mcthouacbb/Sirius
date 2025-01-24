@@ -5,57 +5,32 @@
 #include <span>
 #include <algorithm>
 
-struct ExtMove : public Move
+// all these functions assume that move is a pseudolegal move on the board
+inline Piece movingPiece(const Board& board, Move move)
 {
-public:
-    static ExtMove from(const Board& board, Move move);
+    return board.pieceAt(move.fromSq());
+}
 
-    Piece movingPiece() const;
-    Piece capturedPiece() const;
-    Piece promotionPiece() const;
-private:
-    static Piece promotionPiece(Color sideToMove, Promotion promotion);
-
-    ExtMove(Move move, Piece moving, Piece captured, Piece promotion);
-
-    Piece m_Moving, m_Captured, m_Promotion;
-};
-
-inline ExtMove ExtMove::from(const Board& board, Move move)
+inline Piece capturedPiece(const Board& board, Move move)
 {
-    Piece moving = board.pieceAt(move.fromSq());
-    Piece captured =
-        move.type() == MoveType::ENPASSANT ?
+    return move.type() == MoveType::ENPASSANT ?
         makePiece(PieceType::PAWN, ~board.sideToMove()) :
         board.pieceAt(move.toSq());
-    Piece promotion = move.type() == MoveType::PROMOTION ? promotionPiece(board.sideToMove(), move.promotion()) : Piece::NONE;
-    return ExtMove(move, moving, captured, promotion);
 }
 
-inline Piece ExtMove::movingPiece() const
+// pieces are currently stored as type + 8 * color internally
+// however, this wastes indices between
+// white king = 5
+// and black pawn = 8
+// this function packs all the piece indices tightly into indices 0-11
+inline int packPieceIndices(Piece piece)
 {
-    return m_Moving;
-}
-
-inline Piece ExtMove::capturedPiece() const
-{
-    return m_Captured;
-}
-
-inline Piece ExtMove::promotionPiece() const
-{
-    return m_Promotion;
-}
-
-inline ExtMove::ExtMove(Move move, Piece moving, Piece captured, Piece promotion)
-    : Move(move.fromSq(), move.toSq(), move.type(), move.promotion()), m_Moving(moving), m_Captured(captured), m_Promotion(promotion)
-{
-
-}
-
-inline Piece ExtMove::promotionPiece(Color sideToMove, Promotion promotion)
-{
-    return makePiece(static_cast<PieceType>((static_cast<int>(promotion) >> 14) + static_cast<int>(PieceType::KNIGHT)), sideToMove);
+    // does not work with NONE pieces
+    assert(piece != Piece::NONE);
+    PieceType type = getPieceType(piece);
+    if (getPieceColor(piece) == Color::WHITE)
+        return static_cast<int>(type);
+    return static_cast<int>(type) + 6;
 }
 
 template<int MAX_VAL>
@@ -127,10 +102,10 @@ static constexpr int HISTORY_MAX = 16384;
 // main history(~29 elo)
 using MainHist = MultiArray<HistoryEntry<HISTORY_MAX>, 2, 4096, 2, 2>;
 // continuation history(~40 elo)
-using CHEntry = MultiArray<HistoryEntry<HISTORY_MAX>, 16, 64>;
-using ContHist = MultiArray<CHEntry, 16, 64>;
+using CHEntry = MultiArray<HistoryEntry<HISTORY_MAX>, 12, 64>;
+using ContHist = MultiArray<CHEntry, 12, 64>;
 // capture history(~19 elo)
-using CaptHist = MultiArray<HistoryEntry<HISTORY_MAX>, 7, 16, 64, 2, 2>;
+using CaptHist = MultiArray<HistoryEntry<HISTORY_MAX>, 7, 12, 64, 2, 2>;
 
 // correction history(~91 elo)
 constexpr int PAWN_CORR_HIST_ENTRIES = 16384;
@@ -154,33 +129,33 @@ class History
 public:
     History() = default;
 
-    CHEntry& contHistEntry(ExtMove move)
+    CHEntry& contHistEntry(const Board& board, Move move)
     {
-        return m_ContHist[static_cast<int>(move.movingPiece())][move.toSq().value()];
+        return m_ContHist[packPieceIndices(movingPiece(board, move))][move.toSq().value()];
     }
 
-    const CHEntry& contHistEntry(ExtMove move) const
+    const CHEntry& contHistEntry(const Board& board, Move move) const
     {
-        return m_ContHist[static_cast<int>(move.movingPiece())][move.toSq().value()];
+        return m_ContHist[packPieceIndices(movingPiece(board, move))][move.toSq().value()];
     }
 
-    int getQuietStats(Bitboard threats, ExtMove move, std::span<const CHEntry* const> contHistEntries) const;
-    int getNoisyStats(Bitboard threats, ExtMove move) const;
-    int correctStaticEval(int staticEval, const Board& board) const;
+    int getQuietStats(Move move, Bitboard threats, Piece movingPiece, std::span<const CHEntry* const> contHistEntries) const;
+    int getNoisyStats(const Board& board, Move move) const;
+    int correctStaticEval(const Board& board, int staticEval) const;
 
     void clear();
-    void updateQuietStats(Bitboard threats, ExtMove move, std::span<CHEntry*> contHistEntries, int bonus);
-    void updateContHist(ExtMove move, std::span<CHEntry*> contHistEntries, int bonus);
-    void updateNoisyStats(Bitboard threats, ExtMove move, int bonus);
-    void updateCorrHist(int bonus, int depth, const Board& board);
+    void updateQuietStats(const Board& board, Move move, std::span<CHEntry*> contHistEntries, int bonus);
+    void updateContHist(Move move, Piece movingPiece, std::span<CHEntry*> contHistEntries, int bonus);
+    void updateNoisyStats(const Board& board, Move move, int bonus);
+    void updateCorrHist(const Board& board, int bonus, int depth);
 private:
-    int getMainHist(Bitboard threats, ExtMove move) const;
-    int getContHist(const CHEntry* entry, ExtMove move) const;
-    int getCaptHist(Bitboard threats, ExtMove move) const;
+    int getMainHist(Move move, Bitboard threats, Color color) const;
+    int getContHist(Move move, Piece movingPiece, const CHEntry* entry) const;
+    int getCaptHist(const Board& board, Move move) const;
 
-    void updateMainHist(Bitboard threats, ExtMove move, int bonus);
-    void updateContHist(CHEntry* entry, ExtMove move, int bonus);
-    void updateCaptHist(Bitboard threats, ExtMove move, int bonus);
+    void updateMainHist(const Board& board, Move move, int bonus);
+    void updateContHist(Move move, Piece movingPiece, CHEntry* entry, int bonus);
+    void updateCaptHist(const Board& board, Move move, int bonus);
 
     MainHist m_MainHist;
     ContHist m_ContHist;

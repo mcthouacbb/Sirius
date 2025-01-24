@@ -6,12 +6,12 @@ Sirius does not come with a gui. To play against it, you should download a chess
 ## Strength
 See [Releases](https://github.com/mcthouacbb/Sirius/releases)
 
-| Version | Release Date | [CCRL Blitz](https://ccrl.chessdom.com/ccrl/404/) | [CCRL 40/15](https://ccrl.chessdom.com/ccrl/4040/) |
+| Version | Release Date | [CCRL Blitz](https://www.computerchess.org.uk/ccrl/404/) | [CCRL 40/15](https://www.computerchess.org.uk/ccrl/4040/) |
 | --- | --- | --- | --- |
-| 5.0 | 2023-10-27 | N/A | 2677 |
-| 6.0 | 2024-02-17 | N/A | 2965 |
-| 7.0 | 2024-07-09 | N/A | 3224 |
-| 8.0 | 2024-10-05 | 3444 | N/A  |
+| 5.0 | 2023-10-27 | N/A | 2678 |
+| 6.0 | 2024-02-17 | N/A | 2964 |
+| 7.0 | 2024-07-09 | N/A | 3222 |
+| 8.0 | 2024-10-05 | 3444 | 3354  |
 
 ## Usage
 Sirius can be used with any UCI Chess GUI or matchrunner including Arena, Cutechess, Cutechess-cli, Fastchess, Banksia, and more.
