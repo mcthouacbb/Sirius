@@ -181,7 +181,7 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
     int weakSquares = std::min(weakKingRing.popcount() + weakAttacked.popcount() + weakAttacked2.popcount(), 16u);
     eval += WEAK_KING_RING[weakSquares];
 
-    return eval;
+    return PackedScore(eval.mg() / 64 * 64, eval.eg() / 64 * 64);
 }
 
 template<Color us>
