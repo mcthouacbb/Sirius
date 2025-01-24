@@ -847,6 +847,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
 
     TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
     stack->bestMove = Move();
+    MoveList noisiesTried;
     int movesPlayed = 0;
 
     ScoredMove scoredMove = {};
@@ -867,9 +868,13 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         }
         movesPlayed++;
         stack->contHistEntry = &history.contHistEntry(board, move);
+        bool quiet = moveIsQuiet(board, move);
         board.makeMove(move, thread.evalState);
         thread.nodes.fetch_add(1, std::memory_order_relaxed);
         rootPly++;
+
+        if (!quiet)
+            noisiesTried.push_back(move);
 
         int score = -qsearch(thread, stack + 1, -beta, -alpha, pvNode);
 
@@ -897,6 +902,13 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
             if (bestScore >= beta)
             {
                 bound = TTEntry::Bound::LOWER_BOUND;
+                if (!quiet)
+                    history.updateNoisyStats(board, move, historyBonus(1));
+                for (Move noisyMove : noisiesTried)
+                {
+                    if (noisyMove != move)
+                        history.updateNoisyStats(board, move, -historyMalus(1));
+                }
                 break;
             }
         }
