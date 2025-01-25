@@ -51,7 +51,6 @@ void History::clear()
     fillHistTable(m_ContHist, 0);
     fillHistTable(m_CaptHist, 0);
     fillHistTable(m_PawnCorrHist, 0);
-    fillHistTable(m_MaterialCorrHist, 0);
     fillHistTable(m_NonPawnCorrHist, 0);
     fillHistTable(m_ThreatsCorrHist, 0);
     fillHistTable(m_MinorPieceCorrHist, 0);
@@ -77,7 +76,6 @@ int History::correctStaticEval(const Board& board, int staticEval) const
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
     int pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % PAWN_CORR_HIST_ENTRIES];
-    int materialEntry = m_MaterialCorrHist[static_cast<int>(stm)][board.materialKey() % MATERIAL_CORR_HIST_ENTRIES];
     int nonPawnStmEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(stm)][board.nonPawnKey(stm).value % NON_PAWN_CORR_HIST_ENTRIES];
     int nonPawnNstmEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(~stm)][board.nonPawnKey(~stm).value % NON_PAWN_CORR_HIST_ENTRIES];
     int threatsEntry = m_ThreatsCorrHist[static_cast<int>(stm)][threatsKey % THREATS_CORR_HIST_ENTRIES];
@@ -86,7 +84,6 @@ int History::correctStaticEval(const Board& board, int staticEval) const
 
     int correction = 0;
     correction += search::pawnCorrWeight * pawnEntry;
-    correction += search::materialCorrWeight * materialEntry;
     correction += search::nonPawnStmCorrWeight * nonPawnStmEntry;
     correction += search::nonPawnNstmCorrWeight * nonPawnNstmEntry;
     correction += search::threatsCorrWeight * threatsEntry;
@@ -124,9 +121,6 @@ void History::updateCorrHist(const Board& board, int bonus, int depth)
 
     auto& pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % PAWN_CORR_HIST_ENTRIES];
     pawnEntry.update(scaledBonus, weight);
-
-    auto& materialEntry = m_MaterialCorrHist[static_cast<int>(stm)][board.materialKey() % MATERIAL_CORR_HIST_ENTRIES];
-    materialEntry.update(scaledBonus, weight);
 
     auto& nonPawnWhiteEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(Color::WHITE)][board.nonPawnKey(Color::WHITE).value % NON_PAWN_CORR_HIST_ENTRIES];
     nonPawnWhiteEntry.update(scaledBonus, weight);

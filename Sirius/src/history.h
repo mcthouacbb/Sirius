@@ -109,13 +109,11 @@ using CaptHist = MultiArray<HistoryEntry<HISTORY_MAX>, 7, 12, 64, 2, 2>;
 
 // correction history(~91 elo)
 constexpr int PAWN_CORR_HIST_ENTRIES = 16384;
-constexpr int MATERIAL_CORR_HIST_ENTRIES = 32768;
 constexpr int NON_PAWN_CORR_HIST_ENTRIES = 16384;
 constexpr int THREATS_CORR_HIST_ENTRIES = 16384;
 constexpr int MINOR_PIECE_CORR_HIST_ENTRIES = 16384;
 constexpr int MAJOR_PIECE_CORR_HIST_ENTRIES = 16384;
 using PawnCorrHist = MultiArray<CorrHistEntry, 2, PAWN_CORR_HIST_ENTRIES>;
-using MaterialCorrHist = MultiArray<CorrHistEntry, 2, MATERIAL_CORR_HIST_ENTRIES>;
 using NonPawnCorrHist = MultiArray<CorrHistEntry, 2, 2, NON_PAWN_CORR_HIST_ENTRIES>;
 using ThreatsCorrHist = MultiArray<CorrHistEntry, 2, THREATS_CORR_HIST_ENTRIES>;
 using MinorPieceCorrHist = MultiArray<CorrHistEntry, 2, MINOR_PIECE_CORR_HIST_ENTRIES>;
@@ -161,7 +159,6 @@ private:
     ContHist m_ContHist;
     CaptHist m_CaptHist;
     PawnCorrHist m_PawnCorrHist;
-    MaterialCorrHist m_MaterialCorrHist;
     NonPawnCorrHist m_NonPawnCorrHist;
     ThreatsCorrHist m_ThreatsCorrHist;
     MinorPieceCorrHist m_MinorPieceCorrHist;
