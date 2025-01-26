@@ -93,7 +93,7 @@ inline CorrHistEntry::operator int() const
 
 inline void CorrHistEntry::update(int target, int weight)
 {
-    int newValue = (m_Value * (256 - weight) + target * weight) / 256;
+    int newValue = (m_Value * (256 - weight) * 240 / 256 + target * weight) / 256;
     m_Value = static_cast<int16_t>(std::clamp(newValue, -MAX_CORR_HIST, MAX_CORR_HIST));
 }
 
