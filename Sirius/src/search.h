@@ -133,6 +133,11 @@ private:
     int search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta, bool pvNode, bool cutnode);
     int qsearch(SearchThread& thread, SearchStack* stack, int alpha, int beta, bool pvNode);
 
+    void makeMove(SearchThread& thread, SearchStack* stack, Move move, int histScore);
+    void unmakeMove(SearchThread& thread, SearchStack* stack);
+    void makeNullMove(SearchThread& thread, SearchStack* stack);
+    void unmakeNullMove(SearchThread& thread, SearchStack* stack);
+
     Board& m_Board;
     std::atomic_bool m_ShouldStop;
     TT m_TT;
