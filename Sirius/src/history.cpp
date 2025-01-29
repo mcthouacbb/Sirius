@@ -71,7 +71,7 @@ int History::getNoisyStats(const Board& board, Move move) const
     return getCaptHist(board, move);
 }
 
-int History::correctStaticEval(const Board& board, int staticEval) const
+int History::correctStaticEval(const Board& board, int staticEval, Move prevMove, Piece prevPiece, const ContCorrEntry* contCorr2) const
 {
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
@@ -89,6 +89,11 @@ int History::correctStaticEval(const Board& board, int staticEval) const
     correction += search::threatsCorrWeight * threatsEntry;
     correction += search::minorCorrWeight * minorPieceEntry;
     correction += search::majorCorrWeight * majorPieceEntry;
+
+    if (prevPiece == Piece::NONE)
+        prevPiece = makePiece(PieceType::PAWN, ~board.sideToMove());
+    if (contCorr2)
+        correction += search::contCorr2Weight * (*contCorr2)[packPieceIndices(prevPiece)][prevMove.toSq().value()];;
 
     int corrected = staticEval + correction / (256 * CORR_HIST_SCALE);
     return std::clamp(corrected, -SCORE_MATE_IN_MAX + 1, SCORE_MATE_IN_MAX - 1);
@@ -112,7 +117,7 @@ void History::updateNoisyStats(const Board& board, Move move, int bonus)
     updateCaptHist(board, move, bonus);
 }
 
-void History::updateCorrHist(const Board& board, int bonus, int depth)
+void History::updateCorrHist(const Board& board, int bonus, int depth, Move prevMove, Piece prevPiece, ContCorrEntry* contCorr2)
 {
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
@@ -136,6 +141,14 @@ void History::updateCorrHist(const Board& board, int bonus, int depth)
 
     auto& majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
     majorPieceEntry.update(scaledBonus, weight);
+
+    if (prevPiece == Piece::NONE)
+        prevPiece = makePiece(PieceType::PAWN, ~board.sideToMove());
+    if (contCorr2)
+    {
+        auto& contCorr2Entry = (*contCorr2)[packPieceIndices(prevPiece)][prevMove.toSq().value()];
+        contCorr2Entry.update(scaledBonus, weight);
+    }
 }
 
 int History::getMainHist(Move move, Bitboard threats, Color color) const
