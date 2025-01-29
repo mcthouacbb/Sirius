@@ -214,6 +214,45 @@ void Search::threadLoop(SearchThread& thread)
     }
 }
 
+void Search::makeMove(SearchThread& thread, SearchStack* stack, Move move, int histScore)
+{
+    stack->contHistEntry = &thread.history.contHistEntry(thread.board, move);
+    stack->histScore = histScore;
+    stack->playedMove = move;
+    stack->movedPiece = movingPiece(thread.board, move);
+    stack->contCorrEntry = &thread.history.contCorrEntry(thread.board, move);
+
+    thread.rootPly++;
+    thread.board.makeMove(move, thread.evalState);
+    thread.nodes.fetch_add(1, std::memory_order_relaxed);
+}
+
+void Search::unmakeMove(SearchThread& thread, SearchStack* stack)
+{
+    thread.rootPly--;
+    thread.board.unmakeMove(thread.evalState);
+
+    stack->contHistEntry = nullptr;
+    stack->histScore = 0;
+    stack->playedMove = Move();
+    stack->movedPiece = Piece::NONE;
+    stack->contCorrEntry = nullptr;
+}
+
+void Search::makeNullMove(SearchThread& thread, SearchStack* stack)
+{
+    stack->contCorrEntry = &thread.history.contCorrEntry(thread.board, Move());
+    thread.board.makeNullMove();
+    thread.rootPly++;
+}
+
+void Search::unmakeNullMove(SearchThread& thread, SearchStack* stack)
+{
+    thread.rootPly--;
+    thread.board.unmakeNullMove();
+    stack->contCorrEntry = nullptr;
+}
+
 int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
 {
     int maxDepth = std::min(thread.limits.maxDepth, MAX_PLY - 1);
@@ -444,13 +483,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             nonPawns.multiple())
         {
             int r = nmpBaseReduction + depth / nmpDepthReductionScale + std::min((stack->eval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
-            stack->contCorrEntry = &history.contCorrEntry(board, Move());
-            board.makeNullMove();
-            rootPly++;
+            makeNullMove(thread, stack);
             int nullScore = -search(thread, depth - r, stack + 1, -beta, -beta + 1, false, !cutnode);
-            rootPly--;
-            board.unmakeNullMove();
-            stack->contCorrEntry = nullptr;
+            unmakeNullMove(thread, stack);
             if (nullScore >= beta)
                 return nullScore;
         }
@@ -473,32 +508,18 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 if (!board.see(move, seeThreshold))
                     continue;
 
-                int histScore = history.getNoisyStats(board, move);
-
                 m_TT.prefetch(board.keyAfter(move));
-                stack->contHistEntry = &history.contHistEntry(board, move);
-                stack->histScore = histScore;
-                stack->playedMove = move;
-                stack->movedPiece = movingPiece(board, move);
-                stack->contCorrEntry = &history.contCorrEntry(board, move);
-                rootPly++;
-                board.makeMove(move, thread.evalState);
-                thread.nodes.fetch_add(1, std::memory_order_relaxed);
+
+                makeMove(thread, stack, move, history.getNoisyStats(board, move));
 
                 int score = -qsearch(thread, stack + 1, -probcutBeta, -probcutBeta + 1, false);
                 if (score >= probcutBeta && probcutDepth >= 0)
                     score = -search(thread, probcutDepth, stack + 1, -probcutBeta, -probcutBeta + 1, false, !cutnode);
 
+                unmakeMove(thread, stack);
+                
                 if (m_ShouldStop)
                     return alpha;
-
-                rootPly--;
-                board.unmakeMove(thread.evalState);
-                stack->contHistEntry = nullptr;
-                stack->histScore = 0;
-                stack->playedMove = Move();
-                stack->movedPiece = Piece::NONE;
-                stack->contCorrEntry = nullptr;
 
                 if (score >= probcutBeta)
                 {
@@ -634,15 +655,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         stack->multiExts += extension >= 2;
 
         m_TT.prefetch(board.keyAfter(move));
-        stack->contHistEntry = &history.contHistEntry(board, move);
-        stack->histScore = histScore;
-        stack->playedMove = move;
-        stack->movedPiece = movedPiece;
-        stack->contCorrEntry = &history.contCorrEntry(board, move);
-
         uint64_t nodesBefore = thread.nodes;
-        board.makeMove(move, thread.evalState);
-        thread.nodes.fetch_add(1, std::memory_order_relaxed);
+
+        makeMove(thread, stack, move, histScore);
+        movesPlayed++;
+        
         bool givesCheck = board.checkers().any();
         // check extensions(~13 elo)
         if (!doSE && givesCheck)
@@ -652,9 +669,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             quietsTried.push_back(move);
         else
             noisiesTried.push_back(move);
-
-        rootPly++;
-        movesPlayed++;
 
         int newDepth = depth + extension - 1;
         int score = 0;
@@ -697,16 +711,10 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         if (pvNode && (movesPlayed == 1 || score > alpha))
             score = -search(thread, newDepth, stack + 1, -beta, -alpha, true, false);
 
-        rootPly--;
-        board.unmakeMove(thread.evalState);
+        unmakeMove(thread, stack);
+        
         if (root && thread.isMainThread())
             m_TimeMan.updateNodes(move, thread.nodes - nodesBefore);
-
-        stack->contHistEntry = nullptr;
-        stack->histScore = 0;
-        stack->playedMove = Move();
-        stack->movedPiece = Piece::NONE;
-        stack->contCorrEntry = nullptr;
 
         if (m_ShouldStop)
             return alpha;
@@ -888,23 +896,13 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
             bestScore = std::max(bestScore, futility);
             continue;
         }
-        movesPlayed++;
-        stack->contHistEntry = &history.contHistEntry(board, move);
-        stack->playedMove = move;
-        stack->movedPiece = movingPiece(board, move);
-        stack->contCorrEntry = &history.contCorrEntry(board, move);
-        board.makeMove(move, thread.evalState);
-        thread.nodes.fetch_add(1, std::memory_order_relaxed);
-        rootPly++;
 
+        makeMove(thread, stack, move, 0);
+        movesPlayed++;
+        
         int score = -qsearch(thread, stack + 1, -beta, -alpha, pvNode);
 
-        board.unmakeMove(thread.evalState);
-        stack->contHistEntry = nullptr;
-        stack->playedMove = Move();
-        stack->movedPiece = Piece::NONE;
-        stack->contCorrEntry = nullptr;
-        rootPly--;
+        unmakeMove(thread, stack);
 
         if (score > bestScore)
         {
