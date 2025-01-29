@@ -155,13 +155,13 @@ public:
 
     int getQuietStats(Move move, Bitboard threats, Piece movingPiece, std::span<const CHEntry* const> contHistEntries) const;
     int getNoisyStats(const Board& board, Move move) const;
-    int correctStaticEval(const Board& board, int staticEval, Move prevMove, Piece prevPiece, const ContCorrEntry* contCorr2) const;
+    int correctStaticEval(const Board& board, int staticEval, Move prevMove, Piece prevPiece, std::span<const ContCorrEntry* const> contCorrEntries) const;
 
     void clear();
     void updateQuietStats(const Board& board, Move move, std::span<CHEntry*> contHistEntries, int bonus);
     void updateContHist(Move move, Piece movingPiece, std::span<CHEntry*> contHistEntries, int bonus);
     void updateNoisyStats(const Board& board, Move move, int bonus);
-    void updateCorrHist(const Board& board, int bonus, int depth, Move prevMove, Piece prevPiece, ContCorrEntry* contCorr2);
+    void updateCorrHist(const Board& board, int bonus, int depth, Move prevMove, Piece prevPiece, std::span<ContCorrEntry*> contCorrEntries);
 private:
     int getMainHist(Move move, Bitboard threats, Color color) const;
     int getContHist(Move move, Piece movingPiece, const CHEntry* entry) const;
