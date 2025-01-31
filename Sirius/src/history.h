@@ -2,6 +2,7 @@
 
 #include "defs.h"
 #include "board.h"
+#include "search_params.h"
 #include <span>
 #include <algorithm>
 
@@ -66,8 +67,6 @@ inline void HistoryEntry<MAX_VAL>::update(int bonus)
 }
 
 constexpr int CORR_HIST_SCALE = 256;
-constexpr int MAX_CORR_HIST = CORR_HIST_SCALE * 32;
-constexpr int MAX_CORR_HIST_UPDATE = MAX_CORR_HIST / 4;
 
 struct CorrHistEntry
 {
@@ -95,8 +94,8 @@ inline CorrHistEntry::operator int() const
 inline void CorrHistEntry::update(int target, int weight)
 {
     int newValue = (m_Value * (256 - weight) + target * weight) / 256;
-    newValue = std::clamp(newValue, m_Value - MAX_CORR_HIST_UPDATE, m_Value + MAX_CORR_HIST_UPDATE);
-    m_Value = static_cast<int16_t>(std::clamp(newValue, -MAX_CORR_HIST, MAX_CORR_HIST));
+    newValue = std::clamp(newValue, m_Value - search::maxCorrHistUpdate, m_Value + search::maxCorrHistUpdate);
+    m_Value = static_cast<int16_t>(std::clamp(newValue, -search::maxCorrHist, search::maxCorrHist));
 }
 
 static constexpr int HISTORY_MAX = 16384;
