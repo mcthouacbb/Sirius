@@ -69,7 +69,7 @@ SEARCH_PARAM(nonPawnNstmCorrWeight, 277, 96, 768, 64);
 SEARCH_PARAM(threatsCorrWeight, 280, 96, 768, 64);
 SEARCH_PARAM(minorCorrWeight, 306, 96, 768, 64);
 SEARCH_PARAM(majorCorrWeight, 322, 96, 768, 64);
-SEARCH_PARAM(contCorr2Weight, 192, 96, 768, 64);
+SEARCH_PARAM(contCorrWeight, 192, 96, 768, 64);
 
 SEARCH_PARAM(aspInitDelta, 9, 8, 30, 4);
 SEARCH_PARAM(minAspDepth, 5, 3, 7, 1);

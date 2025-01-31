@@ -94,9 +94,9 @@ int History::correctStaticEval(const Board& board, int staticEval, Move prevMove
         prevPiece = makePiece(PieceType::PAWN, ~board.sideToMove());
     for (auto contCorr : contCorrEntries)
     {
-        // todo: tunable weights for each ply    
+        // todo: tunable weights for each ply
         if (contCorr)
-            correction += search::contCorr2Weight * (*contCorr)[packPieceIndices(prevPiece)][prevMove.toSq().value()];
+            correction += search::contCorrWeight * (*contCorr)[packPieceIndices(prevPiece)][prevMove.toSq().value()];
     }
 
     int corrected = staticEval + correction / (256 * CORR_HIST_SCALE);
