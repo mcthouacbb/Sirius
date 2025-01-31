@@ -71,7 +71,7 @@ int History::getNoisyStats(const Board& board, Move move) const
     return getCaptHist(board, move);
 }
 
-int History::correctStaticEval(const Board& board, int staticEval, Move prevMove, Piece prevPiece, const ContCorrEntry* contCorr2) const
+int History::correctStaticEval(const Board& board, int staticEval, Move prevMove, Piece prevPiece, std::span<const ContCorrEntry* const> contCorrEntries) const
 {
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
@@ -92,8 +92,12 @@ int History::correctStaticEval(const Board& board, int staticEval, Move prevMove
 
     if (prevPiece == Piece::NONE)
         prevPiece = makePiece(PieceType::PAWN, ~board.sideToMove());
-    if (contCorr2)
-        correction += search::contCorr2Weight * (*contCorr2)[packPieceIndices(prevPiece)][prevMove.toSq().value()];;
+    for (auto contCorr : contCorrEntries)
+    {
+        // todo: tunable weights for each ply
+        if (contCorr)
+            correction += search::contCorrWeight * (*contCorr)[packPieceIndices(prevPiece)][prevMove.toSq().value()];
+    }
 
     int corrected = staticEval + correction / (256 * CORR_HIST_SCALE);
     return std::clamp(corrected, -SCORE_MATE_IN_MAX + 1, SCORE_MATE_IN_MAX - 1);
@@ -117,7 +121,7 @@ void History::updateNoisyStats(const Board& board, Move move, int bonus)
     updateCaptHist(board, move, bonus);
 }
 
-void History::updateCorrHist(const Board& board, int bonus, int depth, Move prevMove, Piece prevPiece, ContCorrEntry* contCorr2)
+void History::updateCorrHist(const Board& board, int bonus, int depth, Move prevMove, Piece prevPiece, std::span<ContCorrEntry*> contCorrEntries)
 {
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
@@ -144,10 +148,14 @@ void History::updateCorrHist(const Board& board, int bonus, int depth, Move prev
 
     if (prevPiece == Piece::NONE)
         prevPiece = makePiece(PieceType::PAWN, ~board.sideToMove());
-    if (contCorr2)
+    for (auto contCorr : contCorrEntries)
     {
-        auto& contCorr2Entry = (*contCorr2)[packPieceIndices(prevPiece)][prevMove.toSq().value()];
-        contCorr2Entry.update(scaledBonus, weight);
+        // todo: tunable weights for each ply
+        if (contCorr)
+        {
+            auto& contCorrEntry = (*contCorr)[packPieceIndices(prevPiece)][prevMove.toSq().value()];
+            contCorrEntry.update(scaledBonus, weight);
+        }
     }
 }
 
