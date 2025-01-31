@@ -1,5 +1,4 @@
 #include "history.h"
-#include "search_params.h"
 #include "zobrist.h"
 
 namespace
