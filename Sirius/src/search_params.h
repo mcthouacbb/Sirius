@@ -59,6 +59,10 @@ SEARCH_PARAM(histMalusOffset, 66, 64, 768, 64);
 
 SEARCH_PARAM(histBetaMargin, 50, 30, 120, 5);
 
+// 256 corrhist units = 1 eval unit
+SEARCH_PARAM(maxCorrHist, 8192, 6144, 24576, 512);
+SEARCH_PARAM(maxCorrHistUpdate, 2048, 1024, 8192, 64);
+
 SEARCH_PARAM(pawnCorrWeight, 295, 96, 768, 64);
 SEARCH_PARAM(nonPawnStmCorrWeight, 316, 96, 768, 64);
 SEARCH_PARAM(nonPawnNstmCorrWeight, 277, 96, 768, 64);
