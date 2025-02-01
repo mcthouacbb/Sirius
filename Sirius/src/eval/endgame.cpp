@@ -67,7 +67,6 @@ int evalKQvKP(const Board& board, const EvalState&, Color strongSide)
     Square queen = board.pieces(strongSide, PieceType::QUEEN).lsb();
     Square pawn = board.pieces(weakSide, PieceType::PAWN).lsb();
     Square ourKing = board.kingSq(strongSide);
-    Square theirKing = board.kingSq(weakSide);
 
     int kpDist = Square::chebyshev(ourKing, pawn);
 
@@ -95,7 +94,6 @@ int evalKQvKR(const Board& board, const EvalState& evalState, Color strongSide)
 
     Square ourKing = board.kingSq(strongSide);
     Square theirKing = board.kingSq(weakSide);
-    Square rook = board.pieces(weakSide, PieceType::ROOK).lsb();
 
     int cornerDist = distToAnyCorner(theirKing);
     int kingDist = Square::manhattan(ourKing, theirKing);

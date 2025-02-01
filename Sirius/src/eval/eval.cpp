@@ -258,7 +258,6 @@ void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& p
 {
     constexpr Color them = ~us;
     Bitboard ourPawns = board.pieces(us, PAWN);
-    Bitboard theirPawns = board.pieces(them, PAWN);
     Bitboard blockedPawns = ourPawns & attacks::pawnPushes<them>(board.allPieces());
     Square ourKing = board.kingSq(us);
 

@@ -1,4 +1,5 @@
 #include "move_ordering.h"
+#include "search.h"
 
 #include <climits>
 
@@ -55,7 +56,7 @@ int MoveOrdering::scoreQuiet(Move move) const
     if (move == m_Killers[0] || move == m_Killers[1])
         return KILLER_SCORE + (move == m_Killers[0]);
     else
-        return m_History.getQuietStats(move, m_Board.threats(), movingPiece(m_Board, move), m_ContHistEntries);
+        return m_History.getQuietStats(move, m_Board.threats(), movingPiece(m_Board, move), m_Stack, m_Ply);
 }
 
 int MoveOrdering::scoreMoveQSearch(Move move) const
@@ -76,9 +77,9 @@ MoveOrdering::MoveOrdering(const Board& board, Move ttMove, const History& histo
 {
 }
 
-MoveOrdering::MoveOrdering(const Board& board, Move ttMove, const std::array<Move, 2>& killers, std::span<const CHEntry* const> contHistEntries, const History& history)
+MoveOrdering::MoveOrdering(const Board& board, Move ttMove, const std::array<Move, 2>& killers, SearchStack* stack, int ply, const History& history)
     : m_Board(board), m_TTMove(ttMove),
-    m_History(history), m_ContHistEntries(contHistEntries), m_Killers(killers),
+    m_History(history), m_Stack(stack), m_Ply(ply), m_Killers(killers),
     m_Curr(0), m_Stage(MovePickStage::TT_MOVE)
 {
 }
