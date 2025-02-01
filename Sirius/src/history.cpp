@@ -127,11 +127,11 @@ void History::updateQuietStats(const Board& board, Move move, SearchStack* stack
 
 void History::updateContHist(Move move, Piece movingPiece, SearchStack* stack, int ply, int bonus)
 {
-    if (ply > 0 && stack[-1].contHistEntry)
+    if (ply > 0 && stack[-1].contHistEntry != nullptr)
         updateContHist(move, movingPiece, stack[-1].contHistEntry, bonus);
-    if (ply > 1 && stack[-2].contHistEntry)
+    if (ply > 1 && stack[-2].contHistEntry != nullptr)
         updateContHist(move, movingPiece, stack[-2].contHistEntry, bonus);
-    if (ply > 3 && stack[-4].contHistEntry)
+    if (ply > 3 && stack[-4].contHistEntry != nullptr)
         updateContHist(move, movingPiece, stack[-4].contHistEntry, bonus);
 }
 

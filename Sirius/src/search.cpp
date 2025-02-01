@@ -692,7 +692,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 if (quiet && (score <= alpha || score >= beta))
                 {
                     int bonus = score >= beta ? historyBonus(depth) : -historyMalus(depth);
-                    history.updateContHist(move, movedPiece, stack, rootPly, bonus);
+                    history.updateContHist(move, movedPiece, stack, rootPly - 1, bonus);
                 }
             }
         }
