@@ -1,5 +1,6 @@
 #include "history.h"
 #include "zobrist.h"
+#include "search.h"
 
 namespace
 {
@@ -57,12 +58,15 @@ void History::clear()
     fillHistTable(m_ContCorrHist, 0);
 }
 
-int History::getQuietStats(Move move, Bitboard threats, Piece movingPiece, std::span<const CHEntry* const> contHistEntries) const
+int History::getQuietStats(Move move, Bitboard threats, Piece movingPiece, SearchStack* stack, int ply) const
 {
     int score = getMainHist(move, threats, getPieceColor(movingPiece));
-    for (auto entry : contHistEntries)
-        if (entry)
-            score += getContHist(move, movingPiece, entry);
+    if (ply > 0 && stack[-1].contHistEntry != nullptr)
+        score += getContHist(move, movingPiece, stack[-1].contHistEntry);
+    if (ply > 1 && stack[-2].contHistEntry != nullptr)
+        score += getContHist(move, movingPiece, stack[-2].contHistEntry);
+    if (ply > 3 && stack[-4].contHistEntry != nullptr)
+        score += getContHist(move, movingPiece, stack[-4].contHistEntry);
     return score;
 }
 
@@ -71,7 +75,7 @@ int History::getNoisyStats(const Board& board, Move move) const
     return getCaptHist(board, move);
 }
 
-int History::correctStaticEval(const Board& board, int staticEval, Move prevMove, Piece prevPiece, std::span<const ContCorrEntry* const> contCorrEntries) const
+int History::correctStaticEval(const Board& board, int staticEval, SearchStack* stack, int ply) const
 {
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
@@ -90,30 +94,45 @@ int History::correctStaticEval(const Board& board, int staticEval, Move prevMove
     correction += search::minorCorrWeight * minorPieceEntry;
     correction += search::majorCorrWeight * majorPieceEntry;
 
+    Move prevMove = ply > 0 ? stack[-1].playedMove : Move();
+    // use pawn to a1 as sentinel for null moves in contcorrhist
+    Piece prevPiece = ply > 0 ? stack[-1].movedPiece : Piece::NONE;
     if (prevPiece == Piece::NONE)
         prevPiece = makePiece(PieceType::PAWN, ~board.sideToMove());
-    for (auto contCorr : contCorrEntries)
+
+    const auto contCorrEntry = [&](int pliesBack)
     {
-        // todo: tunable weights for each ply
-        if (contCorr)
-            correction += search::contCorrWeight * (*contCorr)[packPieceIndices(prevPiece)][prevMove.toSq().value()];
-    }
+        int value = 0;
+        if (ply >= pliesBack && stack[-pliesBack].contCorrEntry != nullptr)
+            value = (*stack[-pliesBack].contCorrEntry)[packPieceIndices(prevPiece)][prevMove.toSq().value()];
+        return value;
+    };
+
+    correction += search::contCorr2Weight * contCorrEntry(2);
+    correction += search::contCorr3Weight * contCorrEntry(3);
+    correction += search::contCorr4Weight * contCorrEntry(4);
+    correction += search::contCorr5Weight * contCorrEntry(5);
+    correction += search::contCorr6Weight * contCorrEntry(6);
+    correction += search::contCorr7Weight * contCorrEntry(7);
 
     int corrected = staticEval + correction / (256 * CORR_HIST_SCALE);
     return std::clamp(corrected, -SCORE_MATE_IN_MAX + 1, SCORE_MATE_IN_MAX - 1);
 }
 
-void History::updateQuietStats(const Board& board, Move move, std::span<CHEntry*> contHistEntries, int bonus)
+void History::updateQuietStats(const Board& board, Move move, SearchStack* stack, int ply, int bonus)
 {
     updateMainHist(board, move, bonus);
-    updateContHist(move, movingPiece(board, move), contHistEntries, bonus);
+    updateContHist(move, movingPiece(board, move), stack, ply, bonus);
 }
 
-void History::updateContHist(Move move, Piece movingPiece, std::span<CHEntry*> contHistEntries, int bonus)
+void History::updateContHist(Move move, Piece movingPiece, SearchStack* stack, int ply, int bonus)
 {
-    for (auto entry : contHistEntries)
-        if (entry)
-            updateContHist(move, movingPiece, entry, bonus);
+    if (ply > 0 && stack[-1].contHistEntry != nullptr)
+        updateContHist(move, movingPiece, stack[-1].contHistEntry, bonus);
+    if (ply > 1 && stack[-2].contHistEntry != nullptr)
+        updateContHist(move, movingPiece, stack[-2].contHistEntry, bonus);
+    if (ply > 3 && stack[-4].contHistEntry != nullptr)
+        updateContHist(move, movingPiece, stack[-4].contHistEntry, bonus);
 }
 
 void History::updateNoisyStats(const Board& board, Move move, int bonus)
@@ -121,7 +140,7 @@ void History::updateNoisyStats(const Board& board, Move move, int bonus)
     updateCaptHist(board, move, bonus);
 }
 
-void History::updateCorrHist(const Board& board, int bonus, int depth, Move prevMove, Piece prevPiece, std::span<ContCorrEntry*> contCorrEntries)
+void History::updateCorrHist(const Board& board, int bonus, int depth, SearchStack* stack, int ply)
 {
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
@@ -146,17 +165,27 @@ void History::updateCorrHist(const Board& board, int bonus, int depth, Move prev
     auto& majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
     majorPieceEntry.update(scaledBonus, weight);
 
+    Move prevMove = ply > 0 ? stack[-1].playedMove : Move();
+    // use pawn to a1 as sentinel for null moves in contcorrhist
+    Piece prevPiece = ply > 0 ? stack[-1].movedPiece : Piece::NONE;
     if (prevPiece == Piece::NONE)
         prevPiece = makePiece(PieceType::PAWN, ~board.sideToMove());
-    for (auto contCorr : contCorrEntries)
+
+    const auto updateContCorr = [&](int pliesBack)
     {
-        // todo: tunable weights for each ply
-        if (contCorr)
+        if (ply >= pliesBack && stack[-pliesBack].contCorrEntry != nullptr)
         {
-            auto& contCorrEntry = (*contCorr)[packPieceIndices(prevPiece)][prevMove.toSq().value()];
+            auto& contCorrEntry = (*stack[-pliesBack].contCorrEntry)[packPieceIndices(prevPiece)][prevMove.toSq().value()];
             contCorrEntry.update(scaledBonus, weight);
         }
-    }
+    };
+
+    updateContCorr(2);
+    updateContCorr(3);
+    updateContCorr(4);
+    updateContCorr(5);
+    updateContCorr(6);
+    updateContCorr(7);
 }
 
 int History::getMainHist(Move move, Bitboard threats, Color color) const

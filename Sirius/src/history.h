@@ -3,8 +3,9 @@
 #include "defs.h"
 #include "board.h"
 #include "search_params.h"
-#include <span>
 #include <algorithm>
+
+struct SearchStack;
 
 // all these functions assume that move is a pseudolegal move on the board
 inline Piece movingPiece(const Board& board, Move move)
@@ -154,15 +155,15 @@ public:
         return m_ContCorrHist[packPieceIndices(movingPiece(board, move))][move.toSq().value()];
     }
 
-    int getQuietStats(Move move, Bitboard threats, Piece movingPiece, std::span<const CHEntry* const> contHistEntries) const;
+    int getQuietStats(Move move, Bitboard threats, Piece movingPiece, SearchStack* stack, int ply) const;
     int getNoisyStats(const Board& board, Move move) const;
-    int correctStaticEval(const Board& board, int staticEval, Move prevMove, Piece prevPiece, std::span<const ContCorrEntry* const> contCorrEntries) const;
+    int correctStaticEval(const Board& board, int staticEval, SearchStack* stack, int ply) const;
 
     void clear();
-    void updateQuietStats(const Board& board, Move move, std::span<CHEntry*> contHistEntries, int bonus);
-    void updateContHist(Move move, Piece movingPiece, std::span<CHEntry*> contHistEntries, int bonus);
+    void updateQuietStats(const Board& board, Move move, SearchStack* stack, int ply, int bonus);
+    void updateContHist(Move move, Piece movingPiece, SearchStack* stack, int ply, int bonus);
     void updateNoisyStats(const Board& board, Move move, int bonus);
-    void updateCorrHist(const Board& board, int bonus, int depth, Move prevMove, Piece prevPiece, std::span<ContCorrEntry*> contCorrEntries);
+    void updateCorrHist(const Board& board, int bonus, int depth, SearchStack* stack, int ply);
 private:
     int getMainHist(Move move, Bitboard threats, Color color) const;
     int getContHist(Move move, Piece movingPiece, const CHEntry* entry) const;

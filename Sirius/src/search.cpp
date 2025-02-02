@@ -412,16 +412,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     bool ttHit = false;
 
     int rawStaticEval = SCORE_NONE;
-    Move prevMove = rootPly > 0 ? stack[-1].playedMove : Move();
-    Piece prevPiece = rootPly > 0 ? stack[-1].movedPiece : Piece::NONE;
-    std::array<ContCorrEntry*, 6> contCorrEntries = {
-        rootPly > 1 ? stack[-2].contCorrEntry : nullptr,
-        rootPly > 2 ? stack[-3].contCorrEntry : nullptr,
-        rootPly > 3 ? stack[-4].contCorrEntry : nullptr,
-        rootPly > 4 ? stack[-5].contCorrEntry : nullptr,
-        rootPly > 5 ? stack[-6].contCorrEntry : nullptr,
-        rootPly > 6 ? stack[-7].contCorrEntry : nullptr,
-    };
 
     if (!excluded)
     {
@@ -444,7 +434,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         {
             rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
             // Correction history(~91 elo)
-            stack->staticEval = history.correctStaticEval(board, rawStaticEval, prevMove, prevPiece, contCorrEntries);
+            stack->staticEval = history.correctStaticEval(board, rawStaticEval, stack, rootPly);
             stack->eval = stack->staticEval;
             // use tt score as a better eval(~8 elo)
             if (ttHit && (
@@ -541,18 +531,12 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     if (depth >= minIIRDepth && !inCheck && !excluded && !ttHit)
         depth--;
 
-    // continuation history(~40 elo)
-    std::array<CHEntry*, 3> contHistEntries = {
-        rootPly > 0 ? stack[-1].contHistEntry : nullptr,
-        rootPly > 1 ? stack[-2].contHistEntry : nullptr,
-        rootPly > 3 ? stack[-4].contHistEntry : nullptr
-    };
-
     MoveOrdering ordering(
         board,
         ttData.move,
         stack->killers,
-        contHistEntries,
+        stack,
+        rootPly,
         thread.history
     );
 
@@ -585,7 +569,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         Piece movedPiece = movingPiece(board, move);
         int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
-        int histScore = quiet ? history.getQuietStats(move, threats, movedPiece, contHistEntries) : history.getNoisyStats(board, move);
+        int histScore = quiet ? history.getQuietStats(move, threats, movedPiece, stack, rootPly) : history.getNoisyStats(board, move);
         baseLMR -= histScore / (quiet ? lmrQuietHistDivisor : lmrNoisyHistDivisor);
 
         // move loop pruning(~184 elo)
@@ -708,7 +692,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 if (quiet && (score <= alpha || score >= beta))
                 {
                     int bonus = score >= beta ? historyBonus(depth) : -historyMalus(depth);
-                    history.updateContHist(move, movedPiece, contHistEntries, bonus);
+                    history.updateContHist(move, movedPiece, stack, rootPly - 1, bonus);
                 }
             }
         }
@@ -763,11 +747,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 int malus = historyMalus(histDepth);
                 if (quiet)
                 {
-                    history.updateQuietStats(board, move, contHistEntries, bonus);
+                    history.updateQuietStats(board, move, stack, rootPly, bonus);
                     for (Move quietMove : quietsTried)
                     {
                         if (quietMove != move)
-                            history.updateQuietStats(board, quietMove, contHistEntries, -malus);
+                            history.updateQuietStats(board, quietMove, stack, rootPly, -malus);
                     }
                 }
                 else
@@ -798,7 +782,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         if (!inCheck && (stack->bestMove == Move() || moveIsQuiet(board, stack->bestMove)) &&
             !(bound == TTEntry::Bound::LOWER_BOUND && stack->staticEval >= bestScore) &&
             !(bound == TTEntry::Bound::UPPER_BOUND && stack->staticEval <= bestScore))
-            history.updateCorrHist(board, bestScore - stack->staticEval, depth, prevMove, prevPiece, contCorrEntries);
+            history.updateCorrHist(board, bestScore - stack->staticEval, depth, stack, rootPly);
 
         m_TT.store(board.zkey(), depth, rootPly, bestScore, rawStaticEval, stack->bestMove, ttPV, bound);
     }
@@ -834,16 +818,6 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
 
     bool inCheck = board.checkers().any();
     int rawStaticEval = SCORE_NONE;
-    Move prevMove = rootPly > 0 ? stack[-1].playedMove : Move();
-    Piece prevPiece = rootPly > 0 ? stack[-1].movedPiece : Piece::NONE;
-    std::array<ContCorrEntry*, 6> contCorrEntries = {
-        rootPly > 1 ? stack[-2].contCorrEntry : nullptr,
-        rootPly > 2 ? stack[-3].contCorrEntry : nullptr,
-        rootPly > 3 ? stack[-4].contCorrEntry : nullptr,
-        rootPly > 4 ? stack[-5].contCorrEntry : nullptr,
-        rootPly > 5 ? stack[-6].contCorrEntry : nullptr,
-        rootPly > 6 ? stack[-7].contCorrEntry : nullptr,
-    };
 
     if (inCheck)
     {
@@ -853,7 +827,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     else
     {
         rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
-        stack->staticEval = inCheck ? SCORE_NONE : thread.history.correctStaticEval(board, rawStaticEval, prevMove, prevPiece, contCorrEntries);
+        stack->staticEval = inCheck ? SCORE_NONE : thread.history.correctStaticEval(board, rawStaticEval, stack, rootPly);
 
         // use tt score as a better eval(~8 elo)
         stack->eval = stack->staticEval;
@@ -876,16 +850,10 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     if (rootPly >= MAX_PLY)
         return alpha;
 
-    std::array<CHEntry*, 3> contHistEntries = {
-        rootPly > 0 ? stack[-1].contHistEntry : nullptr,
-        rootPly > 1 ? stack[-2].contHistEntry : nullptr,
-        rootPly > 3 ? stack[-4].contHistEntry : nullptr
-    };
-
     MoveOrdering ordering = [&]()
     {
         if (inCheck)
-            return MoveOrdering(board, ttData.move, stack->killers, contHistEntries, history);
+            return MoveOrdering(board, ttData.move, stack->killers, stack, rootPly, history);
         else
             return MoveOrdering(board, ttData.move, history);
     }();
