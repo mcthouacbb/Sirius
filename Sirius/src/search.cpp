@@ -573,7 +573,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         baseLMR -= histScore / (quiet ? lmrQuietHistDivisor : lmrNoisyHistDivisor);
 
         // move loop pruning(~184 elo)
-        if (!root && quietLosing && bestScore > -SCORE_WIN)
+        if (!root && moveScore <= MoveOrdering::KILLER_SCORE + 1 && bestScore > -SCORE_WIN)
         {
             // futility pruning(~1 elo)
             int lmrDepth = std::max(depth - baseLMR, 0);
