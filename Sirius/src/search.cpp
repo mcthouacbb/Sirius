@@ -667,7 +667,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         // late move reductions(~111 elo)
         if (movesPlayed >= (pvNode ? lmrMinMovesPv : lmrMinMovesNonPv) &&
             depth >= lmrMinDepth &&
-            quietLosing)
+            moveScore <= MoveOrdering::KILLER_SCORE + 1)
         {
             int reduction = baseLMR;
 
