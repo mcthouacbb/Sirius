@@ -259,9 +259,10 @@ void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& p
     constexpr Color them = ~us;
     Bitboard ourPawns = board.pieces(us, PAWN);
     Bitboard blockedPawns = ourPawns & attacks::pawnPushes<them>(board.allPieces());
+    Bitboard unadvancedPawns = ourPawns & (us == Color::WHITE ? RANK_2_BB | RANK_3_BB : RANK_6_BB | RANK_7_BB);
     Square ourKing = board.kingSq(us);
 
-    evalData.mobilityArea[us] = ~pawnStructure.pawnAttacks[them] & ~Bitboard::fromSquare(ourKing) & ~blockedPawns;
+    evalData.mobilityArea[us] = ~pawnStructure.pawnAttacks[them] & ~Bitboard::fromSquare(ourKing) & ~blockedPawns & ~unadvancedPawns;
     evalData.attacked[us] = evalData.attackedBy[us][PAWN] = pawnStructure.pawnAttacks[us];
 
     Bitboard ourKingAtks = attacks::kingAttacks(ourKing);
