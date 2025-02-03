@@ -67,6 +67,8 @@ int History::getQuietStats(Move move, Bitboard threats, Piece movingPiece, Searc
         score += getContHist(move, movingPiece, stack[-2].contHistEntry);
     if (ply > 3 && stack[-4].contHistEntry != nullptr)
         score += getContHist(move, movingPiece, stack[-4].contHistEntry);
+    if (ply < 4)
+        score += 8 * getLowPlyHist(move, movingPiece, ply) / (1 + 2 * ply);
     return score;
 }
 
@@ -123,6 +125,8 @@ void History::updateQuietStats(const Board& board, Move move, SearchStack* stack
 {
     updateMainHist(board, move, bonus);
     updateContHist(move, movingPiece(board, move), stack, ply, bonus);
+    if (ply < 4)
+        updateLowPlyHist(move, movingPiece(board, move), ply, bonus);
 }
 
 void History::updateContHist(Move move, Piece movingPiece, SearchStack* stack, int ply, int bonus)
@@ -200,6 +204,11 @@ int History::getContHist(Move move, Piece movingPiece, const CHEntry* entry) con
     return (*entry)[packPieceIndices(movingPiece)][move.toSq().value()];
 }
 
+int History::getLowPlyHist(Move move, Piece movingPiece, int ply) const
+{
+    return m_LowPlyHist[ply][packPieceIndices(movingPiece)][move.toSq().value()];
+}
+
 int History::getCaptHist(const Board& board, Move move) const
 {
     bool srcThreat = board.threats().has(move.fromSq());
@@ -218,6 +227,11 @@ void History::updateMainHist(const Board& board, Move move, int bonus)
 void History::updateContHist(Move move, Piece movingPiece, CHEntry* entry, int bonus)
 {
     (*entry)[packPieceIndices(movingPiece)][move.toSq().value()].update(bonus);
+}
+
+void History::updateLowPlyHist(Move move, Piece movingPiece, int ply, int bonus)
+{
+    m_LowPlyHist[ply][packPieceIndices(movingPiece)][move.toSq().value()].update(bonus);
 }
 
 void History::updateCaptHist(const Board& board, Move move, int bonus)
