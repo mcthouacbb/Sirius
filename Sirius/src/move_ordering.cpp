@@ -53,8 +53,10 @@ int MoveOrdering::scoreNoisy(Move move) const
 
 int MoveOrdering::scoreQuiet(Move move) const
 {
-    if (move == m_Killers[0] || move == m_Killers[1])
-        return KILLER_SCORE + (move == m_Killers[0]);
+    if (move == m_Killers[0])
+        return MoveOrdering::FIRST_KILLER_SCORE;
+    else if (move == m_Killers[1])
+        return MoveOrdering::SECOND_KILLER_SCORE;
     else
         return m_History.getQuietStats(move, m_Board.threats(), movingPiece(m_Board, move), m_Stack, m_Ply);
 }

@@ -565,7 +565,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         if (!board.isLegal(move))
             continue;
         bool quiet = moveIsQuiet(board, move);
-        bool quietLosing = moveScore < MoveOrdering::KILLER_SCORE;
+        bool quietLosing = moveScore < MoveOrdering::SECOND_KILLER_SCORE;
 
         Piece movedPiece = movingPiece(board, move);
         int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
@@ -667,7 +667,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         // late move reductions(~111 elo)
         if (movesPlayed >= (pvNode ? lmrMinMovesPv : lmrMinMovesNonPv) &&
             depth >= lmrMinDepth &&
-            quietLosing)
+            moveScore <= MoveOrdering::FIRST_KILLER_SCORE)
         {
             int reduction = baseLMR;
 

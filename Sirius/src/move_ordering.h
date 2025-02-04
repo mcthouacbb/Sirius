@@ -40,7 +40,8 @@ class MoveOrdering
 {
 public:
     static constexpr int NO_MOVE = -8000000;
-    static constexpr int KILLER_SCORE = 300000;
+    static constexpr int FIRST_KILLER_SCORE = 300001;
+    static constexpr int SECOND_KILLER_SCORE = 300000;
     static constexpr int PROMOTION_SCORE = 400000;
     static constexpr int CAPTURE_SCORE = 500000;
 
