@@ -118,11 +118,11 @@ SEARCH_PARAM(seeCaptHistDivisor, 32, 16, 96, 2);
 SEARCH_PARAM(maxHistPruningDepth, 5, 2, 8, 1);
 SEARCH_PARAM(histPruningMargin, 1768, 512, 4096, 128);
 
-SEARCH_PARAM(seMinDepth, 7, 4, 9, 1);
+SEARCH_PARAM(seMinDepth, 6, 4, 9, 1);
 SEARCH_PARAM(seTTDepthMargin, 3, 2, 5, 1);
-SEARCH_PARAM(sBetaScale, 15, 8, 32, 1);
+SEARCH_PARAM(sBetaScale, 14, 8, 32, 1);
 SEARCH_PARAM(maxMultiExts, 6, 3, 12, 1);
-SEARCH_PARAM(doubleExtMargin, 14, 0, 40, 2);
+SEARCH_PARAM(doubleExtMargin, 12, 0, 40, 2);
 
 SEARCH_PARAM(lmrMinDepth, 3, 2, 5, 1);
 SEARCH_PARAM(lmrMinMovesNonPv, 3, 1, 6, 1);
