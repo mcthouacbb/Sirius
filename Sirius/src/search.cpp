@@ -632,7 +632,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
             if (score < sBeta)
             {
-                if (!pvNode && stack->multiExts < maxMultiExts && score < sBeta - doubleExtMargin)
+                if (!pvNode && stack->multiExts <= maxMultiExts && score < sBeta - doubleExtMargin)
                     extension = 2;
                 else
                     extension = 1;
