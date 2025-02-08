@@ -5,6 +5,8 @@
 #include <deque>
 #include <functional>
 
+#define EXTERNAL_TUNE
+
 namespace search
 {
 
@@ -48,6 +50,7 @@ SEARCH_PARAM(nodeTMBase, 144, 110, 200, 5);
 SEARCH_PARAM(nodeTMScale, 165, 100, 200, 5);
 
 SEARCH_PARAM(bmStabilityBase, 60, 20, 200, 10);
+SEARCH_PARAM(bmStabilityMin, 90, 60, 120, 15);
 SEARCH_PARAM(bmStabilityScale, 955, 200, 1600, 40);
 SEARCH_PARAM(bmStabilityOffset, 307, 100, 1000, 40);
 SEARCH_PARAM(bmStabilityPower, -159, -250, -120, 8);

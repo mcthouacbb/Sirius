@@ -61,14 +61,13 @@ bool TimeManager::stopSoft(Move bestMove, uint64_t totalNodes, const SearchLimit
     double bmNodes = static_cast<double>(m_NodeCounts[bestMove.fromTo()]) / static_cast<double>(totalNodes);
     double scale = ((search::nodeTMBase / 100.0) - bmNodes) * (search::nodeTMScale / 100.0);
 
-    double bmStability =
+    double bmStabilityScale =
         static_cast<double>(search::bmStabilityBase) / 100.0 +
         static_cast<double>(search::bmStabilityScale) / 100.0 * std::pow(
             m_Stability + static_cast<double>(search::bmStabilityOffset) / 100.0,
             static_cast<double>(search::bmStabilityPower) / 100.0
         );
-    scale *= bmStability;
-    std::cout << bmStability << std::endl;
+    scale *= std::max(bmStabilityScale, static_cast<double>(search::bmStabilityMin) / 100);
     if (searchLimits.clock.enabled && elapsed() > m_SoftBound * scale)
         return true;
     return false;
