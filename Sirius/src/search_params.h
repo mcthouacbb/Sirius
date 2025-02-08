@@ -47,6 +47,11 @@ SEARCH_PARAM(baseTimeScale, 21, 8, 40, 1);
 SEARCH_PARAM(nodeTMBase, 144, 110, 200, 5);
 SEARCH_PARAM(nodeTMScale, 165, 100, 200, 5);
 
+SEARCH_PARAM(bmStabilityBase, 60, 20, 200, 10);
+SEARCH_PARAM(bmStabilityScale, 955, 200, 1600, 40);
+SEARCH_PARAM(bmStabilityOffset, 307, 100, 1000, 40);
+SEARCH_PARAM(bmStabilityPower, -159, -250, -120, 8);
+
 SEARCH_PARAM(maxHistBonus, 2136, 1024, 3072, 256);
 SEARCH_PARAM(histBonusQuadratic, 8, 1, 8, 1);
 SEARCH_PARAM(histBonusLinear, 204, 64, 384, 32);
@@ -85,6 +90,7 @@ SEARCH_PARAM(minIIRDepth, 4, 2, 9, 1);
 SEARCH_PARAM(rfpMaxDepth, 8, 4, 10, 1);
 SEARCH_PARAM(rfpImpMargin, 32, 30, 80, 8);
 SEARCH_PARAM(rfpNonImpMargin, 87, 50, 100, 8);
+SEARCH_PARAM(rfpOppWorsening, 20, 10, 100, 8);
 SEARCH_PARAM(rfpHistDivisor, 408, 256, 512, 16);
 
 SEARCH_PARAM(razoringMaxDepth, 3, 1, 5, 1);

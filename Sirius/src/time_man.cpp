@@ -3,10 +3,6 @@
 #include "search_params.h"
 #include <iostream>
 
-constexpr std::array<double, 7> stabilityValues = {
-    2.2, 1.6, 1.4, 1.1, 1, 0.95, 0.9
-};
-
 void TimeManager::setLimits(const SearchLimits& limits, Color us)
 {
     if (limits.clock.enabled)
@@ -65,7 +61,14 @@ bool TimeManager::stopSoft(Move bestMove, uint64_t totalNodes, const SearchLimit
     double bmNodes = static_cast<double>(m_NodeCounts[bestMove.fromTo()]) / static_cast<double>(totalNodes);
     double scale = ((search::nodeTMBase / 100.0) - bmNodes) * (search::nodeTMScale / 100.0);
 
-    scale *= stabilityValues[std::min(m_Stability, 6u)];
+    double bmStability =
+        static_cast<double>(search::bmStabilityBase) / 100.0 +
+        static_cast<double>(search::bmStabilityScale) / 100.0 * std::pow(
+            m_Stability + static_cast<double>(search::bmStabilityOffset) / 100.0,
+            static_cast<double>(search::bmStabilityPower) / 100.0
+        );
+    scale *= bmStability;
+    std::cout << bmStability << std::endl;
     if (searchLimits.clock.enabled && elapsed() > m_SoftBound * scale)
         return true;
     return false;
