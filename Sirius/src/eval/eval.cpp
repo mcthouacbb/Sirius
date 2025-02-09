@@ -174,6 +174,10 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
     eval += UNSAFE_QUEEN_CHECK * (queenChecks & ~safe).popcount();
 
     eval += evalData.attackWeight[us];
+
+    bool queenless = board.pieces(us, PieceType::QUEEN).empty();
+    eval += QUEENLESS_ATTACK * queenless;
+
     int attackCount = evalData.attackCount[us];
     eval += KING_ATTACKS * attackCount;
 
