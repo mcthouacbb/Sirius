@@ -90,10 +90,8 @@ int History::correctStaticEval(const Board& board, int staticEval, SearchStack* 
 
     if (board.pieces(PieceType::PAWN).any())
         correction += search::pawnCorrWeight * pawnEntry;
-    if ((board.pieces(stm) & ~board.pieces(PieceType::PAWN)).any())
-        correction += search::nonPawnStmCorrWeight * nonPawnStmEntry;
-    if ((board.pieces(~stm) & ~board.pieces(PieceType::PAWN)).any())
-        correction += search::nonPawnNstmCorrWeight * nonPawnNstmEntry;
+    correction += search::nonPawnStmCorrWeight * nonPawnStmEntry;
+    correction += search::nonPawnNstmCorrWeight * nonPawnNstmEntry;
     correction += search::threatsCorrWeight * threatsEntry;
     if (board.pieces(PieceType::BISHOP).any() || board.pieces(PieceType::KNIGHT).any())
         correction += search::minorCorrWeight * minorPieceEntry;
@@ -159,17 +157,11 @@ void History::updateCorrHist(const Board& board, int bonus, int depth, SearchSta
         pawnEntry.update(scaledBonus, weight);
     }
 
-    if ((board.pieces(Color::WHITE) & ~board.pieces(PieceType::PAWN)).any())
-    {
-        auto& nonPawnWhiteEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(Color::WHITE)][board.nonPawnKey(Color::WHITE).value % NON_PAWN_CORR_HIST_ENTRIES];
-        nonPawnWhiteEntry.update(scaledBonus, weight);
-    }
+    auto& nonPawnWhiteEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(Color::WHITE)][board.nonPawnKey(Color::WHITE).value % NON_PAWN_CORR_HIST_ENTRIES];
+    nonPawnWhiteEntry.update(scaledBonus, weight);
 
-    if ((board.pieces(Color::BLACK) & ~board.pieces(PieceType::PAWN)).any())
-    {
-        auto& nonPawnBlackEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(Color::BLACK)][board.nonPawnKey(Color::BLACK).value % NON_PAWN_CORR_HIST_ENTRIES];
-        nonPawnBlackEntry.update(scaledBonus, weight);
-    }
+    auto& nonPawnBlackEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(Color::BLACK)][board.nonPawnKey(Color::BLACK).value % NON_PAWN_CORR_HIST_ENTRIES];
+    nonPawnBlackEntry.update(scaledBonus, weight);
 
     auto& threatsEntry = m_ThreatsCorrHist[static_cast<int>(stm)][threatsKey % THREATS_CORR_HIST_ENTRIES];
     threatsEntry.update(scaledBonus, weight);
