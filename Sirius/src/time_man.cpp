@@ -27,7 +27,7 @@ void TimeManager::startSearch()
     std::fill(m_NodeCounts.begin(), m_NodeCounts.end(), 0);
     m_StartTime = std::chrono::steady_clock::now();
     m_Stability = 0;
-    m_PrevBestMove = Move();
+    m_PrevBestMove = Move::nullmove();
 }
 
 void TimeManager::updateNodes(Move move, uint64_t nodes)

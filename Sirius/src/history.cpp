@@ -94,7 +94,7 @@ int History::correctStaticEval(const Board& board, int staticEval, SearchStack* 
     correction += search::minorCorrWeight * minorPieceEntry;
     correction += search::majorCorrWeight * majorPieceEntry;
 
-    Move prevMove = ply > 0 ? stack[-1].playedMove : Move();
+    Move prevMove = ply > 0 ? stack[-1].playedMove : Move::nullmove();
     // use pawn to a1 as sentinel for null moves in contcorrhist
     Piece prevPiece = ply > 0 ? stack[-1].movedPiece : Piece::NONE;
     if (prevPiece == Piece::NONE)
@@ -165,7 +165,7 @@ void History::updateCorrHist(const Board& board, int bonus, int depth, SearchSta
     auto& majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
     majorPieceEntry.update(scaledBonus, weight);
 
-    Move prevMove = ply > 0 ? stack[-1].playedMove : Move();
+    Move prevMove = ply > 0 ? stack[-1].playedMove : Move::nullmove();
     // use pawn to a1 as sentinel for null moves in contcorrhist
     Piece prevPiece = ply > 0 ? stack[-1].movedPiece : Piece::NONE;
     if (prevPiece == Piece::NONE)

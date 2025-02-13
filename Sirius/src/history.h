@@ -143,14 +143,14 @@ public:
 
     ContCorrEntry& contCorrEntry(const Board& board, Move move)
     {
-        if (move == Move())
+        if (move == Move::nullmove())
             return m_ContCorrHist[packPieceIndices(makePiece(PieceType::PAWN, board.sideToMove()))][move.toSq().value()];
         return m_ContCorrHist[packPieceIndices(movingPiece(board, move))][move.toSq().value()];
     }
 
     const ContCorrEntry& contCorrEntry(const Board& board, Move move) const
     {
-        if (move == Move())
+        if (move == Move::nullmove())
             return m_ContCorrHist[packPieceIndices(makePiece(PieceType::PAWN, board.sideToMove()))][move.toSq().value()];
         return m_ContCorrHist[packPieceIndices(movingPiece(board, move))][move.toSq().value()];
     }

@@ -12,7 +12,7 @@ namespace cuckoo
 
 void init()
 {
-	moves.fill(Move());
+	moves.fill(Move::nullmove());
 	keyDiffs.fill(0);
 
 	uint32_t count = 0;
@@ -66,7 +66,7 @@ void init()
                         std::swap(keyDiffs[slot], keyDiff);
                         std::swap(moves[slot], move);
 
-                        if (move == Move())
+                        if (move == Move::nullmove())
                             break;
 
                         slot = slot == H1(keyDiff) ? H2(keyDiff) : H1(keyDiff);

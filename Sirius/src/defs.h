@@ -253,6 +253,8 @@ public:
     bool operator==(const Move& other) const = default;
     bool operator!=(const Move& other) const = default;
 
+    static constexpr Move nullmove();
+
     Square fromSq() const;
     Square toSq() const;
     int fromTo() const;
@@ -276,6 +278,10 @@ inline Move::Move(Square from, Square to, MoveType type, Promotion promotion)
     m_Data = static_cast<uint16_t>(from.value() | (to.value() << 6) | static_cast<int>(type) | static_cast<int>(promotion));
 }
 
+constexpr Move Move::nullmove()
+{
+    return Move();
+}
 
 inline Square Move::fromSq() const
 {

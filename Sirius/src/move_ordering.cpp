@@ -93,7 +93,7 @@ ScoredMove MoveOrdering::selectMove()
     {
         case TT_MOVE:
             ++m_Stage;
-            if (m_TTMove != Move() && m_Board.isPseudoLegal(m_TTMove))
+            if (m_TTMove != Move::nullmove() && m_Board.isPseudoLegal(m_TTMove))
                 return ScoredMove{m_TTMove, 10000000};
 
             // fallthrough
@@ -136,12 +136,12 @@ ScoredMove MoveOrdering::selectMove()
                 if (scoredMove.move != m_TTMove)
                     return scoredMove;
             }
-            return ScoredMove{Move(), NO_MOVE};
+            return ScoredMove{Move::nullmove(), NO_MOVE};
 
 
         case QS_TT_MOVE:
             ++m_Stage;
-            if (m_TTMove != Move() && m_Board.isPseudoLegal(m_TTMove) && !moveIsQuiet(m_Board, m_TTMove))
+            if (m_TTMove != Move::nullmove() && m_Board.isPseudoLegal(m_TTMove) && !moveIsQuiet(m_Board, m_TTMove))
                 return ScoredMove{m_TTMove, 10000000};
 
             // fallthrough
@@ -159,7 +159,7 @@ ScoredMove MoveOrdering::selectMove()
                 if (scoredMove.move != m_TTMove)
                     return scoredMove;
             }
-            return ScoredMove{Move(), NO_MOVE};
+            return ScoredMove{Move::nullmove(), NO_MOVE};
     }
     if (m_Curr >= m_Moves.size())
         return {Move(), NO_MOVE};
