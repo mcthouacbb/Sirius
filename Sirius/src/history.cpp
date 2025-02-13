@@ -87,12 +87,18 @@ int History::correctStaticEval(const Board& board, int staticEval, SearchStack* 
     int majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
 
     int correction = 0;
-    correction += search::pawnCorrWeight * pawnEntry;
-    correction += search::nonPawnStmCorrWeight * nonPawnStmEntry;
-    correction += search::nonPawnNstmCorrWeight * nonPawnNstmEntry;
+
+    if (board.pieces(PieceType::PAWN).any())
+        correction += search::pawnCorrWeight * pawnEntry;
+    if ((board.pieces(stm) & ~board.pieces(PieceType::PAWN)).any())
+        correction += search::nonPawnStmCorrWeight * nonPawnStmEntry;
+    if ((board.pieces(~stm) & ~board.pieces(PieceType::PAWN)).any())
+        correction += search::nonPawnNstmCorrWeight * nonPawnNstmEntry;
     correction += search::threatsCorrWeight * threatsEntry;
-    correction += search::minorCorrWeight * minorPieceEntry;
-    correction += search::majorCorrWeight * majorPieceEntry;
+    if (board.pieces(PieceType::BISHOP).any() || board.pieces(PieceType::KNIGHT).any())
+        correction += search::minorCorrWeight * minorPieceEntry;
+    if (board.pieces(PieceType::QUEEN).any() || board.pieces(PieceType::ROOK).any())
+        correction += search::majorCorrWeight * majorPieceEntry;
 
     Move prevMove = ply > 0 ? stack[-1].playedMove : Move();
     // use pawn to a1 as sentinel for null moves in contcorrhist
@@ -147,23 +153,38 @@ void History::updateCorrHist(const Board& board, int bonus, int depth, SearchSta
     int scaledBonus = bonus * CORR_HIST_SCALE;
     int weight = std::min(1 + depth, 16);
 
-    auto& pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % PAWN_CORR_HIST_ENTRIES];
-    pawnEntry.update(scaledBonus, weight);
+    if (board.pieces(PieceType::PAWN).any())
+    {
+        auto& pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % PAWN_CORR_HIST_ENTRIES];
+        pawnEntry.update(scaledBonus, weight);
+    }
 
-    auto& nonPawnWhiteEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(Color::WHITE)][board.nonPawnKey(Color::WHITE).value % NON_PAWN_CORR_HIST_ENTRIES];
-    nonPawnWhiteEntry.update(scaledBonus, weight);
+    if ((board.pieces(Color::WHITE) & ~board.pieces(PieceType::PAWN)).any())
+    {
+        auto& nonPawnWhiteEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(Color::WHITE)][board.nonPawnKey(Color::WHITE).value % NON_PAWN_CORR_HIST_ENTRIES];
+        nonPawnWhiteEntry.update(scaledBonus, weight);
+    }
 
-    auto& nonPawnBlackEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(Color::BLACK)][board.nonPawnKey(Color::BLACK).value % NON_PAWN_CORR_HIST_ENTRIES];
-    nonPawnBlackEntry.update(scaledBonus, weight);
+    if ((board.pieces(Color::BLACK) & ~board.pieces(PieceType::PAWN)).any())
+    {
+        auto& nonPawnBlackEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(Color::BLACK)][board.nonPawnKey(Color::BLACK).value % NON_PAWN_CORR_HIST_ENTRIES];
+        nonPawnBlackEntry.update(scaledBonus, weight);
+    }
 
     auto& threatsEntry = m_ThreatsCorrHist[static_cast<int>(stm)][threatsKey % THREATS_CORR_HIST_ENTRIES];
     threatsEntry.update(scaledBonus, weight);
 
-    auto& minorPieceEntry = m_MinorPieceCorrHist[static_cast<int>(stm)][board.minorPieceKey().value % MINOR_PIECE_CORR_HIST_ENTRIES];
-    minorPieceEntry.update(scaledBonus, weight);
+    if (board.pieces(PieceType::BISHOP).any() || board.pieces(PieceType::KNIGHT).any())
+    {
+        auto& minorPieceEntry = m_MinorPieceCorrHist[static_cast<int>(stm)][board.minorPieceKey().value % MINOR_PIECE_CORR_HIST_ENTRIES];
+        minorPieceEntry.update(scaledBonus, weight);
+    }
 
-    auto& majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
-    majorPieceEntry.update(scaledBonus, weight);
+    if (board.pieces(PieceType::QUEEN).any() || board.pieces(PieceType::ROOK).any())
+    {
+        auto& majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
+        majorPieceEntry.update(scaledBonus, weight);
+    }
 
     Move prevMove = ply > 0 ? stack[-1].playedMove : Move();
     // use pawn to a1 as sentinel for null moves in contcorrhist
