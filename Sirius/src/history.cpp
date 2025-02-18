@@ -58,7 +58,7 @@ void History::clear()
     fillHistTable(m_ContCorrHist, 0);
 }
 
-int History::getQuietStats(Move move, Bitboard threats, Piece movingPiece, SearchStack* stack, int ply) const
+int History::getQuietStats(Move move, Bitboard threats, Piece movingPiece, const SearchStack* stack, int ply) const
 {
     int score = getMainHist(move, threats, getPieceColor(movingPiece));
     if (ply > 0 && stack[-1].contHistEntry != nullptr)
@@ -75,7 +75,7 @@ int History::getNoisyStats(const Board& board, Move move) const
     return getCaptHist(board, move);
 }
 
-int History::correctStaticEval(const Board& board, int staticEval, SearchStack* stack, int ply) const
+int History::correctStaticEval(const Board& board, int staticEval, const SearchStack* stack, int ply) const
 {
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
@@ -119,13 +119,13 @@ int History::correctStaticEval(const Board& board, int staticEval, SearchStack* 
     return std::clamp(corrected, -SCORE_MATE_IN_MAX + 1, SCORE_MATE_IN_MAX - 1);
 }
 
-void History::updateQuietStats(const Board& board, Move move, SearchStack* stack, int ply, int bonus)
+void History::updateQuietStats(const Board& board, Move move, const SearchStack* stack, int ply, int bonus)
 {
     updateMainHist(board, move, bonus);
     updateContHist(move, movingPiece(board, move), stack, ply, bonus);
 }
 
-void History::updateContHist(Move move, Piece movingPiece, SearchStack* stack, int ply, int bonus)
+void History::updateContHist(Move move, Piece movingPiece, const SearchStack* stack, int ply, int bonus)
 {
     if (ply > 0 && stack[-1].contHistEntry != nullptr)
         updateContHist(move, movingPiece, stack[-1].contHistEntry, bonus);
@@ -140,7 +140,7 @@ void History::updateNoisyStats(const Board& board, Move move, int bonus)
     updateCaptHist(board, move, bonus);
 }
 
-void History::updateCorrHist(const Board& board, int bonus, int depth, SearchStack* stack, int ply)
+void History::updateCorrHist(const Board& board, int bonus, int depth, const SearchStack* stack, int ply)
 {
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
