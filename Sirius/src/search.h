@@ -24,7 +24,6 @@ struct SearchStack
     Move playedMove;
     Piece movedPiece;
     Move excludedMove;
-    int multiExts;
 
     Move bestMove;
     std::array<Move, 2> killers;
@@ -97,6 +96,7 @@ struct SearchThread
 
     SearchLimits limits;
 
+    int rootDepth = 0;
     int rootPly = 0;
     int selDepth = 0;
     std::array<SearchStack, MAX_PLY + 1> stack;
