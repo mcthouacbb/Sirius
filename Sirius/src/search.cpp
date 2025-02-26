@@ -448,19 +448,19 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     bool ttPV = pvNode || (ttHit && ttData.pv);
     // Improving heuristic(~31 elo)
-    bool improving = !inCheck && rootPly > 1 && stack->staticEval > stack[-2].staticEval;
+    bool improving = !inCheck && rootPly > 1 && stack->staticEval > (stack - 2)->staticEval;
     bool oppWorsening =
         !inCheck && rootPly > 0 &&
-        stack[-1].staticEval != SCORE_NONE && stack->staticEval > -stack[-1].staticEval + 1;
+        (stack - 1)->staticEval != SCORE_NONE && stack->staticEval > -(stack - 1)->staticEval + 1;
 
-    stack[1].killers = {};
+    (stack + 1)->killers = {};
     Bitboard threats = board.threats();
 
     // whole node pruning(~228 elo)
     if (!pvNode && !inCheck && !excluded)
     {
         // reverse futility pruning(~86 elo)
-        int rfpMargin = (improving ? rfpImpMargin : rfpNonImpMargin) * depth - rfpOppWorsening * oppWorsening + stack[-1].histScore / rfpHistDivisor;
+        int rfpMargin = (improving ? rfpImpMargin : rfpNonImpMargin) * depth - rfpOppWorsening * oppWorsening + (stack -1)->histScore / rfpHistDivisor;
         if (depth <= rfpMaxDepth &&
             stack->eval >= std::max(rfpMargin, 20) + beta)
             return stack->eval;
@@ -540,7 +540,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         thread.history
     );
 
-    stack[1].failHighCount = 0;
+    (stack + 1)->failHighCount = 0;
 
     stack->bestMove = Move::nullmove();
 
@@ -676,7 +676,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             reduction -= inCheck;
             reduction -= std::abs(stack->eval - rawStaticEval) > lmrCorrplexityMargin;
             reduction += cutnode;
-            reduction += stack[1].failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin);
+            reduction += (stack + 1)->failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin);
 
             int reduced = std::min(std::max(newDepth - reduction, 1), newDepth);
             score = -search(thread, reduced, stack + 1, -alpha - 1, -alpha, false, true);
@@ -720,9 +720,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 if (pvNode)
                 {
                     stack->pv[0] = move;
-                    stack->pvLength = stack[1].pvLength + 1;
-                    for (int i = 0; i < stack[1].pvLength; i++)
-                        stack->pv[i + 1] = stack[1].pv[i];
+                    stack->pvLength = (stack + 1)->pvLength + 1;
+                    for (int i = 0; i < (stack + 1)->pvLength; i++)
+                        stack->pv[i + 1] = (stack + 1)->pv[i];
                 }
             }
 
@@ -893,10 +893,10 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
             {
                 stack->bestMove = move;
 
-                stack->pvLength = stack[1].pvLength + 1;
+                stack->pvLength = (stack + 1)->pvLength + 1;
                 stack->pv[0] = move;
-                for (int i = 0; i < stack[1].pvLength; i++)
-                    stack->pv[i + 1] = stack[1].pv[i];
+                for (int i = 0; i < (stack + 1)->pvLength; i++)
+                    stack->pv[i + 1] = (stack + 1)->pv[i];
 
                 alpha = bestScore;
                 bound = TTEntry::Bound::EXACT;
