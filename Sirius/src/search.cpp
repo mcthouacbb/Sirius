@@ -52,7 +52,6 @@ void SearchThread::reset()
         stack[i].movedPiece = Piece::NONE;
         stack[i].killers[0] = stack[i].killers[1] = Move();
         stack[i].excludedMove = Move();
-        stack[i].multiExts = 0;
         stack[i].pv = {};
         stack[i].pvLength = 0;
         stack[i].contHistEntry = nullptr;
@@ -266,6 +265,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
 
     for (int depth = 1; depth <= maxDepth; depth++)
     {
+        thread.rootDepth = depth;
         thread.selDepth = 0;
         int searchScore = aspWindows(thread, depth, bestMove, score);
         if (m_ShouldStop)
@@ -553,9 +553,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     int movesPlayed = 0;
     bool noisyTTMove = ttData.move != Move() && !moveIsQuiet(board, ttData.move);
 
-    if (!root)
-        stack->multiExts = stack[-1].multiExts;
-
     ScoredMove scoredMove = {};
     while ((scoredMove = ordering.selectMove()).score != MoveOrdering::NO_MOVE)
     {
@@ -610,6 +607,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         }
 
         bool doSE = !root &&
+            rootPly < 2 * thread.rootDepth &&
             !excluded &&
             depth >= seMinDepth &&
             ttData.move == move &&
@@ -632,7 +630,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
             if (score < sBeta)
             {
-                if (!pvNode && stack->multiExts <= maxMultiExts && score < sBeta - doubleExtMargin)
+                if (!pvNode && score < sBeta - doubleExtMargin)
                     extension = 2;
                 else
                     extension = 1;
@@ -644,8 +642,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             else if (ttData.score <= alpha && cutnode)
                 extension = -1;
         }
-
-        stack->multiExts += extension >= 2;
 
         m_TT.prefetch(board.keyAfter(move));
         uint64_t nodesBefore = thread.nodes;
