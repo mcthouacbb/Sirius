@@ -13,7 +13,7 @@ All features tested against commit a049bb98 or functionally equivalent commits e
 - **Internal iterative reductions**: ~8 elo https://mcthouacbb.pythonanywhere.com/test/460/
 - Improving: ~31 elo https://mcthouacbb.pythonanywhere.com/test/381/
 - TT Eval adjustment: ~8 elo https://mcthouacbb.pythonanywhere.com/test/363/
-- Correction history: ~91 elo https://mcthouacbb.pythonanywhere.com/test/318/
+- Correction history: ~104 elo https://mcthouacbb.pythonanywhere.com/test/593/
 - Static Exchange Evaluation(overall): ~258 elo https://mcthouacbb.pythonanywhere.com/test/388
 - Time Management: ~64 elo https://mcthouacbb.pythonanywhere.com/test/389/
 - Quiescence search(overall): ~184 elo https://mcthouacbb.pythonanywhere.com/test/359/
@@ -49,8 +49,8 @@ All features tested against commit a049bb98 or functionally equivalent commits e
 - Late move reductions: ~111 elo
 - Aspiration windows: ~108 elo
 - TT Move Ordering: ~106 elo
+- Correction history: ~104 elo
 - TT Cutoffs: ~101 elo
-- Correction history: ~91 elo
 - Reverse Futility Pruning: ~88 elo
 - Singular extensions: ~73 elo
 - Time Management: ~64 elo

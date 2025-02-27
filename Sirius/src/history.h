@@ -109,7 +109,7 @@ using ContHist = MultiArray<CHEntry, 12, 64>;
 // capture history(~19 elo)
 using CaptHist = MultiArray<HistoryEntry<HISTORY_MAX>, 7, 12, 64, 2, 2>;
 
-// correction history(~91 elo)
+// correction history(~104 elo)
 constexpr int PAWN_CORR_HIST_ENTRIES = 16384;
 constexpr int NON_PAWN_CORR_HIST_ENTRIES = 16384;
 constexpr int THREATS_CORR_HIST_ENTRIES = 16384;
