@@ -143,27 +143,27 @@ public:
 
     ContCorrEntry& contCorrEntry(const Board& board, Move move)
     {
-        if (move == Move())
+        if (move == Move::nullmove())
             return m_ContCorrHist[packPieceIndices(makePiece(PieceType::PAWN, board.sideToMove()))][move.toSq().value()];
         return m_ContCorrHist[packPieceIndices(movingPiece(board, move))][move.toSq().value()];
     }
 
     const ContCorrEntry& contCorrEntry(const Board& board, Move move) const
     {
-        if (move == Move())
+        if (move == Move::nullmove())
             return m_ContCorrHist[packPieceIndices(makePiece(PieceType::PAWN, board.sideToMove()))][move.toSq().value()];
         return m_ContCorrHist[packPieceIndices(movingPiece(board, move))][move.toSq().value()];
     }
 
-    int getQuietStats(Move move, Bitboard threats, Piece movingPiece, SearchStack* stack, int ply) const;
+    int getQuietStats(Move move, Bitboard threats, Piece movingPiece, const SearchStack* stack, int ply) const;
     int getNoisyStats(const Board& board, Move move) const;
-    int correctStaticEval(const Board& board, int staticEval, SearchStack* stack, int ply) const;
+    int correctStaticEval(const Board& board, int staticEval, const SearchStack* stack, int ply) const;
 
     void clear();
-    void updateQuietStats(const Board& board, Move move, SearchStack* stack, int ply, int bonus);
-    void updateContHist(Move move, Piece movingPiece, SearchStack* stack, int ply, int bonus);
+    void updateQuietStats(const Board& board, Move move, const SearchStack* stack, int ply, int bonus);
+    void updateContHist(Move move, Piece movingPiece, const SearchStack* stack, int ply, int bonus);
     void updateNoisyStats(const Board& board, Move move, int bonus);
-    void updateCorrHist(const Board& board, int bonus, int depth, SearchStack* stack, int ply);
+    void updateCorrHist(const Board& board, int bonus, int depth, const SearchStack* stack, int ply);
 private:
     int getMainHist(Move move, Bitboard threats, Color color) const;
     int getContHist(Move move, Piece movingPiece, const CHEntry* entry) const;
