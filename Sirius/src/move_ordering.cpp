@@ -53,12 +53,7 @@ int MoveOrdering::scoreNoisy(Move move) const
 
 int MoveOrdering::scoreQuiet(Move move) const
 {
-    if (move == m_Killers[0])
-        return MoveOrdering::FIRST_KILLER_SCORE;
-    else if (move == m_Killers[1])
-        return MoveOrdering::SECOND_KILLER_SCORE;
-    else
-        return m_History.getQuietStats(move, m_Board.threats(), movingPiece(m_Board, move), m_Stack, m_Ply);
+    return m_History.getQuietStats(move, m_Board.threats(), movingPiece(m_Board, move), m_Stack, m_Ply);
 }
 
 int MoveOrdering::scoreMoveQSearch(Move move) const
@@ -122,6 +117,28 @@ ScoredMove MoveOrdering::selectMove()
             ++m_Stage;
 
             // fallthrough
+        case FIRST_KILLER:
+            ++m_Stage;
+            if (m_Killers[0] != Move::nullmove() &&
+                m_Killers[0] != m_TTMove &&
+                m_Board.isPseudoLegal(m_Killers[0]) &&
+                moveIsQuiet(m_Board, m_Killers[0]))
+            {
+                return ScoredMove{m_Killers[0], FIRST_KILLER_SCORE};
+            }
+
+            // fallthrough
+        case SECOND_KILLER:
+            ++m_Stage;
+            if (m_Killers[1] != Move::nullmove() &&
+                m_Killers[1] != m_TTMove &&
+                m_Board.isPseudoLegal(m_Killers[1]) &&
+                moveIsQuiet(m_Board, m_Killers[1]))
+            {
+                return ScoredMove{m_Killers[1], SECOND_KILLER_SCORE};
+            }
+
+            // fallthrough
         case GEN_QUIETS:
             ++m_Stage;
             genMoves<MoveGenType::QUIET>(m_Board, m_Moves);
@@ -133,6 +150,9 @@ ScoredMove MoveOrdering::selectMove()
             while (m_Curr < m_Moves.size())
             {
                 ScoredMove scoredMove = selectHighest();
+                if (moveIsQuiet(m_Board, scoredMove.move) &&
+                    (scoredMove.move == m_Killers[0] || scoredMove.move == m_Killers[1]))
+                    continue;
                 if (scoredMove.move != m_TTMove)
                     return scoredMove;
             }
@@ -161,6 +181,7 @@ ScoredMove MoveOrdering::selectMove()
             }
             return ScoredMove{Move::nullmove(), NO_MOVE};
     }
+
     if (m_Curr >= m_Moves.size())
         return {Move(), NO_MOVE};
     return selectHighest();

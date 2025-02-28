@@ -21,6 +21,8 @@ enum class MovePickStage
     TT_MOVE,
     GEN_NOISY,
     GOOD_NOISY,
+    FIRST_KILLER,
+    SECOND_KILLER,
     GEN_QUIETS,
     BAD_NOISY_QUIETS,
 
