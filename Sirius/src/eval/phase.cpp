@@ -1,5 +1,7 @@
 #include "phase.h"
 
+#include <algorithm>
+
 namespace eval
 {
 
@@ -25,7 +27,7 @@ int getPiecePhase(PieceType piece)
 
 int getFullEval(int mg, int eg, int phase)
 {
-    phase = std::min(phase, TOTAL_PHASE);
+    phase = std::clamp(phase, 0, TOTAL_PHASE);
     return (mg * (TOTAL_PHASE - phase) + eg * phase) / TOTAL_PHASE;
 }
 
