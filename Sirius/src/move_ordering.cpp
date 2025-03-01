@@ -120,22 +120,30 @@ ScoredMove MoveOrdering::selectMove()
         case FIRST_KILLER:
             ++m_Stage;
             if (m_Killers[0] != Move::nullmove() &&
-                m_Killers[0] != m_TTMove &&
                 m_Board.isPseudoLegal(m_Killers[0]) &&
                 moveIsQuiet(m_Board, m_Killers[0]))
             {
-                return ScoredMove{m_Killers[0], FIRST_KILLER_SCORE};
+                if (m_Killers[0] != m_TTMove)
+                    return ScoredMove{m_Killers[0], FIRST_KILLER_SCORE};
+            }
+            else
+            {
+                m_Killers[0] = Move::nullmove();
             }
 
             // fallthrough
         case SECOND_KILLER:
             ++m_Stage;
             if (m_Killers[1] != Move::nullmove() &&
-                m_Killers[1] != m_TTMove &&
                 m_Board.isPseudoLegal(m_Killers[1]) &&
                 moveIsQuiet(m_Board, m_Killers[1]))
             {
-                return ScoredMove{m_Killers[1], SECOND_KILLER_SCORE};
+                if (m_Killers[1] != m_TTMove)
+                    return ScoredMove{m_Killers[1], SECOND_KILLER_SCORE};
+            }
+            else
+            {
+                m_Killers[1] = Move::nullmove();
             }
 
             // fallthrough
@@ -150,10 +158,9 @@ ScoredMove MoveOrdering::selectMove()
             while (m_Curr < m_Moves.size())
             {
                 ScoredMove scoredMove = selectHighest();
-                if (moveIsQuiet(m_Board, scoredMove.move) &&
-                    (scoredMove.move == m_Killers[0] || scoredMove.move == m_Killers[1]))
-                    continue;
-                if (scoredMove.move != m_TTMove)
+                if (scoredMove.move != m_TTMove &&
+                    scoredMove.move != m_Killers[0] &&
+                    scoredMove.move != m_Killers[1])
                     return scoredMove;
             }
             return ScoredMove{Move::nullmove(), NO_MOVE};
