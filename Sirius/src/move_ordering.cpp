@@ -88,7 +88,7 @@ ScoredMove MoveOrdering::selectMove()
     {
         case TT_MOVE:
             ++m_Stage;
-            if (m_TTMove != Move::nullmove() && m_Board.isPseudoLegal(m_TTMove))
+            if (m_TTMove != Move::nullmove())
                 return ScoredMove{m_TTMove, 10000000};
 
             // fallthrough
