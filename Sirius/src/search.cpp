@@ -528,7 +528,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     }
 
     // internal iterative reductions(~8 elo)
-    if (depth >= minIIRDepth && !inCheck && !excluded && !ttHit)
+    if (depth >= minIIRDepth && !inCheck && !excluded && (!ttHit || ttData.depth < depth - 3))
         depth--;
 
     MoveOrdering ordering(
