@@ -13,7 +13,8 @@ int mvvLva(const Board& board, Move move)
         PieceType::PAWN :
         getPieceType(board.pieceAt(move.toSq()))
     );
-    return 10 * dstPiece - srcPiece + 15;
+    constexpr int MVV_VALUES[6] = {800, 2400, 2400, 4800, 7200};
+    return MVV_VALUES[dstPiece];
 }
 
 int promotionBonus(Move move)
@@ -43,7 +44,8 @@ int MoveOrdering::scoreNoisy(Move move) const
     if (isCapture)
     {
         int hist = m_History.getNoisyStats(m_Board, move);
-        return hist + CAPTURE_SCORE * m_Board.see(move, -hist / 32) + mvvLva(m_Board, move);
+        int score = hist + mvvLva(m_Board, move);
+        return score + CAPTURE_SCORE * m_Board.see(move, -score / 32);
     }
     else
     {
