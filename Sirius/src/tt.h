@@ -1,6 +1,6 @@
 #pragma once
 
-#include "zobrist.h"
+#include "board.h"
 #include "defs.h"
 
 #include <cstring>
@@ -82,7 +82,7 @@ public:
     TT(const TT&) = delete;
     TT& operator=(const TT&) = delete;
 
-    bool probe(ZKey key, int ply, ProbedTTData& ttData);
+    bool probe(const Board& board, int ply, ProbedTTData& ttData);
     void store(ZKey key, int ply, int depth, int score, int staticEval, Move move, bool pv, TTEntry::Bound type);
     int quality(int age, int depth) const;
     void prefetch(ZKey key) const;

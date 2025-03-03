@@ -77,8 +77,9 @@ inline int storeScore(int score, int ply)
     return score;
 }
 
-bool TT::probe(ZKey key, int ply, ProbedTTData& ttData)
+bool TT::probe(const Board& board, int ply, ProbedTTData& ttData)
 {
+    ZKey key = board.zkey();
     size_t idx = index(key.value);
     TTBucket& bucket = m_Buckets[idx];
     int entryIdx = -1;
@@ -99,6 +100,8 @@ bool TT::probe(ZKey key, int ply, ProbedTTData& ttData)
     }
 
     auto entry = bucket.entries[entryIdx];
+    if (entry.bestMove != Move::nullmove() && !board.isPseudoLegal(entry.bestMove))
+        return false;
 
     ttData.score = retrieveScore(entry.score, ply);
     ttData.staticEval = entry.staticEval;

@@ -415,7 +415,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     if (!excluded)
     {
-        ttHit = m_TT.probe(board.zkey(), rootPly, ttData);
+        ttHit = m_TT.probe(board, rootPly, ttData);
 
         // TT Cutoffs(~101 elo)
         if (ttHit && !pvNode && ttData.depth >= depth && (
@@ -803,7 +803,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         thread.selDepth = rootPly + 1;
 
     ProbedTTData ttData = {};
-    bool ttHit = m_TT.probe(board.zkey(), rootPly, ttData);
+    bool ttHit = m_TT.probe(board, rootPly, ttData);
     bool ttPV = pvNode || (ttHit && ttData.pv);
 
     // tt cutoffs(~101 elo)
