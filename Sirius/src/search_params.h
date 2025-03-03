@@ -118,7 +118,7 @@ SEARCH_PARAM(lmpMinMovesBase, 2, 2, 7, 1);
 
 SEARCH_PARAM(maxSeePruneDepth, 7, 6, 11, 1);
 SEARCH_PARAM(seePruneMarginNoisy, -95, -120, -30, 6);
-SEARCH_PARAM(seePruneMarginQuiet, -58, -120, -30, 6);
+SEARCH_PARAM(seePruneMarginQuiet, -20, -120, -30, 6);
 SEARCH_PARAM(seeCaptHistMax, 97, 50, 200, 6);
 SEARCH_PARAM(seeCaptHistDivisor, 30, 16, 96, 2);
 

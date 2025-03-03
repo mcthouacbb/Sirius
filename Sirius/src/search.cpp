@@ -592,7 +592,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
             // static exchange evaluation pruning(~5 elo)
             int seeMargin = quiet ?
-                depth * seePruneMarginQuiet :
+                lmrDepth * lmrDepth * seePruneMarginQuiet :
                 depth * seePruneMarginNoisy - std::clamp(histScore / seeCaptHistDivisor, -seeCaptHistMax * depth, seeCaptHistMax * depth);
             if (!pvNode &&
                 depth <= maxSeePruneDepth &&
