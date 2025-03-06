@@ -6,14 +6,14 @@
 namespace
 {
 
-int mvvLva(const Board& board, Move move)
+int mvv(const Board& board, Move move)
 {
-    int srcPiece = static_cast<int>(getPieceType(board.pieceAt(move.fromSq())));
+    constexpr int MVV_VALUES[6] = {800, 2400, 2400, 4800, 7200};
+
     int dstPiece = static_cast<int>(move.type() == MoveType::ENPASSANT ?
         PieceType::PAWN :
         getPieceType(board.pieceAt(move.toSq()))
     );
-    constexpr int MVV_VALUES[6] = {800, 2400, 2400, 4800, 7200};
     return MVV_VALUES[dstPiece];
 }
 
@@ -44,7 +44,7 @@ int MoveOrdering::scoreNoisy(Move move) const
     if (isCapture)
     {
         int hist = m_History.getNoisyStats(m_Board, move);
-        int score = hist + mvvLva(m_Board, move);
+        int score = hist + mvv(m_Board, move);
         return score + CAPTURE_SCORE * m_Board.see(move, -score / 32);
     }
     else
@@ -64,7 +64,7 @@ int MoveOrdering::scoreMoveQSearch(Move move) const
     bool isPromotion = move.type() == MoveType::PROMOTION;
     int score = m_History.getNoisyStats(m_Board, move);
     if (isCapture)
-        score += mvvLva(m_Board, move);
+        score += mvv(m_Board, move);
     if (isPromotion)
         score += 100 * promotionBonus(move);
 
