@@ -46,7 +46,7 @@ PackedScore evalKingPawnFile(uint32_t file, Bitboard ourPawns, Bitboard theirPaw
         int rank = filePawns.any() ?
             (us == Color::WHITE ? filePawns.msb() : filePawns.lsb()).relativeRank<them>() :
             0;
-        bool blocked = theirPawns.has(Square(rank + attacks::pawnPushOffset<us>(), file));
+        bool blocked = rank != 0 && theirPawns.has(Square(rank - 1, file));
         eval += PAWN_STORM[blocked][edgeDist][rank];
     }
     {
