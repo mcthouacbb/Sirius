@@ -14,7 +14,6 @@ struct EvalData
     ColorArray<Bitboard> attackedBy2;
     ColorArray<PieceTypeArray<Bitboard>> attackedBy;
     ColorArray<Bitboard> kingRing;
-    ColorArray<PackedScore> attackWeight;
     ColorArray<int> attackerCount;
     ColorArray<int> attackCount;
 };
@@ -58,7 +57,6 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
 
         if (Bitboard kingRingAtks = evalData.kingRing[them] & attacks; kingRingAtks.any())
         {
-            evalData.attackWeight[us] += KING_ATTACKER_WEIGHT[static_cast<int>(piece) - static_cast<int>(KNIGHT)];
             evalData.attackCount[us] += kingRingAtks.popcount();
             evalData.attackerCount[us]++;
         }
@@ -144,13 +142,15 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
 }
 
 template<Color us>
-PackedScore evaluateKings(const Board& board, const EvalData& evalData)
+PackedScore evaluateKings(const Board& board, const EvalData& evalData, const EvalState& evalState)
 {
     constexpr Color them = ~us;
 
     Square theirKing = board.kingSq(them);
 
     PackedScore eval{0, 0};
+
+    eval += evalState.pawnShieldStormScore(us);
 
     Bitboard rookCheckSquares = attacks::rookAttacks(theirKing, board.allPieces());
     Bitboard bishopCheckSquares = attacks::bishopAttacks(theirKing, board.allPieces());
@@ -172,8 +172,6 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
     eval += UNSAFE_BISHOP_CHECK * (bishopChecks & ~safe).popcount();
     eval += UNSAFE_ROOK_CHECK * (rookChecks & ~safe).popcount();
     eval += UNSAFE_QUEEN_CHECK * (queenChecks & ~safe).popcount();
-
-    eval += evalData.attackWeight[us];
 
     bool queenless = board.pieces(us, PieceType::QUEEN).empty();
     eval += QUEENLESS_ATTACK * queenless;
@@ -284,14 +282,14 @@ void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& p
         evalData.kingRing[us] |= evalData.kingRing[us].east();
 }
 
-void nonIncrementalEval(const Board& board, const PawnStructure& pawnStructure, EvalData& evalData, PackedScore& eval)
+void nonIncrementalEval(const Board& board, const EvalState& evalState, const PawnStructure& pawnStructure, EvalData& evalData, PackedScore& eval)
 {
     eval += evaluatePieces<WHITE, KNIGHT>(board, evalData) - evaluatePieces<BLACK, KNIGHT>(board, evalData);
     eval += evaluatePieces<WHITE, BISHOP>(board, evalData) - evaluatePieces<BLACK, BISHOP>(board, evalData);
     eval += evaluatePieces<WHITE, ROOK>(board, evalData) - evaluatePieces<BLACK, ROOK>(board, evalData);
     eval += evaluatePieces<WHITE, QUEEN>(board, evalData) - evaluatePieces<BLACK, QUEEN>(board, evalData);
 
-    eval += evaluateKings<WHITE>(board, evalData) - evaluateKings<BLACK>(board, evalData);
+    eval += evaluateKings<WHITE>(board, evalData, evalState) - evaluateKings<BLACK>(board, evalData, evalState);
     eval += evaluatePassedPawns<WHITE>(board, pawnStructure, evalData) - evaluatePassedPawns<BLACK>(board, pawnStructure, evalData);
     eval += evaluateThreats<WHITE>(board, evalData) - evaluateThreats<BLACK>(board, evalData);
     eval += evaluateComplexity(board, pawnStructure, eval);
@@ -312,7 +310,7 @@ int evaluate(const Board& board, search::SearchThread* thread)
     initEvalData<WHITE>(board, evalData, pawnStructure);
     initEvalData<BLACK>(board, evalData, pawnStructure);
 
-    nonIncrementalEval(board, pawnStructure, evalData, eval);
+    nonIncrementalEval(board, thread->evalState, pawnStructure, evalData, eval);
 
     int scale = evaluateScale(board, eval, thread->evalState);
 
@@ -339,7 +337,7 @@ int evaluateSingle(const Board& board)
     initEvalData<WHITE>(board, evalData, pawnStructure);
     initEvalData<BLACK>(board, evalData, pawnStructure);
 
-    nonIncrementalEval(board, pawnStructure, evalData, eval);
+    nonIncrementalEval(board, evalState, pawnStructure, evalData, eval);
 
     int scale = evaluateScale(board, eval, evalState);
 
