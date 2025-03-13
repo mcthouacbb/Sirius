@@ -14,6 +14,7 @@ struct EvalData
     ColorArray<Bitboard> attackedBy2;
     ColorArray<PieceTypeArray<Bitboard>> attackedBy;
     ColorArray<Bitboard> kingRing;
+    ColorArray<PackedScore> attackWeight;
     ColorArray<int> attackerCount;
     ColorArray<int> attackCount;
 };
@@ -59,6 +60,7 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
         {
             evalData.attackCount[us] += kingRingAtks.popcount();
             evalData.attackerCount[us]++;
+            evalData.attackWeight[us] += KING_ATTACKER_WEIGHT[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)];
         }
 
         if (piece == BISHOP && (attacks & CENTER_SQUARES).multiple())
@@ -141,6 +143,11 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
     return eval;
 }
 
+constexpr int safetyFormula(int value)
+{
+    return (value + std::max(value, 0) * value / 128) / 8;
+}
+
 template<Color us>
 PackedScore evaluateKings(const Board& board, const EvalData& evalData, const EvalState& evalState)
 {
@@ -176,6 +183,8 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData, const Ev
     bool queenless = board.pieces(us, PieceType::QUEEN).empty();
     eval += QUEENLESS_ATTACK * queenless;
 
+    eval += evalData.attackWeight[us];
+
     int attackCount = evalData.attackCount[us];
     eval += KING_ATTACKS * attackCount;
 
@@ -185,9 +194,9 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData, const Ev
     int weakSquares = weakKingRing.popcount() + weakAttacked.popcount() + weakAttacked2.popcount();
     eval += WEAK_KING_RING * weakSquares;
 
-    int scale = SAFETY_SCALE_ATTACKERS[std::min(evalData.attackerCount[us], 5)];
+    eval += SAFETY_OFFSET;
 
-    PackedScore safety{eval.mg() * scale / 128, eval.eg() * scale / 128};
+    PackedScore safety{safetyFormula(eval.mg()), safetyFormula(eval.eg())};
     return safety;
 }
 
