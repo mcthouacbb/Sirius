@@ -145,7 +145,7 @@ void History::updateCorrHist(const Board& board, int bonus, int depth, const Sea
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
     int scaledBonus = bonus * CORR_HIST_SCALE;
-    int weight = std::min(1 + depth, 16);
+    int weight = 2 * std::min(1 + depth, 16);
 
     auto& pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % PAWN_CORR_HIST_ENTRIES];
     pawnEntry.update(scaledBonus, weight);
