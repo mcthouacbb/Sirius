@@ -15,7 +15,6 @@ struct EvalData
     ColorArray<PieceTypeArray<Bitboard>> attackedBy;
     ColorArray<Bitboard> kingRing;
     ColorArray<PackedScore> attackWeight;
-    ColorArray<int> attackerCount;
     ColorArray<int> attackCount;
 };
 
@@ -60,7 +59,6 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
         {
             evalData.attackWeight[us] += KING_ATTACKER_WEIGHT[static_cast<int>(piece) - static_cast<int>(KNIGHT)];
             evalData.attackCount[us] += kingRingAtks.popcount();
-            evalData.attackerCount[us]++;
         }
 
         if (piece == BISHOP && (attacks & CENTER_SQUARES).multiple())
