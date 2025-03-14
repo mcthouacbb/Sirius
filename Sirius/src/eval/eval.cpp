@@ -58,9 +58,9 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
 
         if (Bitboard kingRingAtks = evalData.kingRing[them] & attacks; kingRingAtks.any())
         {
+            evalData.attackWeight[us] += KING_ATTACKER_WEIGHT[static_cast<int>(piece) - static_cast<int>(KNIGHT)];
             evalData.attackCount[us] += kingRingAtks.popcount();
             evalData.attackerCount[us]++;
-            evalData.attackWeight[us] += KING_ATTACKER_WEIGHT[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)];
         }
 
         if (piece == BISHOP && (attacks & CENTER_SQUARES).multiple())
@@ -143,7 +143,7 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
     return eval;
 }
 
-constexpr int safetyFormula(int value)
+constexpr int safetyAdjustment(int value)
 {
     return (value + std::max(value, 0) * value / 128) / 8;
 }
@@ -196,7 +196,7 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData, const Ev
 
     eval += SAFETY_OFFSET;
 
-    PackedScore safety{safetyFormula(eval.mg()), safetyFormula(eval.eg())};
+    PackedScore safety{safetyAdjustment(eval.mg()), safetyAdjustment(eval.eg())};
     return safety;
 }
 
