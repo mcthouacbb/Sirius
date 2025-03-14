@@ -141,14 +141,21 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
     return eval;
 }
 
+constexpr int safetyAdjustment(int value)
+{
+    return (value + std::max(value, 0) * value / 128) / 8;
+}
+
 template<Color us>
-PackedScore evaluateKings(const Board& board, const EvalData& evalData)
+PackedScore evaluateKings(const Board& board, const EvalData& evalData, const EvalState& evalState)
 {
     constexpr Color them = ~us;
 
     Square theirKing = board.kingSq(them);
 
     PackedScore eval{0, 0};
+
+    eval += evalState.pawnShieldStormScore(us);
 
     Bitboard rookCheckSquares = attacks::rookAttacks(theirKing, board.allPieces());
     Bitboard bishopCheckSquares = attacks::bishopAttacks(theirKing, board.allPieces());
@@ -171,17 +178,24 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData)
     eval += UNSAFE_ROOK_CHECK * (rookChecks & ~safe).popcount();
     eval += UNSAFE_QUEEN_CHECK * (queenChecks & ~safe).popcount();
 
+    bool queenless = board.pieces(us, PieceType::QUEEN).empty();
+    eval += QUEENLESS_ATTACK * queenless;
+
     eval += evalData.attackWeight[us];
-    int attackCount = std::min(evalData.attackCount[us], 13);
-    eval += KING_ATTACKS[attackCount];
+
+    int attackCount = evalData.attackCount[us];
+    eval += KING_ATTACKS * attackCount;
 
     Bitboard weakKingRing = (evalData.kingRing[them] & weak);
     Bitboard weakAttacked = weakKingRing & evalData.attacked[us];
     Bitboard weakAttacked2 = weakAttacked & evalData.attackedBy2[us];
-    int weakSquares = std::min(weakKingRing.popcount() + weakAttacked.popcount() + weakAttacked2.popcount(), 16u);
-    eval += WEAK_KING_RING[weakSquares];
+    int weakSquares = weakKingRing.popcount() + weakAttacked.popcount() + weakAttacked2.popcount();
+    eval += WEAK_KING_RING * weakSquares;
 
-    return eval;
+    eval += SAFETY_OFFSET;
+
+    PackedScore safety{safetyAdjustment(eval.mg()), safetyAdjustment(eval.eg())};
+    return safety;
 }
 
 template<Color us>
@@ -275,14 +289,14 @@ void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& p
         evalData.kingRing[us] |= evalData.kingRing[us].east();
 }
 
-void nonIncrementalEval(const Board& board, const PawnStructure& pawnStructure, EvalData& evalData, PackedScore& eval)
+void nonIncrementalEval(const Board& board, const EvalState& evalState, const PawnStructure& pawnStructure, EvalData& evalData, PackedScore& eval)
 {
     eval += evaluatePieces<WHITE, KNIGHT>(board, evalData) - evaluatePieces<BLACK, KNIGHT>(board, evalData);
     eval += evaluatePieces<WHITE, BISHOP>(board, evalData) - evaluatePieces<BLACK, BISHOP>(board, evalData);
     eval += evaluatePieces<WHITE, ROOK>(board, evalData) - evaluatePieces<BLACK, ROOK>(board, evalData);
     eval += evaluatePieces<WHITE, QUEEN>(board, evalData) - evaluatePieces<BLACK, QUEEN>(board, evalData);
 
-    eval += evaluateKings<WHITE>(board, evalData) - evaluateKings<BLACK>(board, evalData);
+    eval += evaluateKings<WHITE>(board, evalData, evalState) - evaluateKings<BLACK>(board, evalData, evalState);
     eval += evaluatePassedPawns<WHITE>(board, pawnStructure, evalData) - evaluatePassedPawns<BLACK>(board, pawnStructure, evalData);
     eval += evaluateThreats<WHITE>(board, evalData) - evaluateThreats<BLACK>(board, evalData);
     eval += evaluateComplexity(board, pawnStructure, eval);
@@ -303,7 +317,7 @@ int evaluate(const Board& board, search::SearchThread* thread)
     initEvalData<WHITE>(board, evalData, pawnStructure);
     initEvalData<BLACK>(board, evalData, pawnStructure);
 
-    nonIncrementalEval(board, pawnStructure, evalData, eval);
+    nonIncrementalEval(board, thread->evalState, pawnStructure, evalData, eval);
 
     int scale = evaluateScale(board, eval, thread->evalState);
 
@@ -330,7 +344,7 @@ int evaluateSingle(const Board& board)
     initEvalData<WHITE>(board, evalData, pawnStructure);
     initEvalData<BLACK>(board, evalData, pawnStructure);
 
-    nonIncrementalEval(board, pawnStructure, evalData, eval);
+    nonIncrementalEval(board, evalState, pawnStructure, evalData, eval);
 
     int scale = evaluateScale(board, eval, evalState);
 
