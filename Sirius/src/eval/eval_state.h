@@ -47,6 +47,7 @@ public:
 
     PackedScore score(const Board& board) const;
     PackedScore psqtScore(const Board& board, Color c) const;
+    PackedScore pawnShieldStormScore(Color c) const;
     const PawnStructure& pawnStructure() const;
     int phase() const;
 private:
@@ -57,7 +58,7 @@ private:
 
         PsqtState psqtState;
         PawnStructure pawnStructure;
-        PackedScore pawnShieldStorm;
+        ColorArray<PackedScore> pawnShieldStorm;
         PackedScore knightOutposts;
         PackedScore bishopPawns;
         PackedScore rookOpen;
