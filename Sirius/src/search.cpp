@@ -610,7 +610,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         bool doSE = !root &&
             rootPly < 2 * thread.rootDepth &&
             !excluded &&
-            depth >= seMinDepth &&
             ttData.move == move &&
             ttData.depth >= depth - seTTDepthMargin &&
             ttData.bound != TTEntry::Bound::UPPER_BOUND &&
@@ -621,27 +620,33 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         // singular extensions(~73 elo)
         if (doSE)
         {
+            bool highDepth = depth >= seMinDepth;
             int sBeta = std::max(-SCORE_MATE, ttData.score - sBetaScale * depth / 16);
             int sDepth = (depth - 1) / 2;
             stack->excludedMove = ttData.move;
 
-            int score = search(thread, sDepth, stack, sBeta - 1, sBeta, false, cutnode);
+            int score = highDepth ?
+                search(thread, sDepth, stack, sBeta - 1, sBeta, false, cutnode) :
+                stack->staticEval;
 
             stack->excludedMove = Move::nullmove();
 
             if (score < sBeta)
             {
-                if (!pvNode && score < sBeta - doubleExtMargin)
+                if (highDepth && !pvNode && score < sBeta - doubleExtMargin)
                     extension = 2;
                 else
                     extension = 1;
             }
-            else if (sBeta >= beta)
-                return sBeta;
-            else if (ttData.score >= beta)
-                extension = -2 + pvNode;
-            else if (ttData.score <= alpha && cutnode)
-                extension = -1;
+            else if (highDepth)
+            {
+                if (sBeta >= beta)
+                    return sBeta;
+                else if (ttData.score >= beta)
+                    extension = -2 + pvNode;
+                else if (ttData.score <= alpha && cutnode)
+                    extension = -1;
+            }
         }
 
         m_TT.prefetch(board.keyAfter(move));
