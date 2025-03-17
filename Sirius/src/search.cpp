@@ -310,8 +310,8 @@ int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prev
 
     if (depth >= minAspDepth)
     {
-        alpha = prevScore - delta;
-        beta = prevScore + delta;
+        alpha = std::max(prevScore - delta, -SCORE_MAX);
+        beta = std::min(prevScore + delta, SCORE_MAX);
     }
 
     while (true)
@@ -323,7 +323,7 @@ int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prev
         if (searchScore <= alpha)
         {
             beta = (alpha + beta) / 2;
-            alpha -= delta;
+            alpha = std::max(alpha - delta, -SCORE_MAX);
             aspDepth = depth;
         }
         else
@@ -331,7 +331,7 @@ int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prev
             bestMove = thread.stack[0].pv[0];
             if (searchScore >= beta)
             {
-                beta += delta;
+                beta = std::min(beta + delta, SCORE_MAX);
                 aspDepth = std::max(aspDepth - 1, depth - 5);
             }
             else
