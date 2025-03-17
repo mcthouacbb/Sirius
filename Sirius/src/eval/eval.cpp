@@ -186,9 +186,18 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData, const Ev
     int attackCount = evalData.attackCount[us];
     eval += KING_ATTACKS * attackCount;
 
-    Bitboard weakKingRing = (evalData.kingRing[them] & weak);
+    Bitboard weakKingRing = evalData.kingRing[them] & weak;
     int weakSquares = weakKingRing.popcount();
     eval += WEAK_KING_RING * weakSquares;
+
+    Bitboard pinned = board.checkBlockers(them) & board.pieces(them);
+    Bitboard discovered = board.checkBlockers(them) & board.pieces(us);
+    while (pinned.any())
+    {
+        PieceType pt = getPieceType(board.pieceAt(pinned.poplsb()));
+        eval += SAFETY_PINNED[static_cast<int>(pt) - static_cast<int>(PieceType::PAWN)];
+    }
+    eval += SAFETY_DISCOVERED * discovered.popcount();
 
     eval += SAFETY_OFFSET;
 
