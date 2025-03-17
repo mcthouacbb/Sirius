@@ -25,7 +25,6 @@ struct SearchStack
     Piece movedPiece;
     Move excludedMove;
 
-    Move bestMove;
     std::array<Move, 2> killers;
 
     ContCorrEntry* contCorrEntry;
