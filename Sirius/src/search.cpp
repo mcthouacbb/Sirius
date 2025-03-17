@@ -460,7 +460,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     if (!pvNode && !inCheck && !excluded)
     {
         // reverse futility pruning(~86 elo)
-        int rfpMargin = (improving ? rfpImpMargin : rfpNonImpMargin) * depth - rfpOppWorsening * oppWorsening + (stack -1)->histScore / rfpHistDivisor;
+        int rfpMargin = (improving ? rfpImpMargin : rfpNonImpMargin) * depth - rfpOppWorsening * oppWorsening + (stack - 1)->histScore / rfpHistDivisor;
         if (depth <= rfpMaxDepth &&
             stack->eval >= std::max(rfpMargin, 20) + beta)
             return stack->eval;
@@ -543,7 +543,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     (stack + 1)->failHighCount = 0;
 
-    stack->bestMove = Move::nullmove();
+    Move bestMove = Move::nullmove();
 
     TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
 
@@ -717,7 +717,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             {
                 bound = TTEntry::Bound::EXACT;
                 alpha = bestScore;
-                stack->bestMove = move;
+                bestMove = move;
                 if (pvNode)
                 {
                     stack->pv[0] = move;
@@ -778,12 +778,12 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     if (!excluded)
     {
-        if (!inCheck && (stack->bestMove == Move::nullmove() || moveIsQuiet(board, stack->bestMove)) &&
+        if (!inCheck && (bestMove == Move::nullmove() || moveIsQuiet(board, bestMove)) &&
             !(bound == TTEntry::Bound::LOWER_BOUND && stack->staticEval >= bestScore) &&
             !(bound == TTEntry::Bound::UPPER_BOUND && stack->staticEval <= bestScore))
             history.updateCorrHist(board, bestScore - stack->staticEval, depth, stack, rootPly);
 
-        m_TT.store(board.zkey(), depth, rootPly, bestScore, rawStaticEval, stack->bestMove, ttPV, bound);
+        m_TT.store(board.zkey(), depth, rootPly, bestScore, rawStaticEval, bestMove, ttPV, bound);
     }
 
     return bestScore;
@@ -859,7 +859,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     }();
 
     TTEntry::Bound bound = TTEntry::Bound::UPPER_BOUND;
-    stack->bestMove = Move::nullmove();
+    Move bestMove = Move::nullmove();
     int movesPlayed = 0;
 
     ScoredMove scoredMove = {};
@@ -892,7 +892,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
 
             if (bestScore > alpha)
             {
-                stack->bestMove = move;
+                bestMove = move;
 
                 stack->pvLength = (stack + 1)->pvLength + 1;
                 stack->pv[0] = move;
@@ -914,7 +914,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     if (inCheck && movesPlayed == 0)
         return -SCORE_MATE + rootPly;
 
-    m_TT.store(board.zkey(), 0, rootPly, bestScore, rawStaticEval, stack->bestMove, ttPV, bound);
+    m_TT.store(board.zkey(), 0, rootPly, bestScore, rawStaticEval, bestMove, ttPV, bound);
 
     return bestScore;
 }
