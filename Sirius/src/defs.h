@@ -331,13 +331,15 @@ public:
         WHITE_KING_SIDE = 1,
         WHITE_QUEEN_SIDE = 2,
         BLACK_KING_SIDE = 4,
-        BLACK_QUEEN_SIDE = 8
+        BLACK_QUEEN_SIDE = 8,
+        ALL = 15
     };
     static constexpr Internal NONE = Internal::NONE;
     static constexpr Internal WHITE_KING_SIDE = Internal::WHITE_KING_SIDE;
     static constexpr Internal WHITE_QUEEN_SIDE = Internal::WHITE_QUEEN_SIDE;
     static constexpr Internal BLACK_KING_SIDE = Internal::BLACK_KING_SIDE;
     static constexpr Internal BLACK_QUEEN_SIDE = Internal::BLACK_QUEEN_SIDE;
+    static constexpr Internal ALL = Internal::ALL;
 
     constexpr CastlingRights();
     constexpr CastlingRights(Internal v);
@@ -347,6 +349,8 @@ public:
 
     constexpr CastlingRights operator&(const CastlingRights& other) const;
     constexpr CastlingRights operator|(const CastlingRights& other) const;
+
+    constexpr CastlingRights operator~() const;
 
     constexpr bool has(Internal v) const;
 
@@ -363,6 +367,11 @@ constexpr CastlingRights operator&(CastlingRights::Internal a, CastlingRights::I
 constexpr CastlingRights operator|(CastlingRights::Internal a, CastlingRights::Internal b)
 {
     return CastlingRights(static_cast<CastlingRights::Internal>(static_cast<int>(a) | static_cast<int>(b)));
+}
+
+constexpr CastlingRights operator~(CastlingRights::Internal a)
+{
+    return static_cast<CastlingRights::Internal>(~static_cast<int>(a)) & CastlingRights::ALL;
 }
 
 constexpr CastlingRights::CastlingRights()
@@ -391,12 +400,17 @@ constexpr CastlingRights& CastlingRights::operator|=(const CastlingRights& other
 
 constexpr CastlingRights CastlingRights::operator&(const CastlingRights& other) const
 {
-    return CastlingRights(m_Value & other.m_Value);
+    return m_Value & other.m_Value;
 }
 
 constexpr CastlingRights CastlingRights::operator|(const CastlingRights& other) const
 {
-    return CastlingRights(m_Value | other.m_Value);
+    return m_Value | other.m_Value;
+}
+
+constexpr CastlingRights CastlingRights::operator~() const
+{
+    return ~m_Value;
 }
 
 constexpr bool CastlingRights::has(Internal v) const

@@ -44,7 +44,7 @@ struct AttackData
     std::array<Bitboard, 64> kingAttacks;
     std::array<Bitboard, 64> knightAttacks;
 
-    std::array<int, 64> castleRightsMasks;
+    std::array<CastlingRights, 64> castleRightsMasks;
 
     Magic bishopTable[64];
     Magic rookTable[64];
@@ -156,7 +156,7 @@ inline Bitboard moveMask(Square king, Square checker)
 
 inline CastlingRights castleRightsMask(Square square)
 {
-    return CastlingRights(static_cast<CastlingRights::Internal>(attackData.castleRightsMasks[square.value()]));
+    return attackData.castleRightsMasks[square.value()];
 }
 
 inline Bitboard passedPawnMask(Color color, Square square)
