@@ -70,6 +70,7 @@ struct RootMove
     Move move;
     uint64_t nodes = 0;
     int score = SCORE_NONE;
+    int previousScore = SCORE_NONE;
 
     RootMove(Move move);
 };

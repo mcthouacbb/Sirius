@@ -81,7 +81,7 @@ void SearchThread::sortRootMoves()
 {
     std::stable_sort(rootMoves.begin(), rootMoves.end(), [](const RootMove& a, const RootMove& b)
     {
-        return a.score < b.score;
+        return a.score == b.score ? a.previousScore > b.previousScore : a.score > b.score;
     });
 }
 
@@ -747,6 +747,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         if (root)
         {
             RootMove& rootMove = thread.findRootMove(move);
+            rootMove.previousScore = rootMove.score;
             rootMove.nodes += thread.nodes - nodesBefore;
 
             if (movesPlayed == 1 || score > alpha)
