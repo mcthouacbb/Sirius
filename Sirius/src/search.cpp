@@ -66,6 +66,34 @@ void SearchThread::startSearching()
     cv.notify_one();
 }
 
+void SearchThread::initRootMoves()
+{
+    rootMoves.clear();
+    MoveList moves;
+    genMoves<MoveGenType::LEGAL>(board, moves);
+    for (Move move : moves)
+    {
+        rootMoves.push_back(RootMove(move));
+    }
+}
+
+void SearchThread::sortRootMoves()
+{
+    std::stable_sort(rootMoves.begin(), rootMoves.end(), [](const RootMove& a, const RootMove& b)
+    {
+        return a.score < b.score;
+    });
+}
+
+RootMove& SearchThread::findRootMove(Move move)
+{
+    auto it = std::find_if(rootMoves.begin(), rootMoves.end(), [=](const RootMove& rm)
+    {
+        return rm.move == move;
+    });
+    return *it;
+}
+
 void SearchThread::wait()
 {
     std::unique_lock<std::mutex> uniqueLock(mutex);
@@ -260,6 +288,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
 
     thread.reset();
     thread.evalState.init(thread.board, thread.pawnTable);
+    thread.initRootMoves();
 
     report = report && normalSearch;
 
@@ -268,6 +297,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
         thread.rootDepth = depth;
         thread.selDepth = 0;
         int searchScore = aspWindows(thread, depth, bestMove, score);
+        thread.sortRootMoves();
         if (m_ShouldStop)
             break;
         score = searchScore;
@@ -286,7 +316,8 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
             info.score = searchScore;
             comm::currComm->reportSearchInfo(info);
         }
-        if (thread.isMainThread() && m_TimeMan.stopSoft(bestMove, thread.nodes, thread.limits))
+        uint64_t bmNodes = thread.findRootMove(bestMove).nodes;
+        if (thread.isMainThread() && m_TimeMan.stopSoft(bestMove, bmNodes, thread.nodes, thread.limits))
             break;
     }
 
@@ -712,9 +743,21 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             score = -search(thread, newDepth, stack + 1, -beta, -alpha, true, false);
 
         unmakeMove(thread, stack);
-        
-        if (root && thread.isMainThread())
-            m_TimeMan.updateNodes(move, thread.nodes - nodesBefore);
+
+        if (root)
+        {
+            RootMove& rootMove = thread.findRootMove(move);
+            rootMove.nodes += thread.nodes - nodesBefore;
+
+            if (movesPlayed == 1 || score > alpha)
+            {
+                rootMove.score = score;
+            }
+            else
+            {
+                rootMove.score = SCORE_NONE;
+            }
+        }
 
         if (m_ShouldStop)
             return alpha;

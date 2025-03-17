@@ -25,15 +25,9 @@ Duration TimeManager::elapsed() const
 void TimeManager::startSearch()
 {
     checkCounter = TIME_CHECK_INTERVAL;
-    std::fill(m_NodeCounts.begin(), m_NodeCounts.end(), 0);
     m_StartTime = std::chrono::steady_clock::now();
     m_Stability = 0;
     m_PrevBestMove = Move::nullmove();
-}
-
-void TimeManager::updateNodes(Move move, uint64_t nodes)
-{
-    m_NodeCounts[move.fromTo()] += nodes;
 }
 
 bool TimeManager::stopHard(const SearchLimits& searchLimits, uint64_t nodes)
@@ -51,7 +45,7 @@ bool TimeManager::stopHard(const SearchLimits& searchLimits, uint64_t nodes)
     return false;
 }
 
-bool TimeManager::stopSoft(Move bestMove, uint64_t totalNodes, const SearchLimits& searchLimits)
+bool TimeManager::stopSoft(Move bestMove, uint64_t bmNodes, uint64_t totalNodes, const SearchLimits& searchLimits)
 {
     if (bestMove == m_PrevBestMove)
         m_Stability++;
@@ -59,8 +53,8 @@ bool TimeManager::stopSoft(Move bestMove, uint64_t totalNodes, const SearchLimit
         m_Stability = 0;
     m_PrevBestMove = bestMove;
 
-    double bmNodes = static_cast<double>(m_NodeCounts[bestMove.fromTo()]) / static_cast<double>(totalNodes);
-    double scale = ((search::nodeTMBase / 100.0) - bmNodes) * (search::nodeTMScale / 100.0);
+    double nodeFrac = static_cast<double>(bmNodes) / static_cast<double>(totalNodes);
+    double scale = ((search::nodeTMBase / 100.0) - nodeFrac) * (search::nodeTMScale / 100.0);
 
     double bmStabilityScale =
         static_cast<double>(search::bmStabilityBase) / 100.0 +
