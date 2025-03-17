@@ -270,7 +270,7 @@ inline BoardState& Board::currState()
 
 inline bool Board::isDraw(int searchPly) const
 {
-    return is50MoveDraw() || isInsufMaterialDraw() || is3FoldDraw(searchPly);
+    return is50MoveDraw() || isInsufMaterialDraw()/* || is3FoldDraw(searchPly)*/;
 }
 
 inline bool Board::is3FoldDraw(int searchPly) const

@@ -392,12 +392,12 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     bool inCheck = board.checkers().any();
     bool excluded = stack->excludedMove != Move::nullmove();
 
-    if (!root && board.halfMoveClock() >= 3 && alpha < 0 && board.hasUpcomingRepetition(rootPly))
+    /*if (!root && board.halfMoveClock() >= 3 && alpha < 0 && board.hasUpcomingRepetition(rootPly))
     {
         alpha = SCORE_DRAW;
         if (alpha >= beta)
             return alpha;
-    }
+    }*/
 
     if (board.isDraw(rootPly))
         return SCORE_DRAW;
