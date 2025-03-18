@@ -489,7 +489,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                     return isMateScore(nullScore) ? beta : nullScore;
 
                 thread.nmpMinPly = rootPly + (depth - r) * 3 / 4;
-                int verifScore = search(thread, depth - r, stack + 1, -beta, -beta + 1, false, true);
+                int verifScore = search(thread, depth - r, stack + 1, beta - 1, beta, false, true);
                 thread.nmpMinPly = 0;
 
                 if (verifScore >= beta)
