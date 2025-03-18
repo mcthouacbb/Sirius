@@ -485,7 +485,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             unmakeNullMove(thread, stack);
             if (nullScore >= beta)
             {
-                if (depth <= 15 || thread.nmpMinPly == 0)
+                if (depth <= 15 || thread.nmpMinPly > 0)
                     return isMateScore(nullScore) ? beta : nullScore;
 
                 thread.nmpMinPly = rootPly + (depth - r) * 3 / 4;
