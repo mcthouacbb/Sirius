@@ -3,6 +3,7 @@
 #include "eval/eval_state.h"
 #include "movegen.h"
 #include "cuckoo.h"
+#include "util/string_split.h"
 
 #include <cstring>
 #include <charconv>
@@ -14,6 +15,12 @@ Board::Board()
 
 void Board::setToFen(const std::string_view& fen)
 {
+    auto parts = splitBySpaces(fen);
+    const auto& pieces = parts[0];
+    const auto& stm = parts[1];
+    const auto& castlingRights = parts[2];
+    const auto& epSq = parts[3];
+
     m_States.clear();
     m_States.push_back(BoardState{});
     m_CastlingData = CastlingData();
@@ -24,7 +31,7 @@ void Board::setToFen(const std::string_view& fen)
     int sq = 56;
     for (;; i++)
     {
-        switch (fen[i])
+        switch (pieces[i])
         {
             case '1':
             case '2':
@@ -34,7 +41,7 @@ void Board::setToFen(const std::string_view& fen)
             case '6':
             case '7':
             case '8':
-                sq += fen[i] - '0';
+                sq += pieces[i] - '0';
                 break;
             case 'k':
                 currState().addPiece(Square(sq++), Color::BLACK, PieceType::KING);
@@ -81,40 +88,35 @@ void Board::setToFen(const std::string_view& fen)
     }
 
 done:
-    i++;
-    m_SideToMove = fen[i] == 'w' ? Color::WHITE : Color::BLACK;
+    m_SideToMove = stm[0] == 'w' ? Color::WHITE : Color::BLACK;
     if (m_SideToMove == Color::BLACK)
     {
         currState().zkey.flipSideToMove();
     }
 
-    i += 2;
     currState().castlingRights = CastlingRights::NONE;
-    if (fen[i] == '-')
+    i = 0;
+    if (castlingRights[i] != '-')
     {
-        i++;
-    }
-    else
-    {
-        if (fen[i] == 'K')
+        if (castlingRights[i] == 'K')
         {
             i++;
             currState().castlingRights |= CastlingRights::WHITE_KING_SIDE;
         }
 
-        if (fen[i] == 'Q')
+        if (castlingRights[i] == 'Q')
         {
             i++;
             currState().castlingRights |= CastlingRights::WHITE_QUEEN_SIDE;
         }
 
-        if (fen[i] == 'k')
+        if (castlingRights[i] == 'k')
         {
             i++;
             currState().castlingRights |= CastlingRights::BLACK_KING_SIDE;
         }
 
-        if (fen[i] == 'q')
+        if (castlingRights[i] == 'q')
         {
             i++;
             currState().castlingRights |= CastlingRights::BLACK_QUEEN_SIDE;
@@ -123,155 +125,28 @@ done:
 
     currState().zkey.updateCastlingRights(currState().castlingRights);
 
-    i++;
-
-    if (fen[i] != '-')
+    if (epSq[0] != '-')
     {
-        currState().epSquare = fen[i] - 'a';
-        currState().epSquare |= (fen[++i] - '1') << 3;
+        currState().epSquare = epSq[0] - 'a';
+        currState().epSquare |= (epSq[1] - '1') << 3;
         currState().zkey.updateEP(currState().epSquare & 7);
     }
     else
     {
         currState().epSquare = -1;
     }
-    i += 2;
 
-    auto [ptr, ec] = std::from_chars(&fen[i], fen.data() + fen.size(), currState().halfMoveClock);
-    std::from_chars(ptr + 1, fen.data() + fen.size(), m_GamePly);
-    m_GamePly = 2 * m_GamePly - 1 - (m_SideToMove == Color::WHITE);
-
-    m_CastlingData.initMasks();
-    updateCheckInfo();
-    calcThreats();
-}
-
-void Board::setToEpd(const std::string_view& epd)
-{
-    m_States.clear();
-    m_States.push_back(BoardState{});
-    m_CastlingData = CastlingData();
-
-    currState().squares.fill(Piece::NONE);
-
-    int i = 0;
-    int sq = 56;
-    for (;; i++)
+    if (parts.size() >= 6)
     {
-        switch (epd[i])
-        {
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-                sq += epd[i] - '0';
-                break;
-            case 'k':
-                currState().addPiece(Square(sq++), Color::BLACK, PieceType::KING);
-                break;
-            case 'q':
-                currState().addPiece(Square(sq++), Color::BLACK, PieceType::QUEEN);
-                break;
-            case 'r':
-                currState().addPiece(Square(sq++), Color::BLACK, PieceType::ROOK);
-                break;
-            case 'b':
-                currState().addPiece(Square(sq++), Color::BLACK, PieceType::BISHOP);
-                break;
-            case 'n':
-                currState().addPiece(Square(sq++), Color::BLACK, PieceType::KNIGHT);
-                break;
-            case 'p':
-                currState().addPiece(Square(sq++), Color::BLACK, PieceType::PAWN);
-                break;
-            case 'K':
-                currState().addPiece(Square(sq++), Color::WHITE, PieceType::KING);
-                break;
-            case 'Q':
-                currState().addPiece(Square(sq++), Color::WHITE, PieceType::QUEEN);
-                break;
-            case 'R':
-                currState().addPiece(Square(sq++), Color::WHITE, PieceType::ROOK);
-                break;
-            case 'B':
-                currState().addPiece(Square(sq++), Color::WHITE, PieceType::BISHOP);
-                break;
-            case 'N':
-                currState().addPiece(Square(sq++), Color::WHITE, PieceType::KNIGHT);
-                break;
-            case 'P':
-                currState().addPiece(Square(sq++), Color::WHITE, PieceType::PAWN);
-                break;
-            case '/':
-                sq -= 16;
-                break;
-            default:
-                goto done;
-        }
-    }
-done:
-    i++;
-    m_SideToMove = epd[i] == 'w' ? Color::WHITE : Color::BLACK;
-    if (m_SideToMove == Color::BLACK)
-    {
-        currState().zkey.flipSideToMove();
-    }
-
-    i += 2;
-    currState().castlingRights = CastlingRights::NONE;
-    if (epd[i] == '-')
-    {
-        i++;
+        std::from_chars(&parts[4][0], &parts[4][0] + parts[4].size(), currState().halfMoveClock);
+        std::from_chars(&parts[5][0], &parts[5][0] + parts[5].size(), m_GamePly);
+        m_GamePly = 2 * m_GamePly - 1 - (m_SideToMove == Color::WHITE);
     }
     else
     {
-        if (epd[i] == 'K')
-        {
-            i++;
-            currState().castlingRights |= CastlingRights::WHITE_KING_SIDE;
-        }
-
-        if (epd[i] == 'Q')
-        {
-            i++;
-            currState().castlingRights |= CastlingRights::WHITE_QUEEN_SIDE;
-        }
-
-        if (epd[i] == 'k')
-        {
-            i++;
-            currState().castlingRights |= CastlingRights::BLACK_KING_SIDE;
-        }
-
-        if (epd[i] == 'q')
-        {
-            i++;
-            currState().castlingRights |= CastlingRights::BLACK_QUEEN_SIDE;
-        }
+        currState().halfMoveClock = 0;
+        m_GamePly = 0;
     }
-
-    currState().zkey.updateCastlingRights(currState().castlingRights);
-
-    i++;
-
-    if (epd[i] != '-')
-    {
-        currState().epSquare = epd[i] - 'a';
-        currState().epSquare |= (epd[++i] - '1') << 3;
-        currState().zkey.updateEP(currState().epSquare & 7);
-    }
-    else
-    {
-        currState().epSquare = -1;
-    }
-    i += 2;
-
-    currState().halfMoveClock = 0;
-    m_GamePly = 0;
 
     m_CastlingData.initMasks();
     updateCheckInfo();

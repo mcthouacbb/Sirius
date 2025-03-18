@@ -271,7 +271,7 @@ void testSEE()
     while (std::getline(file, line))
     {
         int sep1 = static_cast<int>(line.find(';', 0));
-        board.setToEpd(std::string_view(line).substr(0, sep1));
+        board.setToFen(std::string_view(line).substr(0, sep1));
 
         int moveStart = sep1 + 2;
 

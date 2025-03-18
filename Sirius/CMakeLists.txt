@@ -69,6 +69,7 @@ set(SRCS
     "src/util/static_vector.h"
     "src/util/piece_set.h"
     "src/util/prng.h"
+    "src/util/string_split.h"
 )
 
 
