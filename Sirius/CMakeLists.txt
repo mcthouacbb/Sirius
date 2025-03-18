@@ -8,6 +8,7 @@ set(SRCS
     "src/bitboard.h"
     "src/board.cpp"
     "src/board.h"
+    "src/castling.h"
     "src/cuckoo.h"
     "src/cuckoo.cpp"
     "src/defs.h"

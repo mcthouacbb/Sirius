@@ -5,6 +5,7 @@
 #include "zobrist.h"
 #include "util/murmur.h"
 #include "util/enum_array.h"
+#include "castling.h"
 
 #include <string_view>
 #include <string>
@@ -232,6 +233,7 @@ private:
     };
 
     std::vector<BoardState> m_States;
+    CastlingData m_CastlingData;
 
     Color m_SideToMove;
 

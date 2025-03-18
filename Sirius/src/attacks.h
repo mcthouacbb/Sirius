@@ -44,8 +44,6 @@ struct AttackData
     std::array<Bitboard, 64> kingAttacks;
     std::array<Bitboard, 64> knightAttacks;
 
-    std::array<CastlingRights, 64> castleRightsMasks;
-
     Magic bishopTable[64];
     Magic rookTable[64];
 
@@ -152,11 +150,6 @@ inline Bitboard inBetweenSquares(Square src, Square dst)
 inline Bitboard moveMask(Square king, Square checker)
 {
     return attackData.moveMasks[king.value()][checker.value()];
-}
-
-inline CastlingRights castleRightsMask(Square square)
-{
-    return attackData.castleRightsMasks[square.value()];
 }
 
 inline Bitboard passedPawnMask(Color color, Square square)

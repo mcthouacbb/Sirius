@@ -343,7 +343,7 @@ void init()
 {
     initRays();
 
-    attackData.castleRightsMasks.fill(CastlingRights::ALL);
+    /*attackData.castleRightsMasks.fill(CastlingRights::ALL);
     attackData.castleRightsMasks[0] &= ~CastlingRights::WHITE_QUEEN_SIDE;
     attackData.castleRightsMasks[7] &= ~CastlingRights::WHITE_KING_SIDE;
     attackData.castleRightsMasks[4] &= ~(CastlingRights::WHITE_QUEEN_SIDE | CastlingRights::WHITE_KING_SIDE);
@@ -355,7 +355,7 @@ void init()
         std::cout << attackData.castleRightsMasks[i].value() << ", ";
         if (i % 8 == 7)
             std::cout << std::endl;
-    }
+    }*/
     /* = {
         13, 15, 15, 15, 12, 15, 15, 14, // white
         15, 15, 15, 15, 15, 15, 15, 15,

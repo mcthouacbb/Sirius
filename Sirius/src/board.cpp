@@ -16,6 +16,7 @@ void Board::setToFen(const std::string_view& fen)
 {
     m_States.clear();
     m_States.push_back(BoardState{});
+    m_CastlingData = CastlingData();
 
     currState().squares.fill(Piece::NONE);
 
@@ -140,6 +141,7 @@ done:
     std::from_chars(ptr + 1, fen.data() + fen.size(), m_GamePly);
     m_GamePly = 2 * m_GamePly - 1 - (m_SideToMove == Color::WHITE);
 
+    m_CastlingData.initMasks();
     updateCheckInfo();
     calcThreats();
 }
@@ -148,6 +150,7 @@ void Board::setToEpd(const std::string_view& epd)
 {
     m_States.clear();
     m_States.push_back(BoardState{});
+    m_CastlingData = CastlingData();
 
     currState().squares.fill(Piece::NONE);
 
@@ -270,6 +273,7 @@ done:
     currState().halfMoveClock = 0;
     m_GamePly = 0;
 
+    m_CastlingData.initMasks();
     updateCheckInfo();
     calcThreats();
 }
@@ -508,8 +512,8 @@ void Board::makeMove(Move move, eval::EvalState* evalState)
 
     currState().zkey.updateCastlingRights(currState().castlingRights);
 
-    currState().castlingRights &= attacks::castleRightsMask(move.fromSq());
-    currState().castlingRights &= attacks::castleRightsMask(move.toSq());
+    currState().castlingRights &= m_CastlingData.castleRightsMask(move.fromSq());
+    currState().castlingRights &= m_CastlingData.castleRightsMask(move.toSq());
 
     currState().zkey.updateCastlingRights(currState().castlingRights);
 
@@ -1130,8 +1134,8 @@ ZKey Board::keyAfter(Move move) const
 
     CastlingRights newCastlingRights =
         currState().castlingRights &
-        attacks::castleRightsMask(move.fromSq()) &
-        attacks::castleRightsMask(move.toSq());
+        m_CastlingData.castleRightsMask(move.fromSq()) &
+        m_CastlingData.castleRightsMask(move.toSq());
 
     keyAfter.updateCastlingRights(newCastlingRights);
 
