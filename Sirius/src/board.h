@@ -147,7 +147,7 @@ public:
 
     Board();
 
-    void setToFen(const std::string_view& fen);
+    void setToFen(const std::string_view& fen, bool frc = false);
 
     std::string stringRep() const;
     std::string fenStr() const;
@@ -160,6 +160,7 @@ public:
     void makeNullMove();
     void unmakeNullMove();
 
+    bool isFRC() const;
     Color sideToMove() const;
     int epSquare() const;
     int gamePly() const;
@@ -233,6 +234,7 @@ private:
 
     std::vector<BoardState> m_States;
     CastlingData m_CastlingData;
+    bool m_FRC;
 
     Color m_SideToMove;
 
@@ -277,6 +279,11 @@ inline bool Board::isDraw(int searchPly) const
 inline bool Board::is3FoldDraw(int searchPly) const
 {
     return currState().repetitions > 1 || (currState().repetitions == 1 && currState().lastRepetition < searchPly);
+}
+
+inline bool Board::isFRC() const
+{
+    return m_FRC;
 }
 
 inline Color Board::sideToMove() const

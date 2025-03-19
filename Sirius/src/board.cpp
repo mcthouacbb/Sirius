@@ -13,7 +13,7 @@ Board::Board()
     setToFen(defaultFen);
 }
 
-void Board::setToFen(const std::string_view& fen)
+void Board::setToFen(const std::string_view& fen, bool frc)
 {
     auto parts = splitBySpaces(fen);
     const auto& pieces = parts[0];
@@ -24,6 +24,7 @@ void Board::setToFen(const std::string_view& fen)
     m_States.clear();
     m_States.push_back(BoardState{});
     m_CastlingData = CastlingData();
+    m_FRC = frc;
 
     currState().squares.fill(Piece::NONE);
 
@@ -95,31 +96,61 @@ done:
     }
 
     currState().castlingRights = CastlingRights::NONE;
-    i = 0;
-    if (castlingRights[i] != '-')
+    m_CastlingData.setKingSquares(kingSq(Color::WHITE), kingSq(Color::BLACK));
+    for (char c : castlingRights)
     {
-        if (castlingRights[i] == 'K')
+        if (c == '-')
+            break;
+        Color color = std::isupper(c) ? Color::WHITE : Color::BLACK;
+        c = std::tolower(c);
+        if (c == 'k')
         {
-            i++;
-            currState().castlingRights |= CastlingRights::WHITE_KING_SIDE;
+            Square rookSq(kingSq(color).rank(), FILE_H);
+            while (pieceAt(rookSq) != makePiece(PieceType::ROOK, color))
+            {
+                m_FRC = true;
+                rookSq--;
+            }
+            m_CastlingData.setRookSquare(color, CastleSide::KING_SIDE, rookSq);
+            if (color == Color::WHITE)
+                currState().castlingRights |= CastlingRights::WHITE_KING_SIDE;
+            else
+                currState().castlingRights |= CastlingRights::BLACK_KING_SIDE;
         }
-
-        if (castlingRights[i] == 'Q')
+        else if (c == 'q')
         {
-            i++;
-            currState().castlingRights |= CastlingRights::WHITE_QUEEN_SIDE;
+            Square rookSq(kingSq(color).rank(), FILE_A);
+            while (pieceAt(rookSq) != makePiece(PieceType::ROOK, color))
+            {
+                m_FRC = true;
+                rookSq++;
+            }
+            m_CastlingData.setRookSquare(color, CastleSide::QUEEN_SIDE, rookSq);
+            if (color == Color::WHITE)
+                currState().castlingRights |= CastlingRights::WHITE_QUEEN_SIDE;
+            else
+                currState().castlingRights |= CastlingRights::BLACK_QUEEN_SIDE;
         }
-
-        if (castlingRights[i] == 'k')
+        else if (c >= 'a' && c <= 'h')
         {
-            i++;
-            currState().castlingRights |= CastlingRights::BLACK_KING_SIDE;
-        }
-
-        if (castlingRights[i] == 'q')
-        {
-            i++;
-            currState().castlingRights |= CastlingRights::BLACK_QUEEN_SIDE;
+            m_FRC = true;
+            int file = c - 'a';
+            CastleSide side = file > kingSq(color).file() ? CastleSide::KING_SIDE : CastleSide::QUEEN_SIDE;
+            m_CastlingData.setRookSquare(color, side, Square(kingSq(color).rank(), file));
+            if (side == CastleSide::KING_SIDE)
+            {
+                if (color == Color::WHITE)
+                    currState().castlingRights |= CastlingRights::WHITE_KING_SIDE;
+                else
+                    currState().castlingRights |= CastlingRights::BLACK_KING_SIDE;
+            }
+            else
+            {
+                if (color == Color::WHITE)
+                    currState().castlingRights |= CastlingRights::WHITE_QUEEN_SIDE;
+                else
+                    currState().castlingRights |= CastlingRights::BLACK_QUEEN_SIDE;
+            }
         }
     }
 

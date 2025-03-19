@@ -158,7 +158,7 @@ void UCI::printUCISearchInfo(const SearchInfo& info) const
     std::cout << " pv ";
     for (const Move* move = info.pvBegin; move != info.pvEnd; move++)
     {
-        std::cout << comm::convMoveToPCN(*move) << ' ';
+        std::cout << comm::convMoveToUCI(m_Board, *move) << ' ';
     }
     std::cout << std::endl;
 }
@@ -166,7 +166,7 @@ void UCI::printUCISearchInfo(const SearchInfo& info) const
 void UCI::reportBestMove(Move bestMove) const
 {
     auto lock = lockStdout();
-    std::cout << "bestmove " << comm::convMoveToPCN(bestMove) << std::endl;
+    std::cout << "bestmove " << comm::convMoveToUCI(m_Board, bestMove) << std::endl;
 }
 
 bool UCI::execCommand(const std::string& command)
@@ -322,7 +322,7 @@ void UCI::positionCommand(std::istringstream& stream)
                 while (stream.tellg() != -1)
                 {
                     stream >> tok;
-                    MoveStrFind find = comm::findMoveFromPCN(m_LegalMoves, tok.c_str());
+                    MoveStrFind find = comm::findMoveFromUCI(m_Board, m_LegalMoves, tok.c_str());
                     Move move = find.move;
                     makeMove(move);
                 }
@@ -350,7 +350,7 @@ void UCI::positionCommand(std::istringstream& stream)
             while (stream.tellg() != -1)
             {
                 stream >> tok;
-                MoveStrFind find = comm::findMoveFromPCN(m_LegalMoves, tok.c_str());
+                MoveStrFind find = comm::findMoveFromUCI(m_Board, m_LegalMoves, tok.c_str());
                 Move move = find.move;
                 makeMove(move);
             }

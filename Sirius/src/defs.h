@@ -110,6 +110,11 @@ public:
     constexpr bool operator<(const Square& other) const;
     constexpr bool operator<=(const Square& other) const;
 
+    constexpr Square& operator++();
+    constexpr Square operator++(int);
+    constexpr Square& operator--();
+    constexpr Square operator--(int);
+
     constexpr Square operator+(int other) const;
     constexpr Square operator-(int other) const;
     constexpr int operator-(Square other) const;
@@ -161,6 +166,32 @@ constexpr bool Square::operator<(const Square& other) const
 constexpr bool Square::operator<=(const Square& other) const
 {
     return value() <= other.value();
+}
+
+constexpr Square& Square::operator++()
+{
+    m_Value++;
+    return *this;
+}
+
+constexpr Square Square::operator++(int)
+{
+    Square tmp = *this;
+    operator++();
+    return tmp;
+}
+
+constexpr Square& Square::operator--()
+{
+    m_Value--;
+    return *this;
+}
+
+constexpr Square Square::operator--(int)
+{
+    Square tmp = *this;
+    operator--();
+    return tmp;
 }
 
 constexpr Square Square::operator+(int other) const

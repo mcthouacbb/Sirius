@@ -24,10 +24,10 @@ struct MoveStrFind
 // ambiguous = {end + 1, moveStr + moveLen};
 };
 
-MoveStrFind findMoveFromPCN(const MoveList& legalMoves, const char* moveStr);
+MoveStrFind findMoveFromUCI(const Board& board, const MoveList& legalMoves, const char* moveStr);
 MoveStrFind findMoveFromSAN(const Board& board, const MoveList& legalMoves, const char* moveStr);
 
-std::string convMoveToPCN(Move move);
+std::string convMoveToUCI(const Board& board, Move move);
 std::string convMoveToSAN(const Board& board, const MoveList& legalMoves, Move move);
 
 }
