@@ -119,24 +119,6 @@ inline constexpr int pawnPushOffset()
     return c == Color::WHITE ? 8 : -8;
 }
 
-template<Color c>
-inline constexpr Bitboard kscBlockSquares()
-{
-    if constexpr (c == Color::WHITE)
-        return Bitboard(0x60);
-    else
-        return Bitboard(0x6000000000000000);
-}
-
-template<Color c>
-inline constexpr Bitboard qscBlockSquares()
-{
-    if constexpr (c == Color::WHITE)
-        return Bitboard(0xE);
-    else
-        return Bitboard(0xE00000000000000);
-}
-
 inline bool aligned(Square a, Square b, Square c)
 {
     return attackData.alignedSquares[a.value()][b.value()].has(c);

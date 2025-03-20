@@ -103,6 +103,9 @@ public:
     explicit constexpr Square(int sq);
     constexpr Square(int rank, int file);
 
+    constexpr Square& operator+=(int other);
+    constexpr Square& operator-=(int other);
+
     constexpr bool operator==(const Square& other) const = default;
     constexpr bool operator!=(const Square& other) const = default;
     constexpr bool operator>(const Square& other) const;
@@ -146,6 +149,18 @@ constexpr Square::Square(int rank, int file)
     : m_Value(static_cast<uint8_t>(rank * 8 + file))
 {
 
+}
+
+constexpr Square& Square::operator+=(int other)
+{
+    *this = *this + other;
+    return *this;
+}
+
+constexpr Square& Square::operator-=(int other)
+{
+    *this = *this - other;
+    return *this;
 }
 
 constexpr bool Square::operator>(const Square& other) const

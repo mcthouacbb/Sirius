@@ -49,7 +49,7 @@ MoveStrFind findMoveFromUCI(const Board& board, const MoveList& legalMoves, cons
             }
         }
         if (!board.isFRC() && move.fromSq() == Square(src) && move.type() == MoveType::CASTLE &&
-            (move.fromSq() > move.toSq()) == (src > dst))
+            (move.fromSq() > move.toSq()) == (src > dst) && std::abs(src - dst) > 1)
         {
             return {MoveStrFind::Result::FOUND, move, 4};
         }
@@ -433,7 +433,7 @@ std::string convMoveToUCI(const Board& board, Move move)
     int toFile = move.toSq().file();
     if (move.type() == MoveType::CASTLE && !board.isFRC())
     {
-        toFile = move.toSq() > move.fromSq() ? FILE_G : FILE_E;
+        toFile = move.toSq() > move.fromSq() ? FILE_G : FILE_C;
     }
 
     str[2] = static_cast<char>(toFile + 'a');

@@ -186,6 +186,7 @@ public:
     Bitboard pieces(Color color) const;
     Bitboard allPieces() const;
     Square kingSq(Color color) const;
+    Square castlingRookSq(Color color, CastleSide side) const;
 
     bool squareAttacked(Color color, Square square) const;
     bool squareAttacked(Color color, Square square, Bitboard blockers) const;
@@ -193,6 +194,7 @@ public:
     Bitboard attackersTo(Color color, Square square, Bitboard blockers) const;
     Bitboard attackersTo(Square square) const;
     Bitboard attackersTo(Square square, Bitboard blockers) const;
+    bool castlingBlocked(Color color, CastleSide side) const;
 
     bool isPassedPawn(Square square) const;
     bool isIsolatedPawn(Square square) const;
@@ -390,6 +392,11 @@ inline Bitboard Board::allPieces() const
 inline Square Board::kingSq(Color color) const
 {
     return pieces(color, PieceType::KING).lsb();
+}
+
+inline Square Board::castlingRookSq(Color color, CastleSide side) const
+{
+    return m_CastlingData.rookSquare(color, side);
 }
 
 inline bool Board::squareAttacked(Color color, Square square) const
