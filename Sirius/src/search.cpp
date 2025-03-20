@@ -475,7 +475,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         // null move pruning(~31 elo)
         Bitboard nonPawns = board.pieces(board.sideToMove()) ^ board.pieces(board.sideToMove(), PieceType::PAWN);
-        if (board.pliesFromNull() > 0 && depth >= nmpMinDepth &&
+        if (board.pliesFromNull() > 0 && rootPly >= thread.nmpMinPly && depth >= nmpMinDepth &&
             stack->eval >= beta && stack->staticEval >= beta + nmpEvalBaseMargin - nmpEvalDepthMargin * depth &&
             nonPawns.multiple())
         {
@@ -484,7 +484,17 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             int nullScore = -search(thread, depth - r, stack + 1, -beta, -beta + 1, false, !cutnode);
             unmakeNullMove(thread, stack);
             if (nullScore >= beta)
-                return nullScore;
+            {
+                if (depth <= 15 || thread.nmpMinPly > 0)
+                    return isMateScore(nullScore) ? beta : nullScore;
+
+                thread.nmpMinPly = rootPly + (depth - r) * 3 / 4;
+                int verifScore = search(thread, depth - r, stack + 1, beta - 1, beta, false, true);
+                thread.nmpMinPly = 0;
+
+                if (verifScore >= beta)
+                    return verifScore;
+            }
         }
 
         // probcut(~3 elo)
