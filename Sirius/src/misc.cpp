@@ -11,6 +11,7 @@
 void printBoard(const Board& board)
 {
     std::cout << board.stringRep() << std::endl;
+    std::cout << "Fischer random: " << std::boolalpha << board.isFRC() << std::endl;
     std::cout << "GamePly: " << board.gamePly() << std::endl;
     std::cout << "HalfMoveClock: " << board.halfMoveClock() << std::endl;
     std::cout << "CastlingRights: ";

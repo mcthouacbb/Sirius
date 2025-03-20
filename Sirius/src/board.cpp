@@ -246,13 +246,13 @@ std::string Board::fenStr() const
     else
     {
         if (currState().castlingRights.has(CastlingRights::WHITE_KING_SIDE))
-            fen += 'K';
+            fen += !isFRC() ? 'K' : 'A' + castlingRookSq(Color::WHITE, CastleSide::KING_SIDE).file();
         if (currState().castlingRights.has(CastlingRights::WHITE_QUEEN_SIDE))
-            fen += 'Q';
+            fen += !isFRC() ? 'Q' : 'A' + castlingRookSq(Color::WHITE, CastleSide::QUEEN_SIDE).file();
         if (currState().castlingRights.has(CastlingRights::BLACK_KING_SIDE))
-            fen += 'k';
+            fen += !isFRC() ? 'k' : 'a' + castlingRookSq(Color::BLACK, CastleSide::KING_SIDE).file();
         if (currState().castlingRights.has(CastlingRights::BLACK_QUEEN_SIDE))
-            fen += 'q';
+            fen += !isFRC() ? 'q' : 'a' + castlingRookSq(Color::BLACK, CastleSide::QUEEN_SIDE).file();
     }
 
     fen += ' ';
@@ -393,14 +393,18 @@ void Board::makeMove(Move move, eval::EvalState* evalState)
             if (move.fromSq() > move.toSq())
             {
                 // queen side
-                movePiece(move.fromSq(), castleKingDst(m_SideToMove, CastleSide::QUEEN_SIDE), updates);
-                movePiece(move.toSq(), castleRookDst(m_SideToMove, CastleSide::QUEEN_SIDE), updates);
+                removePiece(move.fromSq(), updates);
+                removePiece(move.toSq(), updates);
+                addPiece(castleKingDst(m_SideToMove, CastleSide::QUEEN_SIDE), makePiece(PieceType::KING, m_SideToMove), updates);
+                addPiece(castleRookDst(m_SideToMove, CastleSide::QUEEN_SIDE), makePiece(PieceType::ROOK, m_SideToMove), updates);
             }
             else
             {
                 // king side
-                movePiece(move.fromSq(), castleKingDst(m_SideToMove, CastleSide::KING_SIDE), updates);
-                movePiece(move.toSq(), castleRookDst(m_SideToMove, CastleSide::KING_SIDE), updates);
+                removePiece(move.fromSq(), updates);
+                removePiece(move.toSq(), updates);
+                addPiece(castleKingDst(m_SideToMove, CastleSide::KING_SIDE), makePiece(PieceType::KING, m_SideToMove), updates);
+                addPiece(castleRookDst(m_SideToMove, CastleSide::KING_SIDE), makePiece(PieceType::ROOK, m_SideToMove), updates);
             }
             break;
         }
@@ -820,16 +824,19 @@ bool Board::isLegal(Move move) const
     {
         if (move.type() == MoveType::CASTLE)
         {
-            CastleSide side = move.toSq() > move.fromSq() ? CastleSide::KING_SIDE : CastleSide::QUEEN_SIDE;
+            CastleSide side = to > from ? CastleSide::KING_SIDE : CastleSide::QUEEN_SIDE;
             Square rookTo = castleRookDst(m_SideToMove, side);
             Bitboard occ = allPieces() ^ Bitboard::fromSquare(from) ^ Bitboard::fromSquare(rookTo) ^ Bitboard::fromSquare(to);
 
             Square kingTo = castleKingDst(m_SideToMove, side);
-            int step = move.toSq() > move.fromSq() ? 1 : -1;
-            for (Square sq = from + step; sq != kingTo; sq += step)
+            if (from != kingTo)
             {
-                if (squareAttacked(~m_SideToMove, sq, occ))
-                    return false;
+                int step = kingTo > from ? 1 : -1;
+                for (Square sq = from + step; sq != kingTo; sq += step)
+                {
+                    if (squareAttacked(~m_SideToMove, sq, occ))
+                        return false;
+                }
             }
             return !squareAttacked(~m_SideToMove, kingTo, occ);
         }
@@ -853,9 +860,6 @@ bool Board::isPseudoLegal(Move move) const
         return false;
 
     Piece dstPiece = pieceAt(move.toSq());
-    if (dstPiece != Piece::NONE && (getPieceColor(dstPiece) == m_SideToMove || getPieceType(dstPiece) == PieceType::KING))
-        return false;
-
     PieceType srcPieceType = getPieceType(srcPiece);
     PieceType dstPieceType = getPieceType(dstPiece);
 
@@ -870,23 +874,26 @@ bool Board::isPseudoLegal(Move move) const
 
         if (move.fromSq() > move.toSq())
         {
-            if (move.toSq() != move.fromSq() - 2)
-                return false;
             // queen side
+            if (move.toSq() != castlingRookSq(m_SideToMove, CastleSide::QUEEN_SIDE))
+                return false;
             if ((castlingRights().value() & (2 << 2 * static_cast<int>(m_SideToMove))) == 0)
                 return false;
             return !castlingBlocked(m_SideToMove, CastleSide::QUEEN_SIDE);
         }
         else
         {
-            if (move.toSq() != move.fromSq() + 2)
-                return false;
             // king side
+            if (move.toSq() != castlingRookSq(m_SideToMove, CastleSide::KING_SIDE))
+                return false;
             if ((castlingRights().value() & (1 << 2 * static_cast<int>(m_SideToMove))) == 0)
                 return false;
             return !castlingBlocked(m_SideToMove, CastleSide::KING_SIDE);
         }
     }
+
+    if (dstPiece != Piece::NONE && (getPieceColor(dstPiece) == m_SideToMove || getPieceType(dstPiece) == PieceType::KING))
+        return false;
 
     if (srcPieceType != PieceType::KING && checkers().multiple())
         return false;
@@ -1028,14 +1035,18 @@ ZKey Board::keyAfter(Move move) const
             if (move.fromSq() > move.toSq())
             {
                 // queen side
-                keyAfter.movePiece(PieceType::KING, m_SideToMove, move.fromSq(), move.toSq());
-                keyAfter.movePiece(PieceType::ROOK, m_SideToMove, move.toSq() - 2, move.fromSq() - 1);
+                keyAfter.removePiece(PieceType::KING, m_SideToMove, move.fromSq());
+                keyAfter.removePiece(PieceType::ROOK, m_SideToMove, move.toSq());
+                keyAfter.addPiece(PieceType::KING, m_SideToMove, castleKingDst(m_SideToMove, CastleSide::QUEEN_SIDE));
+                keyAfter.addPiece(PieceType::ROOK, m_SideToMove, castleRookDst(m_SideToMove, CastleSide::QUEEN_SIDE));
             }
             else
             {
                 // king side
-                keyAfter.movePiece(PieceType::KING, m_SideToMove, move.fromSq(), move.toSq());
-                keyAfter.movePiece(PieceType::ROOK, m_SideToMove, move.toSq() + 1, move.fromSq() + 1);
+                keyAfter.removePiece(PieceType::KING, m_SideToMove, move.fromSq());
+                keyAfter.removePiece(PieceType::ROOK, m_SideToMove, move.toSq());
+                keyAfter.addPiece(PieceType::KING, m_SideToMove, castleKingDst(m_SideToMove, CastleSide::KING_SIDE));
+                keyAfter.addPiece(PieceType::ROOK, m_SideToMove, castleRookDst(m_SideToMove, CastleSide::KING_SIDE));
             }
             break;
         }

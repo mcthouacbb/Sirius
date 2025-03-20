@@ -70,8 +70,8 @@ public:
             Square kingDst = Square(m_KingSquares[c].rank(), s == CastleSide::KING_SIDE ? FILE_G : FILE_C);
             Square rookDst = Square(m_RookSquares[c][s].rank(), s == CastleSide::KING_SIDE ? FILE_F : FILE_D);
             m_BlockSquares[c][s] =
-                attacks::inBetweenSquares(m_KingSquares[c], kingDst) |
-                attacks::inBetweenSquares(m_RookSquares[c][s], rookDst);
+                attacks::inBetweenSquares(m_KingSquares[c], kingDst) | Bitboard::fromSquare(kingDst) |
+                attacks::inBetweenSquares(m_RookSquares[c][s], rookDst) | Bitboard::fromSquare(rookDst);
             m_BlockSquares[c][s] &= ~(Bitboard::fromSquare(m_KingSquares[c]) | Bitboard::fromSquare(m_RookSquares[c][s]));
         };
 
