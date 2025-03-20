@@ -11,11 +11,11 @@ IComm::IComm()
     calcLegalMoves();
 }
 
-void IComm::setToFen(const char* fen)
+void IComm::setToFen(const char* fen, bool frc)
 {
     m_PrevMoves.clear();
 
-    m_Board.setToFen(fen);
+    m_Board.setToFen(fen, frc);
     calcLegalMoves();
 }
 

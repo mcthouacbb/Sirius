@@ -27,6 +27,7 @@ UCI::UCI()
         m_Search.setThreads(static_cast<int>(option.intValue()));
     };
     m_Options = {
+        {"UCI_Chess960", UCIOption("UCI_Chess960", UCIOption::BoolData{false})},
         {"Hash", UCIOption("Hash", {64, 64, 1, 65536}, hashCallback)},
         {"Threads", UCIOption("Threads", {1, 1, 1, 256}, threadsCallback)},
         {"MoveOverhead", UCIOption("MoveOverhead", {10, 10, 1, 100})},
@@ -313,7 +314,7 @@ void UCI::positionCommand(std::istringstream& stream)
 
     if (tok == "startpos")
     {
-        setToFen(Board::defaultFen);
+        setToFen(Board::defaultFen, m_Options["UCI_Chess960"].boolValue());
         if (stream)
         {
             stream >> tok;
@@ -343,7 +344,7 @@ void UCI::positionCommand(std::istringstream& stream)
 
         if (!comm::isValidFen(fen.c_str()))
             return;
-        setToFen(fen.c_str());
+        setToFen(fen.c_str(), m_Options["UCI_Chess960"].boolValue());
 
         if (tok == "moves")
         {
