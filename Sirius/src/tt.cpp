@@ -178,3 +178,16 @@ uint32_t TT::index(uint64_t key) const
 {
     return static_cast<uint32_t>(mulhi64(key, m_Buckets.size()));
 }
+
+int TT::hashfull() const
+{
+    int count = 0;
+    for (int i = 0; i < 1000; i++) {
+        for (int j = 0; j < ENTRY_COUNT; j++) {
+            const auto& entry = m_Buckets[i].entries[j];
+            if (entry.bound() != TTEntry::Bound::NONE && entry.gen() == m_CurrAge)
+                count++;
+        }
+    }
+    return count / ENTRY_COUNT;
+}

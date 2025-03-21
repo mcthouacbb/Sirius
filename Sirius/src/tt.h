@@ -27,17 +27,17 @@ struct TTEntry
         UPPER_BOUND
     };
 
-    bool pv()
+    bool pv() const
     {
         return (genBoundPV >> 2) & 1;
     }
 
-    uint8_t gen()
+    uint8_t gen() const
     {
         return genBoundPV >> 3;
     }
 
-    Bound bound()
+    Bound bound() const
     {
         return static_cast<Bound>(genBoundPV & 3);
     }
@@ -97,6 +97,8 @@ public:
         std::fill(m_Buckets.begin(), m_Buckets.end(), TTBucket{});
         m_CurrAge = 0;
     }
+
+    int hashfull() const;
 private:
     uint32_t index(uint64_t key) const;
 
