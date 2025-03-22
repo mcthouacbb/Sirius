@@ -44,8 +44,6 @@ struct AttackData
     std::array<Bitboard, 64> kingAttacks;
     std::array<Bitboard, 64> knightAttacks;
 
-    std::array<int, 64> castleRightsMasks;
-
     Magic bishopTable[64];
     Magic rookTable[64];
 
@@ -121,24 +119,6 @@ inline constexpr int pawnPushOffset()
     return c == Color::WHITE ? 8 : -8;
 }
 
-template<Color c>
-inline constexpr Bitboard kscBlockSquares()
-{
-    if constexpr (c == Color::WHITE)
-        return Bitboard(0x60);
-    else
-        return Bitboard(0x6000000000000000);
-}
-
-template<Color c>
-inline constexpr Bitboard qscBlockSquares()
-{
-    if constexpr (c == Color::WHITE)
-        return Bitboard(0xE);
-    else
-        return Bitboard(0xE00000000000000);
-}
-
 inline bool aligned(Square a, Square b, Square c)
 {
     return attackData.alignedSquares[a.value()][b.value()].has(c);
@@ -152,11 +132,6 @@ inline Bitboard inBetweenSquares(Square src, Square dst)
 inline Bitboard moveMask(Square king, Square checker)
 {
     return attackData.moveMasks[king.value()][checker.value()];
-}
-
-inline CastlingRights castleRightsMask(Square square)
-{
-    return CastlingRights(static_cast<CastlingRights::Internal>(attackData.castleRightsMasks[square.value()]));
 }
 
 inline Bitboard passedPawnMask(Color color, Square square)

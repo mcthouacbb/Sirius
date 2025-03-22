@@ -11,6 +11,7 @@
 void printBoard(const Board& board)
 {
     std::cout << board.stringRep() << std::endl;
+    std::cout << "Fischer random: " << std::boolalpha << board.isFRC() << std::endl;
     std::cout << "GamePly: " << board.gamePly() << std::endl;
     std::cout << "HalfMoveClock: " << board.halfMoveClock() << std::endl;
     std::cout << "CastlingRights: ";
@@ -58,7 +59,7 @@ uint64_t perft(Board& board, int depth)
         board.makeMove(move);
         uint64_t sub = perft<false>(board, depth - 1);
         if (print)
-            std::cout << comm::convMoveToPCN(move) << ": " << sub << std::endl;
+            std::cout << comm::convMoveToUCI(board, move) << ": " << sub << std::endl;
         count += sub;
         board.unmakeMove();
     }
@@ -80,7 +81,7 @@ void testSAN(Board& board, int depth)
         if (find.move != move)
         {
             std::cerr << board.stringRep() << std::endl;
-            std::cout << str << ' ' << comm::convMoveToPCN(move) << std::endl;
+            std::cout << str << ' ' << comm::convMoveToUCI(board, move) << std::endl;
             std::cerr << "No match " << std::endl;
             exit(1);
         }
@@ -88,7 +89,7 @@ void testSAN(Board& board, int depth)
         if (find.len != static_cast<int>(str.length()))
         {
             std::cerr << board.stringRep() << std::endl;
-            std::cerr << str << ' ' << comm::convMoveToPCN(move) << std::endl;
+            std::cerr << str << ' ' << comm::convMoveToUCI(board, move) << std::endl;
             std::cerr << "String wrong" << std::endl;
             exit(1);
         }
@@ -172,7 +173,7 @@ void testIsPseudoLegal(Board& board, int depth)
             if (!board.isPseudoLegal(move))
             {
                 std::cout << board.fenStr() << std::endl;
-                std::cout << comm::convMoveToPCN(move) << std::endl;
+                std::cout << comm::convMoveToUCI(board, move) << std::endl;
                 throw std::runtime_error("bruh");
             }
         }
@@ -271,7 +272,7 @@ void testSEE()
     while (std::getline(file, line))
     {
         int sep1 = static_cast<int>(line.find(';', 0));
-        board.setToEpd(std::string_view(line).substr(0, sep1));
+        board.setToFen(std::string_view(line).substr(0, sep1));
 
         int moveStart = sep1 + 2;
 

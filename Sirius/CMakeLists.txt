@@ -8,6 +8,7 @@ set(SRCS
     "src/bitboard.h"
     "src/board.cpp"
     "src/board.h"
+    "src/castling.h"
     "src/cuckoo.h"
     "src/cuckoo.cpp"
     "src/defs.h"
@@ -68,6 +69,7 @@ set(SRCS
     "src/util/static_vector.h"
     "src/util/piece_set.h"
     "src/util/prng.h"
+    "src/util/string_split.h"
 )
 
 
