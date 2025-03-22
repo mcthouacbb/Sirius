@@ -92,14 +92,19 @@ void genKingMoves(const Board& board, MoveList& moves)
             uint32_t kscBit = 1 << (2 * static_cast<int>(color));
             uint32_t qscBit = 2 << (2 * static_cast<int>(color));
 
-            if ((attacks::kscBlockSquares<color>() & board.allPieces()).empty() && (board.castlingRights().value() & kscBit))
+            Square kingSideRook = board.castlingRookSq(color, CastleSide::KING_SIDE);
+            Square queenSideRook = board.castlingRookSq(color, CastleSide::QUEEN_SIDE);
+
+            if ((board.castlingRights().value() & kscBit) &&
+                !board.castlingBlocked(color, CastleSide::KING_SIDE))
             {
-                moves.push_back(Move(kingSq, kingSq + 2, MoveType::CASTLE));
+                moves.push_back(Move(kingSq, kingSideRook, MoveType::CASTLE));
             }
 
-            if ((attacks::qscBlockSquares<color>() & board.allPieces()).empty() && (board.castlingRights().value() & qscBit))
+            if ((board.castlingRights().value() & qscBit) &&
+                !board.castlingBlocked(color, CastleSide::QUEEN_SIDE))
             {
-                moves.push_back(Move(kingSq, kingSq - 2, MoveType::CASTLE));
+                moves.push_back(Move(kingSq, queenSideRook, MoveType::CASTLE));
             }
         }
     }

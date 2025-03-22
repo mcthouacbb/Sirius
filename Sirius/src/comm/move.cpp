@@ -6,7 +6,7 @@ namespace comm
 const char promoChars[4] = {'N', 'B', 'R', 'Q'};
 const char pieceChars[5] = {'N', 'B', 'R', 'Q', 'K'};
 
-MoveStrFind findMoveFromPCN(const MoveList& legalMoves, const char* moveStr)
+MoveStrFind findMoveFromUCI(const Board& board, const MoveList& legalMoves, const char* moveStr)
 {
     int src = (moveStr[0] - 'a') + ((moveStr[1] - '1') << 3);
     int dst = (moveStr[2] - 'a') + ((moveStr[3] - '1') << 3);
@@ -47,6 +47,11 @@ MoveStrFind findMoveFromPCN(const MoveList& legalMoves, const char* moveStr)
             {
                 return {MoveStrFind::Result::FOUND, move, 4};
             }
+        }
+        if (!board.isFRC() && move.fromSq() == Square(src) && move.type() == MoveType::CASTLE &&
+            (move.fromSq() > move.toSq()) == (src > dst) && std::abs(src - dst) > 1)
+        {
+            return {MoveStrFind::Result::FOUND, move, 4};
         }
     }
     return {MoveStrFind::Result::NOT_FOUND, Move::nullmove(), 4 + isPromotion};
@@ -420,12 +425,18 @@ search_moves:
 }
 
 
-std::string convMoveToPCN(Move move)
+std::string convMoveToUCI(const Board& board, Move move)
 {
     std::string str(4 + (move.type() == MoveType::PROMOTION), ' ');
     str[0] = static_cast<char>(move.fromSq().file() + 'a');
     str[1] = static_cast<char>(move.fromSq().rank() + '1');
-    str[2] = static_cast<char>(move.toSq().file() + 'a');
+    int toFile = move.toSq().file();
+    if (move.type() == MoveType::CASTLE && !board.isFRC())
+    {
+        toFile = move.toSq() > move.fromSq() ? FILE_G : FILE_C;
+    }
+
+    str[2] = static_cast<char>(toFile + 'a');
     str[3] = static_cast<char>(move.toSq().rank() + '1');
     if (move.type() == MoveType::PROMOTION)
     {

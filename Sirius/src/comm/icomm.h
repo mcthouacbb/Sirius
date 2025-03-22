@@ -17,7 +17,7 @@ public:
     IComm();
     virtual ~IComm() = default;
 
-    void setToFen(const char* fen);
+    void setToFen(const char* fen, bool frc = false);
     void makeMove(Move move);
     void unmakeMove();
 

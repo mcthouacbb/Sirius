@@ -343,17 +343,6 @@ void init()
 {
     initRays();
 
-    attackData.castleRightsMasks = {
-        13, 15, 15, 15, 12, 15, 15, 14, // white
-        15, 15, 15, 15, 15, 15, 15, 15,
-        15, 15, 15, 15, 15, 15, 15, 15,
-        15, 15, 15, 15, 15, 15, 15, 15,
-        15, 15, 15, 15, 15, 15, 15, 15,
-        15, 15, 15, 15, 15, 15, 15, 15,
-        15, 15, 15, 15, 15, 15, 15, 15,
-         7, 15, 15, 15,  3, 15, 15, 11, // black
-    };
-
     for (uint32_t square = 0; square < 64; square++)
     {
         Bitboard bb = Bitboard::fromSquare(Square(square));

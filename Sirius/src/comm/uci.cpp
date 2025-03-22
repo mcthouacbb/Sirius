@@ -27,6 +27,7 @@ UCI::UCI()
         m_Search.setThreads(static_cast<int>(option.intValue()));
     };
     m_Options = {
+        {"UCI_Chess960", UCIOption("UCI_Chess960", UCIOption::BoolData{false})},
         {"Hash", UCIOption("Hash", {64, 64, 1, 65536}, hashCallback)},
         {"Threads", UCIOption("Threads", {1, 1, 1, 256}, threadsCallback)},
         {"MoveOverhead", UCIOption("MoveOverhead", {10, 10, 1, 100})},
@@ -158,7 +159,7 @@ void UCI::printUCISearchInfo(const SearchInfo& info) const
     std::cout << " pv ";
     for (const Move* move = info.pvBegin; move != info.pvEnd; move++)
     {
-        std::cout << comm::convMoveToPCN(*move) << ' ';
+        std::cout << comm::convMoveToUCI(m_Board, *move) << ' ';
     }
     std::cout << std::endl;
 }
@@ -166,7 +167,7 @@ void UCI::printUCISearchInfo(const SearchInfo& info) const
 void UCI::reportBestMove(Move bestMove) const
 {
     auto lock = lockStdout();
-    std::cout << "bestmove " << comm::convMoveToPCN(bestMove) << std::endl;
+    std::cout << "bestmove " << comm::convMoveToUCI(m_Board, bestMove) << std::endl;
 }
 
 bool UCI::execCommand(const std::string& command)
@@ -313,7 +314,7 @@ void UCI::positionCommand(std::istringstream& stream)
 
     if (tok == "startpos")
     {
-        setToFen(Board::defaultFen);
+        setToFen(Board::defaultFen, m_Options["UCI_Chess960"].boolValue());
         if (stream)
         {
             stream >> tok;
@@ -322,7 +323,7 @@ void UCI::positionCommand(std::istringstream& stream)
                 while (stream.tellg() != -1)
                 {
                     stream >> tok;
-                    MoveStrFind find = comm::findMoveFromPCN(m_LegalMoves, tok.c_str());
+                    MoveStrFind find = comm::findMoveFromUCI(m_Board, m_LegalMoves, tok.c_str());
                     Move move = find.move;
                     makeMove(move);
                 }
@@ -343,14 +344,14 @@ void UCI::positionCommand(std::istringstream& stream)
 
         if (!comm::isValidFen(fen.c_str()))
             return;
-        setToFen(fen.c_str());
+        setToFen(fen.c_str(), m_Options["UCI_Chess960"].boolValue());
 
         if (tok == "moves")
         {
             while (stream.tellg() != -1)
             {
                 stream >> tok;
-                MoveStrFind find = comm::findMoveFromPCN(m_LegalMoves, tok.c_str());
+                MoveStrFind find = comm::findMoveFromUCI(m_Board, m_LegalMoves, tok.c_str());
                 Move move = find.move;
                 makeMove(move);
             }
