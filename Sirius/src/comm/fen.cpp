@@ -114,6 +114,18 @@ bool isValidFen(const char* fen)
         }
     }
 
+    if (castle != "-")
+    {
+        for (char c : castle)
+        {
+            c = std::tolower(c);
+            if (c != 'k' && c != 'q' && !(c >= 'a' && c <= 'h'))
+            {
+                return false;
+            }
+        }
+    }
+
     if (square != 8)
         return false;
 
