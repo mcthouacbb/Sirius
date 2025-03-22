@@ -343,30 +343,6 @@ void init()
 {
     initRays();
 
-    /*attackData.castleRightsMasks.fill(CastlingRights::ALL);
-    attackData.castleRightsMasks[0] &= ~CastlingRights::WHITE_QUEEN_SIDE;
-    attackData.castleRightsMasks[7] &= ~CastlingRights::WHITE_KING_SIDE;
-    attackData.castleRightsMasks[4] &= ~(CastlingRights::WHITE_QUEEN_SIDE | CastlingRights::WHITE_KING_SIDE);
-    attackData.castleRightsMasks[56] &= ~CastlingRights(CastlingRights::BLACK_QUEEN_SIDE);
-    attackData.castleRightsMasks[63] &= ~CastlingRights::BLACK_KING_SIDE;
-    attackData.castleRightsMasks[60] &= ~(CastlingRights::BLACK_QUEEN_SIDE | CastlingRights::BLACK_KING_SIDE);
-    for (int i = 0; i < 64; i++)
-    {
-        std::cout << attackData.castleRightsMasks[i].value() << ", ";
-        if (i % 8 == 7)
-            std::cout << std::endl;
-    }*/
-    /* = {
-        13, 15, 15, 15, 12, 15, 15, 14, // white
-        15, 15, 15, 15, 15, 15, 15, 15,
-        15, 15, 15, 15, 15, 15, 15, 15,
-        15, 15, 15, 15, 15, 15, 15, 15,
-        15, 15, 15, 15, 15, 15, 15, 15,
-        15, 15, 15, 15, 15, 15, 15, 15,
-        15, 15, 15, 15, 15, 15, 15, 15,
-         7, 15, 15, 15,  3, 15, 15, 11, // black
-    };*/
-
     for (uint32_t square = 0; square < 64; square++)
     {
         Bitboard bb = Bitboard::fromSquare(Square(square));
