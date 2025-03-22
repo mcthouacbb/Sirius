@@ -35,8 +35,10 @@ bool moveIsQuiet(const Board& board, Move move)
 
 bool moveIsCapture(const Board& board, Move move)
 {
-    return move.type() == MoveType::ENPASSANT ||
-        board.pieceAt(move.toSq()) != Piece::NONE;
+    return move.type() != MoveType::CASTLE && (
+        move.type() == MoveType::ENPASSANT ||
+        board.pieceAt(move.toSq()) != Piece::NONE
+    );
 }
 
 int MoveOrdering::scoreNoisy(Move move) const
