@@ -279,6 +279,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
                 info.nodes += searchThread->nodes.load(std::memory_order_relaxed);
             info.depth = depth;
             info.selDepth = thread.selDepth;
+            info.hashfull = m_TT.hashfull();
             info.time = m_TimeMan.elapsed();
             info.pvBegin = thread.stack[0].pv.data();
             info.pvEnd = thread.stack[0].pv.data() + thread.stack[0].pvLength;

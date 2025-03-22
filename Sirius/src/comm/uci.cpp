@@ -100,6 +100,10 @@ void UCI::prettyPrintSearchInfo(const SearchInfo& info) const
     std::cout << std::right << std::setw(7) << std::setfill(' ') << nps / 1000 << "kn/s";
     std::cout << "  ";
 
+    std::cout << std::right << std::setw(3) << std::setfill(' ') << info.hashfull / 10 << ".";
+    std::cout << info.hashfull % 10 << "%";
+    std::cout << "  ";
+
     // score
     if (isMateScore(info.score))
     {
@@ -139,6 +143,7 @@ void UCI::printUCISearchInfo(const SearchInfo& info) const
     std::cout << " nodes " << info.nodes;
     uint64_t nps = info.nodes * 1000ULL / (info.time.count() < 1 ? 1 : info.time.count());
     std::cout << " nps " << nps;
+    std::cout << " hashfull " << info.hashfull;
     std::cout << " score ";
     if (isMateScore(info.score))
     {

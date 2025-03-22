@@ -41,6 +41,7 @@ struct SearchInfo
 {
     int depth;
     int selDepth;
+    int hashfull;
     uint64_t nodes;
     Duration time;
     const Move* pvBegin, * pvEnd;
