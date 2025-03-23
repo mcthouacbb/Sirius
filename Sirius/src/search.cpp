@@ -876,18 +876,22 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     ScoredMove scoredMove = {};
     while ((scoredMove = ordering.selectMove()).score != MoveOrdering::NO_MOVE)
     {
-        // quiescence search pruning(~55 elo)
-        if (!inCheck && movesPlayed >= 2)
-            break;
         auto [move, moveScore] = scoredMove;
         if (!board.isLegal(move))
             continue;
-        if (bestScore > -SCORE_WIN && !board.see(move, 0))
-            continue;
-        if (!inCheck && futility <= alpha && !board.see(move, 1))
+
+        // quiescence search pruning(~55 elo)
+        if ((stack - 1)->playedMove != Move::nullmove() || move.toSq() != (stack - 1)->playedMove.toSq())
         {
-            bestScore = std::max(bestScore, futility);
-            continue;
+            if (!inCheck && movesPlayed >= 2)
+                break;
+            if (bestScore > -SCORE_WIN && !board.see(move, 0))
+                continue;
+            if (!inCheck && futility <= alpha && !board.see(move, 1))
+            {
+                bestScore = std::max(bestScore, futility);
+                continue;
+            }
         }
 
         makeMove(thread, stack, move, 0);
