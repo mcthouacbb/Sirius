@@ -199,6 +199,9 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData, const Ev
     eval += flankAttacks.popcount() * KING_FLANK_ATTACKS[0] + flankAttacks2.popcount() * KING_FLANK_ATTACKS[1];
     eval += flankDefenses.popcount() * KING_FLANK_DEFENSES[0] + flankDefenses2.popcount() * KING_FLANK_DEFENSES[1];
 
+    if (us == board.sideToMove())
+        eval += SAFETY_TEMPO;
+
     eval += SAFETY_OFFSET;
 
     PackedScore safety{safetyAdjustment(eval.mg()), safetyAdjustment(eval.eg())};
