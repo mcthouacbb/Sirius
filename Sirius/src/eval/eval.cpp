@@ -10,6 +10,7 @@ namespace eval
 struct EvalData
 {
     ColorArray<Bitboard> mobilityArea;
+    ColorArray<Bitboard> lowMobPieces;
     ColorArray<Bitboard> attacked;
     ColorArray<Bitboard> attackedBy2;
     ColorArray<PieceTypeArray<Bitboard>> attackedBy;
@@ -27,6 +28,7 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
 {
     constexpr Color them = ~us;
     constexpr Bitboard CENTER_SQUARES = (RANK_4_BB | RANK_5_BB) & (FILE_D_BB | FILE_E_BB);
+    constexpr int LOW_MOB_CUTOFF[4] = {1, 2, 3, 4};
 
     PackedScore eval{0, 0};
     Bitboard pieces = board.pieces(us, piece);
@@ -54,7 +56,10 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
         evalData.attackedBy2[us] |= evalData.attacked[us] & attacks;
         evalData.attacked[us] |= attacks;
 
-        eval += MOBILITY[static_cast<int>(piece) - static_cast<int>(KNIGHT)][(attacks & evalData.mobilityArea[us]).popcount()];
+        int mobility = (attacks & evalData.mobilityArea[us]).popcount();
+        eval += MOBILITY[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)][mobility];
+        if (mobility <= LOW_MOB_CUTOFF[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)])
+            evalData.lowMobPieces[us] |= Bitboard::fromSquare(sq);
 
         if (Bitboard kingRingAtks = evalData.kingRing[them] & attacks; kingRingAtks.any())
         {
@@ -139,6 +144,10 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
 
     Bitboard pushThreats = attacks::pawnAttacks<us>(pushes & safe) & nonPawnEnemies;
     eval += PUSH_THREAT * pushThreats.popcount();
+
+    Bitboard lowMobThreats = evalData.attacked[us] & evalData.lowMobPieces[them];
+    eval += LOW_MOB_THREAT * lowMobThreats.popcount();
+
     return eval;
 }
 
