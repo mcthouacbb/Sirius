@@ -145,7 +145,7 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
     Bitboard pushThreats = attacks::pawnAttacks<us>(pushes & safe) & nonPawnEnemies;
     eval += PUSH_THREAT * pushThreats.popcount();
 
-    Bitboard lowMobThreats = evalData.attacked[us] & evalData.lowMobPieces[them];
+    Bitboard lowMobThreats = ~defendedBB & evalData.attacked[us] & evalData.lowMobPieces[them];
     eval += LOW_MOB_THREAT * lowMobThreats.popcount();
 
     return eval;
