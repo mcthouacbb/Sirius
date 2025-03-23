@@ -416,6 +416,28 @@ void init()
         Bitboard file = white | black | Bitboard::fromSquare(Square(i));
         attackData.isolatedPawnMasks[i] = file.west() | file.east();
     }
+    Bitboard kingFlank = FILE_A_BB | FILE_B_BB | FILE_C_BB | FILE_D_BB;
+    Bitboard whiteRanks = RANK_1_BB | RANK_2_BB | RANK_3_BB | RANK_4_BB | RANK_5_BB;
+    Bitboard blackRanks = RANK_8_BB | RANK_7_BB | RANK_6_BB | RANK_5_BB | RANK_4_BB;
+    for (int i : {FILE_A, FILE_B, FILE_C})
+    {
+        attackData.kingFlanks[static_cast<int>(Color::WHITE)][i] = kingFlank & whiteRanks;
+        attackData.kingFlanks[static_cast<int>(Color::BLACK)][i] = kingFlank & blackRanks;
+    }
+
+    kingFlank = FILE_C_BB | FILE_D_BB | FILE_E_BB | FILE_F_BB;
+    for (int i : {FILE_D, FILE_E})
+    {
+        attackData.kingFlanks[static_cast<int>(Color::WHITE)][i] = kingFlank & whiteRanks;
+        attackData.kingFlanks[static_cast<int>(Color::BLACK)][i] = kingFlank & blackRanks;
+    }
+
+    kingFlank = FILE_E_BB | FILE_F_BB | FILE_G_BB | FILE_H_BB;
+    for (int i : {FILE_F, FILE_G, FILE_H})
+    {
+        attackData.kingFlanks[static_cast<int>(Color::WHITE)][i] = kingFlank & whiteRanks;
+        attackData.kingFlanks[static_cast<int>(Color::BLACK)][i] = kingFlank & blackRanks;
+    }
 
     constexpr Bitboard EDGE_SQUARES = FILE_A_BB | FILE_H_BB | RANK_1_BB | RANK_8_BB;
     Bitboard* currRook = attackData.rookAttacks.data();

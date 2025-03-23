@@ -16,6 +16,7 @@ struct EvalData
     ColorArray<Bitboard> kingRing;
     ColorArray<PackedScore> attackWeight;
     ColorArray<int> attackCount;
+    ColorArray<Bitboard> kingFlank;
 };
 
 using enum PieceType;
@@ -190,6 +191,14 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData, const Ev
     int weakSquares = weakKingRing.popcount();
     eval += WEAK_KING_RING * weakSquares;
 
+    Bitboard flankAttacks = evalData.kingFlank[them] & evalData.attacked[us];
+    Bitboard flankAttacks2 = evalData.kingFlank[them] & evalData.attackedBy2[us];
+    Bitboard flankDefenses = evalData.kingFlank[them] & evalData.attacked[them];
+    Bitboard flankDefenses2 = evalData.kingFlank[them] & evalData.attackedBy2[them];
+
+    eval += flankAttacks.popcount() * KING_FLANK_ATTACKS[0] + flankAttacks2.popcount() * KING_FLANK_ATTACKS[1];
+    eval += flankDefenses.popcount() * KING_FLANK_DEFENSES[0] + flankDefenses2.popcount() * KING_FLANK_DEFENSES[1];
+
     eval += SAFETY_OFFSET;
 
     PackedScore safety{safetyAdjustment(eval.mg()), safetyAdjustment(eval.eg())};
@@ -285,6 +294,8 @@ void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& p
         evalData.kingRing[us] |= evalData.kingRing[us].west();
     if (FILE_A_BB.has(ourKing))
         evalData.kingRing[us] |= evalData.kingRing[us].east();
+
+    evalData.kingFlank[us] = attacks::kingFlank(us, ourKing.file());
 }
 
 void nonIncrementalEval(const Board& board, const EvalState& evalState, const PawnStructure& pawnStructure, EvalData& evalData, PackedScore& eval)
