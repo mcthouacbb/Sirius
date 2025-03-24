@@ -881,11 +881,12 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
             continue;
 
         // quiescence search pruning(~55 elo)
-        if ((stack - 1)->playedMove != Move::nullmove() || move.toSq() != (stack - 1)->playedMove.toSq())
+        bool recapture = move.toSq() == (stack - 1)->playedMove.toSq();
+        if (bestScore > -SCORE_WIN && ((stack - 1)->playedMove == Move::nullmove() || !recapture))
         {
             if (!inCheck && movesPlayed >= 2)
                 break;
-            if (bestScore > -SCORE_WIN && !board.see(move, 0))
+            if (!board.see(move, 0))
                 continue;
             if (!inCheck && futility <= alpha && !board.see(move, 1))
             {
