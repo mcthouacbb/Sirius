@@ -876,12 +876,12 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     ScoredMove scoredMove = {};
     while ((scoredMove = ordering.selectMove()).score != MoveOrdering::NO_MOVE)
     {
-        // quiescence search pruning(~55 elo)
-        if (!inCheck && movesPlayed >= 2)
-            break;
         auto [move, moveScore] = scoredMove;
         if (!board.isLegal(move))
             continue;
+        // quiescence search pruning(~55 elo)
+        if (!inCheck && movesPlayed >= 2)
+            break;
         if (bestScore > -SCORE_WIN && !board.see(move, 0))
             continue;
         if (!inCheck && futility <= alpha && !board.see(move, 1))
