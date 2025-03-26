@@ -920,6 +920,9 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
                 break;
             }
         }
+
+        if (moveIsQuiet(board, move) && inCheck && bestScore > -SCORE_WIN)
+            break;
     }
 
     if (inCheck && movesPlayed == 0)
