@@ -43,9 +43,9 @@ void EvalState::init(const Board& board, PawnTable* pawnTable)
     evaluatePawns(board, currEntry().pawnStructure, m_PawnTable);
     currEntry().pawnShieldStorm[Color::WHITE] = evaluateStormShield<Color::WHITE>(board);
     currEntry().pawnShieldStorm[Color::BLACK] = evaluateStormShield<Color::BLACK>(board);
-    currEntry().knightOutposts =
-        evaluateKnightOutposts<Color::WHITE>(board, currEntry().pawnStructure) -
-        evaluateKnightOutposts<Color::BLACK>(board, currEntry().pawnStructure);
+    currEntry().outposts =
+        evaluateOutposts<Color::WHITE>(board, currEntry().pawnStructure) -
+        evaluateOutposts<Color::BLACK>(board, currEntry().pawnStructure);
     currEntry().bishopPawns = evaluateBishopPawns<Color::WHITE>(board) - evaluateBishopPawns<Color::BLACK>(board);
     currEntry().rookOpen = evaluateRookOpen<Color::WHITE>(board) - evaluateRookOpen<Color::BLACK>(board);
     currEntry().minorBehindPawn = evaluateMinorBehindPawn<Color::WHITE>(board) - evaluateMinorBehindPawn<Color::BLACK>(board);
@@ -84,12 +84,12 @@ void EvalState::push(const Board& board, const EvalUpdates& updates)
     else
         currEntry().pawnShieldStorm = oldEntry.pawnShieldStorm;
 
-    if (updates.changedPieces.hasAny(eval_terms::knightOutposts.deps))
-        currEntry().knightOutposts =
-            evaluateKnightOutposts<Color::WHITE>(board, currEntry().pawnStructure) -
-            evaluateKnightOutposts<Color::BLACK>(board, currEntry().pawnStructure);
+    if (updates.changedPieces.hasAny(eval_terms::outposts.deps))
+        currEntry().outposts =
+            evaluateOutposts<Color::WHITE>(board, currEntry().pawnStructure) -
+            evaluateOutposts<Color::BLACK>(board, currEntry().pawnStructure);
     else
-        currEntry().knightOutposts = oldEntry.knightOutposts;
+        currEntry().outposts = oldEntry.outposts;
 
     if (updates.changedPieces.hasAny(eval_terms::bishopPawns.deps))
         currEntry().bishopPawns = evaluateBishopPawns<Color::WHITE>(board) - evaluateBishopPawns<Color::BLACK>(board);
@@ -117,7 +117,7 @@ PackedScore EvalState::score(const Board& board) const
     return
         currEntry().psqtState.evaluate(board) +
         currEntry().pawnStructure.score +
-        currEntry().knightOutposts +
+        currEntry().outposts +
         currEntry().bishopPawns +
         currEntry().rookOpen +
         currEntry().minorBehindPawn;

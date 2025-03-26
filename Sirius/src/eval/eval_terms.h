@@ -26,7 +26,7 @@ struct EvalTerm
 constexpr EvalTerm pawnStructure = {PieceSet(PAWN)};
 constexpr EvalTerm passers = {PieceSet(PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING)};
 constexpr EvalTerm pawnShieldStorm = {PieceSet(PAWN, KING)};
-constexpr EvalTerm knightOutposts = {PieceSet(PAWN, KNIGHT)};
+constexpr EvalTerm outposts = {PieceSet(PAWN, KNIGHT, BISHOP)};
 constexpr EvalTerm bishopPawns = {PieceSet(PAWN, BISHOP)};
 constexpr EvalTerm rookOpen = {PieceSet(PAWN, ROOK)};
 constexpr EvalTerm minorBehindPawn = {PieceSet(PAWN, KNIGHT, BISHOP)};
@@ -43,7 +43,7 @@ template<Color us>
 PackedScore evaluateStormShield(const Board& board);
 
 template<Color us>
-PackedScore evaluateKnightOutposts(const Board& board, const PawnStructure& pawnStructure);
+PackedScore evaluateOutposts(const Board& board, const PawnStructure& pawnStructure);
 
 template<Color us>
 PackedScore evaluateBishopPawns(const Board& board);
