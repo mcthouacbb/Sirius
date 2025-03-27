@@ -882,7 +882,11 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         auto [move, moveScore] = scoredMove;
         if (!board.isLegal(move))
             continue;
-        if (bestScore > -SCORE_WIN && !board.see(move, 0))
+        Piece movedPiece = movingPiece(board, move);
+        bool quiet = moveIsQuiet(board, move);
+        int histScore = quiet ? history.getQuietStats(move, board.threats(), movedPiece, stack, rootPly) : history.getNoisyStats(board, move);
+
+        if (bestScore > -SCORE_WIN && !board.see(move, -histScore / 128))
             continue;
         if (!inCheck && futility <= alpha && !board.see(move, 1))
         {
@@ -922,7 +926,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         }
 
         // Obsidian idea
-        if (moveIsQuiet(board, move) && inCheck && bestScore > -SCORE_WIN)
+        if (quiet && inCheck && bestScore > -SCORE_WIN)
             break;
     }
 
