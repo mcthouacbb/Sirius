@@ -921,6 +921,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
             }
         }
 
+        // Obsidian idea
         if (moveIsQuiet(board, move) && inCheck && bestScore > -SCORE_WIN)
             break;
     }
