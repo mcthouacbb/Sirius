@@ -886,7 +886,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         bool quiet = moveIsQuiet(board, move);
         int histScore = quiet ? history.getQuietStats(move, board.threats(), movedPiece, stack, rootPly) : history.getNoisyStats(board, move);
 
-        if (bestScore > -SCORE_WIN && !board.see(move, -histScore / 128))
+        if (bestScore > -SCORE_WIN && !board.see(move, -histScore / 32))
             continue;
         if (!inCheck && futility <= alpha && !board.see(move, 1))
         {
