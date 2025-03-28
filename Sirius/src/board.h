@@ -17,7 +17,6 @@ struct CheckInfo
     Bitboard checkers;
     std::array<Bitboard, 2> pinners;
     std::array<Bitboard, 2> blockers;
-
 };
 
 struct BoardState
@@ -36,6 +35,7 @@ struct BoardState
     ColorArray<ZKey> nonPawnKeys;
     ZKey minorPieceKey;
     ZKey majorPieceKey;
+    ZKey quadrantKey;
     ZKey pawnKey;
     CheckInfo checkInfo;
     Bitboard threats;
@@ -49,6 +49,7 @@ struct BoardState
         colors[static_cast<int>(color)] |= posBB;
 
         zkey.addPiece(pieceType, color, pos);
+        quadrantKey.addPiece(pieceType, color, quadrantCorner(pos));
         if (pieceType == PieceType::PAWN)
             pawnKey.addPiece(pieceType, color, pos);
         else
@@ -71,6 +72,7 @@ struct BoardState
         colors[static_cast<int>(color)] |= posBB;
 
         zkey.addPiece(pieceType, color, pos);
+        quadrantKey.addPiece(pieceType, color, quadrantCorner(pos));
         if (pieceType == PieceType::PAWN)
             pawnKey.addPiece(pieceType, color, pos);
         else
@@ -94,6 +96,7 @@ struct BoardState
         colors[static_cast<int>(color)] ^= posBB;
 
         zkey.removePiece(pieceType, color, pos);
+        quadrantKey.removePiece(pieceType, color, quadrantCorner(pos));
         if (pieceType == PieceType::PAWN)
             pawnKey.removePiece(pieceType, color, pos);
         else
@@ -121,6 +124,7 @@ struct BoardState
         colors[static_cast<int>(color)] ^= moveBB;
 
         zkey.movePiece(pieceType, color, src, dst);
+        quadrantKey.movePiece(pieceType, color, quadrantCorner(src), quadrantCorner(dst));
         if (pieceType == PieceType::PAWN)
             pawnKey.movePiece(pieceType, color, src, dst);
         else
@@ -172,6 +176,7 @@ public:
     ZKey nonPawnKey(Color color) const;
     ZKey minorPieceKey() const;
     ZKey majorPieceKey() const;
+    ZKey quadrantKey() const;
     uint64_t materialKey() const;
 
     bool isDraw(int searchPly) const;
@@ -341,6 +346,11 @@ inline ZKey Board::minorPieceKey() const
 inline ZKey Board::majorPieceKey() const
 {
     return currState().majorPieceKey;
+}
+
+inline ZKey Board::quadrantKey() const
+{
+    return currState().quadrantKey;
 }
 
 // yoinked from motor, which I think yoinked from Caissa

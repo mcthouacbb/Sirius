@@ -87,3 +87,8 @@ inline void ZKey::updateEP(uint32_t epFile)
 {
     value ^= zobrist::keys.epFiles[epFile];
 }
+
+constexpr Square quadrantCorner(Square sq)
+{
+    return Square(sq.rank() / 4 * 4, sq.file() / 4 * 4);
+}
