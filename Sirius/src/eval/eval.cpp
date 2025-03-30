@@ -236,6 +236,27 @@ PackedScore evaluatePassedPawns(const Board& board, const PawnStructure& pawnStr
     return eval;
 }
 
+template<Color us>
+PackedScore evaluateSpace(const Board& board, const EvalData& evalData)
+{
+    constexpr Color them = ~us;
+    constexpr Bitboard SPACE_AREA =
+        (FILE_C_BB | FILE_D_BB | FILE_E_BB | FILE_F_BB) &
+        ~(RANK_1_BB | RANK_8_BB);
+
+    Bitboard space = board.pieces(us, PieceType::PAWN);
+    space |= attacks::pawnPushes<them>(space);
+    space |= attacks::pawnPushes<them>(attacks::pawnPushes<them>(space));
+
+    space &= ~(board.pieces(us, PieceType::PAWN) | evalData.attackedBy[them][PieceType::PAWN]);
+    space &= SPACE_AREA;
+
+    int count = space.popcount() * board.pieces(us).popcount() * board.pieces(us).popcount();
+
+    PackedScore eval{count * SPACE.mg() / 1024, 0};
+    return eval;
+}
+
 PackedScore evaluateComplexity(const Board& board, const PawnStructure& pawnStructure, PackedScore eval)
 {
     constexpr Bitboard KING_SIDE = FILE_A_BB | FILE_B_BB | FILE_C_BB | FILE_D_BB;
