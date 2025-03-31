@@ -15,6 +15,7 @@ struct EvalData
     ColorArray<PieceTypeArray<Bitboard>> attackedBy;
     ColorArray<Bitboard> kingRing;
     ColorArray<PackedScore> attackWeight;
+    ColorArray<PackedScore> lostPiece;
     ColorArray<int> attackCount;
     ColorArray<Bitboard> kingFlank;
 };
@@ -61,6 +62,9 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
             evalData.attackWeight[us] += KING_ATTACKER_WEIGHT[static_cast<int>(piece) - static_cast<int>(KNIGHT)];
             evalData.attackCount[us] += kingRingAtks.popcount();
         }
+
+        if (Square::chebyshev(board.kingSq(us), sq) >= 4)
+            evalData.lostPiece[us] += LOST_PIECE[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)];
 
         if (piece == BISHOP && (attacks & CENTER_SQUARES).multiple())
             eval += LONG_DIAG_BISHOP;
@@ -183,6 +187,7 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData, const Ev
     eval += QUEENLESS_ATTACK * queenless;
 
     eval += evalData.attackWeight[us];
+    eval += evalData.lostPiece[them];
 
     int attackCount = evalData.attackCount[us];
     eval += KING_ATTACKS * attackCount;
