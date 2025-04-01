@@ -139,6 +139,24 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
 
     Bitboard pushThreats = attacks::pawnAttacks<us>(pushes & safe) & nonPawnEnemies;
     eval += PUSH_THREAT * pushThreats.popcount();
+    
+    Bitboard oppQueens = board.pieces(them, PieceType::QUEEN);
+    if (oppQueens.one())
+    {
+        Square oppQueen = oppQueens.lsb();
+        Bitboard knightHits = attacks::knightAttacks(oppQueen);
+        Bitboard bishopHits = attacks::bishopAttacks(oppQueen, board.allPieces());
+        Bitboard rookHits = attacks::rookAttacks(oppQueen, board.allPieces());
+
+        Bitboard targets = safe & ~board.pieces(us, PieceType::PAWN);
+
+        eval += KNIGHT_HIT_QUEEN * (targets & knightHits & evalData.attackedBy[us][PieceType::KNIGHT]).popcount();
+
+        targets &= evalData.attackedBy2[us];
+        eval += BISHOP_HIT_QUEEN * (targets & bishopHits & evalData.attackedBy[us][PieceType::BISHOP]).popcount();
+        eval += ROOK_HIT_QUEEN * (targets & rookHits & evalData.attackedBy[us][PieceType::ROOK]).popcount();
+    }
+
     return eval;
 }
 
