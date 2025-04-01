@@ -154,7 +154,6 @@ PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
 
         targets &= evalData.attackedBy2[us];
         eval += BISHOP_HIT_QUEEN * (targets & bishopHits & evalData.attackedBy[us][PieceType::BISHOP]).popcount();
-
         eval += ROOK_HIT_QUEEN * (targets & rookHits & evalData.attackedBy[us][PieceType::ROOK]).popcount();
     }
 
