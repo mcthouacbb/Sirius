@@ -75,7 +75,7 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
                 Piece pawnBlockPiece = board.pieceAt(pawnBlockSq);
                 if (pawnBlockPiece != Piece::NONE)
                 {
-                    eval += CORNERED_BISHOP * 3
+                    eval += CORNERED_BISHOP * 3;
                 }
                 else
                 {
