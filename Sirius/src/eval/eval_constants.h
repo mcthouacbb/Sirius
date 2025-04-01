@@ -167,6 +167,7 @@ constexpr PackedScore BISHOP_PAWNS[7] = {S(   4,   21), S(   5,   20), S(   4,  
 constexpr PackedScore BISHOP_PAIR = S(  18,   60);
 constexpr PackedScore LONG_DIAG_BISHOP = S(  15,    9);
 constexpr PackedScore ROOK_OPEN[2] = {S(  24,    3), S(  13,    4)};
+constexpr PackedScore CORNERED_BISHOP = S( -50,  -50);
 
 constexpr PackedScore TEMPO = S(  32,   34);
 

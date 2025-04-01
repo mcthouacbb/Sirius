@@ -64,6 +64,25 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
 
         if (piece == BISHOP && (attacks & CENTER_SQUARES).multiple())
             eval += LONG_DIAG_BISHOP;
+        
+        if (piece == BISHOP && board.isFRC() && sq.relativeRank<us>() == RANK_1 && (sq.file() == FILE_A || sq.file() == FILE_H))
+        {
+            Square blockSq(sq.rank() + attacks::pawnPushOffset<us>(), sq.file() == FILE_A ? FILE_B : FILE_G);
+            Piece blockPiece = board.pieceAt(blockSq);
+            if (blockPiece == makePiece(PieceType::PAWN, us))
+            {
+                Square pawnBlockSq = blockSq + attacks::pawnPushOffset<us>();
+                Piece pawnBlockPiece = board.pieceAt(pawnBlockSq);
+                if (pawnBlockPiece != Piece::NONE && getPieceColor(pawnBlockPiece) == them)
+                {
+                    eval += CORNERED_BISHOP * (2 + 2 * (getPieceType(pawnBlockPiece) == PieceType::PAWN));
+                }
+                else
+                {
+                    eval += CORNERED_BISHOP;
+                }
+            }
+        }
     }
 
     return eval;
