@@ -62,6 +62,10 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
             evalData.attackCount[us] += kingRingAtks.popcount();
         }
 
+        if (piece == PieceType::ROOK && (Bitboard::fileBB(sq.file()) & board.pieces(PieceType::QUEEN)).any())
+            eval += ROOK_ON_QUEEN_FILE;
+
+
         if (piece == BISHOP && (attacks & CENTER_SQUARES).multiple())
             eval += LONG_DIAG_BISHOP;
     }
