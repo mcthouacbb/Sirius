@@ -782,6 +782,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     if (movesPlayed == 0)
     {
+        if (excluded)
+            return alpha;
         if (inCheck)
             return -SCORE_MATE + rootPly;
         return SCORE_DRAW;
