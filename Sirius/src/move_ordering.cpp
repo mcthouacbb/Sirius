@@ -8,13 +8,14 @@ namespace
 
 int mvv(const Board& board, Move move)
 {
-    constexpr int MVV_VALUES[6] = {800, 2400, 2400, 4800, 7200};
+    return 0;
+    /*constexpr int MVV_VALUES[6] = {800, 2400, 2400, 4800, 7200};
 
     int dstPiece = static_cast<int>(move.type() == MoveType::ENPASSANT ?
         PieceType::PAWN :
         getPieceType(board.pieceAt(move.toSq()))
     );
-    return MVV_VALUES[dstPiece];
+    return MVV_VALUES[dstPiece];*/
 }
 
 int promotionBonus(Move move)
