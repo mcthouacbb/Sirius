@@ -8,18 +8,19 @@ namespace
 
 int mvv(const Board& board, Move move)
 {
-    constexpr int MVV_VALUES[6] = {800, 2400, 2400, 4800, 7200};
+    return 0;
+    /*constexpr int MVV_VALUES[6] = {800, 2400, 2400, 4800, 7200};
 
     int dstPiece = static_cast<int>(move.type() == MoveType::ENPASSANT ?
         PieceType::PAWN :
         getPieceType(board.pieceAt(move.toSq()))
     );
-    return MVV_VALUES[dstPiece];
+    return MVV_VALUES[dstPiece];*/
 }
 
 int promotionBonus(Move move)
 {
-    return 1 + (static_cast<int>(move.promotion()) >> 14);
+    return 0;//1 + (static_cast<int>(move.promotion()) >> 14);
 }
 
 }
@@ -47,13 +48,14 @@ int MoveOrdering::scoreNoisy(Move move) const
 
     if (isCapture)
     {
-        int hist = m_History.getNoisyStats(m_Board, move);
-        int score = hist + mvv(m_Board, move);
-        return score + CAPTURE_SCORE * m_Board.see(move, -score / 32);
+        // int hist = m_History.getNoisyStats(m_Board, move);
+        // int score = hist + mvv(m_Board, move);
+        return CAPTURE_SCORE * m_Board.see(move, 0);/*score + CAPTURE_SCORE * m_Board.see(move, -score / 32);*/
     }
     else
     {
-        return m_History.getNoisyStats(m_Board, move) + PROMOTION_SCORE + promotionBonus(move);
+        return PROMOTION_SCORE;
+        // return m_History.getNoisyStats(m_Board, move) + PROMOTION_SCORE + promotionBonus(move);
     }
 }
 
@@ -66,11 +68,11 @@ int MoveOrdering::scoreMoveQSearch(Move move) const
 {
     bool isCapture = moveIsCapture(m_Board, move);
     bool isPromotion = move.type() == MoveType::PROMOTION;
-    int score = m_History.getNoisyStats(m_Board, move);
-    if (isCapture)
-        score += mvv(m_Board, move);
-    if (isPromotion)
-        score += 100 * promotionBonus(move);
+    int score = 0;//m_History.getNoisyStats(m_Board, move);
+    // if (isCapture)
+        // score += mvv(m_Board, move);
+    // if (isPromotion)
+        // score += 100 * promotionBonus(move);
 
     return score;
 }
