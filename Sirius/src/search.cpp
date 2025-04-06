@@ -618,14 +618,14 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 break;
         }
 
-        bool doSE = !root &&
+        bool doSE = false/*!root &&
             rootPly < 2 * thread.rootDepth &&
             !excluded &&
             depth >= seMinDepth &&
             ttData.move == move &&
             ttData.depth >= depth - seTTDepthMargin &&
             ttData.bound != TTEntry::Bound::UPPER_BOUND &&
-            !isMateScore(ttData.score);
+            !isMateScore(ttData.score)*/;
 
         int extension = 0;
 
