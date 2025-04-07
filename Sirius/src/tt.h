@@ -7,7 +7,7 @@
 #include <vector>
 #include <array>
 #include <algorithm>
-#include <atomic>
+#include <thread>
 
 struct TTEntry
 {
@@ -92,10 +92,19 @@ public:
         m_CurrAge = (m_CurrAge + 1) % GEN_CYCLE_LENGTH;
     }
 
-    void reset()
+    void reset(int numThreads)
     {
-        std::fill(m_Buckets.begin(), m_Buckets.end(), TTBucket{});
         m_CurrAge = 0;
+        std::vector<std::jthread> threads;
+        threads.reserve(numThreads);
+
+        for (int i = 0; i < numThreads; i++)
+        {
+            threads.emplace_back([i, this, numThreads]()
+            {
+                std::fill(m_Buckets.begin() + m_Buckets.size() * i / numThreads, m_Buckets.begin() + m_Buckets.size() * (i + 1) / numThreads, TTBucket{});
+            });
+        }
     }
 
     int hashfull() const;
