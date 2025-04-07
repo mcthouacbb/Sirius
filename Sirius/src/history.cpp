@@ -2,36 +2,6 @@
 #include "zobrist.h"
 #include "search.h"
 
-namespace
-{
-
-template<int MAX_VAL, size_t N>
-void fillHistTable(std::array<HistoryEntry<MAX_VAL>, N>& arr, int value)
-{
-    std::fill(arr.begin(), arr.end(), value);
-}
-
-template<size_t N>
-void fillHistTable(std::array<CorrHistEntry, N>& arr, int value)
-{
-    std::fill(arr.begin(), arr.end(), value);
-}
-
-template<size_t N>
-void fillHistTable(std::array<int, N>& arr, int value)
-{
-    std::fill(arr.begin(), arr.end(), value);
-}
-
-template<typename T, size_t N>
-void fillHistTable(std::array<T, N>& arr, int value)
-{
-    for (auto& elem : arr)
-        fillHistTable(elem, value);
-}
-
-}
-
 int historyBonus(int depth)
 {
     // formula from berserk
@@ -47,15 +17,15 @@ int historyMalus(int depth)
 
 void History::clear()
 {
-    fillHistTable(m_MainHist, 0);
-    fillHistTable(m_ContHist, 0);
-    fillHistTable(m_CaptHist, 0);
-    fillHistTable(m_PawnCorrHist, 0);
-    fillHistTable(m_NonPawnCorrHist, 0);
-    fillHistTable(m_ThreatsCorrHist, 0);
-    fillHistTable(m_MinorPieceCorrHist, 0);
-    fillHistTable(m_MajorPieceCorrHist, 0);
-    fillHistTable(m_ContCorrHist, 0);
+    std::memset(&m_MainHist, 0, sizeof(m_MainHist));
+    std::memset(&m_ContHist, 0, sizeof(m_ContHist));
+    std::memset(&m_CaptHist, 0, sizeof(m_CaptHist));
+    std::memset(&m_PawnCorrHist, 0, sizeof(m_PawnCorrHist));
+    std::memset(&m_NonPawnCorrHist, 0, sizeof(m_NonPawnCorrHist));
+    std::memset(&m_ThreatsCorrHist, 0, sizeof(m_ThreatsCorrHist));
+    std::memset(&m_MinorPieceCorrHist, 0, sizeof(m_MinorPieceCorrHist));
+    std::memset(&m_MajorPieceCorrHist, 0, sizeof(m_MajorPieceCorrHist));
+    std::memset(&m_ContCorrHist, 0, sizeof(m_ContCorrHist));
 }
 
 int History::getQuietStats(Move move, Bitboard threats, Piece movingPiece, const SearchStack* stack, int ply) const
@@ -192,7 +162,7 @@ int History::getMainHist(Move move, Bitboard threats, Color color) const
 {
     bool srcThreat = threats.has(move.fromSq());
     bool dstThreat = threats.has(move.toSq());
-    return m_MainHist[static_cast<int>(color)][move.fromTo()][srcThreat][dstThreat];
+    return m_MainHist[static_cast<int>(color)][move.fromTo()].value(srcThreat, dstThreat);
 }
 
 int History::getContHist(Move move, Piece movingPiece, const CHEntry* entry) const
@@ -212,7 +182,7 @@ void History::updateMainHist(const Board& board, Move move, int bonus)
 {
     bool srcThreat = board.threats().has(move.fromSq());
     bool dstThreat = board.threats().has(move.toSq());
-    m_MainHist[static_cast<int>(board.sideToMove())][move.fromTo()][srcThreat][dstThreat].update(bonus);
+    m_MainHist[static_cast<int>(board.sideToMove())][move.fromTo()].update(srcThreat, dstThreat, bonus);
 }
 
 void History::updateContHist(Move move, Piece movingPiece, CHEntry* entry, int bonus)

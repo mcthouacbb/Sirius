@@ -40,7 +40,6 @@ struct HistoryEntry
 {
 public:
     HistoryEntry() = default;
-    HistoryEntry(int16_t value);
 
     operator int() const;
 
@@ -48,12 +47,6 @@ public:
 private:
     int16_t m_Value;
 };
-
-template<int MAX_VAL>
-inline HistoryEntry<MAX_VAL>::HistoryEntry(int16_t value)
-{
-    m_Value = value;
-}
 
 template<int MAX_VAL>
 inline HistoryEntry<MAX_VAL>::operator int() const
@@ -100,9 +93,35 @@ inline void CorrHistEntry::update(int target, int weight)
 }
 
 static constexpr int HISTORY_MAX = 16384;
+static constexpr int FACTORIZER_MAX = HISTORY_MAX / 4;
+static constexpr int BUCKET_MAX = HISTORY_MAX - FACTORIZER_MAX;
+
+struct MainHistEntry
+{
+public:
+    MainHistEntry() = default;
+
+    int value(bool srcThreat, bool dstThreat) const;
+
+    void update(bool srcThreat, bool dstThreat, int bonus);
+private:
+    HistoryEntry<FACTORIZER_MAX> m_Factorizer;
+    MultiArray<HistoryEntry<BUCKET_MAX>, 2, 2> m_Buckets;
+};
+
+inline int MainHistEntry::value(bool srcThreat, bool dstThreat) const
+{
+    return m_Factorizer + m_Buckets[srcThreat][dstThreat];
+}
+
+inline void MainHistEntry::update(bool srcThreat, bool dstThreat, int bonus)
+{
+    m_Factorizer.update(bonus / 4);
+    m_Buckets[srcThreat][dstThreat].update(bonus * 3 / 4);
+}
 
 // main history(~29 elo)
-using MainHist = MultiArray<HistoryEntry<HISTORY_MAX>, 2, 4096, 2, 2>;
+using MainHist = MultiArray<MainHistEntry, 2, 4096>;
 // continuation history(~40 elo)
 using CHEntry = MultiArray<HistoryEntry<HISTORY_MAX>, 12, 64>;
 using ContHist = MultiArray<CHEntry, 12, 64>;
