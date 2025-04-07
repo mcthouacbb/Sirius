@@ -105,7 +105,7 @@ void Search::newGame()
         thread->history.clear();
         thread->pawnTable.clear();
     }
-    m_TT.reset();
+    m_TT.reset(m_Threads.size());
 }
 
 void Search::run(const SearchLimits& limits, const Board& board)
