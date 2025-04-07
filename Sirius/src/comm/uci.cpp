@@ -28,8 +28,8 @@ UCI::UCI()
     };
     m_Options = {
         {"UCI_Chess960", UCIOption("UCI_Chess960", UCIOption::BoolData{false})},
-        {"Hash", UCIOption("Hash", {64, 64, 1, 65536}, hashCallback)},
-        {"Threads", UCIOption("Threads", {1, 1, 1, 256}, threadsCallback)},
+        {"Hash", UCIOption("Hash", {64, 64, 1, 33554432}, hashCallback)},
+        {"Threads", UCIOption("Threads", {1, 1, 1, 2048}, threadsCallback)},
         {"MoveOverhead", UCIOption("MoveOverhead", {10, 10, 1, 100})},
         {"PrettyPrint", UCIOption("PrettyPrint", UCIOption::BoolData{true})}
     };
