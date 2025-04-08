@@ -53,6 +53,8 @@ void* alignedAlloc(size_t alignment, size_t size) {
 }
 
 void alignedFree(void* ptr) {
+    if (ptr == nullptr)
+        return;
 #ifdef _WIN32
     return _aligned_free(ptr);
 #else
@@ -62,23 +64,25 @@ void alignedFree(void* ptr) {
 
 
 TT::TT(size_t sizeMB)
+    : m_Buckets(nullptr), m_Size(0), m_CurrAge(0)
 {
     resize(sizeMB, 1);
-    m_CurrAge = 0;
+}
+
+TT::~TT()
+{
+    alignedFree(m_Buckets);
 }
 
 // I'll change this later
 void TT::resize(int mb, int numThreads)
 {
     size_t buckets = static_cast<uint64_t>(mb) * 1024 * 1024 / sizeof(TTBucket);
-    std::cout << buckets << ' ' << numThreads << std::endl;
 
-    auto t1 = std::chrono::steady_clock::now();
+    alignedFree(m_Buckets);
     m_Buckets = static_cast<TTBucket*>(alignedAlloc(TT_ALIGNMENT, buckets * sizeof(TTBucket)));
     m_Size = buckets;
     reset(numThreads);
-    auto t2 = std::chrono::steady_clock::now();
-    std::cout << std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1).count() << std::endl;
     m_CurrAge = 0;
 }
 

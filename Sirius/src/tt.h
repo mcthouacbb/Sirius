@@ -76,7 +76,7 @@ public:
     static constexpr int GEN_CYCLE_LENGTH = 1 << 5;
 
     TT(size_t size);
-    ~TT() = default;
+    ~TT();
 
     void resize(int mb, int numThreads);
 
@@ -106,7 +106,6 @@ public:
                 std::fill(m_Buckets + m_Size * i / numThreads, m_Buckets + m_Size * (i + 1) / numThreads, TTBucket{});
             });
         }
-        std::cout << "Threading" << std::endl;
     }
 
     int hashfull() const;
