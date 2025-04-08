@@ -85,7 +85,7 @@ void SearchThread::join()
 }
 
 Search::Search(Board& board)
-    : m_Board(board), m_ShouldStop(false), m_TT(2 * 1024 * 1024)
+    : m_Board(board), m_ShouldStop(false), m_TT(64)
 {
     setThreads(1);
 }

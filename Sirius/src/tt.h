@@ -51,7 +51,8 @@ struct TTEntry
 static_assert(sizeof(TTEntry) == 10, "TTEntry must be 10 bytes");
 static_assert(alignof(TTEntry) == 2, "TTEntry must have 2 byte alignment");
 
-static constexpr int ENTRY_COUNT = 3;
+constexpr int ENTRY_COUNT = 3;
+constexpr size_t TT_ALIGNMENT = 64;
 
 struct alignas(32) TTBucket
 {
@@ -77,7 +78,7 @@ public:
     TT(size_t size);
     ~TT() = default;
 
-    void resize(int mb);
+    void resize(int mb, int numThreads);
 
     TT(const TT&) = delete;
     TT& operator=(const TT&) = delete;
@@ -102,15 +103,17 @@ public:
         {
             threads.emplace_back([i, this, numThreads]()
             {
-                std::fill(m_Buckets.begin() + m_Buckets.size() * i / numThreads, m_Buckets.begin() + m_Buckets.size() * (i + 1) / numThreads, TTBucket{});
+                std::fill(m_Buckets + m_Size * i / numThreads, m_Buckets + m_Size * (i + 1) / numThreads, TTBucket{});
             });
         }
+        std::cout << "Threading" << std::endl;
     }
 
     int hashfull() const;
 private:
     uint32_t index(uint64_t key) const;
 
-    std::vector<TTBucket> m_Buckets;
+    TTBucket* m_Buckets;
+    size_t m_Size;
     int m_CurrAge;
 };

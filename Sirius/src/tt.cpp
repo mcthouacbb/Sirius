@@ -2,6 +2,7 @@
 #include "eval/eval.h"
 
 #include <climits>
+#include <cstdlib>
 
 #if defined(_MSC_VER) && !defined(__clang__)
 #include <mmintrin.h>
@@ -43,19 +44,41 @@ uint64_t mulhi64(uint64_t a, uint64_t b)
 }
 #endif
 
+void* alignedAlloc(size_t alignment, size_t size) {
+#ifdef _WIN32
+    return _aligned_malloc(size, alignment);
+#else
+    return std::aligned_alloc(alignment, size);
+#endif
+}
 
-TT::TT(size_t size)
-    : m_Buckets(size)
+void alignedFree(void* ptr) {
+#ifdef _WIN32
+    return _aligned_free(ptr);
+#else
+    return std::free(ptr);
+#endif
+}
+
+
+TT::TT(size_t sizeMB)
 {
+    resize(sizeMB, 1);
     m_CurrAge = 0;
 }
 
 // I'll change this later
-void TT::resize(int mb)
+void TT::resize(int mb, int numThreads)
 {
-    size_t size = static_cast<uint64_t>(mb) * 1024 * 1024 / sizeof(TTBucket);
-    m_Buckets.resize(size, {});
-    m_Buckets.shrink_to_fit();
+    size_t buckets = static_cast<uint64_t>(mb) * 1024 * 1024 / sizeof(TTBucket);
+    std::cout << buckets << ' ' << numThreads << std::endl;
+
+    auto t1 = std::chrono::steady_clock::now();
+    m_Buckets = static_cast<TTBucket*>(alignedAlloc(TT_ALIGNMENT, buckets * sizeof(TTBucket)));
+    m_Size = buckets;
+    reset(numThreads);
+    auto t2 = std::chrono::steady_clock::now();
+    std::cout << std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1).count() << std::endl;
     m_CurrAge = 0;
 }
 
@@ -171,12 +194,12 @@ int TT::quality(int age, int depth) const
 
 void TT::prefetch(ZKey key) const
 {
-    prefetchAddr(static_cast<const void*>(& m_Buckets[index(key.value)]));
+    prefetchAddr(static_cast<const void*>(&m_Buckets[index(key.value)]));
 }
 
 uint32_t TT::index(uint64_t key) const
 {
-    return static_cast<uint32_t>(mulhi64(key, m_Buckets.size()));
+    return static_cast<uint32_t>(mulhi64(key, m_Size));
 }
 
 int TT::hashfull() const
