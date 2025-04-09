@@ -79,12 +79,12 @@ int History::correctStaticEval(const Board& board, int staticEval, const SearchS
 {
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
-    int pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % PAWN_CORR_HIST_ENTRIES];
-    int nonPawnStmEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(stm)][board.nonPawnKey(stm).value % NON_PAWN_CORR_HIST_ENTRIES];
-    int nonPawnNstmEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(~stm)][board.nonPawnKey(~stm).value % NON_PAWN_CORR_HIST_ENTRIES];
-    int threatsEntry = m_ThreatsCorrHist[static_cast<int>(stm)][threatsKey % THREATS_CORR_HIST_ENTRIES];
-    int minorPieceEntry = m_MinorPieceCorrHist[static_cast<int>(stm)][board.minorPieceKey().value % MINOR_PIECE_CORR_HIST_ENTRIES];
-    int majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
+    int pawnEntry = m_PawnCorrHist[board.pawnKey().value % PAWN_CORR_HIST_ENTRIES][static_cast<int>(stm)];
+    int nonPawnStmEntry = m_NonPawnCorrHist[board.nonPawnKey(stm).value % NON_PAWN_CORR_HIST_ENTRIES][static_cast<int>(stm)][static_cast<int>(stm)];
+    int nonPawnNstmEntry = m_NonPawnCorrHist[board.nonPawnKey(~stm).value % NON_PAWN_CORR_HIST_ENTRIES][static_cast<int>(stm)][static_cast<int>(~stm)];
+    int threatsEntry = m_ThreatsCorrHist[threatsKey % THREATS_CORR_HIST_ENTRIES][static_cast<int>(stm)];
+    int minorPieceEntry = m_MinorPieceCorrHist[board.minorPieceKey().value % MINOR_PIECE_CORR_HIST_ENTRIES][static_cast<int>(stm)];
+    int majorPieceEntry = m_MajorPieceCorrHist[board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES][static_cast<int>(stm)];
 
     int correction = 0;
     correction += search::pawnCorrWeight * pawnEntry;
@@ -147,22 +147,22 @@ void History::updateCorrHist(const Board& board, int bonus, int depth, const Sea
     int scaledBonus = bonus * CORR_HIST_SCALE;
     int weight = 2 * std::min(1 + depth, 16);
 
-    auto& pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % PAWN_CORR_HIST_ENTRIES];
+    auto& pawnEntry = m_PawnCorrHist[board.pawnKey().value % PAWN_CORR_HIST_ENTRIES][static_cast<int>(stm)];
     pawnEntry.update(scaledBonus, weight);
 
-    auto& nonPawnWhiteEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(Color::WHITE)][board.nonPawnKey(Color::WHITE).value % NON_PAWN_CORR_HIST_ENTRIES];
+    auto& nonPawnWhiteEntry = m_NonPawnCorrHist[board.nonPawnKey(Color::WHITE).value % NON_PAWN_CORR_HIST_ENTRIES][static_cast<int>(stm)][static_cast<int>(Color::WHITE)];
     nonPawnWhiteEntry.update(scaledBonus, weight);
 
-    auto& nonPawnBlackEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(Color::BLACK)][board.nonPawnKey(Color::BLACK).value % NON_PAWN_CORR_HIST_ENTRIES];
+    auto& nonPawnBlackEntry = m_NonPawnCorrHist[board.nonPawnKey(Color::BLACK).value % NON_PAWN_CORR_HIST_ENTRIES][static_cast<int>(stm)][static_cast<int>(Color::BLACK)];
     nonPawnBlackEntry.update(scaledBonus, weight);
 
-    auto& threatsEntry = m_ThreatsCorrHist[static_cast<int>(stm)][threatsKey % THREATS_CORR_HIST_ENTRIES];
+    auto& threatsEntry = m_ThreatsCorrHist[threatsKey % THREATS_CORR_HIST_ENTRIES][static_cast<int>(stm)];
     threatsEntry.update(scaledBonus, weight);
 
-    auto& minorPieceEntry = m_MinorPieceCorrHist[static_cast<int>(stm)][board.minorPieceKey().value % MINOR_PIECE_CORR_HIST_ENTRIES];
+    auto& minorPieceEntry = m_MinorPieceCorrHist[board.minorPieceKey().value % MINOR_PIECE_CORR_HIST_ENTRIES][static_cast<int>(stm)];
     minorPieceEntry.update(scaledBonus, weight);
 
-    auto& majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
+    auto& majorPieceEntry = m_MajorPieceCorrHist[board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES][static_cast<int>(stm)];
     majorPieceEntry.update(scaledBonus, weight);
 
     Move prevMove = ply > 0 ? stack[-1].playedMove : Move::nullmove();
