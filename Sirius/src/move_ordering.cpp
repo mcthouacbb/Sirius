@@ -49,7 +49,7 @@ int MoveOrdering::scoreNoisy(Move move) const
     {
         int hist = m_History.getNoisyStats(m_Board, move);
         int score = hist + mvv(m_Board, move);
-        return score + CAPTURE_SCORE * m_Board.see(move, -score / 32);
+        return score + CAPTURE_SCORE;
     }
     else
     {
@@ -117,6 +117,12 @@ ScoredMove MoveOrdering::selectMove()
                 {
                     m_Curr--;
                     break;
+                }
+                if (moveIsCapture(m_Board, scoredMove.move) &&
+                    !m_Board.see(scoredMove.move, -(scoredMove.score - CAPTURE_SCORE) / 32))
+                {
+                    m_MoveScores[--m_Curr] -= CAPTURE_SCORE;
+                    continue;
                 }
                 return scoredMove;
             }
