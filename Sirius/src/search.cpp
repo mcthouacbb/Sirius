@@ -686,6 +686,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             reduction -= ttPV;
             reduction -= givesCheck;
             reduction -= inCheck;
+            reduction -= moveScore == MoveOrdering::FIRST_KILLER_SCORE || moveScore == MoveOrdering::SECOND_KILLER_SCORE;
             reduction -= std::abs(stack->eval - rawStaticEval) > lmrCorrplexityMargin;
             reduction += cutnode;
             reduction += (stack + 1)->failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin);
