@@ -476,7 +476,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         // null move pruning(~31 elo)
         Bitboard nonPawns = board.pieces(board.sideToMove()) ^ board.pieces(board.sideToMove(), PieceType::PAWN);
-        if (board.pliesFromNull() > 0 && rootPly >= thread.nmpMinPly && depth >= nmpMinDepth &&
+        if (cutnode && board.pliesFromNull() > 0 && rootPly >= thread.nmpMinPly && depth >= nmpMinDepth &&
             stack->eval >= beta && stack->staticEval >= beta + nmpEvalBaseMargin - nmpEvalDepthMargin * depth &&
             nonPawns.multiple())
         {
