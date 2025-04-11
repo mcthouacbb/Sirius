@@ -629,7 +629,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         int extension = 0;
 
-        // singular extensions(~73 elo)
+        // singular extensions(~81 elo STC, ~91 elo LTC)
         if (doSE)
         {
             int sBeta = std::max(-SCORE_MATE, ttData.score - sBetaScale * depth / 16);
