@@ -57,7 +57,7 @@ PackedScore PawnStructure::evaluate(const Board& board)
             passedPawns |= Bitboard::fromSquare(sq);
         else if (candidatePasser)
         {
-            bool defended = defenders.popcount() >= threats.popcount();
+            bool defended = defenders.any();
             eval += CANDIDATE_PASSER[defended][sq.relativeRank<us>()];
         }
 
