@@ -51,7 +51,7 @@ PackedScore PawnStructure::evaluate(const Board& board)
         bool backwards = (blocked || pushThreats.any()) && support.empty();
         bool candidatePasser =
             (stoppers == pushThreats && phalanx.popcount() >= pushThreats.popcount()) ||
-            (stoppers == threats);
+            (stoppers == threats && !(threats.multiple() && defenders.empty()));
 
         if (board.isPassedPawn(sq))
             passedPawns |= Bitboard::fromSquare(sq);
