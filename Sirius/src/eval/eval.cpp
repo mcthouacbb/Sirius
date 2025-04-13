@@ -234,6 +234,16 @@ PackedScore evaluatePassedPawns(const Board& board, const PawnStructure& pawnStr
 
     PackedScore eval{0, 0};
 
+    Bitboard candidateBlocked = pawnStructure.candidateBlockedPassers & board.pieces(us);
+    Bitboard helpers =
+        attacks::pawnPushes<us>(board.pieces(us, PAWN)) & ~board.pieces(them) & ~evalData.attackedBy2[them];
+    candidateBlocked &= helpers.west() | helpers.east();
+    while (candidateBlocked.any())
+    {
+        Square sq = candidateBlocked.poplsb();
+        eval += BLOCKED_CANDIDATE_PASSER[sq.relativeRank<us>()];
+    }
+
     while (passers.any())
     {
         Square passer = passers.poplsb();

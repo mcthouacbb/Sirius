@@ -11,11 +11,13 @@ PawnStructure::PawnStructure(const Board& board)
     Bitboard bpawns = board.pieces(Color::BLACK, PieceType::PAWN);
     pawnAttacks[Color::WHITE] = attacks::pawnAttacks<Color::WHITE>(wpawns);
     pawnAttackSpans[Color::WHITE] = attacks::fillUp<Color::WHITE>(pawnAttacks[Color::WHITE]);
+    pawnAttacks2[Color::WHITE] = attacks::pawnEastAttacks<Color::WHITE>(wpawns) & attacks::pawnWestAttacks<Color::WHITE>(wpawns);
     passedPawns = Bitboard(0);
+    candidateBlockedPassers = Bitboard(0);
 
     pawnAttacks[Color::BLACK] = attacks::pawnAttacks<Color::BLACK>(bpawns);
     pawnAttackSpans[Color::BLACK] = attacks::fillUp<Color::BLACK>(pawnAttacks[Color::BLACK]);
-    passedPawns = Bitboard(0);
+    pawnAttacks2[Color::BLACK] = attacks::pawnEastAttacks<Color::WHITE>(bpawns) & attacks::pawnWestAttacks<Color::WHITE>(bpawns);
 }
 
 PackedScore PawnStructure::evaluate(const Board& board)
@@ -49,6 +51,10 @@ PackedScore PawnStructure::evaluate(const Board& board)
         bool blocked = theirPawns.has(push);
         bool doubled = ourPawns.has(push);
         bool backwards = (blocked || pushThreats.any()) && support.empty();
+        bool candidateBlockedPasser =
+            blocked && stoppers.one() &&
+            sq.relativeRank<us>() >= RANK_5 &&
+            (attacks::pawnPushes<us>(defenders) & ~(theirPawns | pawnAttacks2[them])).any();
 
         if (board.isPassedPawn(sq))
             passedPawns |= Bitboard::fromSquare(sq);
@@ -56,6 +62,10 @@ PackedScore PawnStructure::evaluate(const Board& board)
         {
             bool defended = defenders.popcount() >= threats.popcount();
             eval += CANDIDATE_PASSER[defended][sq.relativeRank<us>()];
+        }
+        else if (candidateBlockedPasser)
+        {
+            candidateBlockedPassers |= Bitboard::fromSquare(sq);
         }
 
         if (doubled && threats.empty())
