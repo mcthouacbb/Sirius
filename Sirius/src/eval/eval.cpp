@@ -171,10 +171,11 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData, const Ev
     constexpr Color them = ~us;
 
     Square theirKing = board.kingSq(them);
+    Bitboard ourPawns = board.pieces(us, PieceType::PAWN);
 
-    PackedScore eval{0, 0};
+    PackedScore safety{0, 0};
 
-    eval += evalState.pawnShieldStormScore(us);
+    safety += evalState.pawnShieldStormScore(us);
 
     Bitboard rookCheckSquares = attacks::rookAttacks(theirKing, board.allPieces());
     Bitboard bishopCheckSquares = attacks::bishopAttacks(theirKing, board.allPieces());
@@ -187,40 +188,44 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData, const Ev
     Bitboard weak = ~evalData.attacked[them] | (~evalData.attackedBy2[them] & evalData.attackedBy[them][KING]);
     Bitboard safe = ~board.allPieces() & ~evalData.attacked[them] | (weak & evalData.attackedBy2[us]);
 
-    eval += SAFE_KNIGHT_CHECK * (knightChecks & safe).popcount();
-    eval += SAFE_BISHOP_CHECK * (bishopChecks & safe).popcount();
-    eval += SAFE_ROOK_CHECK * (rookChecks & safe).popcount();
-    eval += SAFE_QUEEN_CHECK * (queenChecks & safe).popcount();
+    safety += SAFE_KNIGHT_CHECK * (knightChecks & safe).popcount();
+    safety += SAFE_BISHOP_CHECK * (bishopChecks & safe).popcount();
+    safety += SAFE_ROOK_CHECK * (rookChecks & safe).popcount();
+    safety += SAFE_QUEEN_CHECK * (queenChecks & safe).popcount();
 
-    eval += UNSAFE_KNIGHT_CHECK * (knightChecks & ~safe).popcount();
-    eval += UNSAFE_BISHOP_CHECK * (bishopChecks & ~safe).popcount();
-    eval += UNSAFE_ROOK_CHECK * (rookChecks & ~safe).popcount();
-    eval += UNSAFE_QUEEN_CHECK * (queenChecks & ~safe).popcount();
+    safety += UNSAFE_KNIGHT_CHECK * (knightChecks & ~safe).popcount();
+    safety += UNSAFE_BISHOP_CHECK * (bishopChecks & ~safe).popcount();
+    safety += UNSAFE_ROOK_CHECK * (rookChecks & ~safe).popcount();
+    safety += UNSAFE_QUEEN_CHECK * (queenChecks & ~safe).popcount();
 
     bool queenless = board.pieces(us, PieceType::QUEEN).empty();
-    eval += QUEENLESS_ATTACK * queenless;
+    safety += QUEENLESS_ATTACK * queenless;
 
-    eval += evalData.attackWeight[us];
+    safety += evalData.attackWeight[us];
 
     int attackCount = evalData.attackCount[us];
-    eval += KING_ATTACKS * attackCount;
+    safety += KING_ATTACKS * attackCount;
 
     Bitboard weakKingRing = (evalData.kingRing[them] & weak);
     int weakSquares = weakKingRing.popcount();
-    eval += WEAK_KING_RING * weakSquares;
+    safety += WEAK_KING_RING * weakSquares;
 
     Bitboard flankAttacks = evalData.kingFlank[them] & evalData.attacked[us];
     Bitboard flankAttacks2 = evalData.kingFlank[them] & evalData.attackedBy2[us];
     Bitboard flankDefenses = evalData.kingFlank[them] & evalData.attacked[them];
     Bitboard flankDefenses2 = evalData.kingFlank[them] & evalData.attackedBy2[them];
 
-    eval += flankAttacks.popcount() * KING_FLANK_ATTACKS[0] + flankAttacks2.popcount() * KING_FLANK_ATTACKS[1];
-    eval += flankDefenses.popcount() * KING_FLANK_DEFENSES[0] + flankDefenses2.popcount() * KING_FLANK_DEFENSES[1];
+    safety += flankAttacks.popcount() * KING_FLANK_ATTACKS[0] + flankAttacks2.popcount() * KING_FLANK_ATTACKS[1];
+    safety += flankDefenses.popcount() * KING_FLANK_DEFENSES[0] + flankDefenses2.popcount() * KING_FLANK_DEFENSES[1];
 
-    eval += SAFETY_OFFSET;
+    safety += SAFETY_OFFSET;
 
-    PackedScore safety{safetyAdjustment(eval.mg()), safetyAdjustment(eval.eg())};
-    return safety;
+    PackedScore eval{safetyAdjustment(safety.mg()), safetyAdjustment(safety.eg())};
+
+    if ((evalData.kingFlank[us] & ourPawns).empty())
+        eval += PAWNLESS_FLANK;
+
+    return eval;
 }
 
 template<Color us>
