@@ -742,7 +742,7 @@ bool Board::see(Move move, int margin) const
     {
         sideToMove = ~sideToMove;
         Bitboard stmAttackers = attackers & pieces(sideToMove);
-        if ((pinners(~sideToMove) & allPieces).any())
+        if ((pinners(sideToMove) & allPieces).any())
             stmAttackers &= ~pinned | pinnedAligned;
 
         if (stmAttackers.empty())
