@@ -191,6 +191,14 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData, const Ev
     eval += SAFE_BISHOP_CHECK * (bishopChecks & safe).popcount();
     eval += SAFE_ROOK_CHECK * (rookChecks & safe).popcount();
     eval += SAFE_QUEEN_CHECK * (queenChecks & safe).popcount();
+    if (board.sideToMove() == us)
+    {
+        eval += SAFE_CHECK_TEMPO * (
+            (knightChecks & safe).popcount() +
+            (bishopChecks & safe).popcount() +
+            (rookChecks & safe).popcount() +
+            (queenChecks & safe).popcount());
+    }
 
     eval += UNSAFE_KNIGHT_CHECK * (knightChecks & ~safe).popcount();
     eval += UNSAFE_BISHOP_CHECK * (bishopChecks & ~safe).popcount();
