@@ -424,7 +424,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta) ||
             (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)
         ))
-            return ttData.score;
+            return std::clamp(ttData.score, alpha, beta);
 
         if (inCheck)
         {
@@ -464,14 +464,14 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         int rfpMargin = (improving ? rfpImpMargin : rfpNonImpMargin) * depth - rfpOppWorsening * oppWorsening + (stack - 1)->histScore / rfpHistDivisor;
         if (depth <= rfpMaxDepth &&
             stack->eval >= std::max(rfpMargin, 20) + beta)
-            return stack->eval;
+            return beta;
 
         // razoring(~6 elo)
         if (depth <= razoringMaxDepth && stack->eval <= alpha - razoringMargin * depth && alpha < 2000)
         {
             int score = qsearch(thread, stack, alpha, beta, pvNode);
             if (score <= alpha)
-                return score;
+                return alpha;
         }
 
         // null move pruning(~31 elo)
@@ -494,7 +494,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 thread.nmpMinPly = 0;
 
                 if (verifScore >= beta)
-                    return verifScore;
+                    return beta;
             }
         }
 
@@ -532,7 +532,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 if (score >= probcutBeta)
                 {
                     m_TT.store(board.zkey(), probcutDepth + 1, rootPly, score, rawStaticEval, move, ttPV, TTEntry::Bound::LOWER_BOUND);
-                    return score;
+                    return beta;
                 }
             }
         }
@@ -648,7 +648,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                     extension = 1;
             }
             else if (sBeta >= beta)
-                return sBeta;
+                return beta;
             else if (ttData.score >= beta)
                 extension = -2 + pvNode;
             else if (ttData.score <= alpha && cutnode)
@@ -794,12 +794,12 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         if (!inCheck && (bestMove == Move::nullmove() || moveIsQuiet(board, bestMove)) &&
             !(bound == TTEntry::Bound::LOWER_BOUND && stack->staticEval >= bestScore) &&
             !(bound == TTEntry::Bound::UPPER_BOUND && stack->staticEval <= bestScore))
-            history.updateCorrHist(board, bestScore - stack->staticEval, depth, stack, rootPly);
+            history.updateCorrHist(board, std::clamp(bestScore, alpha, beta) - stack->staticEval, depth, stack, rootPly);
 
-        m_TT.store(board.zkey(), depth, rootPly, bestScore, rawStaticEval, bestMove, ttPV, bound);
+        m_TT.store(board.zkey(), depth, rootPly, std::clamp(bestScore, alpha, beta), rawStaticEval, bestMove, ttPV, bound);
     }
 
-    return bestScore;
+    return std::clamp(bestScore, alpha, beta);
 }
 
 // quiescence search(~187 elo)
@@ -826,7 +826,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta) ||
         (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)
     ))
-        return ttData.score;
+        return std::clamp(ttData.score, alpha, beta);
 
     bool inCheck = board.checkers().any();
     int rawStaticEval = SCORE_NONE;
@@ -853,7 +853,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     }
 
     if (stack->eval >= beta)
-        return stack->eval;
+        return beta;
     if (stack->eval > alpha)
         alpha = stack->eval;
 
@@ -931,9 +931,9 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     if (inCheck && movesPlayed == 0)
         return -SCORE_MATE + rootPly;
 
-    m_TT.store(board.zkey(), 0, rootPly, bestScore, rawStaticEval, bestMove, ttPV, bound);
+    m_TT.store(board.zkey(), 0, rootPly, std::clamp(bestScore, alpha, beta), rawStaticEval, bestMove, ttPV, bound);
 
-    return bestScore;
+    return std::clamp(bestScore, alpha, beta);
 }
 
 
