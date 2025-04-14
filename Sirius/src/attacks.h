@@ -120,9 +120,14 @@ inline constexpr int pawnPushOffset()
     return c == Color::WHITE ? 8 : -8;
 }
 
+inline Bitboard alignedSquares(Square a, Square b)
+{
+    return attackData.alignedSquares[a.value()][b.value()];
+}
+
 inline bool aligned(Square a, Square b, Square c)
 {
-    return attackData.alignedSquares[a.value()][b.value()].has(c);
+    return alignedSquares(a, b).has(c);
 }
 
 inline Bitboard inBetweenSquares(Square src, Square dst)
