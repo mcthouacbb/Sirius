@@ -2,6 +2,7 @@
 #include "search.h"
 #include "search_params.h"
 #include <iostream>
+#include <cmath>
 
 void TimeManager::setLimits(const SearchLimits& limits, Color us)
 {
