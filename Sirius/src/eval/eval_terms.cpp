@@ -12,7 +12,7 @@
 namespace eval
 {
 
-void evaluatePawns(const Board& board, PawnStructure& pawnStructure, PawnTable* pawnTable)
+/*void evaluatePawns(const Board& board, PawnStructure& pawnStructure, PawnTable* pawnTable)
 {
     if (pawnTable)
     {
@@ -145,6 +145,6 @@ template PackedScore evaluateRookOpen<Color::WHITE>(const Board& board);
 template PackedScore evaluateRookOpen<Color::BLACK>(const Board& board);
 
 template PackedScore evaluateMinorBehindPawn<Color::WHITE>(const Board& board);
-template PackedScore evaluateMinorBehindPawn<Color::BLACK>(const Board& board);
+template PackedScore evaluateMinorBehindPawn<Color::BLACK>(const Board& board);*/
 
 }

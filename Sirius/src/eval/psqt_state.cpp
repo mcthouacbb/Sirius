@@ -6,11 +6,11 @@ namespace eval
 
 PackedScore PsqtState::evaluate(const Board& board) const
 {
-    int whiteBucket = getKingBucket(board.kingSq(Color::WHITE));
-    int blackBucket = getKingBucket(board.kingSq(Color::BLACK));
+    //int whiteBucket = getKingBucket(board.kingSq(Color::WHITE));
+    //int blackBucket = getKingBucket(board.kingSq(Color::BLACK));
     return
-        accumulators[static_cast<int>(Color::WHITE)].materialPsqt[whiteBucket] +
-        accumulators[static_cast<int>(Color::BLACK)].materialPsqt[blackBucket];
+        accumulators[static_cast<int>(Color::WHITE)].materialPsqt[0] +
+        accumulators[static_cast<int>(Color::BLACK)].materialPsqt[0];
 }
 
 

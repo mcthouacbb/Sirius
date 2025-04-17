@@ -17,7 +17,7 @@ int main(int argc, char** argv)
     attacks::init();
     cuckoo::init();
     search::init();
-    eval::endgames::init();
+    //eval::endgames::init();
 
     if (argc > 1 && std::string(argv[1]) == "bench")
     {

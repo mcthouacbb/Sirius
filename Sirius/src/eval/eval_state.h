@@ -47,8 +47,8 @@ public:
 
     PackedScore score(const Board& board) const;
     PackedScore psqtScore(const Board& board, Color c) const;
-    PackedScore pawnShieldStormScore(Color c) const;
-    const PawnStructure& pawnStructure() const;
+    //PackedScore pawnShieldStormScore(Color c) const;
+    //const PawnStructure& pawnStructure() const;
     int phase() const;
 private:
     void init(const Board& board, PawnTable* pawnTable);
@@ -57,12 +57,12 @@ private:
         EvalUpdates updates;
 
         PsqtState psqtState;
-        PawnStructure pawnStructure;
+        /*PawnStructure pawnStructure;
         ColorArray<PackedScore> pawnShieldStorm;
         PackedScore knightOutposts;
         PackedScore bishopPawns;
         PackedScore rookOpen;
-        PackedScore minorBehindPawn;
+        PackedScore minorBehindPawn;*/
     };
 
     StackEntry& currEntry()
@@ -77,7 +77,7 @@ private:
 
     std::array<StackEntry, 256> m_Stack;
     StackEntry* m_CurrEntry;
-    PawnTable* m_PawnTable;
+    //PawnTable* m_PawnTable;
 };
 
 

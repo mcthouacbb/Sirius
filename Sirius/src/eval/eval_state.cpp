@@ -29,7 +29,7 @@ void EvalState::init(const Board& board, PawnTable* pawnTable)
 
     std::fill(m_Stack.begin(), m_Stack.end(), StackEntry{});
     m_CurrEntry = &m_Stack[0];
-    m_PawnTable = pawnTable;
+    //m_PawnTable = pawnTable;
 
     currEntry().psqtState.init();
     for (Color c : {WHITE, BLACK})
@@ -40,7 +40,7 @@ void EvalState::init(const Board& board, PawnTable* pawnTable)
                 currEntry().psqtState.addPiece(c, pt, pieces.poplsb());
         }
 
-    evaluatePawns(board, currEntry().pawnStructure, m_PawnTable);
+    /*evaluatePawns(board, currEntry().pawnStructure, m_PawnTable);
     currEntry().pawnShieldStorm[Color::WHITE] = evaluateStormShield<Color::WHITE>(board);
     currEntry().pawnShieldStorm[Color::BLACK] = evaluateStormShield<Color::BLACK>(board);
     currEntry().knightOutposts =
@@ -48,7 +48,7 @@ void EvalState::init(const Board& board, PawnTable* pawnTable)
         evaluateKnightOutposts<Color::BLACK>(board, currEntry().pawnStructure);
     currEntry().bishopPawns = evaluateBishopPawns<Color::WHITE>(board) - evaluateBishopPawns<Color::BLACK>(board);
     currEntry().rookOpen = evaluateRookOpen<Color::WHITE>(board) - evaluateRookOpen<Color::BLACK>(board);
-    currEntry().minorBehindPawn = evaluateMinorBehindPawn<Color::WHITE>(board) - evaluateMinorBehindPawn<Color::BLACK>(board);
+    currEntry().minorBehindPawn = evaluateMinorBehindPawn<Color::WHITE>(board) - evaluateMinorBehindPawn<Color::BLACK>(board);*/
 }
 
 void EvalState::push(const Board& board, const EvalUpdates& updates)
@@ -71,7 +71,7 @@ void EvalState::push(const Board& board, const EvalUpdates& updates)
         currEntry().psqtState.removePiece(getPieceColor(add.piece), getPieceType(add.piece), add.square);
     }
 
-    if (updates.changedPieces.hasAny(eval_terms::pawnStructure.deps))
+    /*if (updates.changedPieces.hasAny(eval_terms::pawnStructure.deps))
         evaluatePawns(board, currEntry().pawnStructure, m_PawnTable);
     else
         currEntry().pawnStructure = oldEntry.pawnStructure;
@@ -104,7 +104,7 @@ void EvalState::push(const Board& board, const EvalUpdates& updates)
     if (updates.changedPieces.hasAny(eval_terms::minorBehindPawn.deps))
         currEntry().minorBehindPawn = evaluateMinorBehindPawn<Color::WHITE>(board) - evaluateMinorBehindPawn<Color::BLACK>(board);
     else
-        currEntry().minorBehindPawn = oldEntry.minorBehindPawn;
+        currEntry().minorBehindPawn = oldEntry.minorBehindPawn;*/
 }
 
 void EvalState::pop()
@@ -115,12 +115,12 @@ void EvalState::pop()
 PackedScore EvalState::score(const Board& board) const
 {
     return
-        currEntry().psqtState.evaluate(board) +
-        currEntry().pawnStructure.score +
+        currEntry().psqtState.evaluate(board);
+        /*currEntry().pawnStructure.score +
         currEntry().knightOutposts +
         currEntry().bishopPawns +
         currEntry().rookOpen +
-        currEntry().minorBehindPawn;
+        currEntry().minorBehindPawn;*/
 }
 
 PackedScore EvalState::psqtScore(const Board& board, Color c) const
@@ -131,7 +131,7 @@ PackedScore EvalState::psqtScore(const Board& board, Color c) const
     return psqt;
 }
 
-PackedScore EvalState::pawnShieldStormScore(Color c) const
+/*PackedScore EvalState::pawnShieldStormScore(Color c) const
 {
     return currEntry().pawnShieldStorm[c];
 }
@@ -139,7 +139,7 @@ PackedScore EvalState::pawnShieldStormScore(Color c) const
 const PawnStructure& EvalState::pawnStructure() const
 {
     return currEntry().pawnStructure;
-}
+}*/
 
 int EvalState::phase() const
 {

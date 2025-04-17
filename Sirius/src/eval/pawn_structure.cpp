@@ -27,7 +27,8 @@ PackedScore PawnStructure::evaluate(const Board& board)
 template<Color us>
 PackedScore PawnStructure::evaluate(const Board& board)
 {
-    constexpr Color them = ~us;
+    return {};
+    /*constexpr Color them = ~us;
     Bitboard ourPawns = board.pieces(us, PieceType::PAWN);
     Bitboard theirPawns = board.pieces(them, PieceType::PAWN);
 
@@ -75,7 +76,7 @@ PackedScore PawnStructure::evaluate(const Board& board)
     while (defended.any())
         eval += DEFENDED_PAWN[defended.poplsb().relativeRank<us>()];
 
-    return eval;
+    return eval;*/
 }
 
 }
