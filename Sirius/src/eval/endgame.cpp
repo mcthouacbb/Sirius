@@ -7,7 +7,7 @@
 namespace eval::endgames
 {
 
-int distToAnyCorner(Square sq)
+/*int distToAnyCorner(Square sq)
 {
     int rankDist = std::min(sq.rank(), 7 - sq.rank());
     int fileDist = std::min(sq.file(), 7 - sq.file());
@@ -272,6 +272,6 @@ void init()
 
     addEndgameEval("KQ", "KP", &evalKQvKP);
     addEndgameEval("KQ", "KR", &evalKQvKR);
-}
+}*/
 
 }

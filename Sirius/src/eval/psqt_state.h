@@ -11,11 +11,11 @@ class Board;
 namespace eval
 {
 
-constexpr int BUCKET_COUNT = 2;
-inline int getKingBucket(Square kingSq)
+constexpr int BUCKET_COUNT = 1;
+/*inline int getKingBucket(Square kingSq)
 {
     return kingSq.file() >= FILE_E;
-}
+}*/
 
 struct Accumulator
 {
@@ -54,7 +54,7 @@ struct PsqtState
 
 inline void PsqtState::init()
 {
-    accumulators.fill({{ScorePair(0, 0), ScorePair(0, 0)}});
+    accumulators.fill({{ScorePair(0, 0)}});
 }
 
 inline void PsqtState::addPiece(Color color, PieceType piece, Square square)

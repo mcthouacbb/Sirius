@@ -47,8 +47,8 @@ public:
 
     ScorePair score(const Board& board) const;
     ScorePair psqtScore(const Board& board, Color c) const;
-    ScorePair pawnShieldStormScore(Color c) const;
-    const PawnStructure& pawnStructure() const;
+    // ScorePair pawnShieldStormScore(Color c) const;
+    // const PawnStructure& pawnStructure() const;
 
 private:
     void init(const Board& board, PawnTable* pawnTable);
@@ -57,12 +57,12 @@ private:
         EvalUpdates updates;
 
         PsqtState psqtState;
-        PawnStructure pawnStructure;
+        /*PawnStructure pawnStructure;
         ColorArray<ScorePair> pawnShieldStorm;
         ScorePair knightOutposts;
         ScorePair bishopPawns;
         ScorePair rookOpen;
-        ScorePair minorBehindPawn;
+        ScorePair minorBehindPawn;*/
     };
 
     StackEntry& currEntry()
@@ -77,7 +77,7 @@ private:
 
     std::array<StackEntry, 256> m_Stack;
     StackEntry* m_CurrEntry;
-    PawnTable* m_PawnTable;
+    // PawnTable* m_PawnTable;
 };
 
 }

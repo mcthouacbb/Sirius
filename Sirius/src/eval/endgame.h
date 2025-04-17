@@ -14,7 +14,7 @@ constexpr int SCALE_FACTOR_DRAW = 0;
 namespace eval::endgames
 {
 
-using EndgameFunc = int(const Board&, const EvalState&, Color);
+/*using EndgameFunc = int(const Board&, const EvalState&, Color);
 
 enum class EndgameType
 {
@@ -47,6 +47,6 @@ struct Endgame
 
 void init();
 const Endgame* probeEvalFunc(const Board& board);
-const Endgame* probeScaleFunc(const Board& board, Color strongSide);
+const Endgame* probeScaleFunc(const Board& board, Color strongSide);*/
 
 }
