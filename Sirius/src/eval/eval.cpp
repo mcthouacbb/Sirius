@@ -264,7 +264,6 @@ PackedScore evaluateComplexity(const Board& board, const PawnStructure& pawnStru
 
     PackedScore complexity =
         COMPLEXITY_PAWNS * pawns.popcount() +
-        COMPLEXITY_PASSERS * pawnStructure.passedPawns.popcount() +
         COMPLEXITY_PAWNS_BOTH_SIDES * pawnsBothSides +
         COMPLEXITY_PAWN_ENDGAME * pawnEndgame +
         COMPLEXITY_OFFSET;
