@@ -17,6 +17,7 @@ struct EvalData
     ColorArray<PackedScore> attackWeight;
     ColorArray<int> attackCount;
     ColorArray<Bitboard> kingFlank;
+    ColorArray<int> mobilityCount;
 };
 
 using enum PieceType;
@@ -54,7 +55,14 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
         evalData.attackedBy2[us] |= evalData.attacked[us] & attacks;
         evalData.attacked[us] |= attacks;
 
-        eval += MOBILITY[static_cast<int>(piece) - static_cast<int>(KNIGHT)][(attacks & evalData.mobilityArea[us]).popcount()];
+        int mobility = (attacks & evalData.mobilityArea[us]).popcount();
+        eval += MOBILITY[static_cast<int>(piece) - static_cast<int>(KNIGHT)][mobility];
+        
+        evalData.mobilityCount[us] +=
+            piece == PieceType::KNIGHT ? 3 * (mobility - 4) :
+            piece == PieceType::BISHOP ? 3 * (mobility - 5) / 2 :
+            piece == PieceType::ROOK ? 3 * (mobility - 6) / 2 :
+            mobility - 8;
 
         if (Bitboard kingRingAtks = evalData.kingRing[them] & attacks; kingRingAtks.any())
         {
@@ -216,6 +224,9 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData, const Ev
 
     eval += flankAttacks.popcount() * KING_FLANK_ATTACKS[0] + flankAttacks2.popcount() * KING_FLANK_ATTACKS[1];
     eval += flankDefenses.popcount() * KING_FLANK_DEFENSES[0] + flankDefenses2.popcount() * KING_FLANK_DEFENSES[1];
+
+    int mobilityDiff = (evalData.mobilityCount[us] - evalData.mobilityCount[them]) / 3;
+    eval += SAFETY_MOBILITY_DIFF * mobilityDiff;
 
     eval += SAFETY_OFFSET;
 
