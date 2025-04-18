@@ -231,6 +231,7 @@ PackedScore evaluatePassedPawns(const Board& board, const PawnStructure& pawnStr
     Square theirKing = board.kingSq(them);
 
     Bitboard passers = pawnStructure.passedPawns & board.pieces(us);
+    Bitboard verticalSliders = board.pieces(us, PieceType::ROOK) | board.pieces(us, PieceType::QUEEN);
 
     PackedScore eval{0, 0};
 
@@ -248,6 +249,9 @@ PackedScore evaluatePassedPawns(const Board& board, const PawnStructure& pawnStr
 
             eval += OUR_PASSER_PROXIMITY[Square::chebyshev(ourKing, pushSq)];
             eval += THEIR_PASSER_PROXIMITY[Square::chebyshev(theirKing, pushSq)];
+
+            if ((verticalSliders & Bitboard::fileBB(passer.file())).any())
+                eval += SLIDER_PASSER_FILE;
         }
     }
 
