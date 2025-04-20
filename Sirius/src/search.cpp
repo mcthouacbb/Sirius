@@ -499,7 +499,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         }
 
         // probcut(~3 elo)
-        int probcutBeta = beta + probcutBetaMargin;
+        int probcutBeta = beta + probcutBetaMargin - improving * probcutBetaImproving;
         if (depth >= probcutMinDepth &&
             !isMateScore(beta) &&
             (!ttHit || ttData.score >= probcutBeta || ttData.depth + 3 < depth))
