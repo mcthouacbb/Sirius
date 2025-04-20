@@ -278,7 +278,7 @@ PackedScore evaluateComplexity(const Board& board, const PawnStructure& pawnStru
 int evaluateScale(const Board& board, PackedScore eval, const EvalState& evalState)
 {
     int scaleFactor = SCALE_FACTOR_NORMAL;
-    Color strongSide = eval.eg() > 0 ? WHITE : BLACK;
+    Color strongSide = eval.eg() > 0 ? WHITE : eval.eg() < 0 ? BLACK : board.sideToMove();
 
     auto endgameScale = endgames::probeScaleFunc(board, strongSide);
     if (endgameScale != nullptr)
