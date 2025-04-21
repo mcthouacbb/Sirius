@@ -413,6 +413,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     bool ttHit = false;
 
     int rawStaticEval = SCORE_NONE;
+    int correction = 0;
 
     if (!excluded)
     {
@@ -435,7 +436,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         {
             rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
             // Correction history(~104 elo)
-            stack->staticEval = history.correctStaticEval(board, rawStaticEval, stack, rootPly);
+            correction = history.staticEvalCorrection(board, stack, rootPly);
+            stack->staticEval = history.correctStaticEval(rawStaticEval, correction);
             stack->eval = stack->staticEval;
             // use tt score as a better eval(~8 elo)
             if (ttHit && (
@@ -461,7 +463,10 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     if (!pvNode && !inCheck && !excluded)
     {
         // reverse futility pruning(~86 elo)
-        int rfpMargin = (improving ? rfpImpMargin : rfpNonImpMargin) * depth - rfpOppWorsening * oppWorsening + (stack - 1)->histScore / rfpHistDivisor;
+        int rfpMargin =
+            (improving ? rfpImpMargin : rfpNonImpMargin) * depth - rfpOppWorsening * oppWorsening +
+            (stack - 1)->histScore / rfpHistDivisor +
+            15 - correction / CORR_HIST_SCALE;
         if (depth <= rfpMaxDepth &&
             stack->eval >= std::max(rfpMargin, 20) + beta)
             return stack->eval;
@@ -841,7 +846,8 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     {
         rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
         // Correction history(~104 elo)
-        stack->staticEval = inCheck ? SCORE_NONE : thread.history.correctStaticEval(board, rawStaticEval, stack, rootPly);
+        int correction = inCheck ? 0 : thread.history.staticEvalCorrection(board, stack, rootPly);
+        stack->staticEval = inCheck ? SCORE_NONE : thread.history.correctStaticEval(rawStaticEval, correction);
 
         // use tt score as a better eval(~8 elo)
         stack->eval = stack->staticEval;
