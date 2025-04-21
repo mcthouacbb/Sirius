@@ -457,6 +457,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     (stack + 1)->killers = {};
     Bitboard threats = board.threats();
 
+    if (rootPly > 0 && (stack - 1)->reduction >= 3 && !oppWorsening)
+        depth++;
+
     // whole node pruning(~228 elo)
     if (!pvNode && !inCheck && !excluded)
     {
@@ -692,7 +695,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             reduction += (stack + 1)->failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin);
 
             int reduced = std::min(std::max(newDepth - reduction, 1), newDepth);
+            
+            stack->reduction = reduction;
             score = -search(thread, reduced, stack + 1, -alpha - 1, -alpha, false, true);
+            stack->reduction = 0;
+            
             if (score > alpha && reduced < newDepth)
             {
                 bool doDeeper = score > bestScore + doDeeperMarginBase + doDeeperMarginDepth * newDepth / 16;

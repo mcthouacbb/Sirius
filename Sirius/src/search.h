@@ -30,6 +30,7 @@ struct SearchStack
     ContCorrEntry* contCorrEntry;
     CHEntry* contHistEntry;
     int histScore;
+    int reduction;
 
     int staticEval;
     int eval;
