@@ -49,6 +49,7 @@ void History::clear()
 {
     fillHistTable(m_MainHist, 0);
     fillHistTable(m_ContHist, 0);
+    fillHistTable(m_LowPlyHist, 0);
     fillHistTable(m_CaptHist, 0);
     fillHistTable(m_PawnCorrHist, 0);
     fillHistTable(m_NonPawnCorrHist, 0);
@@ -67,6 +68,7 @@ int History::getQuietStats(Move move, Bitboard threats, Piece movingPiece, const
         score += getContHist(move, movingPiece, stack[-2].contHistEntry);
     if (ply > 3 && stack[-4].contHistEntry != nullptr)
         score += getContHist(move, movingPiece, stack[-4].contHistEntry);
+    score += getLowPlyHist(move, ply, getPieceColor(movingPiece));
     return score;
 }
 
@@ -123,6 +125,7 @@ void History::updateQuietStats(const Board& board, Move move, const SearchStack*
 {
     updateMainHist(board, move, bonus);
     updateContHist(move, movingPiece(board, move), stack, ply, bonus);
+    updateLowPlyHist(board, move, ply, bonus);
 }
 
 void History::updateContHist(Move move, Piece movingPiece, const SearchStack* stack, int ply, int bonus)
@@ -200,6 +203,13 @@ int History::getContHist(Move move, Piece movingPiece, const CHEntry* entry) con
     return (*entry)[packPieceIndices(movingPiece)][move.toSq().value()];
 }
 
+int History::getLowPlyHist(Move move, int ply, Color color) const
+{
+    if (ply <= 4)
+        return m_LowPlyHist[static_cast<int>(color)][move.fromTo()] * 8 / (1 + 2 * ply);
+    return 0;
+}
+
 int History::getCaptHist(const Board& board, Move move) const
 {
     bool srcThreat = board.threats().has(move.fromSq());
@@ -218,6 +228,12 @@ void History::updateMainHist(const Board& board, Move move, int bonus)
 void History::updateContHist(Move move, Piece movingPiece, CHEntry* entry, int bonus)
 {
     (*entry)[packPieceIndices(movingPiece)][move.toSq().value()].update(bonus);
+}
+
+void History::updateLowPlyHist(const Board& board, Move move, int ply, int bonus)
+{
+    if (ply <= 4)
+        m_LowPlyHist[static_cast<int>(board.sideToMove())][move.fromTo()].update(bonus);
 }
 
 void History::updateCaptHist(const Board& board, Move move, int bonus)

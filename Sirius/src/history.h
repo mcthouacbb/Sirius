@@ -109,6 +109,8 @@ using ContHist = MultiArray<CHEntry, 12, 64>;
 // capture history(~19 elo)
 using CaptHist = MultiArray<HistoryEntry<HISTORY_MAX>, 7, 12, 64, 2, 2>;
 
+using LowPlyHist = MultiArray<HistoryEntry<HISTORY_MAX>, 2, 4096>;
+
 // correction history(~104 elo)
 constexpr int PAWN_CORR_HIST_ENTRIES = 16384;
 constexpr int NON_PAWN_CORR_HIST_ENTRIES = 16384;
@@ -167,14 +169,17 @@ public:
 private:
     int getMainHist(Move move, Bitboard threats, Color color) const;
     int getContHist(Move move, Piece movingPiece, const CHEntry* entry) const;
+    int getLowPlyHist(Move move, int ply, Color color) const;
     int getCaptHist(const Board& board, Move move) const;
 
     void updateMainHist(const Board& board, Move move, int bonus);
     void updateContHist(Move move, Piece movingPiece, CHEntry* entry, int bonus);
+    void updateLowPlyHist(const Board& board, Move move, int ply, int bonus);
     void updateCaptHist(const Board& board, Move move, int bonus);
 
     MainHist m_MainHist;
     ContHist m_ContHist;
+    LowPlyHist m_LowPlyHist;
     CaptHist m_CaptHist;
     PawnCorrHist m_PawnCorrHist;
     NonPawnCorrHist m_NonPawnCorrHist;
