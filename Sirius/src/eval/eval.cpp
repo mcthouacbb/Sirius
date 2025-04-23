@@ -248,6 +248,9 @@ PackedScore evaluatePassedPawns(const Board& board, const PawnStructure& pawnStr
 
             eval += OUR_PASSER_PROXIMITY[Square::chebyshev(ourKing, pushSq)];
             eval += THEIR_PASSER_PROXIMITY[Square::chebyshev(theirKing, pushSq)];
+
+            if (evalData.attacked[us].has(pushSq))
+                eval += DEFENDED_PUSH_SQ;
         }
     }
 
