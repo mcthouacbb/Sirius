@@ -574,6 +574,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         if (!board.isLegal(move))
             continue;
         bool quiet = moveIsQuiet(board, move);
+        bool givesCheck = board.givesCheck(move);
         bool quietLosing = moveScore < MoveOrdering::SECOND_KILLER_SCORE;
 
         Piece movedPiece = movingPiece(board, move);
@@ -590,6 +591,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             if (lmrDepth <= fpMaxDepth &&
                 quiet &&
                 !inCheck &&
+                !givesCheck &&
                 alpha < SCORE_WIN &&
                 stack->staticEval + fpMargin <= alpha)
             {
@@ -662,7 +664,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         makeMove(thread, stack, move, histScore);
         movesPlayed++;
         
-        bool givesCheck = board.checkers().any();
         // check extensions(~13 elo)
         if (!doSE && givesCheck)
             extension = 1;
