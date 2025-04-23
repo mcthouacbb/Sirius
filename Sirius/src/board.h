@@ -17,7 +17,7 @@ struct CheckInfo
     Bitboard checkers;
     std::array<Bitboard, 2> pinners;
     std::array<Bitboard, 2> blockers;
-
+    EnumArray<Bitboard, PieceType, 5> checkSquares;
 };
 
 struct BoardState
@@ -206,6 +206,7 @@ public:
     Bitboard threats() const;
 
     bool see(Move move, int margin) const;
+    bool givesCheck(Move move) const;
     bool isPseudoLegal(Move move) const;
     bool isLegal(Move move) const;
     ZKey keyAfter(Move move) const;

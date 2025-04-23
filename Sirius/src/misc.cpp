@@ -261,6 +261,29 @@ void testQuietGen(Board& board, int depth)
     }
 }
 
+void testGivesCheck(Board& board, int depth)
+{
+    if (depth == 0)
+        return;
+    
+    MoveList moves;
+    genMoves<MoveGenType::LEGAL>(board, moves);
+
+    for (Move move : moves)
+    {
+        bool givesCheck = board.givesCheck(move);
+        board.makeMove(move);
+        if (board.checkers().any() != givesCheck)
+        {
+            board.unmakeMove();
+            std::cout << "Failed: " << board.fenStr() << ' ' << comm::convMoveToUCI(board, move);
+            throw std::runtime_error("Failed");
+        }
+        testQuietGen(board, depth - 1);
+        board.unmakeMove();
+    }
+}
+
 void testSEE()
 {
     std::ifstream file("res/see_tests.epd");

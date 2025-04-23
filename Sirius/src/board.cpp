@@ -822,6 +822,43 @@ bool Board::see(Move move, int margin) const
     return us;
 }
 
+bool Board::givesCheck(Move move) const
+{
+    Color nstm = ~sideToMove();
+
+    if (move.type() == MoveType::CASTLE)
+    {
+        CastleSide side = move.toSq() > move.fromSq() ? CastleSide::KING_SIDE : CastleSide::QUEEN_SIDE;
+        Square rookTo = castleRookDst(m_SideToMove, side);
+        Bitboard occ = allPieces() ^ Bitboard::fromSquare(move.fromSq()) ^ Bitboard::fromSquare(rookTo) ^ Bitboard::fromSquare(move.toSq());
+
+        return attacks::rookAttacks(rookTo, occ).has(kingSq(~m_SideToMove));
+    }
+
+    if (move.type() == MoveType::ENPASSANT)
+    {
+        Square captured = move.toSq();
+        captured += m_SideToMove == Color::WHITE ? -8 : 8;
+        if (checkBlockers(nstm).has(captured) &&
+            !attacks::aligned(move.toSq(), captured, kingSq(nstm)))
+            return true;
+    }
+
+    PieceType movedPiece = move.type() == MoveType::PROMOTION ?
+        promoPiece(move.promotion()) :
+        getPieceType(pieceAt(move.fromSq()));
+    if (currState().checkInfo.checkSquares[movedPiece].has(move.toSq()))
+        return true;
+
+    if (checkBlockers(nstm).has(move.fromSq()) &&
+        !attacks::aligned(move.fromSq(), move.toSq(), kingSq(nstm)))
+    {
+        return true;
+    }
+
+    return false;
+}
+
 bool Board::isLegal(Move move) const
 {
     Square from = move.fromSq();
@@ -1096,13 +1133,25 @@ void Board::updateCheckInfo()
 {
     Square whiteKingSq = kingSq(Color::WHITE);
     Square blackKingSq = kingSq(Color::BLACK);
-    Square kingSq = m_SideToMove == Color::WHITE ? whiteKingSq : blackKingSq;
+    Square stmKingSq = m_SideToMove == Color::WHITE ? whiteKingSq : blackKingSq;
 
-    currState().checkInfo.checkers = attackersTo(~m_SideToMove, kingSq);
+    Color opp = ~m_SideToMove;
+    currState().checkInfo.checkers = attackersTo(opp, stmKingSq);
     currState().checkInfo.blockers[static_cast<int>(Color::WHITE)] =
         pinnersBlockers(whiteKingSq, pieces(Color::BLACK), currState().checkInfo.pinners[static_cast<int>(Color::WHITE)]);
     currState().checkInfo.blockers[static_cast<int>(Color::BLACK)] =
         pinnersBlockers(blackKingSq, pieces(Color::WHITE), currState().checkInfo.pinners[static_cast<int>(Color::BLACK)]);
+
+    currState().checkInfo.checkSquares[PieceType::PAWN] =
+        attacks::pawnAttacks(opp, kingSq(opp));
+    currState().checkInfo.checkSquares[PieceType::KNIGHT] =
+        attacks::knightAttacks(kingSq(opp));
+    Bitboard bishopSqrs = currState().checkInfo.checkSquares[PieceType::BISHOP] =
+        attacks::bishopAttacks(kingSq(opp), allPieces());
+    Bitboard rookSqrs = currState().checkInfo.checkSquares[PieceType::ROOK] =
+        attacks::rookAttacks(kingSq(opp), allPieces());
+    currState().checkInfo.checkSquares[PieceType::QUEEN] =
+        bishopSqrs | rookSqrs;
 }
 
 void Board::calcThreats()
