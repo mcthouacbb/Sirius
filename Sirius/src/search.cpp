@@ -592,9 +592,12 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 !inCheck &&
                 alpha < SCORE_WIN &&
                 stack->staticEval + fpMargin <= alpha)
-            {
                 continue;
-            }
+
+            if (lmrDepth <= 2 &&
+                !quiet &&
+                histScore < -1024 * depth * depth - 1024)
+                continue;
 
             // late move pruning(~23 elo)
             if (!pvNode &&
