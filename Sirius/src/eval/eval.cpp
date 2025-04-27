@@ -188,14 +188,20 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData, const Ev
     Bitboard safe = ~board.pieces(us) & (~evalData.attacked[them] | (weak & evalData.attackedBy2[us]));
 
     eval += SAFE_KNIGHT_CHECK * (knightChecks & safe).popcount();
+    if ((knightChecks & safe).empty())
+        eval += UNSAFE_KNIGHT_CHECK * (knightChecks & ~safe).popcount();
+    
     eval += SAFE_BISHOP_CHECK * (bishopChecks & safe).popcount();
+    if ((bishopChecks & safe).empty())
+        eval += UNSAFE_BISHOP_CHECK * (bishopChecks & ~safe).popcount();
+    
     eval += SAFE_ROOK_CHECK * (rookChecks & safe).popcount();
-    eval += SAFE_QUEEN_CHECK * (queenChecks & safe).popcount();
+    if ((rookChecks & safe).empty())
+        eval += UNSAFE_ROOK_CHECK * (rookChecks & ~safe).popcount();
 
-    eval += UNSAFE_KNIGHT_CHECK * (knightChecks & ~safe).popcount();
-    eval += UNSAFE_BISHOP_CHECK * (bishopChecks & ~safe).popcount();
-    eval += UNSAFE_ROOK_CHECK * (rookChecks & ~safe).popcount();
-    eval += UNSAFE_QUEEN_CHECK * (queenChecks & ~safe).popcount();
+    eval += SAFE_QUEEN_CHECK * (queenChecks & safe).popcount();
+    if ((queenChecks & safe).empty())
+        eval += UNSAFE_QUEEN_CHECK * (queenChecks & ~safe).popcount();
 
     bool queenless = board.pieces(us, PieceType::QUEEN).empty();
     eval += QUEENLESS_ATTACK * queenless;
