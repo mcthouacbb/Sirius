@@ -116,8 +116,8 @@ inline int MainHistEntry::value(bool srcThreat, bool dstThreat) const
 
 inline void MainHistEntry::update(bool srcThreat, bool dstThreat, int bonus)
 {
-    m_Factorizer.update(bonus / 4);
-    m_Buckets[srcThreat][dstThreat].update(bonus * 3 / 4);
+    m_Factorizer.update(bonus);
+    m_Buckets[srcThreat][dstThreat].update(bonus);
 }
 
 // main history(~29 elo)
