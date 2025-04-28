@@ -726,10 +726,25 @@ bool Board::see(Move move, int margin) const
 
     bool us = false;
 
+    Bitboard whitePinned = checkBlockers(Color::WHITE) & pieces(Color::WHITE);
+    Bitboard blackPinned = checkBlockers(Color::BLACK) & pieces(Color::BLACK);
+
+    Bitboard whiteKingRay = attacks::alignedSquares(dst, kingSq(Color::WHITE));
+    Bitboard blackKingRay = attacks::alignedSquares(dst, kingSq(Color::BLACK));
+
+    Bitboard whitePinnedAligned = whiteKingRay & whitePinned;
+    Bitboard blackPinnedAligned = blackKingRay & blackPinned;
+
+    Bitboard pinned = whitePinned | blackPinned;
+    Bitboard pinnedAligned = whitePinnedAligned | blackPinnedAligned;
+
     while (true)
     {
         sideToMove = ~sideToMove;
         Bitboard stmAttackers = attackers & pieces(sideToMove);
+        if ((pinners(sideToMove) & allPieces).any())
+            stmAttackers &= ~pinned | pinnedAligned;
+
         if (stmAttackers.empty())
             return !us;
 

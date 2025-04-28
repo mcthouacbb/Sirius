@@ -85,7 +85,7 @@ void SearchThread::join()
 }
 
 Search::Search(Board& board)
-    : m_Board(board), m_ShouldStop(false), m_TT(2 * 1024 * 1024)
+    : m_Board(board), m_ShouldStop(false), m_TT(64)
 {
     setThreads(1);
 }
@@ -287,11 +287,11 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
             comm::currComm->reportSearchInfo(info);
         }
         if (thread.isMainThread() && m_TimeMan.stopSoft(bestMove, thread.nodes, thread.limits))
-        {
-            m_ShouldStop.store(true, std::memory_order_relaxed);
             break;
-        }
     }
+
+    if (thread.isMainThread())
+        m_ShouldStop.store(true, std::memory_order_relaxed);
 
     if (report)
     {
@@ -586,11 +586,12 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         {
             // futility pruning(~1 elo)
             int lmrDepth = std::max(depth - baseLMR, 0);
+            int fpMargin = std::max(fpBaseMargin + fpDepthMargin * lmrDepth + histScore / fpHistDivisor, 20);
             if (lmrDepth <= fpMaxDepth &&
                 quiet &&
                 !inCheck &&
                 alpha < SCORE_WIN &&
-                stack->eval + fpBaseMargin + fpDepthMargin * lmrDepth <= alpha)
+                stack->staticEval + fpMargin <= alpha)
             {
                 continue;
             }
@@ -629,7 +630,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         int extension = 0;
 
-        // singular extensions(~73 elo)
+        // singular extensions(~81 elo STC, ~91 elo LTC)
         if (doSE)
         {
             int sBeta = std::max(-SCORE_MATE, ttData.score - sBetaScale * depth / 16);

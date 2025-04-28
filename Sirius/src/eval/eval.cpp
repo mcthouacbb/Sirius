@@ -185,7 +185,7 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData, const Ev
     Bitboard queenChecks = evalData.attackedBy[us][QUEEN] & (bishopCheckSquares | rookCheckSquares);
 
     Bitboard weak = ~evalData.attacked[them] | (~evalData.attackedBy2[them] & evalData.attackedBy[them][KING]);
-    Bitboard safe = ~board.allPieces() & ~evalData.attacked[them] | (weak & evalData.attackedBy2[us]);
+    Bitboard safe = ~board.pieces(us) & (~evalData.attacked[them] | (weak & evalData.attackedBy2[us]));
 
     eval += SAFE_KNIGHT_CHECK * (knightChecks & safe).popcount();
     eval += SAFE_BISHOP_CHECK * (bishopChecks & safe).popcount();
@@ -264,7 +264,6 @@ PackedScore evaluateComplexity(const Board& board, const PawnStructure& pawnStru
 
     PackedScore complexity =
         COMPLEXITY_PAWNS * pawns.popcount() +
-        COMPLEXITY_PASSERS * pawnStructure.passedPawns.popcount() +
         COMPLEXITY_PAWNS_BOTH_SIDES * pawnsBothSides +
         COMPLEXITY_PAWN_ENDGAME * pawnEndgame +
         COMPLEXITY_OFFSET;
@@ -279,7 +278,7 @@ PackedScore evaluateComplexity(const Board& board, const PawnStructure& pawnStru
 int evaluateScale(const Board& board, PackedScore eval, const EvalState& evalState)
 {
     int scaleFactor = SCALE_FACTOR_NORMAL;
-    Color strongSide = eval.eg() > 0 ? WHITE : BLACK;
+    Color strongSide = eval.eg() > 0 ? WHITE : eval.eg() < 0 ? BLACK : board.sideToMove();
 
     auto endgameScale = endgames::probeScaleFunc(board, strongSide);
     if (endgameScale != nullptr)

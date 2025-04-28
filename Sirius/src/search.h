@@ -122,7 +122,7 @@ public:
 
     void setTTSize(int mb)
     {
-        m_TT.resize(mb);
+        m_TT.resize(mb, m_Threads.size());
     }
 private:
     void joinThreads();

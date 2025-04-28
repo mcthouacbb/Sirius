@@ -37,7 +37,9 @@ All features tested against commit a049bb98 or functionally equivalent commits e
 	- History pruning: ~14 elo https://mcthouacbb.pythonanywhere.com/test/378/
 - Extensions
 	- Check extensions: ~13 elo https://mcthouacbb.pythonanywhere.com/test/392/
-	- Singular extensions: ~73 elo https://mcthouacbb.pythonanywhere.com/test/350/
+	- Singular extensions
+		- ~81 elo STC: https://mcthouacbb.pythonanywhere.com/test/662/
+		- ~91 elo LTC: https://mcthouacbb.pythonanywhere.com/test/663/
 - Late move reductions: ~111 elo https://mcthouacbb.pythonanywhere.com/test/368/
 
 ### In order of elo gain
@@ -51,8 +53,8 @@ All features tested against commit a049bb98 or functionally equivalent commits e
 - TT Move Ordering: ~106 elo
 - Correction history: ~104 elo
 - TT Cutoffs: ~101 elo
+- Singular extensions: ~91 elo
 - Reverse Futility Pruning: ~88 elo
-- Singular extensions: ~73 elo
 - Time Management: ~64 elo
 - QS pruning: ~55 elo
 - Continuation history: ~40 elo
