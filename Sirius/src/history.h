@@ -69,11 +69,11 @@ inline void HistoryEntry<MAX_VAL>::update(int bonus)
 
 constexpr int CORR_HIST_SCALE = 256;
 
-struct CorrHistEntry
+struct CorrHistValue
 {
 public:
-    CorrHistEntry() = default;
-    CorrHistEntry(int16_t value);
+    CorrHistValue() = default;
+    CorrHistValue(int16_t value);
 
     operator int() const;
 
@@ -82,21 +82,52 @@ private:
     int16_t m_Value;
 };
 
-inline CorrHistEntry::CorrHistEntry(int16_t value)
+inline CorrHistValue::CorrHistValue(int16_t value)
 {
     m_Value = value;
 }
 
-inline CorrHistEntry::operator int() const
+inline CorrHistValue::operator int() const
 {
     return m_Value;
 }
 
-inline void CorrHistEntry::update(int target, int weight)
+inline void CorrHistValue::update(int target, int weight)
 {
     int newValue = (m_Value * (256 - weight) + target * weight) / 256;
     newValue = std::clamp(newValue, m_Value - search::maxCorrHistUpdate, m_Value + search::maxCorrHistUpdate);
     m_Value = static_cast<int16_t>(std::clamp(newValue, -search::maxCorrHist, search::maxCorrHist));
+}
+
+struct CorrHistEntry
+{
+public:
+    CorrHistEntry() = default;
+    CorrHistEntry(int16_t value);
+
+    int value(int phase) const;
+
+    void update(int target, int weight, int phase);
+private:
+    CorrHistValue m_Base;
+    std::array<CorrHistValue, 4> m_Buckets;
+};
+
+inline CorrHistEntry::CorrHistEntry(int16_t value)
+    : m_Base(value), m_Buckets({CorrHistValue(value), CorrHistValue(value), CorrHistValue(value), CorrHistValue(value)})
+{
+
+}
+
+inline int CorrHistEntry::value(int phase) const
+{
+    return std::clamp(m_Base + m_Buckets[std::min(phase / 6, 3)], -search::maxCorrHist, search::maxCorrHist);
+}
+
+inline void CorrHistEntry::update(int target, int weight, int phase)
+{
+    m_Base.update(target, weight / 2);
+    m_Buckets[std::min(phase / 6, 3)].update(target, weight / 2);
 }
 
 static constexpr int HISTORY_MAX = 16384;
