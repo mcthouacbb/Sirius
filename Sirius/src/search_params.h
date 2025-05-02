@@ -89,7 +89,7 @@ SEARCH_PARAM(aspWideningFactor, 3, 1, 32, 2);
 SEARCH_PARAM(minIIRDepth, 4, 2, 9, 1);
 
 SEARCH_PARAM(rfpMaxDepth, 8, 4, 10, 1);
-SEARCH_PARAM(rfpImpMargin, 30, 30, 80, 8);
+SEARCH_PARAM(rfpImpMargin, 42, 30, 80, 8);
 SEARCH_PARAM(rfpNonImpMargin, 84, 50, 100, 8);
 SEARCH_PARAM(rfpOppWorsening, 15, 10, 100, 8);
 SEARCH_PARAM(rfpHistDivisor, 413, 256, 512, 16);
