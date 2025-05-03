@@ -279,7 +279,7 @@ template<Color us>
 PackedScore evaluateSpace(const Board& board, const EvalData& evalData, const PawnStructure& pawnStructure)
 {
     constexpr Color them = ~us;
-    Bitboard OPP_RANKS = us == Color::WHITE ?
+    constexpr Bitboard OPP_RANKS = us == Color::WHITE ?
         RANK_5_BB | RANK_6_BB | RANK_7_BB | RANK_8_BB :
         RANK_1_BB | RANK_2_BB | RANK_3_BB | RANK_4_BB;
 
