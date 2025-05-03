@@ -275,6 +275,26 @@ PackedScore evaluateComplexity(const Board& board, const PawnStructure& pawnStru
     return PackedScore(0, egSign * egComplexity);
 }
 
+template<Color us>
+PackedScore evaluateSpace(const Board& board, const EvalData& evalData, const PawnStructure& pawnStructure)
+{
+    constexpr Color them = ~us;
+    Bitboard OPP_RANKS = us == Color::WHITE ?
+        RANK_5_BB | RANK_6_BB | RANK_7_BB | RANK_8_BB :
+        RANK_1_BB | RANK_2_BB | RANK_3_BB | RANK_4_BB;
+
+    Bitboard invasionSquares = OPP_RANKS & evalData.attackedBy2[us] & ~pawnStructure.pawnDblAttacks[us];
+    invasionSquares &=
+        ~evalData.attacked[them] & ~pawnStructure.pawnAttackSpans[them] &
+        ~attacks::pawnAttacks<them>(pawnStructure.pawnAttackSpans[them]);
+
+    PackedScore eval{0, 0};
+
+    eval += INVASION_SQUARES * invasionSquares.popcount();
+
+    return eval;
+}
+
 int evaluateScale(const Board& board, PackedScore eval, const EvalState& evalState)
 {
     int scaleFactor = SCALE_FACTOR_NORMAL;
@@ -325,6 +345,7 @@ void nonIncrementalEval(const Board& board, const EvalState& evalState, const Pa
     eval += evaluateKings<WHITE>(board, evalData, evalState) - evaluateKings<BLACK>(board, evalData, evalState);
     eval += evaluatePassedPawns<WHITE>(board, pawnStructure, evalData) - evaluatePassedPawns<BLACK>(board, pawnStructure, evalData);
     eval += evaluateThreats<WHITE>(board, evalData) - evaluateThreats<BLACK>(board, evalData);
+    eval += evaluateSpace<WHITE>(board, evalData, pawnStructure) - evaluateSpace<WHITE>(board, evalData, pawnStructure);
     eval += evaluateComplexity(board, pawnStructure, eval);
 }
 
