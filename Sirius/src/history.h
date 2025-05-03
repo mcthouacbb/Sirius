@@ -121,13 +121,12 @@ inline CorrHistEntry::CorrHistEntry(int16_t value)
 
 inline int CorrHistEntry::value(int phase) const
 {
-    return std::clamp(m_Base + m_Buckets[std::min(phase / 6, 3)], -search::maxCorrHist, search::maxCorrHist);
+    return m_Buckets[std::min(phase / 6, 3)];
 }
 
 inline void CorrHistEntry::update(int target, int weight, int phase)
 {
-    m_Base.update(target, weight / 2);
-    m_Buckets[std::min(phase / 6, 3)].update(target, weight / 2);
+    m_Buckets[std::min(phase / 6, 3)].update(target, weight);
 }
 
 static constexpr int HISTORY_MAX = 16384;
