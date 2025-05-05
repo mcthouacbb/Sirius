@@ -338,10 +338,6 @@ void Board::makeMove(Move move, eval::EvalState* evalState)
 
     currState().halfMoveClock = prev.halfMoveClock + 1;
     currState().pliesFromNull = prev.pliesFromNull + 1;
-    currState().epSquare = prev.epSquare;
-    currState().castlingRights = prev.castlingRights;
-    currState().zkey = prev.zkey;
-    currState().pawnKey = prev.pawnKey;
 
     m_GamePly++;
 
@@ -427,8 +423,6 @@ void Board::makeMove(Move move, eval::EvalState* evalState)
 
     currState().zkey.updateCastlingRights(currState().castlingRights);
 
-
-
     if (currState().epSquare == prev.epSquare)
         currState().epSquare = -1;
 
@@ -471,9 +465,6 @@ void Board::makeNullMove()
     currState().halfMoveClock = prev.halfMoveClock + 1;
     currState().pliesFromNull = 0;
     currState().epSquare = -1;
-    currState().castlingRights = prev.castlingRights;
-    currState().zkey = prev.zkey;
-    currState().pawnKey = prev.pawnKey;
     currState().repetitions = 0;
     currState().lastRepetition = 0;
 

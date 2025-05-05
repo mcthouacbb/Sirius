@@ -45,7 +45,7 @@ constexpr Keys keys = generateZobristKeys();
 struct ZKey
 {
     uint64_t value;
-
+    
     void flipSideToMove();
     void addPiece(PieceType piece, Color color, Square square);
     void removePiece(PieceType piece, Color color, Square square);
