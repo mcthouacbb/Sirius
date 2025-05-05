@@ -11,7 +11,7 @@ PawnStructure::PawnStructure(const Board& board)
     Bitboard bpawns = board.pieces(Color::BLACK, PieceType::PAWN);
     pawnAttacks[Color::WHITE] = attacks::pawnAttacks<Color::WHITE>(wpawns);
     pawnAttackSpans[Color::WHITE] = attacks::fillUp<Color::WHITE>(pawnAttacks[Color::WHITE]);
-    pawnDblAttacks[Color::WHITE] = attacks::pawnWestAttacks<Color::WHITE>(wpawns) & attacks::pawnEastAttacks<Color::BLACK>(bpawns);
+    pawnDblAttacks[Color::WHITE] = attacks::pawnWestAttacks<Color::WHITE>(wpawns) & attacks::pawnEastAttacks<Color::WHITE>(wpawns);
 
     pawnAttacks[Color::BLACK] = attacks::pawnAttacks<Color::BLACK>(bpawns);
     pawnAttackSpans[Color::BLACK] = attacks::fillUp<Color::BLACK>(pawnAttacks[Color::BLACK]);
