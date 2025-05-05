@@ -345,7 +345,7 @@ void nonIncrementalEval(const Board& board, const EvalState& evalState, const Pa
     eval += evaluateKings<WHITE>(board, evalData, evalState) - evaluateKings<BLACK>(board, evalData, evalState);
     eval += evaluatePassedPawns<WHITE>(board, pawnStructure, evalData) - evaluatePassedPawns<BLACK>(board, pawnStructure, evalData);
     eval += evaluateThreats<WHITE>(board, evalData) - evaluateThreats<BLACK>(board, evalData);
-    eval += evaluateSpace<WHITE>(board, evalData, pawnStructure) - evaluateSpace<WHITE>(board, evalData, pawnStructure);
+    eval += evaluateSpace<WHITE>(board, evalData, pawnStructure) - evaluateSpace<BLACK>(board, evalData, pawnStructure);
     eval += evaluateComplexity(board, pawnStructure, eval);
 }
 
