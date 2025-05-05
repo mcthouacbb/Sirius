@@ -140,8 +140,7 @@ public:
     ZKey zkey() const;
     ZKey pawnKey() const;
     ZKey nonPawnKey(Color color) const;
-    ZKey minorPieceKey() const;
-    ZKey majorPieceKey() const;
+    ZKey tripletKey(PieceType pt1, PieceType pt2) const;
     uint64_t materialKey() const;
 
     bool isDraw(int searchPly) const;
@@ -303,21 +302,12 @@ inline ZKey Board::nonPawnKey(Color color) const
     return currState().nonPawnKeys[color];
 }
 
-inline ZKey Board::minorPieceKey() const
+inline ZKey Board::tripletKey(PieceType pt1, PieceType pt2) const
 {
     return ZKey{
         currState().pieceKeys[PieceType::KING].value ^
-        currState().pieceKeys[PieceType::BISHOP].value ^
-        currState().pieceKeys[PieceType::KNIGHT].value
-    };
-}
-
-inline ZKey Board::majorPieceKey() const
-{
-    return ZKey{
-        currState().pieceKeys[PieceType::KING].value ^
-        currState().pieceKeys[PieceType::QUEEN].value ^
-        currState().pieceKeys[PieceType::ROOK].value
+        currState().pieceKeys[pt1].value ^
+        currState().pieceKeys[pt2].value
     };
 }
 

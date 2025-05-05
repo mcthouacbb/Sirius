@@ -109,17 +109,23 @@ using ContHist = MultiArray<CHEntry, 12, 64>;
 // capture history(~19 elo)
 using CaptHist = MultiArray<HistoryEntry<HISTORY_MAX>, 7, 12, 64, 2, 2>;
 
+enum class Triplet
+{
+    KPN, KPB, KPR, KPQ,
+    KNB, KNR, KNQ,
+    KBR, KBQ,
+    KRQ
+};
+
 // correction history(~104 elo)
 constexpr int PAWN_CORR_HIST_ENTRIES = 16384;
 constexpr int NON_PAWN_CORR_HIST_ENTRIES = 16384;
 constexpr int THREATS_CORR_HIST_ENTRIES = 16384;
-constexpr int MINOR_PIECE_CORR_HIST_ENTRIES = 16384;
-constexpr int MAJOR_PIECE_CORR_HIST_ENTRIES = 16384;
+constexpr int TRIPLET_CORR_HIST_ENTRIES = 16384;
 using PawnCorrHist = MultiArray<CorrHistEntry, 2, PAWN_CORR_HIST_ENTRIES>;
 using NonPawnCorrHist = MultiArray<CorrHistEntry, 2, 2, NON_PAWN_CORR_HIST_ENTRIES>;
 using ThreatsCorrHist = MultiArray<CorrHistEntry, 2, THREATS_CORR_HIST_ENTRIES>;
-using MinorPieceCorrHist = MultiArray<CorrHistEntry, 2, MINOR_PIECE_CORR_HIST_ENTRIES>;
-using MajorPieceCorrHist = MultiArray<CorrHistEntry, 2, MAJOR_PIECE_CORR_HIST_ENTRIES>;
+using TripletCorrHist = MultiArray<CorrHistEntry, 2, 10, TRIPLET_CORR_HIST_ENTRIES>;
 using ContCorrEntry = MultiArray<CorrHistEntry, 12, 64>;
 using ContCorrHist = MultiArray<ContCorrEntry, 12, 64>;
 
@@ -179,7 +185,6 @@ private:
     PawnCorrHist m_PawnCorrHist;
     NonPawnCorrHist m_NonPawnCorrHist;
     ThreatsCorrHist m_ThreatsCorrHist;
-    MinorPieceCorrHist m_MinorPieceCorrHist;
-    MajorPieceCorrHist m_MajorPieceCorrHist;
+    TripletCorrHist m_TripletCorrHist;
     ContCorrHist m_ContCorrHist;
 };

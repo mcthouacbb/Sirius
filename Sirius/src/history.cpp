@@ -30,6 +30,35 @@ void fillHistTable(std::array<T, N>& arr, int value)
         fillHistTable(elem, value);
 }
 
+std::pair<PieceType, PieceType> tripletPieces(Triplet triplet)
+{
+    using enum PieceType;
+    constexpr std::pair<PieceType, PieceType> result[] = {
+        {PAWN, KNIGHT}, {PAWN, BISHOP}, {PAWN, ROOK}, {PAWN, QUEEN},
+        {KNIGHT, BISHOP}, {KNIGHT, ROOK}, {KNIGHT, QUEEN},
+        {BISHOP, ROOK}, {BISHOP, QUEEN},
+        {ROOK, QUEEN}
+    };
+    return result[static_cast<int>(triplet)];
+}
+
+int tripletCorrWeight(Triplet triplet)
+{
+    switch (triplet)
+    {
+        case Triplet::KPN: return search::TKPNCorrWeight;
+        case Triplet::KPB: return search::TKPBCorrWeight;
+        case Triplet::KPR: return search::TKPRCorrWeight;
+        case Triplet::KPQ: return search::TKPQCorrWeight;
+        case Triplet::KNB: return search::TKNBCorrWeight;
+        case Triplet::KNR: return search::TKNRCorrWeight;
+        case Triplet::KNQ: return search::TKNQCorrWeight;
+        case Triplet::KBR: return search::TKBRCorrWeight;
+        case Triplet::KBQ: return search::TKBQCorrWeight;
+        case Triplet::KRQ: return search::TKRQCorrWeight;
+    }
+}
+
 }
 
 int historyBonus(int depth)
@@ -53,8 +82,7 @@ void History::clear()
     fillHistTable(m_PawnCorrHist, 0);
     fillHistTable(m_NonPawnCorrHist, 0);
     fillHistTable(m_ThreatsCorrHist, 0);
-    fillHistTable(m_MinorPieceCorrHist, 0);
-    fillHistTable(m_MajorPieceCorrHist, 0);
+    fillHistTable(m_TripletCorrHist, 0);
     fillHistTable(m_ContCorrHist, 0);
 }
 
@@ -77,22 +105,37 @@ int History::getNoisyStats(const Board& board, Move move) const
 
 int History::correctStaticEval(const Board& board, int staticEval, const SearchStack* stack, int ply) const
 {
+    using enum Triplet;
+
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
     int pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % PAWN_CORR_HIST_ENTRIES];
     int nonPawnStmEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(stm)][board.nonPawnKey(stm).value % NON_PAWN_CORR_HIST_ENTRIES];
     int nonPawnNstmEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(~stm)][board.nonPawnKey(~stm).value % NON_PAWN_CORR_HIST_ENTRIES];
     int threatsEntry = m_ThreatsCorrHist[static_cast<int>(stm)][threatsKey % THREATS_CORR_HIST_ENTRIES];
-    int minorPieceEntry = m_MinorPieceCorrHist[static_cast<int>(stm)][board.minorPieceKey().value % MINOR_PIECE_CORR_HIST_ENTRIES];
-    int majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
 
     int correction = 0;
     correction += search::pawnCorrWeight * pawnEntry;
     correction += search::nonPawnStmCorrWeight * nonPawnStmEntry;
     correction += search::nonPawnNstmCorrWeight * nonPawnNstmEntry;
     correction += search::threatsCorrWeight * threatsEntry;
-    correction += search::minorCorrWeight * minorPieceEntry;
-    correction += search::majorCorrWeight * majorPieceEntry;
+
+    const auto tripletEntry = [&](Triplet triplet)
+    {
+        auto pieces = tripletPieces(triplet);
+        auto tripletKey = board.tripletKey(pieces.first, pieces.second);
+        return m_TripletCorrHist[static_cast<int>(stm)][static_cast<int>(triplet)][tripletKey.value % TRIPLET_CORR_HIST_ENTRIES];
+    };
+
+    for (Triplet triplet: {
+        KPN, KPB, KPR, KPQ,
+        KNB, KNR, KNQ,
+        KBR, KBQ,
+        KRQ
+    })
+    {
+        correction += tripletCorrWeight(triplet) * tripletEntry(triplet);
+    }
 
     Move prevMove = ply > 0 ? stack[-1].playedMove : Move::nullmove();
     // use pawn to a1 as sentinel for null moves in contcorrhist
@@ -142,6 +185,8 @@ void History::updateNoisyStats(const Board& board, Move move, int bonus)
 
 void History::updateCorrHist(const Board& board, int bonus, int depth, const SearchStack* stack, int ply)
 {
+    using enum Triplet;
+
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
     int scaledBonus = bonus * CORR_HIST_SCALE;
@@ -159,11 +204,23 @@ void History::updateCorrHist(const Board& board, int bonus, int depth, const Sea
     auto& threatsEntry = m_ThreatsCorrHist[static_cast<int>(stm)][threatsKey % THREATS_CORR_HIST_ENTRIES];
     threatsEntry.update(scaledBonus, weight);
 
-    auto& minorPieceEntry = m_MinorPieceCorrHist[static_cast<int>(stm)][board.minorPieceKey().value % MINOR_PIECE_CORR_HIST_ENTRIES];
-    minorPieceEntry.update(scaledBonus, weight);
+    const auto updateTriplet = [&](Triplet triplet)
+    {
+        auto pieces = tripletPieces(triplet);
+        auto tripletKey = board.tripletKey(pieces.first, pieces.second);
+        auto& tripletEntry = m_TripletCorrHist[static_cast<int>(stm)][static_cast<int>(triplet)][tripletKey.value % TRIPLET_CORR_HIST_ENTRIES];
+        tripletEntry.update(scaledBonus, weight);
+    };
 
-    auto& majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
-    majorPieceEntry.update(scaledBonus, weight);
+    for (Triplet triplet: {
+        KPN, KPB, KPR, KPQ,
+        KNB, KNR, KNQ,
+        KBR, KBQ,
+        KRQ
+    })
+    {
+        updateTriplet(triplet);
+    }
 
     Move prevMove = ply > 0 ? stack[-1].playedMove : Move::nullmove();
     // use pawn to a1 as sentinel for null moves in contcorrhist
