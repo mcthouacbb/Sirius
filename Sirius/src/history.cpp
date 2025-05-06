@@ -86,6 +86,9 @@ int History::correctStaticEval(const Board& board, int staticEval, const SearchS
     int minorPieceEntry = m_MinorPieceCorrHist[static_cast<int>(stm)][board.minorPieceKey().value % MINOR_PIECE_CORR_HIST_ENTRIES];
     int majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
 
+    Square kingSq = board.kingSq(stm);
+    int kingRingEntry = m_KingRingCorrhist[static_cast<int>(stm)][kingSq.value()][attacks::kingRingAttacksIdx(kingSq, board.threats())];
+    
     int correction = 0;
     correction += search::pawnCorrWeight * pawnEntry;
     correction += search::nonPawnStmCorrWeight * nonPawnStmEntry;
@@ -93,6 +96,7 @@ int History::correctStaticEval(const Board& board, int staticEval, const SearchS
     correction += search::threatsCorrWeight * threatsEntry;
     correction += search::minorCorrWeight * minorPieceEntry;
     correction += search::majorCorrWeight * majorPieceEntry;
+    correction += search::kingRingCorrWeight * kingRingEntry;
 
     Move prevMove = ply > 0 ? stack[-1].playedMove : Move::nullmove();
     // use pawn to a1 as sentinel for null moves in contcorrhist
@@ -164,6 +168,10 @@ void History::updateCorrHist(const Board& board, int bonus, int depth, const Sea
 
     auto& majorPieceEntry = m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % MAJOR_PIECE_CORR_HIST_ENTRIES];
     majorPieceEntry.update(scaledBonus, weight);
+
+    Square kingSq = board.kingSq(stm);
+    auto& kingRingEntry = m_KingRingCorrhist[static_cast<int>(stm)][kingSq.value()][attacks::kingRingAttacksIdx(kingSq, board.threats())];
+    kingRingEntry.update(scaledBonus, weight);
 
     Move prevMove = ply > 0 ? stack[-1].playedMove : Move::nullmove();
     // use pawn to a1 as sentinel for null moves in contcorrhist

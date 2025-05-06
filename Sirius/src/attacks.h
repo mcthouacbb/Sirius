@@ -157,10 +157,7 @@ inline Bitboard kingFlank(Color color, int file)
     return attackData.kingFlanks[static_cast<int>(color)][file];
 }
 
-inline Bitboard kingRing(Square sq)
-{
-    return attackData.kingRings[sq.value()];
-}
+uint32_t kingRingAttacksIdx(Square kingSq, Bitboard attacks);
 
 inline Bitboard pawnAttacks(Color color, Square square)
 {
