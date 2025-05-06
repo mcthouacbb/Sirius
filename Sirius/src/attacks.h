@@ -41,6 +41,8 @@ struct AttackData
     std::array<Bitboard, 64> isolatedPawnMasks;
     MultiArray<Bitboard, 2, 8> kingFlanks;
 
+    std::array<Bitboard, 64> kingRings;
+
     MultiArray<Bitboard, 2, 64> pawnAttacks;
     std::array<Bitboard, 64> kingAttacks;
     std::array<Bitboard, 64> knightAttacks;
@@ -149,9 +151,15 @@ inline Bitboard isolatedPawnMask(Square square)
 {
     return attackData.isolatedPawnMasks[square.value()];
 }
+
 inline Bitboard kingFlank(Color color, int file)
 {
     return attackData.kingFlanks[static_cast<int>(color)][file];
+}
+
+inline Bitboard kingRing(Square sq)
+{
+    return attackData.kingRings[sq.value()];
 }
 
 inline Bitboard pawnAttacks(Color color, Square square)

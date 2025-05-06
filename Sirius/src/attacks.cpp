@@ -1,4 +1,5 @@
 #include "attacks.h"
+#include <algorithm>
 
 namespace attacks
 {
@@ -137,6 +138,73 @@ constexpr uint64_t bishopMagics[64] = {
     0x40102000a0a60140ULL,
 };
 
+constexpr uint64_t kingRingMagics[64] = {
+    90080788774846464,
+    9241966978309033984,
+    4620983488787548240,
+    2311475260756902402,
+    9518358363411316773,
+    11534847294398595328,
+    3177290087742441476,
+    27166733710657664,
+    4684904698359056384,
+    2306978267963328512,
+    2306269624053795328,
+    1153134819006220320,
+    4899969720893079552,
+    1153240367340979200,
+    360307899108057104,
+    1153064509846323200,
+    288406323781976707,
+    12718183085942784000,
+    2308732564442972196,
+    9619772366947092736,
+    1441205207206838784,
+    1297063905902854403,
+    9224779970353190912,
+    18034190331150404,
+    2326110321016115200,
+    9466587307457974276,
+    282127811739780,
+    37506553665818632,
+    282102578807349,
+    4899951596273664000,
+    2324455623653064788,
+    19141398465873920,
+    144132917768159368,
+    2904823959285407744,
+    4629974281271377929,
+    1306062586185252897,
+    5769128989776414888,
+    4638901680150151808,
+    9838148577006714890,
+    4611730003191679012,
+    2251868537487360,
+    18665481201320448,
+    1955763454884184196,
+    9367489423987519488,
+    34376654856,
+    8214566822017499136,
+    4900197871704223744,
+    5276160,
+    288234774470983692,
+    297237575410656768,
+    576460891354038466,
+    2261147814266888,
+    95138544683057249,
+    3030929700877911040,
+    3760505697444823185,
+    9241396349256597673,
+    611478789234692,
+    9223653521495692416,
+    2251834374783064,
+    616422313051168,
+    4611862223772459036,
+    180152783337558024,
+    1199083402398565377,
+    1213861508170241
+};
+
 constexpr uint32_t rookIndexBits[64] = {
     12, 11, 11, 11, 11, 11, 11, 12,
     11, 10, 10, 10, 10, 10, 10, 11,
@@ -157,6 +225,17 @@ constexpr uint32_t bishopIndexBits[64] = {
     5, 5, 7, 7, 7, 7, 5, 5,
     5, 5, 5, 5, 5, 5, 5, 5,
     6, 5, 5, 5, 5, 5, 5, 6
+};
+
+constexpr uint32_t kingRingIndexBits[64] = {
+     1,  0,  0,  0,  1,  2,  3,  2,
+     0,  0,  1,  1,  0,  3,  0,  4,
+     8,  2,  9,  7,  8,  8,  0,  9,
+     6, 11,  7,  3,  6,  4,  8, 10,
+     0,  4,  1,  8,  4,  6, 13,  0,
+     7,  6, 11,  1,  9, 15,  7,  1,
+    12,  4,  0, 12,  1, 12,  3,  3,
+     0,  9,  6,  5,  6, 14, 13, 11
 };
 
 Bitboard rays[64][8] = {};
@@ -413,9 +492,18 @@ void init()
         black |= black >> 32;
         attackData.passedPawnMasks[static_cast<int>(Color::BLACK)][i] = black | black.west() | black.east();
 
-        Bitboard file = white | black | Bitboard::fromSquare(Square(i));
-        attackData.isolatedPawnMasks[i] = file.west() | file.east();
+        Bitboard fileBB = white | black | Bitboard::fromSquare(Square(i));
+        attackData.isolatedPawnMasks[i] = fileBB.west() | fileBB.east();
+        
+        Square kingSq = Square(i);
+        int rank = std::clamp(i / 8, 1, 6);
+        int file = std::clamp(i % 8, 1, 6);
+        Bitboard kingRing = attacks::kingAttacks(Square(rank, file));
+        kingRing |= Bitboard::fromSquare(Square(rank, file));
+        kingRing &= ~Bitboard::fromSquare(kingSq);
+        attackData.kingRings[i] = kingRing;
     }
+
     Bitboard kingFlank = FILE_A_BB | FILE_B_BB | FILE_C_BB | FILE_D_BB;
     Bitboard whiteRanks = RANK_1_BB | RANK_2_BB | RANK_3_BB | RANK_4_BB | RANK_5_BB;
     Bitboard blackRanks = RANK_8_BB | RANK_7_BB | RANK_6_BB | RANK_5_BB | RANK_4_BB;
