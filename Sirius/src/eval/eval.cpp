@@ -286,7 +286,7 @@ PackedScore evaluateSpace(const Board& board, const EvalData& evalData, const Pa
     Bitboard invasionSquares = OPP_RANKS & evalData.attackedBy2[us] & ~pawnStructure.pawnDblAttacks[us];
     invasionSquares &=
         ~evalData.attacked[them] & ~pawnStructure.pawnAttackSpans[them] &
-        ~attacks::pawnAttacks<them>(pawnStructure.pawnAttackSpans[them]);
+        ~attacks::fillUp<them>(board.pieces(them, PieceType::PAWN));
 
     PackedScore eval{0, 0};
 
