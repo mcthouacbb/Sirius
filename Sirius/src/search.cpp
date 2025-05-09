@@ -21,7 +21,7 @@ MultiArray<int, 64, 64> genLMRTable()
     {
         for (int i = 1; i < 64; i++)
         {
-            lmrTable[d][i] = static_cast<int>(lmrBase / 100.0 + std::log(static_cast<double>(d)) * std::log(static_cast<double>(i)) / (lmrDivisor / 100.0));
+            lmrTable[d][i] = static_cast<int>(lmrBase + lmrScale * std::log(static_cast<double>(d)) * std::log(static_cast<double>(i)));
         }
     }
     return lmrTable;
@@ -579,13 +579,13 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         Piece movedPiece = movingPiece(board, move);
         int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
         int histScore = quiet ? history.getQuietStats(move, threats, movedPiece, stack, rootPly) : history.getNoisyStats(board, move);
-        baseLMR -= histScore / (quiet ? lmrQuietHistDivisor : lmrNoisyHistDivisor);
+        baseLMR -= 1024 * histScore / (quiet ? lmrQuietHistDivisor : lmrNoisyHistDivisor);
 
         // move loop pruning(~184 elo)
         if (!root && quietLosing && bestScore > -SCORE_WIN)
         {
             // futility pruning(~1 elo)
-            int lmrDepth = std::max(depth - baseLMR, 0);
+            int lmrDepth = std::max(depth - baseLMR / 1024, 0);
             int fpMargin = std::max(fpBaseMargin + fpDepthMargin * lmrDepth + histScore / fpHistDivisor, 20);
             if (lmrDepth <= fpMaxDepth &&
                 quiet &&
@@ -680,14 +680,31 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         {
             int reduction = baseLMR;
 
-            reduction += !improving;
-            reduction += noisyTTMove;
-            reduction -= ttPV;
-            reduction -= givesCheck;
-            reduction -= inCheck;
-            reduction -= std::abs(stack->eval - rawStaticEval) > lmrCorrplexityMargin;
-            reduction += cutnode;
-            reduction += (stack + 1)->failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin);
+            if (!improving)
+                reduction += 1024;
+
+            if (noisyTTMove)
+                reduction += 1024;
+
+            if (ttPV)
+                reduction -= 1024;
+
+            if (givesCheck)
+                reduction -= 1024;
+
+            if (inCheck)
+                reduction -= 1024;
+
+            if (std::abs(stack->eval - rawStaticEval) > lmrCorrplexityMargin)
+                reduction -= 1024;
+
+            if (cutnode)
+                reduction += 1024;
+
+            if ((stack + 1)->failHighCount >= lmrFailHighCountMargin)
+                reduction += 1024;
+
+            reduction /= 1024;
 
             int reduced = std::min(std::max(newDepth - reduction, 1), newDepth);
             score = -search(thread, reduced, stack + 1, -alpha - 1, -alpha, false, true);
