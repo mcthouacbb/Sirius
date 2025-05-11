@@ -735,6 +735,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                     for (int i = 0; i < (stack + 1)->pvLength; i++)
                         stack->pv[i + 1] = (stack + 1)->pv[i];
                 }
+
+                if (bestScore < beta && depth >= 3 && depth <= 11 && std::abs(bestScore) < SCORE_WIN)
+                    depth--;
             }
 
             if (bestScore >= beta)
