@@ -112,7 +112,7 @@ SEARCH_PARAM(probcutReduction, 4, 3, 6, 1);
 SEARCH_PARAM(fpBaseMargin, 149, 60, 360, 12);
 SEARCH_PARAM(fpDepthMargin, 123, 10, 180, 12);
 SEARCH_PARAM(fpHistDivisor, 400, 256, 512, 16);
-SEARCH_PARAM(fpMaxDepth, 4, 4, 9, 1);
+SEARCH_PARAM(fpMaxDepth, 8, 4, 9, 1);
 
 SEARCH_PARAM(lmpMinMovesBase, 2, 2, 7, 1);
 
