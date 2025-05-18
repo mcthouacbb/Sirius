@@ -606,8 +606,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             int seeMargin = quiet ?
                 depth * seePruneMarginQuiet :
                 depth * seePruneMarginNoisy - std::clamp(histScore / seeCaptHistDivisor, -seeCaptHistMax * depth, seeCaptHistMax * depth);
-            if (!pvNode &&
-                !board.see(move, seeMargin))
+            if (!board.see(move, seeMargin))
                 continue;
 
             // history pruning(~14 elo)
