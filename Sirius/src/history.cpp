@@ -125,6 +125,13 @@ void History::updateQuietStats(const Board& board, Move move, const SearchStack*
     updateContHist(move, movingPiece(board, move), stack, ply, bonus);
 }
 
+void History::updateMainHist(Move move, Color stm, Bitboard threats, int bonus)
+{
+    bool srcThreat = threats.has(move.fromSq());
+    bool dstThreat = threats.has(move.toSq());
+    m_MainHist[static_cast<int>(stm)][move.fromTo()][srcThreat][dstThreat].update(bonus);
+}
+
 void History::updateContHist(Move move, Piece movingPiece, const SearchStack* stack, int ply, int bonus)
 {
     if (ply > 0 && stack[-1].contHistEntry != nullptr)

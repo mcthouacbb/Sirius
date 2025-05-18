@@ -23,8 +23,10 @@ struct SearchStack
 
     Move playedMove;
     Piece movedPiece;
+    bool quiet;
     Move excludedMove;
 
+    Bitboard threats;
     std::array<Move, 2> killers;
 
     ContCorrEntry* contCorrEntry;

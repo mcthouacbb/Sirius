@@ -161,6 +161,7 @@ public:
 
     void clear();
     void updateQuietStats(const Board& board, Move move, const SearchStack* stack, int ply, int bonus);
+    void updateMainHist(Move move, Color stm, Bitboard threats, int bonus);
     void updateContHist(Move move, Piece movingPiece, const SearchStack* stack, int ply, int bonus);
     void updateNoisyStats(const Board& board, Move move, int bonus);
     void updateCorrHist(const Board& board, int bonus, int depth, const SearchStack* stack, int ply);

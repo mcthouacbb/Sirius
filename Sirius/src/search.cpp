@@ -246,8 +246,10 @@ void Search::makeMove(SearchThread& thread, SearchStack* stack, Move move, int h
     stack->contHistEntry = &thread.history.contHistEntry(thread.board, move);
     stack->histScore = histScore;
     stack->playedMove = move;
+    stack->quiet = moveIsQuiet(thread.board, move);
     stack->movedPiece = movingPiece(thread.board, move);
     stack->contCorrEntry = &thread.history.contCorrEntry(thread.board, move);
+    stack->threats = thread.board.threats();
 
     thread.rootPly++;
     thread.board.makeMove(move, thread.evalState);
@@ -262,8 +264,10 @@ void Search::unmakeMove(SearchThread& thread, SearchStack* stack)
     stack->contHistEntry = nullptr;
     stack->histScore = 0;
     stack->playedMove = Move::nullmove();
+    stack->quiet = false;
     stack->movedPiece = Piece::NONE;
     stack->contCorrEntry = nullptr;
+    stack->threats = Bitboard(0);
 }
 
 void Search::makeNullMove(SearchThread& thread, SearchStack* stack)
@@ -840,6 +844,13 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             history.updateCorrHist(board, bestScore - stack->staticEval, depth, stack, rootPly);
 
         m_TT.store(board.zkey(), depth, rootPly, bestScore, rawStaticEval, bestMove, ttPV, bound);
+
+        if (rootPly > 0 && bound == TTEntry::Bound::UPPER_BOUND &&
+            (stack - 1)->playedMove != Move::nullmove() && (stack - 1)->quiet)
+        {
+            int bonus = historyBonus(depth);
+            history.updateMainHist((stack - 1)->playedMove, ~m_Board.sideToMove(), (stack - 1)->threats, bonus);
+        }
     }
 
     return bestScore;
