@@ -335,7 +335,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
 // Aspiration windows(~108 elo)
 int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prevScore)
 {
-    int delta = aspInitDelta;
+    int delta = aspInitDelta + prevScore * prevScore / 16384;
     int alpha = -SCORE_MAX;
     int beta = SCORE_MAX;
     int aspDepth = depth;
