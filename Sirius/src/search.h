@@ -65,6 +65,22 @@ enum class WakeFlag
     QUIT
 };
 
+struct RootMove
+{
+    Move move;
+    uint64_t nodes = 0;
+    int score = SCORE_NONE;
+    int previousScore = SCORE_NONE;
+
+    RootMove(Move move);
+};
+
+inline RootMove::RootMove(Move move)
+    : move(move)
+{
+
+}
+
 struct SearchThread
 {
     SearchThread(uint32_t id, std::thread&& thread);
@@ -79,6 +95,9 @@ struct SearchThread
 
     void reset();
     void startSearching();
+    void initRootMoves();
+    void sortRootMoves();
+    RootMove& findRootMove(Move move);
     void wait();
     void join();
 
@@ -100,6 +119,7 @@ struct SearchThread
     int rootPly = 0;
     int selDepth = 0;
     int nmpMinPly = 0;
+    std::vector<RootMove> rootMoves;
     std::array<SearchStack, MAX_PLY + 1> stack;
     History history;
     PawnTable pawnTable;
