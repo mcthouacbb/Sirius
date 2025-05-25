@@ -114,6 +114,10 @@ SEARCH_PARAM(fpDepthMargin, 123, 10, 180, 12);
 SEARCH_PARAM(fpHistDivisor, 400, 256, 512, 16);
 SEARCH_PARAM(fpMaxDepth, 8, 4, 9, 1);
 
+SEARCH_PARAM(noisyFpMaxDepth, 5, 2, 9, 1);
+SEARCH_PARAM(noisyFpDepthMargin, 122, 10, 360, 12);
+SEARCH_PARAM(noisyFpMovesPlayedMargin, 371, 20, 2000, 40);
+
 SEARCH_PARAM(lmpMinMovesBase, 2, 2, 7, 1);
 
 SEARCH_PARAM(seePruneMarginNoisy, -95, -120, -30, 6);
