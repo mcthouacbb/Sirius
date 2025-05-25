@@ -627,6 +627,19 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 continue;
             }
 
+            // capture futility pruning
+            fpMargin = 122 * depth + 371 * movesPlayed / 128;
+            if (depth <= 5 &&
+                !quiet &&
+                !inCheck &&
+                alpha < SCORE_WIN &&
+                stack->staticEval + fpMargin <= alpha)
+            {
+                if (!isMateScore(bestScore) && bestScore <= stack->staticEval + fpMargin)
+                    bestScore = stack->staticEval + fpMargin;
+                break;
+            }
+
             // late move pruning(~23 elo)
             if (!pvNode &&
                 !inCheck &&
