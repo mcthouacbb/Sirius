@@ -638,7 +638,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
             // late move pruning(~23 elo)
             if (!pvNode && !inCheck
-                && movesPlayed >= lmpMinMovesBase + depth * depth / (improving ? 1 : 2))
+                && movesPlayed >= lmpMinMovesBase
+                        + depth * depth / (improving || stack->staticEval >= beta + 50 ? 1 : 2))
                 break;
 
             // static exchange evaluation pruning(~5 elo)
