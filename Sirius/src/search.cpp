@@ -628,8 +628,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             }
 
             // capture futility pruning
-            fpMargin = noisyFpDepthMargin * depth + noisyFpMovesPlayedMargin * movesPlayed / 128;
-            if (depth <= noisyFpMaxDepth &&
+            fpMargin = noisyFpDepthMargin * lmrDepth + noisyFpMovesPlayedMargin * movesPlayed / 128;
+            if (lmrDepth <= noisyFpMaxDepth &&
                 !quiet &&
                 !inCheck &&
                 alpha < SCORE_WIN &&
