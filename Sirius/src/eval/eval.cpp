@@ -23,10 +23,13 @@ using enum PieceType;
 using enum Color;
 
 template<Color us, PieceType piece>
-PackedScore evaluatePieces(const Board& board, EvalData& evalData)
+PackedScore evaluatePieces(const Board& board, const PawnStructure& pawnStructure, EvalData& evalData)
 {
     constexpr Color them = ~us;
     constexpr Bitboard CENTER_SQUARES = (RANK_4_BB | RANK_5_BB) & (FILE_D_BB | FILE_E_BB);
+    constexpr Bitboard OPP_RANKS = us == Color::WHITE ?
+        RANK_5_BB | RANK_6_BB | RANK_7_BB | RANK_8_BB :
+        RANK_1_BB | RANK_2_BB | RANK_3_BB | RANK_4_BB;
 
     PackedScore eval{0, 0};
     Bitboard pieces = board.pieces(us, piece);
@@ -64,6 +67,13 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
 
         if (piece == BISHOP && (attacks & CENTER_SQUARES).multiple())
             eval += LONG_DIAG_BISHOP;
+
+        if (piece == PieceType::QUEEN)
+        {
+            Bitboard infiltrationSquares = ~pawnStructure.pawnAttackSpans[them] & OPP_RANKS;
+            if (infiltrationSquares.has(sq))
+                eval += QUEEN_INFILTRATION;
+        }
     }
 
     return eval;
@@ -317,10 +327,10 @@ void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& p
 
 void nonIncrementalEval(const Board& board, const EvalState& evalState, const PawnStructure& pawnStructure, EvalData& evalData, PackedScore& eval)
 {
-    eval += evaluatePieces<WHITE, KNIGHT>(board, evalData) - evaluatePieces<BLACK, KNIGHT>(board, evalData);
-    eval += evaluatePieces<WHITE, BISHOP>(board, evalData) - evaluatePieces<BLACK, BISHOP>(board, evalData);
-    eval += evaluatePieces<WHITE, ROOK>(board, evalData) - evaluatePieces<BLACK, ROOK>(board, evalData);
-    eval += evaluatePieces<WHITE, QUEEN>(board, evalData) - evaluatePieces<BLACK, QUEEN>(board, evalData);
+    eval += evaluatePieces<WHITE, KNIGHT>(board, pawnStructure, evalData) - evaluatePieces<BLACK, KNIGHT>(board, pawnStructure, evalData);
+    eval += evaluatePieces<WHITE, BISHOP>(board, pawnStructure, evalData) - evaluatePieces<BLACK, BISHOP>(board, pawnStructure, evalData);
+    eval += evaluatePieces<WHITE, ROOK>(board, pawnStructure, evalData) - evaluatePieces<BLACK, ROOK>(board, pawnStructure, evalData);
+    eval += evaluatePieces<WHITE, QUEEN>(board, pawnStructure, evalData) - evaluatePieces<BLACK, QUEEN>(board, pawnStructure, evalData);
 
     eval += evaluateKings<WHITE>(board, evalData, evalState) - evaluateKings<BLACK>(board, evalData, evalState);
     eval += evaluatePassedPawns<WHITE>(board, pawnStructure, evalData) - evaluatePassedPawns<BLACK>(board, pawnStructure, evalData);
