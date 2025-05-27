@@ -62,6 +62,9 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
             evalData.attackCount[us] += kingRingAtks.popcount();
         }
 
+        if (piece == PieceType::KNIGHT)
+            eval += KNIGHT_PROTECTOR * Square::chebyshev(sq, board.kingSq(us));
+
         if (piece == BISHOP && (attacks & CENTER_SQUARES).multiple())
             eval += LONG_DIAG_BISHOP;
     }
