@@ -275,6 +275,22 @@ PackedScore evaluateComplexity(const Board& board, const PawnStructure& pawnStru
     return PackedScore(0, egSign * egComplexity);
 }
 
+PackedScore evaluateClosedness(const Board& board)
+{
+    PackedScore eval = PackedScore(0, 0);
+
+    int numBlockedPairs =
+        (board.pieces(Color::WHITE, PieceType::PAWN) & board.pieces(Color::BLACK, PieceType::PAWN).south()).popcount();
+    int closedness = numBlockedPairs;
+    closedness = std::clamp(closedness, 0, 4);
+
+    int knightDiff = board.pieces(Color::WHITE, PieceType::KNIGHT).popcount() - board.pieces(Color::BLACK, PieceType::KNIGHT).popcount();
+
+    eval += knightDiff * KNIGHT_CLOSEDNESS[closedness];
+
+    return eval;
+}
+
 int evaluateScale(const Board& board, PackedScore eval, const EvalState& evalState)
 {
     int scaleFactor = SCALE_FACTOR_NORMAL;
@@ -326,6 +342,7 @@ void nonIncrementalEval(const Board& board, const EvalState& evalState, const Pa
     eval += evaluatePassedPawns<WHITE>(board, pawnStructure, evalData) - evaluatePassedPawns<BLACK>(board, pawnStructure, evalData);
     eval += evaluateThreats<WHITE>(board, evalData) - evaluateThreats<BLACK>(board, evalData);
     eval += evaluateComplexity(board, pawnStructure, eval);
+    eval += evaluateClosedness(board);
 }
 
 int evaluate(const Board& board, search::SearchThread* thread)
