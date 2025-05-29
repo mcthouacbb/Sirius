@@ -64,6 +64,12 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
 
         if (piece == BISHOP && (attacks & CENTER_SQUARES).multiple())
             eval += LONG_DIAG_BISHOP;
+
+        if (piece == PieceType::QUEEN)
+        {
+            Bitboard tmpPinners;
+            eval += WEAK_QUEEN * board.pinnersBlockers(sq, board.pieces(them), tmpPinners).any();
+        }
     }
 
     return eval;
