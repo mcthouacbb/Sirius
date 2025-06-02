@@ -211,6 +211,8 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData, const Ev
     Bitboard weakKingRing = (evalData.kingRing[them] & weak);
     int weakSquares = weakKingRing.popcount();
     eval += WEAK_KING_RING * weakSquares;
+    
+    eval += (evalData.attackedBy[them][PieceType::KNIGHT] & evalData.kingRing[them]).any() * KNIGHT_DEFENDING_KING;
 
     Bitboard flankAttacks = evalData.kingFlank[them] & evalData.attacked[us];
     Bitboard flankAttacks2 = evalData.kingFlank[them] & evalData.attackedBy2[us];
