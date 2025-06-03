@@ -176,7 +176,7 @@ inline Bitboard& rayFrom(uint32_t idx, Direction dir)
 
 Bitboard getMaskBlockerIdx(Bitboard mask, uint32_t idx)
 {
-    Bitboard blockers = Bitboard(0);
+    Bitboard blockers = EMPTY_BB;
     while (mask.any())
     {
         Square lsb = mask.poplsb();
@@ -194,7 +194,7 @@ void initRays()
         Bitboard bb = Bitboard::fromSquare(Square(square));
 
         Bitboard tmp = bb;
-        Bitboard result = Bitboard(0);
+        Bitboard result = EMPTY_BB;
         while (tmp.any())
         {
             tmp = tmp.north();
@@ -203,7 +203,7 @@ void initRays()
         rayFrom(square, Direction::NORTH) = result;
 
         tmp = bb;
-        result = Bitboard(0);
+        result = EMPTY_BB;
         while (tmp.any())
         {
             tmp = tmp.south();
@@ -212,7 +212,7 @@ void initRays()
         rayFrom(square, Direction::SOUTH) = result;
 
         tmp = bb;
-        result = Bitboard(0);
+        result = EMPTY_BB;
         while (tmp.any())
         {
             tmp = tmp.east();
@@ -221,7 +221,7 @@ void initRays()
         rayFrom(square, Direction::EAST) = result;
 
         tmp = bb;
-        result = Bitboard(0);
+        result = EMPTY_BB;
         while (tmp.any())
         {
             tmp = tmp.west();
@@ -230,7 +230,7 @@ void initRays()
         rayFrom(square, Direction::WEST) = result;
 
         tmp = bb;
-        result = Bitboard(0);
+        result = EMPTY_BB;
         while (tmp.any())
         {
             tmp = tmp.northEast();
@@ -239,7 +239,7 @@ void initRays()
         rayFrom(square, Direction::NORTH_EAST) = result;
 
         tmp = bb;
-        result = Bitboard(0);
+        result = EMPTY_BB;
         while (tmp.any())
         {
             tmp = tmp.northWest();
@@ -248,7 +248,7 @@ void initRays()
         rayFrom(square, Direction::NORTH_WEST) = result;
 
         tmp = bb;
-        result = Bitboard(0);
+        result = EMPTY_BB;
         while (tmp.any())
         {
             tmp = tmp.southEast();
@@ -257,7 +257,7 @@ void initRays()
         rayFrom(square, Direction::SOUTH_EAST) = result;
 
         tmp = bb;
-        result = Bitboard(0);
+        result = EMPTY_BB;
         while (tmp.any())
         {
             tmp = tmp.southWest();

@@ -210,7 +210,7 @@ inline Bitboard pieceAttacks(Square square, Bitboard blockers)
             return kingAttacks(square);
         // unreachable
         default:
-            return Bitboard(0);
+            return EMPTY_BB;
     }
 }
 

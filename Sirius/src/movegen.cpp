@@ -50,8 +50,7 @@ void genMoves(const Board& board, MoveList& moves)
     if (!checkers.multiple())
     {
         Bitboard moveMask = ~board.pieces(color)
-            & (checkers.any() ? attacks::moveMask(board.kingSq(color), checkers.lsb())
-                              : Bitboard(~0ull));
+            & (checkers.any() ? attacks::moveMask(board.kingSq(color), checkers.lsb()) : ALL_BB);
         genPawnMoves<type, color>(board, moves, moveMask);
         if constexpr (type == MoveGenType::NOISY)
             moveMask &= board.pieces(~color);

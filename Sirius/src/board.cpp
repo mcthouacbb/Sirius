@@ -641,10 +641,10 @@ bool Board::isIsolatedPawn(Square square) const
 Bitboard Board::pinnersBlockers(Square square, Bitboard attackers, Bitboard& pinners) const
 {
     Bitboard queens = pieces(PieceType::QUEEN);
-    attackers &= (attacks::rookAttacks(square, Bitboard(0)) & (pieces(PieceType::ROOK) | queens))
-        | (attacks::bishopAttacks(square, Bitboard(0)) & (pieces(PieceType::BISHOP) | queens));
+    attackers &= (attacks::rookAttacks(square, EMPTY_BB) & (pieces(PieceType::ROOK) | queens))
+        | (attacks::bishopAttacks(square, EMPTY_BB) & (pieces(PieceType::BISHOP) | queens));
 
-    Bitboard blockers = Bitboard(0);
+    Bitboard blockers = EMPTY_BB;
 
     Bitboard blockMask = allPieces() ^ attackers;
 
@@ -924,7 +924,7 @@ bool Board::isPseudoLegal(Move move) const
 
     Bitboard moveMask = checkers().any() && srcPieceType != PieceType::KING
         ? attacks::moveMask(kingSq(m_SideToMove), checkers().lsb())
-        : Bitboard(~0ull);
+        : ALL_BB;
 
     if (move.type() != MoveType::ENPASSANT && !moveMask.has(move.toSq()))
         return false;
@@ -1129,7 +1129,7 @@ void Board::updateCheckInfo()
 void Board::calcThreats()
 {
     Color color = ~m_SideToMove;
-    Bitboard threats = Bitboard(0);
+    Bitboard threats = EMPTY_BB;
     Bitboard occupied = allPieces();
 
     Bitboard queens = pieces(color, PieceType::QUEEN);

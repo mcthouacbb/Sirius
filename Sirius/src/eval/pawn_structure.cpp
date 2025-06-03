@@ -15,7 +15,7 @@ PawnStructure::PawnStructure(const Board& board)
     pawnAttacks[Color::BLACK] = attacks::pawnAttacks<Color::BLACK>(bpawns);
     pawnAttackSpans[Color::BLACK] = attacks::fillUp<Color::BLACK>(pawnAttacks[Color::BLACK]);
 
-    passedPawns = Bitboard(0);
+    passedPawns = EMPTY_BB;
 }
 
 ScorePair PawnStructure::evaluate(const Board& board)

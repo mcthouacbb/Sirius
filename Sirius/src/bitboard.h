@@ -71,6 +71,8 @@ constexpr Bitboard::Bitboard(uint64_t v)
 {
 }
 
+constexpr Bitboard EMPTY_BB = Bitboard(0);
+constexpr Bitboard ALL_BB = Bitboard(0xFFFFFFFFFFFFFFFFull);
 constexpr Bitboard FILE_A_BB = Bitboard(0x0101010101010101ull);
 constexpr Bitboard FILE_B_BB = Bitboard(0x0202020202020202ull);
 constexpr Bitboard FILE_C_BB = Bitboard(0x0404040404040404ull);
