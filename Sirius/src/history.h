@@ -1,7 +1,7 @@
 #pragma once
 
-#include "defs.h"
 #include "board.h"
+#include "defs.h"
 #include "search_params.h"
 #include <algorithm>
 
@@ -15,9 +15,8 @@ inline Piece movingPiece(const Board& board, Move move)
 
 inline Piece capturedPiece(const Board& board, Move move)
 {
-    return move.type() == MoveType::ENPASSANT ?
-        makePiece(PieceType::PAWN, ~board.sideToMove()) :
-        board.pieceAt(move.toSq());
+    return move.type() == MoveType::ENPASSANT ? makePiece(PieceType::PAWN, ~board.sideToMove())
+                                              : board.pieceAt(move.toSq());
 }
 
 // pieces are currently stored as type + 8 * color internally
@@ -45,6 +44,7 @@ public:
     operator int() const;
 
     void update(int bonus);
+
 private:
     int16_t m_Value;
 };
@@ -78,6 +78,7 @@ public:
     operator int() const;
 
     void update(int target, int weight);
+
 private:
     int16_t m_Value;
 };
@@ -95,7 +96,8 @@ inline CorrHistEntry::operator int() const
 inline void CorrHistEntry::update(int target, int weight)
 {
     int newValue = (m_Value * (256 - weight) + target * weight) / 256;
-    newValue = std::clamp(newValue, m_Value - search::maxCorrHistUpdate, m_Value + search::maxCorrHistUpdate);
+    newValue = std::clamp(
+        newValue, m_Value - search::maxCorrHistUpdate, m_Value + search::maxCorrHistUpdate);
     m_Value = static_cast<int16_t>(std::clamp(newValue, -search::maxCorrHist, search::maxCorrHist));
 }
 
@@ -110,16 +112,12 @@ using ContHist = MultiArray<CHEntry, 12, 64>;
 using CaptHist = MultiArray<HistoryEntry<HISTORY_MAX>, 7, 12, 64, 2, 2>;
 
 // correction history(~104 elo)
-constexpr int PAWN_CORR_HIST_ENTRIES = 16384;
-constexpr int NON_PAWN_CORR_HIST_ENTRIES = 16384;
-constexpr int THREATS_CORR_HIST_ENTRIES = 16384;
-constexpr int MINOR_PIECE_CORR_HIST_ENTRIES = 16384;
-constexpr int MAJOR_PIECE_CORR_HIST_ENTRIES = 16384;
-using PawnCorrHist = MultiArray<CorrHistEntry, 2, PAWN_CORR_HIST_ENTRIES>;
-using NonPawnCorrHist = MultiArray<CorrHistEntry, 2, 2, NON_PAWN_CORR_HIST_ENTRIES>;
-using ThreatsCorrHist = MultiArray<CorrHistEntry, 2, THREATS_CORR_HIST_ENTRIES>;
-using MinorPieceCorrHist = MultiArray<CorrHistEntry, 2, MINOR_PIECE_CORR_HIST_ENTRIES>;
-using MajorPieceCorrHist = MultiArray<CorrHistEntry, 2, MAJOR_PIECE_CORR_HIST_ENTRIES>;
+constexpr int CORR_HIST_ENTRIES = 16384;
+using PawnCorrHist = MultiArray<CorrHistEntry, 2, CORR_HIST_ENTRIES>;
+using NonPawnCorrHist = MultiArray<CorrHistEntry, 2, 2, CORR_HIST_ENTRIES>;
+using ThreatsCorrHist = MultiArray<CorrHistEntry, 2, CORR_HIST_ENTRIES>;
+using MinorPieceCorrHist = MultiArray<CorrHistEntry, 2, CORR_HIST_ENTRIES>;
+using MajorPieceCorrHist = MultiArray<CorrHistEntry, 2, CORR_HIST_ENTRIES>;
 using ContCorrEntry = MultiArray<CorrHistEntry, 12, 64>;
 using ContCorrHist = MultiArray<ContCorrEntry, 12, 64>;
 
@@ -144,18 +142,21 @@ public:
     ContCorrEntry& contCorrEntry(const Board& board, Move move)
     {
         if (move == Move::nullmove())
-            return m_ContCorrHist[packPieceIndices(makePiece(PieceType::PAWN, board.sideToMove()))][move.toSq().value()];
+            return m_ContCorrHist[packPieceIndices(makePiece(PieceType::PAWN, board.sideToMove()))]
+                                 [move.toSq().value()];
         return m_ContCorrHist[packPieceIndices(movingPiece(board, move))][move.toSq().value()];
     }
 
     const ContCorrEntry& contCorrEntry(const Board& board, Move move) const
     {
         if (move == Move::nullmove())
-            return m_ContCorrHist[packPieceIndices(makePiece(PieceType::PAWN, board.sideToMove()))][move.toSq().value()];
+            return m_ContCorrHist[packPieceIndices(makePiece(PieceType::PAWN, board.sideToMove()))]
+                                 [move.toSq().value()];
         return m_ContCorrHist[packPieceIndices(movingPiece(board, move))][move.toSq().value()];
     }
 
-    int getQuietStats(Move move, Bitboard threats, Piece movingPiece, const SearchStack* stack, int ply) const;
+    int getQuietStats(
+        Move move, Bitboard threats, Piece movingPiece, const SearchStack* stack, int ply) const;
     int getNoisyStats(const Board& board, Move move) const;
     int correctStaticEval(const Board& board, int staticEval, const SearchStack* stack, int ply) const;
 
@@ -164,6 +165,7 @@ public:
     void updateContHist(Move move, Piece movingPiece, const SearchStack* stack, int ply, int bonus);
     void updateNoisyStats(const Board& board, Move move, int bonus);
     void updateCorrHist(const Board& board, int bonus, int depth, const SearchStack* stack, int ply);
+
 private:
     int getMainHist(Move move, Bitboard threats, Color color) const;
     int getContHist(Move move, Piece movingPiece, const CHEntry* entry) const;

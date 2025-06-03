@@ -11,13 +11,12 @@ void init();
 
 constexpr uint64_t H1(uint64_t keyDiff)
 {
-	return keyDiff % 8192;
+    return keyDiff % 8192;
 }
 
 constexpr uint64_t H2(uint64_t keyDiff)
 {
-	return (keyDiff >> 16) % 8192;
+    return (keyDiff >> 16) % 8192;
 }
-
 
 }

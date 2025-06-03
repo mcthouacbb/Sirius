@@ -1,8 +1,8 @@
 #pragma once
 
-#include <chrono>
-#include <array>
 #include "defs.h"
+#include <array>
+#include <chrono>
 
 using TimePoint = std::chrono::steady_clock::time_point;
 using Duration = std::chrono::milliseconds;
@@ -33,7 +33,9 @@ public:
 
     void startSearch();
     bool stopHard(const SearchLimits& searchLimits, uint64_t nodes);
-    bool stopSoft(Move bestMove, uint64_t bmNodes, uint64_t totalNodes, const SearchLimits& searchLimits);
+    bool stopSoft(
+        Move bestMove, uint64_t bmNodes, uint64_t totalNodes, const SearchLimits& searchLimits);
+
 private:
     static constexpr uint32_t TIME_CHECK_INTERVAL = 2048;
 

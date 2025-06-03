@@ -1,18 +1,20 @@
 #include "time_man.h"
 #include "search.h"
 #include "search_params.h"
-#include <iostream>
 #include <cmath>
+#include <iostream>
 
 void TimeManager::setLimits(const SearchLimits& limits, Color us)
 {
     if (limits.clock.enabled)
     {
-        Duration time = std::max(Duration(1), limits.clock.timeLeft[static_cast<int>(us)] - limits.overhead);
+        Duration time =
+            std::max(Duration(1), limits.clock.timeLeft[static_cast<int>(us)] - limits.overhead);
         Duration inc = limits.clock.increments[static_cast<int>(us)];
 
         // formulas from stormphrax
-        m_SoftBound = std::chrono::duration_cast<Duration>(search::softTimeScale / 100.0 * (time / search::baseTimeScale + inc * search::incrementScale / 100.0));
+        m_SoftBound = std::chrono::duration_cast<Duration>(search::softTimeScale / 100.0
+            * (time / search::baseTimeScale + inc * search::incrementScale / 100.0));
         m_HardBound = std::chrono::duration_cast<Duration>(time * (search::hardTimeScale / 100.0));
     }
 }
@@ -45,7 +47,8 @@ bool TimeManager::stopHard(const SearchLimits& searchLimits, uint64_t nodes)
     return false;
 }
 
-bool TimeManager::stopSoft(Move bestMove, uint64_t bmNodes, uint64_t totalNodes, const SearchLimits& searchLimits)
+bool TimeManager::stopSoft(
+    Move bestMove, uint64_t bmNodes, uint64_t totalNodes, const SearchLimits& searchLimits)
 {
     if (bestMove == m_PrevBestMove)
         m_Stability++;
@@ -56,12 +59,10 @@ bool TimeManager::stopSoft(Move bestMove, uint64_t bmNodes, uint64_t totalNodes,
     double nodeFrac = static_cast<double>(bmNodes) / static_cast<double>(totalNodes);
     double scale = ((search::nodeTMBase / 100.0) - nodeFrac) * (search::nodeTMScale / 100.0);
 
-    double bmStabilityScale =
-        static_cast<double>(search::bmStabilityBase) / 100.0 +
-        static_cast<double>(search::bmStabilityScale) / 100.0 * std::pow(
-            m_Stability + static_cast<double>(search::bmStabilityOffset) / 100.0,
-            static_cast<double>(search::bmStabilityPower) / 100.0
-        );
+    double bmStabilityScale = static_cast<double>(search::bmStabilityBase) / 100.0
+        + static_cast<double>(search::bmStabilityScale) / 100.0
+            * std::pow(m_Stability + static_cast<double>(search::bmStabilityOffset) / 100.0,
+                static_cast<double>(search::bmStabilityPower) / 100.0);
     scale *= std::max(bmStabilityScale, static_cast<double>(search::bmStabilityMin) / 100);
     if (searchLimits.clock.enabled && elapsed() > m_SoftBound * scale)
         return true;

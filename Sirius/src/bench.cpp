@@ -1,6 +1,8 @@
 #include "bench.h"
 
-constexpr const char* fens[] = { // fens from stormphrax, which got them from alexandria, ultimately came from bitgenie
+// clang-format off
+// fens from stormphrax, which got them from alexandria, ultimately came from bitgenie
+constexpr const char* fens[] = {
     "r3k2r/2pb1ppp/2pp1q2/p7/1nP1B3/1P2P3/P2N1PPP/R2QK2R w KQkq a6 0 14",
     "4rrk1/2p1b1p1/p1p3q1/4p3/2P2n1p/1P1NR2P/PB3PP1/3R1QK1 b - - 2 24",
     "r3qbrk/6p1/2b2pPp/p3pP1Q/PpPpP2P/3P1B2/2PB3K/R5R1 w - - 16 42",
@@ -52,6 +54,7 @@ constexpr const char* fens[] = { // fens from stormphrax, which got them from al
     "3br1k1/p1pn3p/1p3n2/5pNq/2P1p3/1PN3PP/P2Q1PB1/4R1K1 w - - 0 23",
     "2r2b2/5p2/5k2/p1r1pP2/P2pB3/1P3P2/K1P3R1/7R w - - 23 93"
 };
+// clang-format on
 
 void runBench(search::Search& search, int depth)
 {
@@ -72,6 +75,7 @@ void runBench(search::Search& search, int depth)
 
     auto t2 = std::chrono::steady_clock::now();
 
-    double nps = static_cast<double>(nodes) / std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1).count();
+    double nps = static_cast<double>(nodes)
+        / std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1).count();
     std::cout << nodes << " nodes " << static_cast<int>(nps) << " nps" << std::endl;
 }

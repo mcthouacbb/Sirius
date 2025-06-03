@@ -1,8 +1,8 @@
 #pragma once
 
 #include "board.h"
-#include "movegen.h"
 #include "history.h"
+#include "movegen.h"
 #include <array>
 
 struct SearchStack;
@@ -48,10 +48,12 @@ public:
     static constexpr int CAPTURE_SCORE = 500000;
 
     MoveOrdering(const Board& board, Move ttMove, const History& history);
-    MoveOrdering(const Board& board, Move hashMove, const std::array<Move, 2>& killers, SearchStack* stack, int ply, const History& history);
+    MoveOrdering(const Board& board, Move hashMove, const std::array<Move, 2>& killers,
+        SearchStack* stack, int ply, const History& history);
 
     ScoredMove selectMove();
     ScoredMove selectHighest();
+
 private:
     int scoreNoisy(Move move) const;
     int scoreQuiet(Move move) const;

@@ -1,11 +1,10 @@
 #pragma once
 
-#include <variant>
+#include <cassert>
+#include <functional>
 #include <string>
 #include <string_view>
-#include <functional>
-#include <cassert>
-
+#include <variant>
 
 // currently only supports integers
 class UCIOption
@@ -43,6 +42,7 @@ public:
     bool boolValue() const;
     const IntData& intData() const;
     const std::string& name() const;
+
 private:
     Type m_Type;
     std::string m_Name;
@@ -53,19 +53,16 @@ private:
 inline UCIOption::UCIOption()
     : m_Type(Type::NONE)
 {
-
 }
 
 inline UCIOption::UCIOption(std::string_view name, IntData data, Callback callback)
     : m_Type(Type::INT), m_Name(name), m_Callback(callback), m_Data(data)
 {
-
 }
 
 inline UCIOption::UCIOption(std::string_view name, BoolData data, Callback callback)
     : m_Type(Type::BOOL), m_Name(name), m_Callback(callback), m_Data(data)
 {
-
 }
 
 inline void UCIOption::setIntValue(int64_t value)

@@ -10,6 +10,7 @@ public:
     constexpr PRNG() = default;
     constexpr void seed(uint64_t s);
     constexpr uint64_t next64();
+
 private:
     uint64_t a, b, c, counter;
 };

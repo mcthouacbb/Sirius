@@ -1,10 +1,10 @@
 #pragma once
 
-#include "psqt_state.h"
+#include "../util/piece_set.h"
+#include "../util/static_vector.h"
 #include "pawn_structure.h"
 #include "pawn_table.h"
-#include "../util/static_vector.h"
-#include "../util/piece_set.h"
+#include "psqt_state.h"
 #include <optional>
 
 namespace eval
@@ -50,6 +50,7 @@ public:
     PackedScore pawnShieldStormScore(Color c) const;
     const PawnStructure& pawnStructure() const;
     int phase() const;
+
 private:
     void init(const Board& board, PawnTable* pawnTable);
     struct StackEntry
@@ -79,6 +80,5 @@ private:
     StackEntry* m_CurrEntry;
     PawnTable* m_PawnTable;
 };
-
 
 }

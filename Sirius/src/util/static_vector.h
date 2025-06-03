@@ -1,7 +1,7 @@
 #pragma once
 
-#include <array>
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstddef>
 
@@ -32,7 +32,6 @@ public:
     {
         std::fill(begin(), end(), value);
     }
-
 
     size_t size() const
     {
@@ -95,6 +94,7 @@ public:
     {
         m_Size = size;
     }
+
 private:
     std::array<T, Capacity> m_Data;
     size_t m_Size = 0;

@@ -8,14 +8,14 @@ public:
     constexpr PieceSet()
         : m_Value(0)
     {
-
     }
 
     template<typename Type, typename... Types>
     constexpr PieceSet(Type type, Types... types)
         : m_Value(PieceSet(types...).m_Value)
     {
-        static_assert(std::is_same_v<Type, PieceType>, "Piece set constructor argument must be a Piecetype");
+        static_assert(
+            std::is_same_v<Type, PieceType>, "Piece set constructor argument must be a Piecetype");
         add(type);
     }
 
@@ -37,7 +37,7 @@ public:
     {
         return (m_Value & other.m_Value) > 0;
     }
+
 private:
     uint8_t m_Value;
 };
-

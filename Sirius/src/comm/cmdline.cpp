@@ -1,10 +1,10 @@
-#include "../sirius.h"
 #include "cmdline.h"
-#include "fen.h"
-#include "move.h"
 #include "../eval/eval.h"
 #include "../misc.h"
 #include "../movegen.h"
+#include "../sirius.h"
+#include "fen.h"
+#include "move.h"
 
 #include <fstream>
 #include <sstream>
@@ -181,7 +181,7 @@ void CmdLine::setPositionCommand(std::istringstream& stream)
         std::cout << "fen: " << fen << std::endl;
         if (!comm::isValidFen(fen))
         {
-            std::cout << "Invalid fen string" << std::endl;;
+            std::cout << "Invalid fen string" << std::endl;
             return;
         }
         setToFen(fen);
@@ -247,10 +247,10 @@ void CmdLine::staticEvalCommand()
 {
     auto lock = lockStdout();
     std::cout << "not currently supported" << std::endl;
-    //std::cout << "Eval: " << eval::evaluate(m_Board) << std::endl;
-    //std::cout << "Phase: " << m_Board.psqtState().phase << std::endl;
-    //PackedScore psqt = m_Board.psqtState().evaluate(m_Board);
-    //std::cout << "Piece Square Tables: " << psqt.mg() << ' ' << psqt.eg() << std::endl;
+    // std::cout << "Eval: " << eval::evaluate(m_Board) << std::endl;
+    // std::cout << "Phase: " << m_Board.psqtState().phase << std::endl;
+    // PackedScore psqt = m_Board.psqtState().evaluate(m_Board);
+    // std::cout << "Piece Square Tables: " << psqt.mg() << ' ' << psqt.eg() << std::endl;
 }
 
 void CmdLine::searchCommand(std::istringstream& stream)
@@ -262,7 +262,6 @@ void CmdLine::searchCommand(std::istringstream& stream)
     stream >> tok;
     if (tok == "infinite")
     {
-
     }
     else if (tok == "clock")
     {
@@ -306,7 +305,8 @@ void CmdLine::runPerftCommand(std::istringstream& stream)
     uint64_t result = perft<true>(m_Board, depth);
     auto t2 = std::chrono::steady_clock::now();
     std::cout << "Nodes: " << result << std::endl;
-    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1).count() << std::endl;
+    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1).count()
+              << std::endl;
 }
 
 void CmdLine::probeBookCommand()
@@ -325,7 +325,5 @@ void CmdLine::probeBookCommand()
         std::cout << std::endl;
     }
 }
-
-
 
 }

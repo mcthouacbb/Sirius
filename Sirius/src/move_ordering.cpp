@@ -10,10 +10,9 @@ int mvv(const Board& board, Move move)
 {
     constexpr int MVV_VALUES[6] = {800, 2400, 2400, 4800, 7200};
 
-    int dstPiece = static_cast<int>(move.type() == MoveType::ENPASSANT ?
-        PieceType::PAWN :
-        getPieceType(board.pieceAt(move.toSq()))
-    );
+    int dstPiece = static_cast<int>(move.type() == MoveType::ENPASSANT
+            ? PieceType::PAWN
+            : getPieceType(board.pieceAt(move.toSq())));
     return MVV_VALUES[dstPiece];
 }
 
@@ -26,19 +25,15 @@ int promotionBonus(Move move)
 
 bool moveIsQuiet(const Board& board, Move move)
 {
-	return move.type() == MoveType::CASTLE || (
-        move.type() != MoveType::PROMOTION &&
-		move.type() != MoveType::ENPASSANT &&
-		board.pieceAt(move.toSq()) == Piece::NONE
-    );
+    return move.type() == MoveType::CASTLE
+        || (move.type() != MoveType::PROMOTION && move.type() != MoveType::ENPASSANT
+            && board.pieceAt(move.toSq()) == Piece::NONE);
 }
 
 bool moveIsCapture(const Board& board, Move move)
 {
-    return move.type() != MoveType::CASTLE && (
-        move.type() == MoveType::ENPASSANT ||
-        board.pieceAt(move.toSq()) != Piece::NONE
-    );
+    return move.type() != MoveType::CASTLE
+        && (move.type() == MoveType::ENPASSANT || board.pieceAt(move.toSq()) != Piece::NONE);
 }
 
 int MoveOrdering::scoreNoisy(Move move) const
@@ -80,10 +75,16 @@ MoveOrdering::MoveOrdering(const Board& board, Move ttMove, const History& histo
 {
 }
 
-MoveOrdering::MoveOrdering(const Board& board, Move ttMove, const std::array<Move, 2>& killers, SearchStack* stack, int ply, const History& history)
-    : m_Board(board), m_TTMove(ttMove),
-    m_History(history), m_Stack(stack), m_Ply(ply), m_Killers(killers),
-    m_Curr(0), m_Stage(MovePickStage::TT_MOVE)
+MoveOrdering::MoveOrdering(const Board& board, Move ttMove, const std::array<Move, 2>& killers,
+    SearchStack* stack, int ply, const History& history)
+    : m_Board(board),
+      m_TTMove(ttMove),
+      m_History(history),
+      m_Stack(stack),
+      m_Ply(ply),
+      m_Killers(killers),
+      m_Curr(0),
+      m_Stage(MovePickStage::TT_MOVE)
 {
 }
 
@@ -125,9 +126,8 @@ ScoredMove MoveOrdering::selectMove()
             // fallthrough
         case FIRST_KILLER:
             ++m_Stage;
-            if (m_Killers[0] != Move::nullmove() &&
-                m_Board.isPseudoLegal(m_Killers[0]) &&
-                moveIsQuiet(m_Board, m_Killers[0]))
+            if (m_Killers[0] != Move::nullmove() && m_Board.isPseudoLegal(m_Killers[0])
+                && moveIsQuiet(m_Board, m_Killers[0]))
             {
                 if (m_Killers[0] != m_TTMove)
                     return ScoredMove{m_Killers[0], FIRST_KILLER_SCORE};
@@ -140,9 +140,8 @@ ScoredMove MoveOrdering::selectMove()
             // fallthrough
         case SECOND_KILLER:
             ++m_Stage;
-            if (m_Killers[1] != Move::nullmove() &&
-                m_Board.isPseudoLegal(m_Killers[1]) &&
-                moveIsQuiet(m_Board, m_Killers[1]))
+            if (m_Killers[1] != Move::nullmove() && m_Board.isPseudoLegal(m_Killers[1])
+                && moveIsQuiet(m_Board, m_Killers[1]))
             {
                 if (m_Killers[1] != m_TTMove)
                     return ScoredMove{m_Killers[1], SECOND_KILLER_SCORE};
@@ -164,17 +163,16 @@ ScoredMove MoveOrdering::selectMove()
             while (m_Curr < m_Moves.size())
             {
                 ScoredMove scoredMove = selectHighest();
-                if (scoredMove.move != m_TTMove &&
-                    scoredMove.move != m_Killers[0] &&
-                    scoredMove.move != m_Killers[1])
+                if (scoredMove.move != m_TTMove && scoredMove.move != m_Killers[0]
+                    && scoredMove.move != m_Killers[1])
                     return scoredMove;
             }
             return ScoredMove{Move::nullmove(), NO_MOVE};
 
-
         case QS_TT_MOVE:
             ++m_Stage;
-            if (m_TTMove != Move::nullmove() && m_Board.isPseudoLegal(m_TTMove) && !moveIsQuiet(m_Board, m_TTMove))
+            if (m_TTMove != Move::nullmove() && m_Board.isPseudoLegal(m_TTMove)
+                && !moveIsQuiet(m_Board, m_TTMove))
                 return ScoredMove{m_TTMove, 10000000};
 
             // fallthrough

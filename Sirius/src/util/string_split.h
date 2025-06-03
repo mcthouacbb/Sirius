@@ -1,10 +1,11 @@
-#include <vector>
+#include <sstream>
 #include <string>
 #include <string_view>
-#include <sstream>
+#include <vector>
 
 // https://stackoverflow.com/a/236803
-std::vector<std::string> splitBySpaces(const std::string_view& str) {
+std::vector<std::string> splitBySpaces(const std::string_view& str)
+{
     std::istringstream iss{std::string(str)};
     std::string token;
     std::vector<std::string> result;

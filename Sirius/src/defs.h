@@ -1,11 +1,10 @@
 #pragma once
 
-#include <cstdint>
-#include <iostream>
-#include <bitset>
 #include <bit>
+#include <bitset>
 #include <cassert>
 #include <cstdint>
+#include <iostream>
 
 enum class PieceType
 {
@@ -29,7 +28,8 @@ constexpr Color operator~(const Color& c)
     return static_cast<Color>(static_cast<int>(c) ^ 1);
 }
 
-enum class Piece : uint8_t {
+enum class Piece : uint8_t
+{
     NONE = static_cast<int>(PieceType::NONE)
 };
 
@@ -47,7 +47,6 @@ inline Color getPieceColor(Piece piece)
 {
     return static_cast<Color>(static_cast<int>(piece) >> 3);
 }
-
 
 enum class MoveType
 {
@@ -68,11 +67,7 @@ enum class Promotion
 inline PieceType promoPiece(Promotion promo)
 {
     static const PieceType promoPieces[4] = {
-        PieceType::KNIGHT,
-        PieceType::BISHOP,
-        PieceType::ROOK,
-        PieceType::QUEEN
-    };
+        PieceType::KNIGHT, PieceType::BISHOP, PieceType::ROOK, PieceType::QUEEN};
 
     return promoPieces[static_cast<int>(promo) >> 14];
 }
@@ -85,7 +80,6 @@ constexpr int RANK_5 = 4;
 constexpr int RANK_6 = 5;
 constexpr int RANK_7 = 6;
 constexpr int RANK_8 = 7;
-
 
 constexpr int FILE_A = 0;
 constexpr int FILE_B = 1;
@@ -135,6 +129,7 @@ public:
     static constexpr int chebyshev(Square a, Square b);
     static constexpr int manhattan(Square a, Square b);
     static constexpr Square average(Square a, Square b);
+
 private:
     uint8_t m_Value;
 };
@@ -148,7 +143,6 @@ constexpr Square::Square(int sq)
 constexpr Square::Square(int rank, int file)
     : m_Value(static_cast<uint8_t>(rank * 8 + file))
 {
-
 }
 
 constexpr Square& Square::operator+=(int other)
@@ -306,6 +300,7 @@ public:
     int fromTo() const;
     MoveType type() const;
     Promotion promotion() const;
+
 private:
     static constexpr int TYPE_MASK = 3 << 12;
     static constexpr int PROMOTION_MASK = 3 << 14;
@@ -321,7 +316,8 @@ inline Move::Move(Square from, Square to, MoveType type)
 inline Move::Move(Square from, Square to, MoveType type, Promotion promotion)
     : m_Data(0)
 {
-    m_Data = static_cast<uint16_t>(from.value() | (to.value() << 6) | static_cast<int>(type) | static_cast<int>(promotion));
+    m_Data = static_cast<uint16_t>(
+        from.value() | (to.value() << 6) | static_cast<int>(type) | static_cast<int>(promotion));
 }
 
 constexpr Move Move::nullmove()
@@ -401,18 +397,21 @@ public:
     constexpr bool has(Internal v) const;
 
     constexpr int value() const;
+
 private:
     Internal m_Value;
 };
 
 constexpr CastlingRights operator&(CastlingRights::Internal a, CastlingRights::Internal b)
 {
-    return CastlingRights(static_cast<CastlingRights::Internal>(static_cast<int>(a) & static_cast<int>(b)));
+    return CastlingRights(
+        static_cast<CastlingRights::Internal>(static_cast<int>(a) & static_cast<int>(b)));
 }
 
 constexpr CastlingRights operator|(CastlingRights::Internal a, CastlingRights::Internal b)
 {
-    return CastlingRights(static_cast<CastlingRights::Internal>(static_cast<int>(a) | static_cast<int>(b)));
+    return CastlingRights(
+        static_cast<CastlingRights::Internal>(static_cast<int>(a) | static_cast<int>(b)));
 }
 
 constexpr CastlingRights operator~(CastlingRights::Internal a)
@@ -423,13 +422,11 @@ constexpr CastlingRights operator~(CastlingRights::Internal a)
 constexpr CastlingRights::CastlingRights()
     : m_Value(Internal::NONE)
 {
-
 }
 
 constexpr CastlingRights::CastlingRights(Internal v)
     : m_Value(v)
 {
-
 }
 
 constexpr CastlingRights& CastlingRights::operator&=(const CastlingRights& other)
@@ -485,6 +482,7 @@ public:
     friend constexpr PackedScore operator-(const PackedScore& p);
     friend constexpr PackedScore operator*(int a, const PackedScore& b);
     friend constexpr PackedScore operator*(const PackedScore& a, int b);
+
 private:
     constexpr PackedScore(int value)
         : m_Value(value)
@@ -497,7 +495,6 @@ private:
 constexpr PackedScore::PackedScore(int mg, int eg)
     : m_Value((static_cast<int32_t>(static_cast<uint32_t>(eg) << 16) + mg))
 {
-
 }
 
 constexpr PackedScore& PackedScore::operator+=(const PackedScore& other)

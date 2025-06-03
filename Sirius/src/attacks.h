@@ -1,7 +1,7 @@
 #pragma once
 
-#include "defs.h"
 #include "bitboard.h"
+#include "defs.h"
 #include "util/multi_array.h"
 
 #include <utility>
@@ -173,14 +173,16 @@ inline Bitboard bishopAttacks(Square square, Bitboard blockers)
 {
     blockers &= attackData.bishopTable[square.value()].mask;
     uint64_t index = blockers.value() * attackData.bishopTable[square.value()].magic;
-    return attackData.bishopTable[square.value()].attackData[index >> attackData.bishopTable[square.value()].shift];
+    return attackData.bishopTable[square.value()]
+        .attackData[index >> attackData.bishopTable[square.value()].shift];
 }
 
 inline Bitboard rookAttacks(Square square, Bitboard blockers)
 {
     blockers &= attackData.rookTable[square.value()].mask;
     uint64_t index = blockers.value() * attackData.rookTable[square.value()].magic;
-    return attackData.rookTable[square.value()].attackData[index >> attackData.rookTable[square.value()].shift];
+    return attackData.rookTable[square.value()]
+        .attackData[index >> attackData.rookTable[square.value()].shift];
 }
 
 inline Bitboard queenAttacks(Square square, Bitboard blockers)
@@ -192,23 +194,24 @@ template<PieceType pce>
 inline Bitboard pieceAttacks(Square square, Bitboard blockers)
 {
     using enum PieceType;
-    static_assert(
-        pce == KNIGHT ||
-        pce == BISHOP ||
-        pce == ROOK ||
-        pce == QUEEN ||
-        pce == KING, "invalid piece type for attacks::pieceAttacks");
+    static_assert(pce == KNIGHT || pce == BISHOP || pce == ROOK || pce == QUEEN || pce == KING,
+        "invalid piece type for attacks::pieceAttacks");
     switch (pce)
     {
-        case KNIGHT: return knightAttacks(square);
-        case BISHOP: return bishopAttacks(square, blockers);
-        case ROOK: return rookAttacks(square, blockers);
-        case QUEEN: return queenAttacks(square, blockers);
-        case KING: return kingAttacks(square);
+        case KNIGHT:
+            return knightAttacks(square);
+        case BISHOP:
+            return bishopAttacks(square, blockers);
+        case ROOK:
+            return rookAttacks(square, blockers);
+        case QUEEN:
+            return queenAttacks(square, blockers);
+        case KING:
+            return kingAttacks(square);
         // unreachable
-        default: return Bitboard(0);
+        default:
+            return Bitboard(0);
     }
 }
-
 
 }

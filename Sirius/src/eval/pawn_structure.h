@@ -17,10 +17,10 @@ struct PawnStructure
     ColorArray<Bitboard> pawnAttackSpans;
     Bitboard passedPawns;
     PackedScore score;
+
 private:
     template<Color us>
     PackedScore evaluate(const Board& board);
 };
-
 
 }

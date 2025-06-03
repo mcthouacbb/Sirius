@@ -49,9 +49,8 @@ bool isValidFen(const char* fen)
 
     /*if (castle != "-" && castle != "K" && castle != "Q" && castle != "k" && castle != "q" &&
         castle != "KQ" && castle != "Kk" && castle != "Kq" && castle != "Qk" && castle != "Qq" &&
-        castle != "kq" && castle != "KQk" && castle != "KQq" && castle != "Kkq" && castle != "Qkq" &&
-        castle != "KQkq")
-        return false;*/
+        castle != "kq" && castle != "KQk" && castle != "KQq" && castle != "Kkq" && castle != "Qkq"
+       && castle != "KQkq") return false;*/
 
     if (ep != "-" && ep.size() != 2)
         return false;
@@ -145,7 +144,8 @@ bool isValidFen(const char* fen)
                     return false;
                 break;
             case 3:
-                if (hmc[0] < '0' || hmc[0] > '9' || hmc[1] < '0' || hmc[1] > '9' || hmc[2] < '0' || hmc[2] > '9')
+                if (hmc[0] < '0' || hmc[0] > '9' || hmc[1] < '0' || hmc[1] > '9' || hmc[2] < '0'
+                    || hmc[2] > '9')
                     return false;
                 break;
             default:
@@ -164,6 +164,5 @@ bool isValidFen(const char* fen)
 
     return true;
 }
-
 
 }

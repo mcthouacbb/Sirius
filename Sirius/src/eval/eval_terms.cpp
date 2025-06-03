@@ -1,11 +1,11 @@
 #include "eval_terms.h"
 
-#include "../board.h"
 #include "../attacks.h"
+#include "../board.h"
 
+#include "eval_constants.h"
 #include "pawn_structure.h"
 #include "pawn_table.h"
-#include "eval_constants.h"
 
 #include <algorithm>
 
@@ -55,9 +55,9 @@ PackedScore evalKingPawnFile(uint32_t file, Bitboard ourPawns, Bitboard theirPaw
     }
     {
         Bitboard filePawns = theirPawns & Bitboard::fileBB(file);
-        int rank = filePawns.any() ?
-            (us == Color::WHITE ? filePawns.msb() : filePawns.lsb()).relativeRank<them>() :
-            0;
+        int rank = filePawns.any()
+            ? (us == Color::WHITE ? filePawns.msb() : filePawns.lsb()).relativeRank<them>()
+            : 0;
         eval += PAWN_SHIELD[edgeDist][rank];
     }
     return eval;
@@ -85,7 +85,8 @@ PackedScore evaluateKnightOutposts(const Board& board, const PawnStructure& pawn
 {
     constexpr Color them = ~us;
     Bitboard outpostRanks = RANK_4_BB | RANK_5_BB | (us == Color::WHITE ? RANK_6_BB : RANK_3_BB);
-    Bitboard outposts = outpostRanks & ~pawnStructure.pawnAttackSpans[them] & pawnStructure.pawnAttacks[us];
+    Bitboard outposts =
+        outpostRanks & ~pawnStructure.pawnAttackSpans[them] & pawnStructure.pawnAttacks[us];
     return KNIGHT_OUTPOST * (board.pieces(us, PieceType::KNIGHT) & outposts).popcount();
 }
 
@@ -99,7 +100,8 @@ PackedScore evaluateBishopPawns(const Board& board)
     {
         Square sq = bishops.poplsb();
         bool lightSquare = LIGHT_SQUARES_BB.has(sq);
-        Bitboard sameColorPawns = board.pieces(us, PieceType::PAWN) & (lightSquare ? LIGHT_SQUARES_BB : DARK_SQUARES_BB);
+        Bitboard sameColorPawns =
+            board.pieces(us, PieceType::PAWN) & (lightSquare ? LIGHT_SQUARES_BB : DARK_SQUARES_BB);
         eval += BISHOP_PAWNS[std::min(sameColorPawns.popcount(), 6u)];
     }
     return eval;
@@ -133,14 +135,18 @@ PackedScore evaluateMinorBehindPawn(const Board& board)
     return MINOR_BEHIND_PAWN * shielded.popcount();
 }
 
-template PackedScore evalKingPawnFile<Color::WHITE>(uint32_t file, Bitboard ourPawns, Bitboard theirPawns);
-template PackedScore evalKingPawnFile<Color::BLACK>(uint32_t file, Bitboard ourPawns, Bitboard theirPawns);
+template PackedScore evalKingPawnFile<Color::WHITE>(
+    uint32_t file, Bitboard ourPawns, Bitboard theirPawns);
+template PackedScore evalKingPawnFile<Color::BLACK>(
+    uint32_t file, Bitboard ourPawns, Bitboard theirPawns);
 
 template PackedScore evaluateStormShield<Color::WHITE>(const Board& board);
 template PackedScore evaluateStormShield<Color::BLACK>(const Board& board);
 
-template PackedScore evaluateKnightOutposts<Color::WHITE>(const Board& board, const PawnStructure& pawnStructure);
-template PackedScore evaluateKnightOutposts<Color::BLACK>(const Board& board, const PawnStructure& pawnStructure);
+template PackedScore evaluateKnightOutposts<Color::WHITE>(
+    const Board& board, const PawnStructure& pawnStructure);
+template PackedScore evaluateKnightOutposts<Color::BLACK>(
+    const Board& board, const PawnStructure& pawnStructure);
 
 template PackedScore evaluateBishopPawns<Color::WHITE>(const Board& board);
 template PackedScore evaluateBishopPawns<Color::BLACK>(const Board& board);

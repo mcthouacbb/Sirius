@@ -48,8 +48,8 @@ MoveStrFind findMoveFromUCI(const Board& board, const MoveList& legalMoves, cons
                 return {MoveStrFind::Result::FOUND, move, 4};
             }
         }
-        if (!board.isFRC() && move.fromSq() == Square(src) && move.type() == MoveType::CASTLE &&
-            (move.fromSq() > move.toSq()) == (src > dst) && std::abs(src - dst) > 1)
+        if (!board.isFRC() && move.fromSq() == Square(src) && move.type() == MoveType::CASTLE
+            && (move.fromSq() > move.toSq()) == (src > dst) && std::abs(src - dst) > 1)
         {
             return {MoveStrFind::Result::FOUND, move, 4};
         }
@@ -121,7 +121,8 @@ MoveStrFind findMoveFromSAN(const Board& board, const MoveList& legalMoves, cons
                     Move move = legalMoves[i];
                     if (move.type() == MoveType::CASTLE && move.toSq() > move.fromSq())
                     {
-                        return {MoveStrFind::Result::FOUND, move, 3 + (moveStr[3] == '+' || moveStr[3] == '#')};
+                        return {MoveStrFind::Result::FOUND, move,
+                            3 + (moveStr[3] == '+' || moveStr[3] == '#')};
                     }
                 }
                 return {MoveStrFind::Result::NOT_FOUND, Move::nullmove(), 3};
@@ -135,7 +136,8 @@ MoveStrFind findMoveFromSAN(const Board& board, const MoveList& legalMoves, cons
                     Move move = legalMoves[i];
                     if (move.type() == MoveType::CASTLE && move.toSq() < move.fromSq())
                     {
-                        return {MoveStrFind::Result::FOUND, move, 5 + (moveStr[5] == '+' || moveStr[5] == '#')};
+                        return {MoveStrFind::Result::FOUND, move,
+                            5 + (moveStr[5] == '+' || moveStr[5] == '#')};
                     }
                 }
                 return {MoveStrFind::Result::NOT_FOUND, Move::nullmove(), 5};
@@ -384,7 +386,8 @@ search_moves:
         switch (it->type())
         {
             case MoveType::ENPASSANT:
-                if (isCapture && (toRank == 2 || toRank == 5) && board.pieceAt(toSquare + pawnOffset) == Piece::NONE)
+                if (isCapture && (toRank == 2 || toRank == 5)
+                    && board.pieceAt(toSquare + pawnOffset) == Piece::NONE)
                     continue;
                 break;
             default:
@@ -424,7 +427,6 @@ search_moves:
         return {MoveStrFind::Result::NOT_FOUND, Move::nullmove(), moveLen};
 }
 
-
 std::string convMoveToUCI(const Board& board, Move move)
 {
     std::string str(4 + (move.type() == MoveType::PROMOTION), ' ');
@@ -445,7 +447,8 @@ std::string convMoveToUCI(const Board& board, Move move)
     return str;
 }
 
-bool isAmbiguous(const Board& board, const MoveList& legalMoves, PieceType piece, Square toSquare, int fromFile, int fromRank)
+bool isAmbiguous(const Board& board, const MoveList& legalMoves, PieceType piece, Square toSquare,
+    int fromFile, int fromRank)
 {
     const Move* match = nullptr;
     for (const Move* it = legalMoves.data(); it != legalMoves.data() + legalMoves.size(); it++)
@@ -573,6 +576,5 @@ std::string convMoveToSAN(const Board& board, const MoveList& legalMoves, Move m
         return str;
     }
 }
-
 
 }

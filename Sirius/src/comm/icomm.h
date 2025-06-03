@@ -1,12 +1,12 @@
 #pragma once
 
 #include "../board.h"
+#include "../movegen.h"
 #include "../search.h"
 #include "../time_man.h"
-#include "../movegen.h"
 #include <deque>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace comm
 {
@@ -23,8 +23,10 @@ public:
 
     virtual void reportSearchInfo(const SearchInfo& info) const = 0;
     virtual void reportBestMove(Move bestMove) const = 0;
+
 private:
     void calcLegalMoves();
+
 protected:
     std::unique_lock<std::mutex> lockStdout() const;
 

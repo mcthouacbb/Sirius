@@ -1,6 +1,6 @@
 #include "eval_state.h"
-#include "eval_terms.h"
 #include "../board.h"
+#include "eval_terms.h"
 #include <algorithm>
 
 namespace eval
@@ -43,12 +43,14 @@ void EvalState::init(const Board& board, PawnTable* pawnTable)
     evaluatePawns(board, currEntry().pawnStructure, m_PawnTable);
     currEntry().pawnShieldStorm[Color::WHITE] = evaluateStormShield<Color::WHITE>(board);
     currEntry().pawnShieldStorm[Color::BLACK] = evaluateStormShield<Color::BLACK>(board);
-    currEntry().knightOutposts =
-        evaluateKnightOutposts<Color::WHITE>(board, currEntry().pawnStructure) -
-        evaluateKnightOutposts<Color::BLACK>(board, currEntry().pawnStructure);
-    currEntry().bishopPawns = evaluateBishopPawns<Color::WHITE>(board) - evaluateBishopPawns<Color::BLACK>(board);
-    currEntry().rookOpen = evaluateRookOpen<Color::WHITE>(board) - evaluateRookOpen<Color::BLACK>(board);
-    currEntry().minorBehindPawn = evaluateMinorBehindPawn<Color::WHITE>(board) - evaluateMinorBehindPawn<Color::BLACK>(board);
+    currEntry().knightOutposts = evaluateKnightOutposts<Color::WHITE>(board, currEntry().pawnStructure)
+        - evaluateKnightOutposts<Color::BLACK>(board, currEntry().pawnStructure);
+    currEntry().bishopPawns =
+        evaluateBishopPawns<Color::WHITE>(board) - evaluateBishopPawns<Color::BLACK>(board);
+    currEntry().rookOpen =
+        evaluateRookOpen<Color::WHITE>(board) - evaluateRookOpen<Color::BLACK>(board);
+    currEntry().minorBehindPawn =
+        evaluateMinorBehindPawn<Color::WHITE>(board) - evaluateMinorBehindPawn<Color::BLACK>(board);
 }
 
 void EvalState::push(const Board& board, const EvalUpdates& updates)
@@ -86,23 +88,26 @@ void EvalState::push(const Board& board, const EvalUpdates& updates)
 
     if (updates.changedPieces.hasAny(eval_terms::knightOutposts.deps))
         currEntry().knightOutposts =
-            evaluateKnightOutposts<Color::WHITE>(board, currEntry().pawnStructure) -
-            evaluateKnightOutposts<Color::BLACK>(board, currEntry().pawnStructure);
+            evaluateKnightOutposts<Color::WHITE>(board, currEntry().pawnStructure)
+            - evaluateKnightOutposts<Color::BLACK>(board, currEntry().pawnStructure);
     else
         currEntry().knightOutposts = oldEntry.knightOutposts;
 
     if (updates.changedPieces.hasAny(eval_terms::bishopPawns.deps))
-        currEntry().bishopPawns = evaluateBishopPawns<Color::WHITE>(board) - evaluateBishopPawns<Color::BLACK>(board);
+        currEntry().bishopPawns =
+            evaluateBishopPawns<Color::WHITE>(board) - evaluateBishopPawns<Color::BLACK>(board);
     else
         currEntry().bishopPawns = oldEntry.bishopPawns;
 
     if (updates.changedPieces.hasAny(eval_terms::rookOpen.deps))
-        currEntry().rookOpen = evaluateRookOpen<Color::WHITE>(board) - evaluateRookOpen<Color::BLACK>(board);
+        currEntry().rookOpen =
+            evaluateRookOpen<Color::WHITE>(board) - evaluateRookOpen<Color::BLACK>(board);
     else
         currEntry().rookOpen = oldEntry.rookOpen;
 
     if (updates.changedPieces.hasAny(eval_terms::minorBehindPawn.deps))
-        currEntry().minorBehindPawn = evaluateMinorBehindPawn<Color::WHITE>(board) - evaluateMinorBehindPawn<Color::BLACK>(board);
+        currEntry().minorBehindPawn = evaluateMinorBehindPawn<Color::WHITE>(board)
+            - evaluateMinorBehindPawn<Color::BLACK>(board);
     else
         currEntry().minorBehindPawn = oldEntry.minorBehindPawn;
 }
@@ -114,13 +119,9 @@ void EvalState::pop()
 
 PackedScore EvalState::score(const Board& board) const
 {
-    return
-        currEntry().psqtState.evaluate(board) +
-        currEntry().pawnStructure.score +
-        currEntry().knightOutposts +
-        currEntry().bishopPawns +
-        currEntry().rookOpen +
-        currEntry().minorBehindPawn;
+    return currEntry().psqtState.evaluate(board) + currEntry().pawnStructure.score
+        + currEntry().knightOutposts + currEntry().bishopPawns + currEntry().rookOpen
+        + currEntry().minorBehindPawn;
 }
 
 PackedScore EvalState::psqtScore(const Board& board, Color c) const
@@ -145,6 +146,5 @@ int EvalState::phase() const
 {
     return currEntry().psqtState.phase;
 }
-
 
 }

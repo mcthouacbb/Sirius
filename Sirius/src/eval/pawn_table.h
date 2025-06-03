@@ -1,9 +1,9 @@
 #pragma once
 
-#include <vector>
-#include "../zobrist.h"
 #include "../defs.h"
+#include "../zobrist.h"
 #include "pawn_structure.h"
+#include <vector>
 
 struct PawnEntry
 {
@@ -22,6 +22,7 @@ public:
     void store(PawnEntry entry);
 
     void clear();
+
 private:
     std::vector<PawnEntry> m_Entries;
 };
@@ -29,7 +30,6 @@ private:
 inline PawnTable::PawnTable()
     : m_Entries(SIZE)
 {
-
 }
 
 inline PawnEntry PawnTable::probe(ZKey pawnKey) const

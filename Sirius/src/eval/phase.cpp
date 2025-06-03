@@ -17,8 +17,7 @@ constexpr int PHASE_WEIGHTS[] = {
     // queen
     QUEEN_PHASE,
     // king
-    0
-};
+    0};
 
 int getPiecePhase(PieceType piece)
 {

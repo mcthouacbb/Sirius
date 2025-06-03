@@ -1,10 +1,10 @@
 #pragma once
 
+#include "../bitboard.h"
+#include "../defs.h"
+#include "../util/piece_set.h"
 #include <bitset>
 #include <type_traits>
-#include "../defs.h"
-#include "../bitboard.h"
-#include "../util/piece_set.h"
 
 class Board;
 struct PawnStructure;
@@ -31,7 +31,6 @@ constexpr EvalTerm bishopPawns = {PieceSet(PAWN, BISHOP)};
 constexpr EvalTerm rookOpen = {PieceSet(PAWN, ROOK)};
 constexpr EvalTerm minorBehindPawn = {PieceSet(PAWN, KNIGHT, BISHOP)};
 
-
 } // namespace eval_terms
 
 void evaluatePawns(const Board& board, PawnStructure& pawnStructure, PawnTable* pawnTable);
@@ -53,6 +52,5 @@ PackedScore evaluateRookOpen(const Board& board);
 
 template<Color us>
 PackedScore evaluateMinorBehindPawn(const Board& board);
-
 
 }

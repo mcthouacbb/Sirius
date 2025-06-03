@@ -1,6 +1,6 @@
 #include "cuckoo.h"
-#include "zobrist.h"
 #include "attacks.h"
+#include "zobrist.h"
 
 namespace cuckoo
 {
@@ -12,10 +12,10 @@ namespace cuckoo
 
 void init()
 {
-	moves.fill(Move::nullmove());
-	keyDiffs.fill(0);
+    moves.fill(Move::nullmove());
+    keyDiffs.fill(0);
 
-	uint32_t count = 0;
+    uint32_t count = 0;
 
     using enum Color;
     using enum PieceType;

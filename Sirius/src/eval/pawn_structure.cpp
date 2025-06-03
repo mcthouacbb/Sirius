@@ -39,7 +39,8 @@ PackedScore PawnStructure::evaluate(const Board& board)
         Square sq = pawns.poplsb();
         Square push = sq + attacks::pawnPushOffset<us>();
         Bitboard attacks = attacks::pawnAttacks(us, sq);
-        Bitboard support = attacks::passedPawnMask(them, push) & attacks::isolatedPawnMask(sq) & ourPawns;
+        Bitboard support =
+            attacks::passedPawnMask(them, push) & attacks::isolatedPawnMask(sq) & ourPawns;
         Bitboard threats = attacks & theirPawns;
         Bitboard pushThreats = attacks::pawnPushes<us>(attacks) & theirPawns;
         Bitboard defenders = attacks::pawnAttacks(them, sq) & ourPawns;

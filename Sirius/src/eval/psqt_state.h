@@ -36,7 +36,8 @@ struct Accumulator
     void movePiece(Color color, PieceType piece, Square src, Square dst)
     {
         for (int bucket = 0; bucket < BUCKET_COUNT; bucket++)
-            materialPsqt[bucket] += combinedPsqtScore(bucket, color, piece, dst) - combinedPsqtScore(bucket, color, piece, src);
+            materialPsqt[bucket] += combinedPsqtScore(bucket, color, piece, dst)
+                - combinedPsqtScore(bucket, color, piece, src);
     }
 };
 
@@ -50,7 +51,6 @@ struct PsqtState
     void addPiece(Color color, PieceType piece, Square square);
     void removePiece(Color color, PieceType piece, Square square);
     void movePiece(Color color, PieceType piece, Square src, Square dst);
-
 };
 
 inline void PsqtState::init()

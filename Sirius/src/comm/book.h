@@ -21,6 +21,7 @@ public:
     void loadFromPGN(const char* pgns);
 
     const std::vector<BookEntry>* lookup(ZKey key) const;
+
 private:
     std::unordered_map<uint64_t, std::vector<BookEntry>> m_Entries;
 };

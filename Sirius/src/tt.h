@@ -1,13 +1,13 @@
 #pragma once
 
-#include "zobrist.h"
 #include "defs.h"
+#include "zobrist.h"
 
-#include <cstring>
-#include <vector>
-#include <array>
 #include <algorithm>
+#include <array>
+#include <cstring>
 #include <thread>
+#include <vector>
 
 struct TTEntry
 {
@@ -84,7 +84,8 @@ public:
     TT& operator=(const TT&) = delete;
 
     bool probe(ZKey key, int ply, ProbedTTData& ttData);
-    void store(ZKey key, int ply, int depth, int score, int staticEval, Move move, bool pv, TTEntry::Bound type);
+    void store(ZKey key, int ply, int depth, int score, int staticEval, Move move, bool pv,
+        TTEntry::Bound type);
     int quality(int age, int depth) const;
     void prefetch(ZKey key) const;
 
@@ -101,14 +102,17 @@ public:
 
         for (int i = 0; i < numThreads; i++)
         {
-            threads.emplace_back([i, this, numThreads]()
-            {
-                std::fill(m_Buckets + m_Size * i / numThreads, m_Buckets + m_Size * (i + 1) / numThreads, TTBucket{});
-            });
+            threads.emplace_back(
+                [i, this, numThreads]()
+                {
+                    std::fill(m_Buckets + m_Size * i / numThreads,
+                        m_Buckets + m_Size * (i + 1) / numThreads, TTBucket{});
+                });
         }
     }
 
     int hashfull() const;
+
 private:
     uint32_t index(uint64_t key) const;
 

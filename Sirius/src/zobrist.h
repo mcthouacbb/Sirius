@@ -1,9 +1,9 @@
 #pragma once
 
-#include <cstdint>
 #include "defs.h"
 #include "util/multi_array.h"
 #include "util/prng.h"
+#include <cstdint>
 
 namespace zobrist
 {
@@ -65,17 +65,20 @@ inline void ZKey::flipSideToMove()
 
 inline void ZKey::addPiece(PieceType piece, Color color, Square square)
 {
-    value ^= zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][square.value()];
+    value ^=
+        zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][square.value()];
 }
 
 inline void ZKey::removePiece(PieceType piece, Color color, Square square)
 {
-    value ^= zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][square.value()];
+    value ^=
+        zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][square.value()];
 }
 
 inline void ZKey::movePiece(PieceType piece, Color color, Square src, Square dst)
 {
-    value ^= zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][src.value()] ^ zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][dst.value()];
+    value ^= zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][src.value()]
+        ^ zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][dst.value()];
 }
 
 inline void ZKey::updateCastlingRights(CastlingRights castlingRights)

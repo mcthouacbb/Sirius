@@ -34,10 +34,10 @@ public:
         BENCH
     };
 
-
     void run(std::string cmd);
     virtual void reportSearchInfo(const SearchInfo& info) const override;
     virtual void reportBestMove(Move bestMove) const override;
+
 private:
     void prettyPrintSearchInfo(const SearchInfo& info) const;
     void printUCISearchInfo(const SearchInfo& info) const;
@@ -56,6 +56,5 @@ private:
 
     std::unordered_map<std::string, UCIOption> m_Options;
 };
-
 
 }

@@ -1,12 +1,12 @@
 #include "misc.h"
 #include "comm/move.h"
-#include "movegen.h"
 #include "move_ordering.h"
-#include <chrono>
+#include "movegen.h"
 #include <algorithm>
 #include <charconv>
-#include <vector>
+#include <chrono>
 #include <fstream>
+#include <vector>
 
 void printBoard(const Board& board)
 {
@@ -31,12 +31,14 @@ void printBoard(const Board& board)
         std::cout << '-';
     }
     std::cout << std::endl;
-    std::cout << "Side to move: " << (board.sideToMove() == Color::WHITE ? "WHITE" : "BLACK") << std::endl;
+    std::cout << "Side to move: " << (board.sideToMove() == Color::WHITE ? "WHITE" : "BLACK")
+              << std::endl;
     if (board.epSquare() != -1)
-        std::cout << "Ep square: " << static_cast<char>((board.epSquare() & 7) + 'a') << static_cast<char>((board.epSquare() >> 3) + '1') << std::endl;
+        std::cout << "Ep square: " << static_cast<char>((board.epSquare() & 7) + 'a')
+                  << static_cast<char>((board.epSquare() >> 3) + '1') << std::endl;
     else
         std::cout << "Ep square: N/A" << std::endl;
-    std::cout << "Fen: " <<  board.fenStr() << std::endl;
+    std::cout << "Fen: " << board.fenStr() << std::endl;
 
     std::cout << "Zobrist hash: " << board.zkey().value << std::endl;
     std::cout << "Pawn structure hash: " << board.pawnKey().value << std::endl;
@@ -183,31 +185,38 @@ void testIsPseudoLegal(Board& board, int depth)
             for (int to = 0; to < 64; to++)
             {
                 Move move(Square(from), Square(to), MoveType::NONE);
-                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                if (std::find(moves.begin(), moves.end(), move) == moves.end()
+                    && board.isPseudoLegal(move))
                     throw std::runtime_error("bruh2");
 
                 move = Move(Square(from), Square(to), MoveType::ENPASSANT);
-                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                if (std::find(moves.begin(), moves.end(), move) == moves.end()
+                    && board.isPseudoLegal(move))
                     throw std::runtime_error("bruh2");
 
                 move = Move(Square(from), Square(to), MoveType::CASTLE);
-                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                if (std::find(moves.begin(), moves.end(), move) == moves.end()
+                    && board.isPseudoLegal(move))
                     throw std::runtime_error("bruh2");
 
                 move = Move(Square(from), Square(to), MoveType::PROMOTION, Promotion::KNIGHT);
-                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                if (std::find(moves.begin(), moves.end(), move) == moves.end()
+                    && board.isPseudoLegal(move))
                     throw std::runtime_error("bruh2");
 
                 move = Move(Square(from), Square(to), MoveType::PROMOTION, Promotion::BISHOP);
-                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                if (std::find(moves.begin(), moves.end(), move) == moves.end()
+                    && board.isPseudoLegal(move))
                     throw std::runtime_error("bruh2");
 
                 move = Move(Square(from), Square(to), MoveType::PROMOTION, Promotion::ROOK);
-                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                if (std::find(moves.begin(), moves.end(), move) == moves.end()
+                    && board.isPseudoLegal(move))
                     throw std::runtime_error("bruh2");
 
                 move = Move(Square(from), Square(to), MoveType::PROMOTION, Promotion::QUEEN);
-                if (std::find(moves.begin(), moves.end(), move) == moves.end() && board.isPseudoLegal(move))
+                if (std::find(moves.begin(), moves.end(), move) == moves.end()
+                    && board.isPseudoLegal(move))
                     throw std::runtime_error("bruh2");
             }
         }
@@ -354,7 +363,8 @@ void runTests(Board& board, bool fast)
             i++;
         test.fen = line.substr(0, i);
 
-        std::from_chars(line.data() + i + 4, line.data() + line.size(), test.results[line[i + 2] - '1']);
+        std::from_chars(
+            line.data() + i + 4, line.data() + line.size(), test.results[line[i + 2] - '1']);
 
         while (true)
         {
@@ -362,7 +372,8 @@ void runTests(Board& board, bool fast)
             if (idx == std::string::npos)
                 break;
             i = static_cast<int>(idx);
-            std::from_chars(line.data() + i + 4, line.data() + line.size(), test.results[line[i + 2] - '1']);
+            std::from_chars(
+                line.data() + i + 4, line.data() + line.size(), test.results[line[i + 2] - '1']);
         }
         tests.push_back(test);
     }
@@ -393,7 +404,8 @@ void runTests(Board& board, bool fast)
             }
             else
             {
-                std::cout << "\tFailed: depth " << j + 1 << ", Expected: " << test.results[j] << ", got: " << nodes << std::endl;
+                std::cout << "\tFailed: depth " << j + 1 << ", Expected: " << test.results[j]
+                          << ", got: " << nodes << std::endl;
                 failCount++;
             }
         }
@@ -406,12 +418,8 @@ void runTests(Board& board, bool fast)
 
 void testSANFind(const Board& board, const MoveList& moveList, int len)
 {
-    static constexpr std::array<char, 25> chars = {
-        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
-        '1', '2', '3', '4', '5', '6', '7', '8',
-        'K', 'Q', 'R', 'B', 'N', 'q', 'r', 'n',
-        'x'
-    };
+    static constexpr std::array<char, 25> chars = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', '1', '2',
+        '3', '4', '5', '6', '7', '8', 'K', 'Q', 'R', 'B', 'N', 'q', 'r', 'n', 'x'};
     static constexpr uint64_t charCount = 25;
     char* buf = new char[len + 1];
     buf[len] = '\0';

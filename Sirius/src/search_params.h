@@ -1,15 +1,14 @@
 #pragma once
 
 #include <cstdint>
-#include <string>
 #include <deque>
 #include <functional>
+#include <string>
 
 namespace search
 {
 
 #ifdef EXTERNAL_TUNE
-
 
 struct SearchParam
 {
@@ -23,7 +22,8 @@ struct SearchParam
 };
 
 std::deque<SearchParam>& searchParams();
-SearchParam& addSearchParam(std::string name, int value, int min, int max, int step, std::function<void()> callback = std::function<void()>());
+SearchParam& addSearchParam(std::string name, int value, int min, int max, int step,
+    std::function<void()> callback = std::function<void()>());
 void printWeatherFactoryConfig();
 void printOpenBenchConfig();
 void updateLmrTable();
@@ -36,7 +36,8 @@ void updateLmrTable();
     inline const int& name = name##Param.value
 #else
 #define SEARCH_PARAM(name, val, min, max, step) constexpr int name = val;
-#define SEARCH_PARAM_CALLBACK(name, val, min, max, step, callback) SEARCH_PARAM(name, val, min, max, step)
+#define SEARCH_PARAM_CALLBACK(name, val, min, max, step, callback) \
+    SEARCH_PARAM(name, val, min, max, step)
 #endif
 
 SEARCH_PARAM(hardTimeScale, 61, 20, 100, 5);
@@ -150,6 +151,5 @@ SEARCH_PARAM(doDeeperMarginDepth, 36, 8, 96, 5);
 SEARCH_PARAM(doShallowerMargin, 8, 2, 15, 1);
 
 SEARCH_PARAM(qsFpMargin, 61, 0, 250, 16);
-
 
 }
