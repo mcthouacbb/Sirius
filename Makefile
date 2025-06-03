@@ -17,3 +17,6 @@ CXXFLAGS := -std=c++20 -O3 -flto -DNDEBUG -march=native
 
 $(EXE)$(EXE_SUFFIX): $(SOURCES)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(SOURCES) -o $(EXE)$(EXE_SUFFIX)
+
+format:
+	clang-format -i $(SOURCES)
