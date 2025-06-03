@@ -45,9 +45,9 @@ public:
     void push(const Board& board, const EvalUpdates& updates);
     void pop();
 
-    PackedScore score(const Board& board) const;
-    PackedScore psqtScore(const Board& board, Color c) const;
-    PackedScore pawnShieldStormScore(Color c) const;
+    ScorePair score(const Board& board) const;
+    ScorePair psqtScore(const Board& board, Color c) const;
+    ScorePair pawnShieldStormScore(Color c) const;
     const PawnStructure& pawnStructure() const;
     int phase() const;
 
@@ -59,11 +59,11 @@ private:
 
         PsqtState psqtState;
         PawnStructure pawnStructure;
-        ColorArray<PackedScore> pawnShieldStorm;
-        PackedScore knightOutposts;
-        PackedScore bishopPawns;
-        PackedScore rookOpen;
-        PackedScore minorBehindPawn;
+        ColorArray<ScorePair> pawnShieldStorm;
+        ScorePair knightOutposts;
+        ScorePair bishopPawns;
+        ScorePair rookOpen;
+        ScorePair minorBehindPawn;
     };
 
     StackEntry& currEntry()

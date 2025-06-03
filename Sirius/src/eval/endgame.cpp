@@ -226,6 +226,7 @@ ColorArray<Endgame> scaleKPsvKEndgames = {
     Endgame(Color::WHITE, &scaleKPsvK, EndgameType::SCALE),
     Endgame(Color::BLACK, &scaleKPsvK, EndgameType::SCALE)
 };
+// clang-format on
 
 const Endgame* probeEvalFunc(const Board& board)
 {

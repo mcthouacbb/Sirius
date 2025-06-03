@@ -14,7 +14,7 @@ struct EvalData
     ColorArray<Bitboard> attackedBy2;
     ColorArray<PieceTypeArray<Bitboard>> attackedBy;
     ColorArray<Bitboard> kingRing;
-    ColorArray<PackedScore> attackWeight;
+    ColorArray<ScorePair> attackWeight;
     ColorArray<int> attackCount;
     ColorArray<Bitboard> kingFlank;
 };
@@ -23,12 +23,12 @@ using enum PieceType;
 using enum Color;
 
 template<Color us, PieceType piece>
-PackedScore evaluatePieces(const Board& board, EvalData& evalData)
+ScorePair evaluatePieces(const Board& board, EvalData& evalData)
 {
     constexpr Color them = ~us;
     constexpr Bitboard CENTER_SQUARES = (RANK_4_BB | RANK_5_BB) & (FILE_D_BB | FILE_E_BB);
 
-    PackedScore eval{0, 0};
+    ScorePair eval = ScorePair(0, 0);
     Bitboard pieces = board.pieces(us, piece);
     if (piece == BISHOP && pieces.multiple())
         eval += BISHOP_PAIR;
@@ -70,11 +70,11 @@ PackedScore evaluatePieces(const Board& board, EvalData& evalData)
 }
 
 template<Color us>
-PackedScore evaluateThreats(const Board& board, const EvalData& evalData)
+ScorePair evaluateThreats(const Board& board, const EvalData& evalData)
 {
     constexpr Color them = ~us;
 
-    PackedScore eval{0, 0};
+    ScorePair eval = ScorePair(0, 0);
 
     Bitboard defendedBB = evalData.attackedBy2[them] | evalData.attackedBy[them][PAWN]
         | (evalData.attacked[them] & ~evalData.attackedBy2[us]);
@@ -172,13 +172,13 @@ constexpr int safetyAdjustment(int value)
 }
 
 template<Color us>
-PackedScore evaluateKings(const Board& board, const EvalData& evalData, const EvalState& evalState)
+ScorePair evaluateKings(const Board& board, const EvalData& evalData, const EvalState& evalState)
 {
     constexpr Color them = ~us;
 
     Square theirKing = board.kingSq(them);
 
-    PackedScore eval{0, 0};
+    ScorePair eval = ScorePair(0, 0);
 
     eval += evalState.pawnShieldStormScore(us);
 
@@ -228,12 +228,12 @@ PackedScore evaluateKings(const Board& board, const EvalData& evalData, const Ev
 
     eval += SAFETY_OFFSET;
 
-    PackedScore safety{safetyAdjustment(eval.mg()), safetyAdjustment(eval.eg())};
+    ScorePair safety{safetyAdjustment(eval.mg()), safetyAdjustment(eval.eg())};
     return safety;
 }
 
 template<Color us>
-PackedScore evaluatePassedPawns(
+ScorePair evaluatePassedPawns(
     const Board& board, const PawnStructure& pawnStructure, const EvalData& evalData)
 {
     constexpr Color them = ~us;
@@ -242,7 +242,7 @@ PackedScore evaluatePassedPawns(
 
     Bitboard passers = pawnStructure.passedPawns & board.pieces(us);
 
-    PackedScore eval{0, 0};
+    ScorePair eval = ScorePair(0, 0);
 
     while (passers.any())
     {
@@ -264,7 +264,7 @@ PackedScore evaluatePassedPawns(
     return eval;
 }
 
-PackedScore evaluateComplexity(const Board& board, const PawnStructure& pawnStructure, PackedScore eval)
+ScorePair evaluateComplexity(const Board& board, const PawnStructure& pawnStructure, ScorePair eval)
 {
     constexpr Bitboard KING_SIDE = FILE_A_BB | FILE_B_BB | FILE_C_BB | FILE_D_BB;
     constexpr Bitboard QUEEN_SIDE = ~KING_SIDE;
@@ -272,7 +272,7 @@ PackedScore evaluateComplexity(const Board& board, const PawnStructure& pawnStru
     bool pawnsBothSides = (pawns & KING_SIDE).any() && (pawns & QUEEN_SIDE).any();
     bool pawnEndgame = board.allPieces() == (pawns | board.pieces(KING));
 
-    PackedScore complexity = COMPLEXITY_PAWNS * pawns.popcount()
+    ScorePair complexity = COMPLEXITY_PAWNS * pawns.popcount()
         + COMPLEXITY_PAWNS_BOTH_SIDES * pawnsBothSides + COMPLEXITY_PAWN_ENDGAME * pawnEndgame
         + COMPLEXITY_OFFSET;
 
@@ -280,10 +280,10 @@ PackedScore evaluateComplexity(const Board& board, const PawnStructure& pawnStru
 
     int egComplexity = std::max(complexity.eg(), -std::abs(eval.eg()));
 
-    return PackedScore(0, egSign * egComplexity);
+    return ScorePair(0, egSign * egComplexity);
 }
 
-int evaluateScale(const Board& board, PackedScore eval, const EvalState& evalState)
+int evaluateScale(const Board& board, ScorePair eval, const EvalState& evalState)
 {
     int scaleFactor = SCALE_FACTOR_NORMAL;
     Color strongSide = eval.eg() > 0 ? WHITE : eval.eg() < 0 ? BLACK : board.sideToMove();
@@ -327,7 +327,7 @@ void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& p
 
 // clang-format off
 void nonIncrementalEval(const Board& board, const EvalState& evalState,
-    const PawnStructure& pawnStructure, EvalData& evalData, PackedScore& eval)
+    const PawnStructure& pawnStructure, EvalData& evalData, ScorePair& eval)
 {
     eval += evaluatePieces<WHITE, KNIGHT>(board, evalData) - evaluatePieces<BLACK, KNIGHT>(board, evalData);
     eval += evaluatePieces<WHITE, BISHOP>(board, evalData) - evaluatePieces<BLACK, BISHOP>(board, evalData);
@@ -347,7 +347,7 @@ int evaluate(const Board& board, search::SearchThread* thread)
         return (*endgameEval)(board, thread->evalState);
 
     Color color = board.sideToMove();
-    PackedScore eval = thread->evalState.score(board);
+    ScorePair eval = thread->evalState.score(board);
 
     const PawnStructure& pawnStructure = thread->evalState.pawnStructure();
 
@@ -378,7 +378,7 @@ int evaluateSingle(const Board& board)
         return (*endgame)(board, evalState);
 
     Color color = board.sideToMove();
-    PackedScore eval = evalState.score(board);
+    ScorePair eval = evalState.score(board);
 
     const PawnStructure& pawnStructure = evalState.pawnStructure();
 

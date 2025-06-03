@@ -4,7 +4,7 @@
 namespace eval
 {
 
-PackedScore PsqtState::evaluate(const Board& board) const
+ScorePair PsqtState::evaluate(const Board& board) const
 {
     int whiteBucket = getKingBucket(board.kingSq(Color::WHITE));
     int blackBucket = getKingBucket(board.kingSq(Color::BLACK));

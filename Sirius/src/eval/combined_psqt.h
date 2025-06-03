@@ -10,9 +10,9 @@
 namespace eval
 {
 
-constexpr auto init()
+constexpr auto initPsqt()
 {
-    MultiArray<PackedScore, 2, 2, 6, 64> combined = {};
+    MultiArray<ScorePair, 2, 2, 6, 64> combined = {};
     for (int bucket = 0; bucket < 2; bucket++)
         for (int piece = 0; piece < 6; piece++)
             for (int sq = 0; sq < 64; sq++)
@@ -25,9 +25,9 @@ constexpr auto init()
     return combined;
 }
 
-constexpr auto combinedPsqt = init();
+constexpr auto combinedPsqt = initPsqt();
 
-inline PackedScore combinedPsqtScore(int bucket, Color color, PieceType piece, Square square)
+inline ScorePair combinedPsqtScore(int bucket, Color color, PieceType piece, Square square)
 {
     return combinedPsqt[bucket][static_cast<int>(color)][static_cast<int>(piece)][square.value()];
 }

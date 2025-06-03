@@ -466,25 +466,25 @@ constexpr int CastlingRights::value() const
     return static_cast<int>(m_Value);
 }
 
-struct PackedScore
+struct ScorePair
 {
 public:
-    constexpr PackedScore() = default;
-    constexpr PackedScore(int mg, int eg);
-    constexpr PackedScore& operator+=(const PackedScore& other);
-    constexpr PackedScore& operator-=(const PackedScore& other);
+    constexpr ScorePair() = default;
+    constexpr ScorePair(int mg, int eg);
+    constexpr ScorePair& operator+=(const ScorePair& other);
+    constexpr ScorePair& operator-=(const ScorePair& other);
 
     constexpr int mg() const;
     constexpr int eg() const;
 
-    friend constexpr PackedScore operator+(const PackedScore& a, const PackedScore& b);
-    friend constexpr PackedScore operator-(const PackedScore& a, const PackedScore& b);
-    friend constexpr PackedScore operator-(const PackedScore& p);
-    friend constexpr PackedScore operator*(int a, const PackedScore& b);
-    friend constexpr PackedScore operator*(const PackedScore& a, int b);
+    friend constexpr ScorePair operator+(const ScorePair& a, const ScorePair& b);
+    friend constexpr ScorePair operator-(const ScorePair& a, const ScorePair& b);
+    friend constexpr ScorePair operator-(const ScorePair& p);
+    friend constexpr ScorePair operator*(int a, const ScorePair& b);
+    friend constexpr ScorePair operator*(const ScorePair& a, int b);
 
 private:
-    constexpr PackedScore(int value)
+    constexpr ScorePair(int value)
         : m_Value(value)
     {
     }
@@ -492,54 +492,54 @@ private:
     int32_t m_Value;
 };
 
-constexpr PackedScore::PackedScore(int mg, int eg)
+constexpr ScorePair::ScorePair(int mg, int eg)
     : m_Value((static_cast<int32_t>(static_cast<uint32_t>(eg) << 16) + mg))
 {
 }
 
-constexpr PackedScore& PackedScore::operator+=(const PackedScore& other)
+constexpr ScorePair& ScorePair::operator+=(const ScorePair& other)
 {
     m_Value += other.m_Value;
     return *this;
 }
 
-constexpr PackedScore& PackedScore::operator-=(const PackedScore& other)
+constexpr ScorePair& ScorePair::operator-=(const ScorePair& other)
 {
     m_Value -= other.m_Value;
     return *this;
 }
 
-constexpr int PackedScore::mg() const
+constexpr int ScorePair::mg() const
 {
     return static_cast<int16_t>(m_Value);
 }
 
-constexpr int PackedScore::eg() const
+constexpr int ScorePair::eg() const
 {
     return static_cast<int16_t>(static_cast<uint32_t>(m_Value + 0x8000) >> 16);
 }
 
-constexpr PackedScore operator+(const PackedScore& a, const PackedScore& b)
+constexpr ScorePair operator+(const ScorePair& a, const ScorePair& b)
 {
-    return PackedScore(a.m_Value + b.m_Value);
+    return ScorePair(a.m_Value + b.m_Value);
 }
 
-constexpr PackedScore operator-(const PackedScore& a, const PackedScore& b)
+constexpr ScorePair operator-(const ScorePair& a, const ScorePair& b)
 {
-    return PackedScore(a.m_Value - b.m_Value);
+    return ScorePair(a.m_Value - b.m_Value);
 }
 
-constexpr PackedScore operator-(const PackedScore& p)
+constexpr ScorePair operator-(const ScorePair& p)
 {
-    return PackedScore(-p.m_Value);
+    return ScorePair(-p.m_Value);
 }
 
-constexpr PackedScore operator*(int a, const PackedScore& b)
+constexpr ScorePair operator*(int a, const ScorePair& b)
 {
-    return PackedScore(a * b.m_Value);
+    return ScorePair(a * b.m_Value);
 }
 
-constexpr PackedScore operator*(const PackedScore& a, int b)
+constexpr ScorePair operator*(const ScorePair& a, int b)
 {
-    return PackedScore(a.m_Value * b);
+    return ScorePair(a.m_Value * b);
 }

@@ -6,11 +6,11 @@ namespace eval
 {
 
 // clang-format off
-#define S(mg, eg) PackedScore(mg, eg)
+#define S(mg, eg) ScorePair(mg, eg)
 
-constexpr PackedScore MATERIAL[6] = {S(  61,  131), S( 286,  431), S( 306,  444), S( 386,  789), S( 745, 1618), S(0, 0)};
+constexpr ScorePair MATERIAL[6] = {S(  61,  131), S( 286,  431), S( 306,  444), S( 386,  789), S( 745, 1618), S(0, 0)};
 
-constexpr PackedScore PSQT[6][64] = {
+constexpr ScorePair PSQT[6][64] = {
     {
         S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0),
         S(  54,   79), S(  37,   90), S(  21,  101), S(  55,   77), S(  73,   61), S(  57,   76), S(  47,   95), S(  68,   77),
@@ -73,48 +73,48 @@ constexpr PackedScore PSQT[6][64] = {
     },
 };
 
-constexpr PackedScore MOBILITY[4][28] = {
+constexpr ScorePair MOBILITY[4][28] = {
     {S(  -3,  -29), S( -39,  -47), S( -18,  -16), S(  -9,    0), S(   1,    9), S(   6,   19), S(  13,   22), S(  20,   26), S(  29,   19), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0)},
     {S( -10,  -46), S( -30,  -61), S( -18,  -32), S( -11,  -14), S(  -3,   -4), S(   2,    6), S(   4,   15), S(   7,   19), S(   7,   21), S(   9,   22), S(  10,   22), S(  14,   17), S(  12,   23), S(  17,    4), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0)},
     {S( -12,  -44), S( -29,  -70), S( -14,  -53), S(  -2,  -31), S(   0,  -17), S(  -2,   -6), S(  -1,    2), S(   1,    8), S(   3,   11), S(   6,   17), S(   3,   27), S(   4,   34), S(   6,   38), S(   9,   39), S(  16,   36), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0)},
     {S(   0,    8), S( -32,  -72), S( -61, -112), S( -19, -198), S( -24,  -63), S( -16,  -11), S(  -6,  -23), S(  -4,   -5), S(  -3,   13), S(   0,   22), S(   2,   25), S(   6,   28), S(   6,   38), S(  10,   37), S(  10,   43), S(  12,   44), S(  13,   46), S(  15,   47), S(  15,   46), S(  21,   38), S(  25,   29), S(  31,   13), S(  28,   18), S(  34,   -5), S(  34,   -8), S(   9,   -7), S( -13,  -11), S(-116,   10)}
 };
 
-constexpr PackedScore THREAT_BY_PAWN[6] = {S(   4,  -20), S(  66,   28), S(  60,   60), S(  81,   24), S(  72,   -2), S(   0,    0)};
-constexpr PackedScore THREAT_BY_KNIGHT[2][6] = {
+constexpr ScorePair THREAT_BY_PAWN[6] = {S(   4,  -20), S(  66,   28), S(  60,   60), S(  81,   24), S(  72,   -2), S(   0,    0)};
+constexpr ScorePair THREAT_BY_KNIGHT[2][6] = {
     {S(   3,   28), S(  14,   36), S(  35,   43), S(  73,   13), S(  53,  -30), S(   0,    0)},
     {S(  -7,    9), S(   6,   36), S(  29,   29), S(  64,   34), S(  60,   -1), S(   0,    0)}
 };
-constexpr PackedScore THREAT_BY_BISHOP[2][6] = {
+constexpr ScorePair THREAT_BY_BISHOP[2][6] = {
     {S(  -3,   34), S(  38,   32), S( -15,   36), S(  67,   15), S(  68,   44), S(   0,    0)},
     {S(  -4,    6), S(  17,   22), S( -26,  -11), S(  44,   44), S(  47,  111), S(   0,    0)}
 };
-constexpr PackedScore THREAT_BY_ROOK[2][6] = {
+constexpr ScorePair THREAT_BY_ROOK[2][6] = {
     {S(  -2,   40), S(  15,   57), S(  25,   53), S( -13,  -28), S(  60,   13), S(   0,    0)},
     {S(  -8,    7), S(   1,   15), S(  14,    3), S( -12,  -66), S(  42,   62), S(   0,    0)}
 };
-constexpr PackedScore THREAT_BY_QUEEN[2][6] = {
+constexpr ScorePair THREAT_BY_QUEEN[2][6] = {
     {S(   6,    5), S(  23,   19), S(  10,   42), S(  14,    2), S(  10,  -56), S(  99,   54)},
     {S(  -3,   12), S(   0,    8), S(  -5,   15), S(  -3,    3), S( -15,  -74), S( 118,   53)}
 };
-constexpr PackedScore THREAT_BY_KING[6] = {S( -14,   43), S(   8,   48), S(  28,   41), S(  83,    8), S(   0,    0), S(   0,    0)};
-constexpr PackedScore KNIGHT_HIT_QUEEN = S(  10,    3);
-constexpr PackedScore BISHOP_HIT_QUEEN = S(  16,    9);
-constexpr PackedScore ROOK_HIT_QUEEN = S(  18,   -5);
-constexpr PackedScore PUSH_THREAT = S(  14,   18);
-constexpr PackedScore RESTRICTED_SQUARES = S(   2,    3);
+constexpr ScorePair THREAT_BY_KING[6] = {S( -14,   43), S(   8,   48), S(  28,   41), S(  83,    8), S(   0,    0), S(   0,    0)};
+constexpr ScorePair KNIGHT_HIT_QUEEN = S(  10,    3);
+constexpr ScorePair BISHOP_HIT_QUEEN = S(  16,    9);
+constexpr ScorePair ROOK_HIT_QUEEN = S(  18,   -5);
+constexpr ScorePair PUSH_THREAT = S(  14,   18);
+constexpr ScorePair RESTRICTED_SQUARES = S(   2,    3);
 
-constexpr PackedScore ISOLATED_PAWN[8] = {S(  -8,    6), S(  -3,  -16), S( -12,   -8), S( -10,  -16), S( -12,  -14), S(  -8,   -7), S(  -4,  -14), S( -12,    7)};
-constexpr PackedScore DOUBLED_PAWN[8] = {S(   0,  -61), S(  13,  -37), S(   0,  -27), S(  -2,  -17), S(  -5,  -12), S(  -8,  -20), S(   5,  -38), S(   6,  -71)};
-constexpr PackedScore BACKWARDS_PAWN[8] = {S(   0,    0), S(  -8,  -12), S(  -2,  -14), S(  -7,  -12), S(   1,  -18), S(  32,  -13), S(   0,    0), S(   0,    0)};
-constexpr PackedScore PAWN_PHALANX[8] = {S(   0,    0), S(   5,   -4), S(  11,   -2), S(  20,    8), S(  39,   41), S( 117,  213), S(   6,  340), S(   0,    0)};
-constexpr PackedScore DEFENDED_PAWN[8] = {S(   0,    0), S(   0,    0), S(  18,    6), S(  11,    8), S(  17,   21), S(  33,   64), S( 141,   76), S(   0,    0)};
-constexpr PackedScore CANDIDATE_PASSER[2][8] = {
+constexpr ScorePair ISOLATED_PAWN[8] = {S(  -8,    6), S(  -3,  -16), S( -12,   -8), S( -10,  -16), S( -12,  -14), S(  -8,   -7), S(  -4,  -14), S( -12,    7)};
+constexpr ScorePair DOUBLED_PAWN[8] = {S(   0,  -61), S(  13,  -37), S(   0,  -27), S(  -2,  -17), S(  -5,  -12), S(  -8,  -20), S(   5,  -38), S(   6,  -71)};
+constexpr ScorePair BACKWARDS_PAWN[8] = {S(   0,    0), S(  -8,  -12), S(  -2,  -14), S(  -7,  -12), S(   1,  -18), S(  32,  -13), S(   0,    0), S(   0,    0)};
+constexpr ScorePair PAWN_PHALANX[8] = {S(   0,    0), S(   5,   -4), S(  11,   -2), S(  20,    8), S(  39,   41), S( 117,  213), S(   6,  340), S(   0,    0)};
+constexpr ScorePair DEFENDED_PAWN[8] = {S(   0,    0), S(   0,    0), S(  18,    6), S(  11,    8), S(  17,   21), S(  33,   64), S( 141,   76), S(   0,    0)};
+constexpr ScorePair CANDIDATE_PASSER[2][8] = {
     {S(   0,    0), S( -31,  -17), S( -18,   -7), S(   0,   26), S(  25,   52), S(  65,  114), S(   0,    0), S(   0,    0)},
     {S(   0,    0), S( -17,  -10), S(  -8,   14), S(  -4,   28), S(  18,   41), S(  26,  181), S(   0,    0), S(   0,    0)}
 };
 
-constexpr PackedScore PASSED_PAWN[2][2][8] = {
+constexpr ScorePair PASSED_PAWN[2][2][8] = {
     {
         {S(   0,    0), S(   0,    0), S(   0,    0), S( -36,  -41), S( -16,   22), S(  11,  159), S(  67,  218), S(   0,    0)},
         {S(   0,    0), S(   0,    0), S(   0,    0), S( -22,  -53), S(   3,  -20), S(  37,   41), S(  70,   25), S(   0,    0)}
@@ -124,10 +124,10 @@ constexpr PackedScore PASSED_PAWN[2][2][8] = {
         {S(   0,    0), S(   0,    0), S(   0,    0), S( -30,  -56), S(  -7,  -24), S(  16,   19), S(  -9,  -11), S(   0,    0)}
     }
 };
-constexpr PackedScore OUR_PASSER_PROXIMITY[8] = {S(  79,   98), S(  71,  100), S(  46,   72), S(   6,   58), S(   5,   38), S(   7,   25), S(  12,   17), S(  -8,   24)};
-constexpr PackedScore THEIR_PASSER_PROXIMITY[8] = {S( -44,  -10), S(  -2,    3), S(  25,    0), S(  20,   31), S(  14,   64), S(  18,   78), S(  25,   80), S(  30,   69)};
+constexpr ScorePair OUR_PASSER_PROXIMITY[8] = {S(  79,   98), S(  71,  100), S(  46,   72), S(   6,   58), S(   5,   38), S(   7,   25), S(  12,   17), S(  -8,   24)};
+constexpr ScorePair THEIR_PASSER_PROXIMITY[8] = {S( -44,  -10), S(  -2,    3), S(  25,    0), S(  20,   31), S(  14,   64), S(  18,   78), S(  25,   80), S(  30,   69)};
 
-constexpr PackedScore PAWN_STORM[2][4][8] = {
+constexpr ScorePair PAWN_STORM[2][4][8] = {
     {
         {S(  40,   36), S(-110,  -51), S( -40,  -35), S(  59,    1), S(  27,   21), S(  -1,   30), S( -10,   30), S(   0,    0)},
         {S(  32,    6), S(  43, -124), S(  92,  -83), S(  58,  -20), S(  16,   -2), S( -21,    8), S(   4,    6), S(   0,    0)},
@@ -141,41 +141,41 @@ constexpr PackedScore PAWN_STORM[2][4][8] = {
         {S(   0,    0), S(   0,    0), S(  87,   17), S(  16,   25), S( -25,   25), S( -24,   22), S(  -3,   17), S(   0,    0)}
     }
 };
-constexpr PackedScore PAWN_SHIELD[4][8] = {
+constexpr ScorePair PAWN_SHIELD[4][8] = {
     {S(  46,   36), S( -20,   51), S( -12,   41), S(  39,   30), S(  44,   16), S( -27,   -2), S( -67,  -19), S(   0,    0)},
     {S(  49,    9), S( -24,   19), S(   9,    7), S(  53,   -1), S(  43,  -16), S(  14,  -20), S( -42,  -32), S(   0,    0)},
     {S(  22,   -3), S(  15,  118), S(  12,   -2), S(  34,  -22), S(  23,  -20), S(  -6,  -26), S( -59,  -42), S(   0,    0)},
     {S(  14,   16), S(   2,   12), S(   1,   10), S(  27,    4), S(  33,    1), S(   8,    5), S( -84,    7), S(   0,    0)}
 };
-constexpr PackedScore SAFE_KNIGHT_CHECK = S( 109,    7);
-constexpr PackedScore SAFE_BISHOP_CHECK = S(  71,   18);
-constexpr PackedScore SAFE_ROOK_CHECK = S( 115,   15);
-constexpr PackedScore SAFE_QUEEN_CHECK = S(  55,   26);
-constexpr PackedScore UNSAFE_KNIGHT_CHECK = S(  16,    2);
-constexpr PackedScore UNSAFE_BISHOP_CHECK = S(  38,   10);
-constexpr PackedScore UNSAFE_ROOK_CHECK = S(  39,    3);
-constexpr PackedScore UNSAFE_QUEEN_CHECK = S(  15,    4);
-constexpr PackedScore QUEENLESS_ATTACK = S(-145,  145);
-constexpr PackedScore KING_ATTACKER_WEIGHT[4] = {S(  56,   -4), S(  21,    0), S(  29,  -13), S(   4,   -9)};
-constexpr PackedScore KING_ATTACKS = S(   7,    0);
-constexpr PackedScore WEAK_KING_RING = S(   8,   -1);
-constexpr PackedScore KING_FLANK_ATTACKS[2] = {S(  12,   -3), S(   5,   -1)};
-constexpr PackedScore KING_FLANK_DEFENSES[2] = {S(  -7,    0), S(  -8,    3)};
-constexpr PackedScore SAFETY_OFFSET = S(  78,  207);
+constexpr ScorePair SAFE_KNIGHT_CHECK = S( 109,    7);
+constexpr ScorePair SAFE_BISHOP_CHECK = S(  71,   18);
+constexpr ScorePair SAFE_ROOK_CHECK = S( 115,   15);
+constexpr ScorePair SAFE_QUEEN_CHECK = S(  55,   26);
+constexpr ScorePair UNSAFE_KNIGHT_CHECK = S(  16,    2);
+constexpr ScorePair UNSAFE_BISHOP_CHECK = S(  38,   10);
+constexpr ScorePair UNSAFE_ROOK_CHECK = S(  39,    3);
+constexpr ScorePair UNSAFE_QUEEN_CHECK = S(  15,    4);
+constexpr ScorePair QUEENLESS_ATTACK = S(-145,  145);
+constexpr ScorePair KING_ATTACKER_WEIGHT[4] = {S(  56,   -4), S(  21,    0), S(  29,  -13), S(   4,   -9)};
+constexpr ScorePair KING_ATTACKS = S(   7,    0);
+constexpr ScorePair WEAK_KING_RING = S(   8,   -1);
+constexpr ScorePair KING_FLANK_ATTACKS[2] = {S(  12,   -3), S(   5,   -1)};
+constexpr ScorePair KING_FLANK_DEFENSES[2] = {S(  -7,    0), S(  -8,    3)};
+constexpr ScorePair SAFETY_OFFSET = S(  78,  207);
 
-constexpr PackedScore MINOR_BEHIND_PAWN = S(   5,   12);
-constexpr PackedScore KNIGHT_OUTPOST = S(  23,   16);
-constexpr PackedScore BISHOP_PAWNS[7] = {S(   4,   20), S(   5,   19), S(   4,   11), S(   1,    4), S(  -2,   -5), S(  -2,  -18), S(  -5,  -30)};
-constexpr PackedScore BISHOP_PAIR = S(  19,   60);
-constexpr PackedScore LONG_DIAG_BISHOP = S(  15,    8);
-constexpr PackedScore ROOK_OPEN[2] = {S(  24,    3), S(  12,    5)};
+constexpr ScorePair MINOR_BEHIND_PAWN = S(   5,   12);
+constexpr ScorePair KNIGHT_OUTPOST = S(  23,   16);
+constexpr ScorePair BISHOP_PAWNS[7] = {S(   4,   20), S(   5,   19), S(   4,   11), S(   1,    4), S(  -2,   -5), S(  -2,  -18), S(  -5,  -30)};
+constexpr ScorePair BISHOP_PAIR = S(  19,   60);
+constexpr ScorePair LONG_DIAG_BISHOP = S(  15,    8);
+constexpr ScorePair ROOK_OPEN[2] = {S(  24,    3), S(  12,    5)};
 
-constexpr PackedScore TEMPO = S(  32,   34);
+constexpr ScorePair TEMPO = S(  32,   34);
 
-constexpr PackedScore COMPLEXITY_PAWNS = S(   0,   10);
-constexpr PackedScore COMPLEXITY_PAWNS_BOTH_SIDES = S(   0,   63);
-constexpr PackedScore COMPLEXITY_PAWN_ENDGAME = S(   0,   80);
-constexpr PackedScore COMPLEXITY_OFFSET = S(   0, -134);
+constexpr ScorePair COMPLEXITY_PAWNS = S(   0,   10);
+constexpr ScorePair COMPLEXITY_PAWNS_BOTH_SIDES = S(   0,   63);
+constexpr ScorePair COMPLEXITY_PAWN_ENDGAME = S(   0,   80);
+constexpr ScorePair COMPLEXITY_OFFSET = S(   0, -134);
 
 #undef S
 // clang-format on

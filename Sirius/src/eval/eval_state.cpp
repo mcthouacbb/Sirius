@@ -117,14 +117,14 @@ void EvalState::pop()
     m_CurrEntry--;
 }
 
-PackedScore EvalState::score(const Board& board) const
+ScorePair EvalState::score(const Board& board) const
 {
     return currEntry().psqtState.evaluate(board) + currEntry().pawnStructure.score
         + currEntry().knightOutposts + currEntry().bishopPawns + currEntry().rookOpen
         + currEntry().minorBehindPawn;
 }
 
-PackedScore EvalState::psqtScore(const Board& board, Color c) const
+ScorePair EvalState::psqtScore(const Board& board, Color c) const
 {
     auto psqt = currEntry().psqtState.evaluate(board);
     if (c == Color::BLACK)
@@ -132,7 +132,7 @@ PackedScore EvalState::psqtScore(const Board& board, Color c) const
     return psqt;
 }
 
-PackedScore EvalState::pawnShieldStormScore(Color c) const
+ScorePair EvalState::pawnShieldStormScore(Color c) const
 {
     return currEntry().pawnShieldStorm[c];
 }

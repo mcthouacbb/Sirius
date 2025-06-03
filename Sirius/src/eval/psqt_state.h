@@ -19,7 +19,7 @@ inline int getKingBucket(Square kingSq)
 
 struct Accumulator
 {
-    std::array<PackedScore, BUCKET_COUNT> materialPsqt;
+    std::array<ScorePair, BUCKET_COUNT> materialPsqt;
 
     void addPiece(Color color, PieceType piece, Square square)
     {
@@ -47,7 +47,7 @@ struct PsqtState
     std::array<Accumulator, 2> accumulators;
 
     void init();
-    PackedScore evaluate(const Board& board) const;
+    ScorePair evaluate(const Board& board) const;
     void addPiece(Color color, PieceType piece, Square square);
     void removePiece(Color color, PieceType piece, Square square);
     void movePiece(Color color, PieceType piece, Square src, Square dst);
@@ -56,7 +56,7 @@ struct PsqtState
 inline void PsqtState::init()
 {
     phase = TOTAL_PHASE;
-    accumulators.fill({{PackedScore(0, 0), PackedScore(0, 0)}});
+    accumulators.fill({{ScorePair(0, 0), ScorePair(0, 0)}});
 }
 
 inline void PsqtState::addPiece(Color color, PieceType piece, Square square)
