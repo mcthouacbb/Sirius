@@ -149,9 +149,22 @@ inline Bitboard isolatedPawnMask(Square square)
 {
     return attackData.isolatedPawnMasks[square.value()];
 }
+
 inline Bitboard kingFlank(Color color, int file)
 {
     return attackData.kingFlanks[static_cast<int>(color)][file];
+}
+
+template<Color color>
+inline Bitboard kingRing(Square kingSq)
+{
+    Bitboard kingAtks = attacks::kingAttacks(kingSq);
+    Bitboard kingRing = kingAtks | attacks::pawnPushes<color>(kingAtks);
+    if (FILE_H_BB.has(kingSq))
+        kingRing |= kingRing.west();
+    if (FILE_A_BB.has(kingSq))
+        kingRing |= kingRing.east();
+    return kingRing & ~Bitboard::fromSquare(kingSq);
 }
 
 inline Bitboard pawnAttacks(Color color, Square square)

@@ -1,8 +1,10 @@
 #pragma once
 
 #include "../defs.h"
+#include "../util/enum_array.h"
 #include "combined_psqt.h"
 #include "phase.h"
+
 
 #include <iostream>
 
@@ -44,7 +46,7 @@ struct Accumulator
 struct PsqtState
 {
     int phase;
-    std::array<Accumulator, 2> accumulators;
+    ColorArray<Accumulator> accumulators;
 
     void init();
     ScorePair evaluate(const Board& board) const;
@@ -61,19 +63,19 @@ inline void PsqtState::init()
 
 inline void PsqtState::addPiece(Color color, PieceType piece, Square square)
 {
-    accumulators[static_cast<int>(color)].addPiece(color, piece, square);
+    accumulators[color].addPiece(color, piece, square);
     phase -= getPiecePhase(piece);
 }
 
 inline void PsqtState::removePiece(Color color, PieceType piece, Square square)
 {
-    accumulators[static_cast<int>(color)].removePiece(color, piece, square);
+    accumulators[color].removePiece(color, piece, square);
     phase += getPiecePhase(piece);
 }
 
 inline void PsqtState::movePiece(Color color, PieceType piece, Square src, Square dst)
 {
-    accumulators[static_cast<int>(color)].movePiece(color, piece, src, dst);
+    accumulators[color].movePiece(color, piece, src, dst);
 }
 
 }

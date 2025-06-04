@@ -15,17 +15,17 @@ public:
         : m_Value(PieceSet(types...).m_Value)
     {
         static_assert(
-            std::is_same_v<Type, PieceType>, "Piece set constructor argument must be a Piecetype");
+            std::is_same_v<Type, PieceType>, "Piece set constructor argument must be a PieceType");
         add(type);
     }
 
     constexpr void add(PieceType piece)
     {
-        m_Value |= (1ull << static_cast<int>(piece));
+        m_Value |= 1 << static_cast<int>(piece);
     }
     constexpr void remove(PieceType piece)
     {
-        m_Value &= ~(1ull << static_cast<int>(piece));
+        m_Value &= ~(1 << static_cast<int>(piece));
     }
 
     constexpr bool has(PieceType piece) const

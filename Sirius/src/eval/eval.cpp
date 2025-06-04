@@ -315,13 +315,7 @@ void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& p
     evalData.attackedBy[us][KING] = ourKingAtks;
     evalData.attackedBy2[us] = evalData.attacked[us] & ourKingAtks;
     evalData.attacked[us] |= ourKingAtks;
-    evalData.kingRing[us] =
-        (ourKingAtks | attacks::pawnPushes<us>(ourKingAtks)) & ~Bitboard::fromSquare(ourKing);
-    if (FILE_H_BB.has(ourKing))
-        evalData.kingRing[us] |= evalData.kingRing[us].west();
-    if (FILE_A_BB.has(ourKing))
-        evalData.kingRing[us] |= evalData.kingRing[us].east();
-
+    evalData.kingRing[us] = attacks::kingRing<us>(ourKing);
     evalData.kingFlank[us] = attacks::kingFlank(us, ourKing.file());
 }
 
@@ -339,6 +333,7 @@ void nonIncrementalEval(const Board& board, const EvalState& evalState,
     eval += evaluateThreats<WHITE>(board, evalData) - evaluateThreats<BLACK>(board, evalData);
     eval += evaluateComplexity(board, pawnStructure, eval);
 }
+// clang-format on
 
 int evaluate(const Board& board, search::SearchThread* thread)
 {
