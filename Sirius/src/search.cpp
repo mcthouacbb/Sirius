@@ -21,9 +21,10 @@ MultiArray<int, 64, 64> genLMRTable()
     {
         for (int i = 1; i < 64; i++)
         {
-            lmrTable[d][i] = static_cast<int>(lmrBase / 100.0
-                + std::log(static_cast<double>(d)) * std::log(static_cast<double>(i))
-                    / (lmrDivisor / 100.0));
+            double base = static_cast<double>(lmrBase) / 100.0;
+            double divisor = static_cast<double>(lmrDivisor) / 100.0;
+            lmrTable[d][i] = static_cast<int>(
+                base + std::log(static_cast<double>(d)) * std::log(static_cast<double>(i)) / divisor);
         }
     }
     return lmrTable;
@@ -331,9 +332,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
         m_ShouldStop.store(true, std::memory_order_relaxed);
 
     if (report)
-    {
         comm::currComm->reportBestMove(bestMove);
-    }
 
     return score;
 }
@@ -606,9 +605,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             continue;
         if (!board.isLegal(move))
             continue;
-        bool quiet = moveIsQuiet(board, move);
-        bool quietLosing = moveScore < MoveOrdering::SECOND_KILLER_SCORE;
 
+        bool quiet = moveIsQuiet(board, move);
         Piece movedPiece = movingPiece(board, move);
         int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
         int histScore = quiet ? history.getQuietStats(move, threats, movedPiece, stack, rootPly)
@@ -616,7 +614,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         baseLMR -= histScore / (quiet ? lmrQuietHistDivisor : lmrNoisyHistDivisor);
 
         // move loop pruning(~184 elo)
-        if (!root && quietLosing && bestScore > -SCORE_WIN)
+        if (!root && moveScore < MoveOrdering::SECOND_KILLER_SCORE && bestScore > -SCORE_WIN)
         {
             // futility pruning(~1 elo)
             int lmrDepth = std::max(depth - baseLMR, 0);
@@ -644,10 +642,12 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 break;
 
             // static exchange evaluation pruning(~5 elo)
-            int seeMargin = quiet ? depth * seePruneMarginQuiet
-                                  : depth * seePruneMarginNoisy
-                    - std::clamp(histScore / seeCaptHistDivisor, -seeCaptHistMax * depth,
-                        seeCaptHistMax * depth);
+            int seeMargin = quiet ? depth * seePruneMarginQuiet : depth * seePruneMarginNoisy;
+            if (!quiet)
+            {
+                int max = seeCaptHistMax * depth;
+                seeMargin -= std::clamp(histScore / seeCaptHistDivisor, -max, max);
+            }
             if (!pvNode && !board.see(move, seeMargin))
                 continue;
 
