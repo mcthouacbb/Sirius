@@ -5,7 +5,6 @@
 #include "combined_psqt.h"
 #include "phase.h"
 
-
 #include <iostream>
 
 class Board;
