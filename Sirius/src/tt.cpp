@@ -64,6 +64,20 @@ void alignedFree(void* ptr)
 #endif
 }
 
+int retrieveScore(int score, int ply)
+{
+    if (isMateScore(score))
+        score -= score < 0 ? -ply : ply;
+    return score;
+}
+
+int storeScore(int score, int ply)
+{
+    if (isMateScore(score))
+        score += score < 0 ? -ply : ply;
+    return score;
+}
+
 TT::TT(size_t sizeMB)
     : m_Buckets(nullptr), m_Size(0), m_CurrAge(0)
 {
@@ -85,24 +99,6 @@ void TT::resize(int mb, int numThreads)
     m_Size = buckets;
     reset(numThreads);
     m_CurrAge = 0;
-}
-
-inline int retrieveScore(int score, int ply)
-{
-    if (isMateScore(score))
-    {
-        score -= score < 0 ? -ply : ply;
-    }
-    return score;
-}
-
-inline int storeScore(int score, int ply)
-{
-    if (isMateScore(score))
-    {
-        score += score < 0 ? -ply : ply;
-    }
-    return score;
 }
 
 bool TT::probe(ZKey key, int ply, ProbedTTData& ttData)
@@ -163,18 +159,12 @@ void TT::store(ZKey key, int depth, int ply, int score, int staticEval, Move mov
         }
     }
 
-    // only overwrite the move if new move is not a null move or the entry is from a different
-    // position idea from stockfish and ethereal
+    // only overwrite the move if new move is not a null move
+    // or the entry is from a different position
+    // idea from stockfish and ethereal
     TTEntry& replace = bucket.entries[replaceIdx];
     if (move != Move() || replace.key16 != key16)
         replace.bestMove = move;
-
-    // only overwrite if we have exact bound, different position, or same position and depth is not
-    // significantly worse idea from stockfish and ethereal
-    /*if (bound != TTEntry::Bound::EXACT &&
-        entry.key16 == key16 &&
-        depth < entry.depth - 2)
-        return;*/
 
     if (bound == TTEntry::Bound::EXACT || replace.key16 != key16
         || depth >= replace.depth - 2 - 2 * pv || replace.gen() != m_CurrAge)
@@ -183,7 +173,7 @@ void TT::store(ZKey key, int depth, int ply, int score, int staticEval, Move mov
         replace.staticEval = staticEval;
         replace.depth = static_cast<uint8_t>(depth);
         replace.score = static_cast<int16_t>(storeScore(score, ply));
-        replace.genBoundPV = TTEntry::makeGenBoundPV(pv, static_cast<uint8_t>(m_CurrAge), bound);
+        replace.setGenBoundPV(pv, static_cast<uint8_t>(m_CurrAge), bound);
     }
 }
 
