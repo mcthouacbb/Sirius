@@ -47,11 +47,6 @@ bool isValidFen(const char* fen)
     if (stm[0] != 'w' && stm[0] != 'b')
         return false;
 
-    /*if (castle != "-" && castle != "K" && castle != "Q" && castle != "k" && castle != "q" &&
-        castle != "KQ" && castle != "Kk" && castle != "Kq" && castle != "Qk" && castle != "Qq" &&
-        castle != "kq" && castle != "KQk" && castle != "KQq" && castle != "Kkq" && castle != "Qkq"
-       && castle != "KQkq") return false;*/
-
     if (ep != "-" && ep.size() != 2)
         return false;
 
@@ -115,6 +110,8 @@ bool isValidFen(const char* fen)
 
     if (castle != "-")
     {
+        if (castle.size() == 0)
+            return false;
         for (char c : castle)
         {
             c = std::tolower(c);
