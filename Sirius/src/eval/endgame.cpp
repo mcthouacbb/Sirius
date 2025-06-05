@@ -1,6 +1,6 @@
 #include "endgame.h"
-#include "eval_constants.h"
 #include "../attacks.h"
+#include "eval_constants.h"
 
 #include <algorithm>
 
@@ -34,10 +34,10 @@ int evalKXvK(const Board& board, const EvalState& evalState, Color strongSide)
 
     int result = evalState.psqtScore(board, strongSide).eg() + 13 * 20 - 20 * kingDist - 20 * cornerDist;
 
-    if (board.pieces(PieceType::QUEEN).any() ||
-        board.pieces(PieceType::ROOK).any() ||
-        (board.pieces(PieceType::BISHOP).any() && board.pieces(PieceType::KNIGHT).any()) ||
-        ((board.pieces(PieceType::BISHOP) & LIGHT_SQUARES_BB).any() && (board.pieces(PieceType::BISHOP) & DARK_SQUARES_BB).any()))
+    if (board.pieces(PieceType::QUEEN).any() || board.pieces(PieceType::ROOK).any()
+        || (board.pieces(PieceType::BISHOP).any() && board.pieces(PieceType::KNIGHT).any())
+        || ((board.pieces(PieceType::BISHOP) & LIGHT_SQUARES_BB).any()
+            && (board.pieces(PieceType::BISHOP) & DARK_SQUARES_BB).any()))
         result += 10000;
 
     return result;
@@ -78,11 +78,11 @@ int evalKQvKP(const Board& board, const EvalState&, Color strongSide)
     if (queeningSquares.has(queen) || queeningSquares.has(ourKing))
         eval += 10000;
 
-    if (pawn.relativeRank(weakSide) < RANK_7 ||
-        (FILE_B_BB | FILE_D_BB | FILE_E_BB | FILE_G_BB).has(pawn) ||
-        eval >= 10000)
+    if (pawn.relativeRank(weakSide) < RANK_7
+        || (FILE_B_BB | FILE_D_BB | FILE_E_BB | FILE_G_BB).has(pawn) || eval >= 10000)
     {
-        eval += MATERIAL[static_cast<int>(PieceType::QUEEN)].eg() - MATERIAL[static_cast<int>(PieceType::PAWN)].eg();
+        eval += MATERIAL[static_cast<int>(PieceType::QUEEN)].eg()
+            - MATERIAL[static_cast<int>(PieceType::PAWN)].eg();
     }
 
     return eval;
@@ -126,7 +126,8 @@ int scaleKBPsvK(const Board& board, const EvalState&, Color strongSide)
     if ((strongPawns & ~FILE_A_BB).empty() || (strongPawns & ~FILE_H_BB).empty())
     {
         Square queeningSquare = Square(queeningRank, strongPawns.lsb().file());
-        if (queeningSquare.darkSquare() != bishop.darkSquare() && Square::chebyshev(weakKing, queeningSquare) <= 1)
+        if (queeningSquare.darkSquare() != bishop.darkSquare()
+            && Square::chebyshev(weakKing, queeningSquare) <= 1)
             return SCALE_FACTOR_DRAW;
     }
     return SCALE_FACTOR_NORMAL;
@@ -139,8 +140,16 @@ Key genMaterialKey(std::string white, std::string black)
     assert(white.length() < 8);
     assert(black.length() < 8);
 
-    std::transform(white.begin(), white.end(), white.begin(), [](auto c) { return std::toupper(c); });
-    std::transform(black.begin(), black.end(), black.begin(), [](auto c) { return std::tolower(c); });
+    std::transform(white.begin(), white.end(), white.begin(),
+        [](auto c)
+        {
+            return std::toupper(c);
+        });
+    std::transform(black.begin(), black.end(), black.begin(),
+        [](auto c)
+        {
+            return std::tolower(c);
+        });
 
     std::string fen;
     fen += black;
@@ -175,7 +184,8 @@ void addEndgameEval(const std::string& strongCode, const std::string& weakCode, 
 {
     insertEndgame(genMaterialKey(strongCode, weakCode), Endgame(Color::WHITE, func, EndgameType::EVAL));
     if (strongCode != weakCode)
-        insertEndgame(genMaterialKey(weakCode, strongCode), Endgame(Color::BLACK, func, EndgameType::EVAL));
+        insertEndgame(
+            genMaterialKey(weakCode, strongCode), Endgame(Color::BLACK, func, EndgameType::EVAL));
 }
 
 bool isKXvK(const Board& board, Color strongSide)
@@ -184,10 +194,8 @@ bool isKXvK(const Board& board, Color strongSide)
         return false;
 
     Bitboard minors = board.pieces(PieceType::BISHOP) | board.pieces(PieceType::KNIGHT);
-    return
-        board.pieces(PieceType::QUEEN).any() ||
-        board.pieces(PieceType::ROOK).any() ||
-        minors.multiple();
+    return board.pieces(PieceType::QUEEN).any() || board.pieces(PieceType::ROOK).any()
+        || minors.multiple();
 }
 
 bool isKPsvK(const Board& board, Color strongSide)
@@ -203,17 +211,22 @@ bool isKBPsvK(const Board& board, Color strongSide)
     return (board.pieces(strongSide) ^ bishops ^ pawns).one() && bishops.one() && pawns.any();
 }
 
+// clang-format off
 ColorArray<Endgame> evalKXvKEndgames = {
-    Endgame(Color::WHITE, &evalKXvK, EndgameType::EVAL), Endgame(Color::BLACK, &evalKXvK, EndgameType::EVAL)
+    Endgame(Color::WHITE, &evalKXvK, EndgameType::EVAL),
+    Endgame(Color::BLACK, &evalKXvK, EndgameType::EVAL)
 };
 
 ColorArray<Endgame> scaleKBPsvKEndgames = {
-    Endgame(Color::WHITE, &scaleKBPsvK, EndgameType::SCALE), Endgame(Color::BLACK, &scaleKBPsvK, EndgameType::SCALE)
+    Endgame(Color::WHITE, &scaleKBPsvK, EndgameType::SCALE),
+    Endgame(Color::BLACK, &scaleKBPsvK, EndgameType::SCALE)
 };
 
 ColorArray<Endgame> scaleKPsvKEndgames = {
-    Endgame(Color::WHITE, &scaleKPsvK, EndgameType::SCALE), Endgame(Color::BLACK, &scaleKPsvK, EndgameType::SCALE)
+    Endgame(Color::WHITE, &scaleKPsvK, EndgameType::SCALE),
+    Endgame(Color::BLACK, &scaleKPsvK, EndgameType::SCALE)
 };
+// clang-format on
 
 const Endgame* probeEvalFunc(const Board& board)
 {
@@ -260,6 +273,5 @@ void init()
     addEndgameEval("KQ", "KP", &evalKQvKP);
     addEndgameEval("KQ", "KR", &evalKQvKR);
 }
-
 
 }

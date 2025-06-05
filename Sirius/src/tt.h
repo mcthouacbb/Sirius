@@ -1,13 +1,13 @@
 #pragma once
 
-#include "zobrist.h"
 #include "defs.h"
+#include "zobrist.h"
 
-#include <cstring>
-#include <vector>
-#include <array>
 #include <algorithm>
+#include <array>
+#include <cstring>
 #include <thread>
+#include <vector>
 
 struct TTEntry
 {
@@ -16,7 +16,7 @@ struct TTEntry
     int16_t staticEval;
     Move bestMove;
     uint8_t depth;
-    // 2 bits bound(lower), 6 bits gen(upper)
+    // 2 bits bound, 1 bit pv, 5 bits gen
     uint8_t genBoundPV;
 
     enum class Bound : uint8_t
@@ -42,9 +42,9 @@ struct TTEntry
         return static_cast<Bound>(genBoundPV & 3);
     }
 
-    static uint8_t makeGenBoundPV(bool pv, uint8_t gen, Bound bound)
+    void setGenBoundPV(bool pv, uint8_t gen, Bound bound)
     {
-        return static_cast<int>(bound) | (pv << 2) | (gen << 3);
+        genBoundPV = static_cast<int>(bound) | (pv << 2) | (gen << 3);
     }
 };
 
@@ -84,7 +84,8 @@ public:
     TT& operator=(const TT&) = delete;
 
     bool probe(ZKey key, int ply, ProbedTTData& ttData);
-    void store(ZKey key, int ply, int depth, int score, int staticEval, Move move, bool pv, TTEntry::Bound type);
+    void store(ZKey key, int ply, int depth, int score, int staticEval, Move move, bool pv,
+        TTEntry::Bound type);
     int quality(int age, int depth) const;
     void prefetch(ZKey key) const;
 
@@ -101,14 +102,18 @@ public:
 
         for (int i = 0; i < numThreads; i++)
         {
-            threads.emplace_back([i, this, numThreads]()
-            {
-                std::fill(m_Buckets + m_Size * i / numThreads, m_Buckets + m_Size * (i + 1) / numThreads, TTBucket{});
-            });
+            threads.emplace_back(
+                [i, this, numThreads]()
+                {
+                    auto begin = m_Buckets + m_Size * i / numThreads;
+                    auto end = m_Buckets + m_Size * (i + 1) / numThreads;
+                    std::fill(begin, end, TTBucket{});
+                });
         }
     }
 
     int hashfull() const;
+
 private:
     uint32_t index(uint64_t key) const;
 

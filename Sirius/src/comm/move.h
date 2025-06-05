@@ -19,9 +19,9 @@ struct MoveStrFind
     int len;
     static constexpr int NO_INDEX = 256;
 
-// invalid = {nullptr, moveStr};
-// not found = {end, moveStr + moveLen};
-// ambiguous = {end + 1, moveStr + moveLen};
+    // invalid = {nullptr, moveStr};
+    // not found = {end, moveStr + moveLen};
+    // ambiguous = {end + 1, moveStr + moveLen};
 };
 
 MoveStrFind findMoveFromUCI(const Board& board, const MoveList& legalMoves, const char* moveStr);

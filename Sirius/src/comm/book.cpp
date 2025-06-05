@@ -1,9 +1,9 @@
 #include "book.h"
-#include "move.h"
 #include "../movegen.h"
+#include "move.h"
 #include <algorithm>
-#include <deque>
 #include <cstring>
+#include <deque>
 
 void Book::loadFromPGN(const char* pgn)
 {
@@ -31,7 +31,8 @@ void Book::loadFromPGN(const char* pgn)
 
             if (it != m_Entries.end())
             {
-                if (std::find(it->second.begin(), it->second.end(), BookEntry{find.move}) == it->second.end())
+                if (std::find(it->second.begin(), it->second.end(), BookEntry{find.move})
+                    == it->second.end())
                     it->second.push_back({find.move});
             }
             else

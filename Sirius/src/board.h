@@ -1,15 +1,15 @@
 #pragma once
 
-#include "defs.h"
 #include "bitboard.h"
-#include "zobrist.h"
-#include "util/murmur.h"
-#include "util/enum_array.h"
 #include "castling.h"
+#include "defs.h"
+#include "util/enum_array.h"
+#include "util/murmur.h"
+#include "zobrist.h"
 
-#include <string_view>
-#include <string>
 #include <array>
+#include <string>
+#include <string_view>
 #include <vector>
 
 struct CheckInfo
@@ -17,7 +17,6 @@ struct CheckInfo
     Bitboard checkers;
     std::array<Bitboard, 2> pinners;
     std::array<Bitboard, 2> blockers;
-
 };
 
 struct BoardState
@@ -54,9 +53,11 @@ struct BoardState
         else
         {
             nonPawnKeys[color].addPiece(pieceType, color, pos);
-            if (pieceType == PieceType::BISHOP || pieceType == PieceType::KNIGHT || pieceType == PieceType::KING)
+            if (pieceType == PieceType::BISHOP || pieceType == PieceType::KNIGHT
+                || pieceType == PieceType::KING)
                 minorPieceKey.addPiece(pieceType, color, pos);
-            if (pieceType == PieceType::ROOK || pieceType == PieceType::QUEEN || pieceType == PieceType::KING)
+            if (pieceType == PieceType::ROOK || pieceType == PieceType::QUEEN
+                || pieceType == PieceType::KING)
                 majorPieceKey.addPiece(pieceType, color, pos);
         }
     }
@@ -76,9 +77,11 @@ struct BoardState
         else
         {
             nonPawnKeys[color].addPiece(pieceType, color, pos);
-            if (pieceType == PieceType::BISHOP || pieceType == PieceType::KNIGHT || pieceType == PieceType::KING)
+            if (pieceType == PieceType::BISHOP || pieceType == PieceType::KNIGHT
+                || pieceType == PieceType::KING)
                 minorPieceKey.addPiece(pieceType, color, pos);
-            if (pieceType == PieceType::ROOK || pieceType == PieceType::QUEEN || pieceType == PieceType::KING)
+            if (pieceType == PieceType::ROOK || pieceType == PieceType::QUEEN
+                || pieceType == PieceType::KING)
                 majorPieceKey.addPiece(pieceType, color, pos);
         }
     }
@@ -99,9 +102,11 @@ struct BoardState
         else
         {
             nonPawnKeys[color].removePiece(pieceType, color, pos);
-            if (pieceType == PieceType::BISHOP || pieceType == PieceType::KNIGHT || pieceType == PieceType::KING)
+            if (pieceType == PieceType::BISHOP || pieceType == PieceType::KNIGHT
+                || pieceType == PieceType::KING)
                 minorPieceKey.removePiece(pieceType, color, pos);
-            if (pieceType == PieceType::ROOK || pieceType == PieceType::QUEEN || pieceType == PieceType::KING)
+            if (pieceType == PieceType::ROOK || pieceType == PieceType::QUEEN
+                || pieceType == PieceType::KING)
                 majorPieceKey.removePiece(pieceType, color, pos);
         }
     }
@@ -126,9 +131,11 @@ struct BoardState
         else
         {
             nonPawnKeys[color].movePiece(pieceType, color, src, dst);
-            if (pieceType == PieceType::BISHOP || pieceType == PieceType::KNIGHT || pieceType == PieceType::KING)
+            if (pieceType == PieceType::BISHOP || pieceType == PieceType::KNIGHT
+                || pieceType == PieceType::KING)
                 minorPieceKey.movePiece(pieceType, color, src, dst);
-            if (pieceType == PieceType::ROOK || pieceType == PieceType::QUEEN || pieceType == PieceType::KING)
+            if (pieceType == PieceType::ROOK || pieceType == PieceType::QUEEN
+                || pieceType == PieceType::KING)
                 majorPieceKey.movePiece(pieceType, color, src, dst);
         }
     }
@@ -209,6 +216,7 @@ public:
     bool isPseudoLegal(Move move) const;
     bool isLegal(Move move) const;
     ZKey keyAfter(Move move) const;
+
 private:
     template<bool updateEval>
     void makeMove(Move move, eval::EvalState* evalState);
@@ -230,9 +238,7 @@ private:
 
     int seePieceValue(PieceType type) const;
 
-    static constexpr std::array<int, 6> SEE_PIECE_VALUES = {
-        100, 450, 450, 675, 1300, 0
-    };
+    static constexpr std::array<int, 6> SEE_PIECE_VALUES = {100, 450, 450, 675, 1300, 0};
 
     std::vector<BoardState> m_States;
     CastlingData m_CastlingData;
@@ -280,7 +286,8 @@ inline bool Board::isDraw(int searchPly) const
 
 inline bool Board::is3FoldDraw(int searchPly) const
 {
-    return currState().repetitions > 1 || (currState().repetitions == 1 && currState().lastRepetition < searchPly);
+    return currState().repetitions > 1
+        || (currState().repetitions == 1 && currState().lastRepetition < searchPly);
 }
 
 inline bool Board::isFRC() const

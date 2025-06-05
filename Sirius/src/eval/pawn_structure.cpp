@@ -11,27 +11,27 @@ PawnStructure::PawnStructure(const Board& board)
     Bitboard bpawns = board.pieces(Color::BLACK, PieceType::PAWN);
     pawnAttacks[Color::WHITE] = attacks::pawnAttacks<Color::WHITE>(wpawns);
     pawnAttackSpans[Color::WHITE] = attacks::fillUp<Color::WHITE>(pawnAttacks[Color::WHITE]);
-    passedPawns = Bitboard(0);
 
     pawnAttacks[Color::BLACK] = attacks::pawnAttacks<Color::BLACK>(bpawns);
     pawnAttackSpans[Color::BLACK] = attacks::fillUp<Color::BLACK>(pawnAttacks[Color::BLACK]);
-    passedPawns = Bitboard(0);
+
+    passedPawns = EMPTY_BB;
 }
 
-PackedScore PawnStructure::evaluate(const Board& board)
+ScorePair PawnStructure::evaluate(const Board& board)
 {
     score = evaluate<Color::WHITE>(board) - evaluate<Color::BLACK>(board);
     return score;
 }
 
 template<Color us>
-PackedScore PawnStructure::evaluate(const Board& board)
+ScorePair PawnStructure::evaluate(const Board& board)
 {
     constexpr Color them = ~us;
     Bitboard ourPawns = board.pieces(us, PieceType::PAWN);
     Bitboard theirPawns = board.pieces(them, PieceType::PAWN);
 
-    PackedScore eval{0, 0};
+    ScorePair eval = ScorePair(0, 0);
 
     Bitboard pawns = ourPawns;
     while (pawns.any())
@@ -39,7 +39,8 @@ PackedScore PawnStructure::evaluate(const Board& board)
         Square sq = pawns.poplsb();
         Square push = sq + attacks::pawnPushOffset<us>();
         Bitboard attacks = attacks::pawnAttacks(us, sq);
-        Bitboard support = attacks::passedPawnMask(them, push) & attacks::isolatedPawnMask(sq) & ourPawns;
+        Bitboard support =
+            attacks::passedPawnMask(them, push) & attacks::isolatedPawnMask(sq) & ourPawns;
         Bitboard threats = attacks & theirPawns;
         Bitboard pushThreats = attacks::pawnPushes<us>(attacks) & theirPawns;
         Bitboard defenders = attacks::pawnAttacks(them, sq) & ourPawns;

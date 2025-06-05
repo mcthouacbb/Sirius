@@ -4,8 +4,8 @@
 #include "comm/uci.h"
 #endif
 
-#include <cmath>
 #include "util/multi_array.h"
+#include <cmath>
 
 namespace search
 {
@@ -21,7 +21,8 @@ std::deque<SearchParam>& searchParams()
     return params;
 }
 
-SearchParam& addSearchParam(std::string name, int value, int min, int max, int step, std::function<void()> callback)
+SearchParam& addSearchParam(
+    std::string name, int value, int min, int max, int step, std::function<void()> callback)
 {
     searchParams().push_back({name, value, value, min, max, step, callback});
     SearchParam& param = searchParams().back();
@@ -51,12 +52,9 @@ void printOpenBenchConfig()
 {
     for (auto& param : searchParams())
     {
-        std::cout << param.name << ", int, "
-            << param.defaultValue << ", "
-            << param.min << ", "
-            << param.max << ", "
-            << param.step << ", "
-            << "0.002" << std::endl;
+        std::cout << param.name << ", int, " << param.defaultValue << ", " << param.min << ", "
+                  << param.max << ", " << param.step << ", "
+                  << "0.002" << std::endl;
     }
 }
 
@@ -68,6 +66,5 @@ void updateLmrTable()
 {
     lmrTable = genLMRTable();
 }
-
 
 }

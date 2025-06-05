@@ -1,6 +1,6 @@
+#include "attacks.h"
 #include "defs.h"
 #include "util/enum_array.h"
-#include "attacks.h"
 
 enum class CastleSide
 {
@@ -57,22 +57,31 @@ public:
     void initMasks()
     {
         m_CastleRightsMasks.fill(CastlingRights::ALL);
-        m_CastleRightsMasks[m_RookSquares[Color::WHITE][CastleSide::KING_SIDE].value()] &= ~CastlingRights::WHITE_KING_SIDE;
-        m_CastleRightsMasks[m_RookSquares[Color::WHITE][CastleSide::QUEEN_SIDE].value()] &= ~CastlingRights::WHITE_QUEEN_SIDE;
-        m_CastleRightsMasks[m_KingSquares[Color::WHITE].value()] &= ~(CastlingRights::WHITE_KING_SIDE | CastlingRights::WHITE_QUEEN_SIDE);
+        m_CastleRightsMasks[m_RookSquares[Color::WHITE][CastleSide::KING_SIDE].value()] &=
+            ~CastlingRights::WHITE_KING_SIDE;
+        m_CastleRightsMasks[m_RookSquares[Color::WHITE][CastleSide::QUEEN_SIDE].value()] &=
+            ~CastlingRights::WHITE_QUEEN_SIDE;
+        m_CastleRightsMasks[m_KingSquares[Color::WHITE].value()] &=
+            ~(CastlingRights::WHITE_KING_SIDE | CastlingRights::WHITE_QUEEN_SIDE);
 
-        m_CastleRightsMasks[m_RookSquares[Color::BLACK][CastleSide::KING_SIDE].value()] &= ~CastlingRights::BLACK_KING_SIDE;
-        m_CastleRightsMasks[m_RookSquares[Color::BLACK][CastleSide::QUEEN_SIDE].value()] &= ~CastlingRights::BLACK_QUEEN_SIDE;
-        m_CastleRightsMasks[m_KingSquares[Color::BLACK].value()] &= ~(CastlingRights::BLACK_KING_SIDE | CastlingRights::BLACK_QUEEN_SIDE);
+        m_CastleRightsMasks[m_RookSquares[Color::BLACK][CastleSide::KING_SIDE].value()] &=
+            ~CastlingRights::BLACK_KING_SIDE;
+        m_CastleRightsMasks[m_RookSquares[Color::BLACK][CastleSide::QUEEN_SIDE].value()] &=
+            ~CastlingRights::BLACK_QUEEN_SIDE;
+        m_CastleRightsMasks[m_KingSquares[Color::BLACK].value()] &=
+            ~(CastlingRights::BLACK_KING_SIDE | CastlingRights::BLACK_QUEEN_SIDE);
 
         const auto setBlockSquares = [&](Color c, CastleSide s)
         {
-            Square kingDst = Square(m_KingSquares[c].rank(), s == CastleSide::KING_SIDE ? FILE_G : FILE_C);
-            Square rookDst = Square(m_RookSquares[c][s].rank(), s == CastleSide::KING_SIDE ? FILE_F : FILE_D);
-            m_BlockSquares[c][s] =
-                attacks::inBetweenSquares(m_KingSquares[c], kingDst) | Bitboard::fromSquare(kingDst) |
-                attacks::inBetweenSquares(m_RookSquares[c][s], rookDst) | Bitboard::fromSquare(rookDst);
-            m_BlockSquares[c][s] &= ~(Bitboard::fromSquare(m_KingSquares[c]) | Bitboard::fromSquare(m_RookSquares[c][s]));
+            Square kingDst =
+                Square(m_KingSquares[c].rank(), s == CastleSide::KING_SIDE ? FILE_G : FILE_C);
+            Square rookDst =
+                Square(m_RookSquares[c][s].rank(), s == CastleSide::KING_SIDE ? FILE_F : FILE_D);
+            m_BlockSquares[c][s] = attacks::inBetweenSquares(m_KingSquares[c], kingDst)
+                | attacks::inBetweenSquares(m_RookSquares[c][s], rookDst)
+                | Bitboard::fromSquare(kingDst) | Bitboard::fromSquare(rookDst);
+            m_BlockSquares[c][s] &=
+                ~(Bitboard::fromSquare(m_KingSquares[c]) | Bitboard::fromSquare(m_RookSquares[c][s]));
         };
 
         setBlockSquares(Color::WHITE, CastleSide::KING_SIDE);
@@ -80,6 +89,7 @@ public:
         setBlockSquares(Color::BLACK, CastleSide::KING_SIDE);
         setBlockSquares(Color::BLACK, CastleSide::QUEEN_SIDE);
     }
+
 private:
     ColorArray<CastleSideArray<Square>> m_RookSquares;
     ColorArray<Square> m_KingSquares;

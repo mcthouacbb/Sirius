@@ -46,5 +46,4 @@ std::unique_lock<std::mutex> IComm::lockStdout() const
     return std::unique_lock<std::mutex>(m_StdoutMutex);
 }
 
-
 }

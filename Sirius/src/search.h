@@ -2,18 +2,18 @@
 
 #include "board.h"
 #include "defs.h"
-#include "tt.h"
-#include "time_man.h"
-#include "history.h"
-#include "eval/pawn_table.h"
 #include "eval/eval_state.h"
+#include "eval/pawn_table.h"
+#include "history.h"
+#include "time_man.h"
+#include "tt.h"
 
 #include <array>
-#include <deque>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
 #include <atomic>
+#include <condition_variable>
+#include <deque>
+#include <mutex>
+#include <thread>
 #include <vector>
 
 struct SearchStack
@@ -44,7 +44,7 @@ struct SearchInfo
     int hashfull;
     uint64_t nodes;
     Duration time;
-    const Move* pvBegin, * pvEnd;
+    const Move *pvBegin, *pvEnd;
     int score;
 };
 
@@ -78,7 +78,6 @@ struct RootMove
 inline RootMove::RootMove(Move move)
     : move(move)
 {
-
 }
 
 struct SearchThread
@@ -107,7 +106,6 @@ struct SearchThread
     std::mutex mutex;
     std::condition_variable cv;
     WakeFlag wakeFlag;
-
 
     Board board;
 
@@ -144,6 +142,7 @@ public:
     {
         m_TT.resize(mb, m_Threads.size());
     }
+
 private:
     void joinThreads();
     void threadLoop(SearchThread& thread);
@@ -151,7 +150,8 @@ private:
     int iterDeep(SearchThread& thread, bool report, bool normalSearch);
     int aspWindows(SearchThread& thread, int depth, Move& bestMove, int prevScore);
 
-    int search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta, bool pvNode, bool cutnode);
+    int search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta,
+        bool pvNode, bool cutnode);
     int qsearch(SearchThread& thread, SearchStack* stack, int alpha, int beta, bool pvNode);
 
     void makeMove(SearchThread& thread, SearchStack* stack, Move move, int histScore);
@@ -167,6 +167,5 @@ private:
 
     std::vector<std::unique_ptr<SearchThread>> m_Threads;
 };
-
 
 }

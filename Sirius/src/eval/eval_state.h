@@ -1,10 +1,10 @@
 #pragma once
 
-#include "psqt_state.h"
+#include "../util/piece_set.h"
+#include "../util/static_vector.h"
 #include "pawn_structure.h"
 #include "pawn_table.h"
-#include "../util/static_vector.h"
-#include "../util/piece_set.h"
+#include "psqt_state.h"
 #include <optional>
 
 namespace eval
@@ -45,11 +45,12 @@ public:
     void push(const Board& board, const EvalUpdates& updates);
     void pop();
 
-    PackedScore score(const Board& board) const;
-    PackedScore psqtScore(const Board& board, Color c) const;
-    PackedScore pawnShieldStormScore(Color c) const;
+    ScorePair score(const Board& board) const;
+    ScorePair psqtScore(const Board& board, Color c) const;
+    ScorePair pawnShieldStormScore(Color c) const;
     const PawnStructure& pawnStructure() const;
     int phase() const;
+
 private:
     void init(const Board& board, PawnTable* pawnTable);
     struct StackEntry
@@ -58,11 +59,11 @@ private:
 
         PsqtState psqtState;
         PawnStructure pawnStructure;
-        ColorArray<PackedScore> pawnShieldStorm;
-        PackedScore knightOutposts;
-        PackedScore bishopPawns;
-        PackedScore rookOpen;
-        PackedScore minorBehindPawn;
+        ColorArray<ScorePair> pawnShieldStorm;
+        ScorePair knightOutposts;
+        ScorePair bishopPawns;
+        ScorePair rookOpen;
+        ScorePair minorBehindPawn;
     };
 
     StackEntry& currEntry()
@@ -79,6 +80,5 @@ private:
     StackEntry* m_CurrEntry;
     PawnTable* m_PawnTable;
 };
-
 
 }

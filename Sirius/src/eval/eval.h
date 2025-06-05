@@ -1,8 +1,8 @@
 #pragma once
 
-#include "phase.h"
-#include "../search.h"
 #include "../board.h"
+#include "../search.h"
+#include "phase.h"
 
 namespace eval
 {

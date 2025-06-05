@@ -1,9 +1,9 @@
 #pragma once
 
-#include <cstdint>
-#include <iostream>
 #include <bit>
 #include <bitset>
+#include <cstdint>
+#include <iostream>
 
 #if defined(_MSC_VER)
 #include <intrin.h>
@@ -61,6 +61,7 @@ public:
     static constexpr Bitboard nthRank();
 
     static constexpr Bitboard fileBB(int file);
+
 private:
     uint64_t m_Value;
 };
@@ -68,9 +69,10 @@ private:
 constexpr Bitboard::Bitboard(uint64_t v)
     : m_Value(v)
 {
-
 }
 
+constexpr Bitboard EMPTY_BB = Bitboard(0);
+constexpr Bitboard ALL_BB = Bitboard(0xFFFFFFFFFFFFFFFFull);
 constexpr Bitboard FILE_A_BB = Bitboard(0x0101010101010101ull);
 constexpr Bitboard FILE_B_BB = Bitboard(0x0202020202020202ull);
 constexpr Bitboard FILE_C_BB = Bitboard(0x0404040404040404ull);
@@ -156,7 +158,6 @@ constexpr Bitboard& Bitboard::operator^=(const Bitboard& other)
     m_Value ^= other.m_Value;
     return *this;
 }
-
 
 inline uint8_t reverse(uint8_t b)
 {

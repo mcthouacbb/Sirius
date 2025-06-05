@@ -7,7 +7,6 @@ namespace eval
 constexpr int SCALE_FACTOR_NORMAL = 128;
 constexpr int SCALE_FACTOR_DRAW = 0;
 
-
 }
 
 namespace eval::endgames
@@ -26,12 +25,10 @@ struct Endgame
     Endgame()
         : func(nullptr), strongSide(Color::WHITE), key(0), type(EndgameType::EVAL)
     {
-
     }
     explicit Endgame(Color c, EndgameFunc* func, EndgameType type)
         : func(func), strongSide(c), key(0), type(type)
     {
-
     }
 
     int operator()(const Board& board, const EvalState& evalState) const

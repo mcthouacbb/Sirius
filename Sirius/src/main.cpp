@@ -2,14 +2,14 @@
 #include <string>
 
 #include "attacks.h"
-#include "comm/icomm.h"
+#include "bench.h"
 #include "comm/cmdline.h"
+#include "comm/icomm.h"
 #include "comm/uci.h"
 #include "cuckoo.h"
-#include "eval/eval.h"
 #include "eval/endgame.h"
+#include "eval/eval.h"
 #include "search_params.h"
-#include "bench.h"
 #include "sirius.h"
 
 int main(int argc, char** argv)

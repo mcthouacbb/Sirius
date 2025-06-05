@@ -1,15 +1,15 @@
-#include <string>
 #include <algorithm>
-#include <optional>
 #include <iomanip>
+#include <optional>
+#include <string>
 
-#include "../sirius.h"
-#include "uci.h"
-#include "fen.h"
-#include "move.h"
+#include "../bench.h"
 #include "../eval/eval.h"
 #include "../misc.h"
-#include "../bench.h"
+#include "../sirius.h"
+#include "fen.h"
+#include "move.h"
+#include "uci.h"
 
 #include "../search_params.h"
 
@@ -26,22 +26,22 @@ UCI::UCI()
     {
         m_Search.setThreads(static_cast<int>(option.intValue()));
     };
-    m_Options = {
-        {"UCI_Chess960", UCIOption("UCI_Chess960", UCIOption::BoolData{false})},
+    m_Options = {{"UCI_Chess960", UCIOption("UCI_Chess960", UCIOption::BoolData{false})},
         {"Hash", UCIOption("Hash", {64, 64, 1, 33554432}, hashCallback)},
         {"Threads", UCIOption("Threads", {1, 1, 1, 2048}, threadsCallback)},
         {"MoveOverhead", UCIOption("MoveOverhead", {10, 10, 1, 100})},
-        {"PrettyPrint", UCIOption("PrettyPrint", UCIOption::BoolData{true})}
-    };
+        {"PrettyPrint", UCIOption("PrettyPrint", UCIOption::BoolData{true})}};
 #ifdef EXTERNAL_TUNE
     for (auto& param : search::searchParams())
     {
-        m_Options.insert({param.name, UCIOption(param.name, {param.value, param.defaultValue, param.min, param.max}, [&param](const UCIOption& option)
-        {
-            param.value = static_cast<int>(option.intValue());
-            if (param.callback)
-                param.callback();
-        })});
+        m_Options.insert({param.name,
+            UCIOption(param.name, {param.value, param.defaultValue, param.min, param.max},
+                [&param](const UCIOption& option)
+                {
+                    param.value = static_cast<int>(option.intValue());
+                    if (param.callback)
+                        param.callback();
+                })});
     }
 #endif
 }
@@ -76,21 +76,21 @@ void UCI::prettyPrintSearchInfo(const SearchInfo& info) const
 {
     std::cout << "  ";
     // depth/seldepth
-    std::cout
-        << std::right << std::setw(3) << std::setfill(' ') << info.depth
-        << "/" << std::left << std::setw(3) << std::setfill(' ') << info.selDepth;
+    std::cout << std::right << std::setw(3) << std::setfill(' ') << info.depth << "/" << std::left
+              << std::setw(3) << std::setfill(' ') << info.selDepth;
     std::cout << "  ";
 
     // time
     if (info.time < Duration(1000))
     {
-        std::cout << "    " << std::right << std::setw(3) << std::setfill(' ') << info.time.count() << "ms";
+        std::cout << "    " << std::right << std::setw(3) << std::setfill(' ') << info.time.count()
+                  << "ms";
     }
     else
     {
-        std::cout
-            << std::right << std::setw(4) << std::setfill(' ') << info.time.count() / 1000 << '.'
-            << std::right << std::setw(2) << std::setfill('0') << info.time.count() / 10 % 100 << "s ";
+        std::cout << std::right << std::setw(4) << std::setfill(' ') << info.time.count() / 1000
+                  << '.' << std::right << std::setw(2) << std::setfill('0')
+                  << info.time.count() / 10 % 100 << "s ";
     }
     std::cout << "  ";
 
@@ -109,11 +109,13 @@ void UCI::prettyPrintSearchInfo(const SearchInfo& info) const
     {
         if (info.score > 0)
         {
-            std::cout << "    #" << std::left << std::setw(4) << std::setfill(' ') << ((SCORE_MATE - info.score) + 1) / 2;
+            std::cout << "    #" << std::left << std::setw(4) << std::setfill(' ')
+                      << ((SCORE_MATE - info.score) + 1) / 2;
         }
         else
         {
-            std::cout << "   #-" << std::left << std::setw(4) << std::setfill(' ') << (info.score + SCORE_MATE) / 2;
+            std::cout << "   #-" << std::left << std::setw(4) << std::setfill(' ')
+                      << (info.score + SCORE_MATE) / 2;
         }
     }
     else
@@ -275,7 +277,6 @@ UCI::Command UCI::getCommand(const std::string& command) const
     return Command::INVALID;
 }
 
-
 void UCI::uciCommand() const
 {
     auto lock = lockStdout();
@@ -288,16 +289,15 @@ void UCI::uciCommand() const
         {
             case UCIOption::Type::INT:
             {
-                std::cout << "spin default " << option.second.intData().defaultValue
-                    << " min " << option.second.intData().minValue
-                    << " max " << option.second.intData().maxValue
-                    << std::endl;
+                std::cout << "spin default " << option.second.intData().defaultValue << " min "
+                          << option.second.intData().minValue << " max "
+                          << option.second.intData().maxValue << std::endl;
                 break;
             }
             case UCIOption::Type::BOOL:
             {
                 std::cout << "check default " << std::boolalpha << option.second.boolValue()
-                    << std::endl;
+                          << std::endl;
                 break;
             }
             default:
@@ -431,7 +431,6 @@ void UCI::goCommand(std::istringstream& stream)
         }
         else if (tok == "infinite")
         {
-
         }
     }
     m_Search.run(limits, m_Board);
@@ -494,7 +493,8 @@ void UCI::perftCommand(std::istringstream& stream)
     uint64_t result = perft<true>(m_Board, depth);
     auto t2 = std::chrono::steady_clock::now();
     std::cout << "Nodes: " << result << std::endl;
-    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1).count() << std::endl;
+    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1).count()
+              << std::endl;
 }
 
 void UCI::evalCommand()
@@ -513,6 +513,5 @@ void UCI::benchCommand()
 {
     runBench(m_Search, BENCH_DEPTH);
 }
-
 
 }

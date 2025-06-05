@@ -1,6 +1,6 @@
 #include "cuckoo.h"
-#include "zobrist.h"
 #include "attacks.h"
+#include "zobrist.h"
 
 namespace cuckoo
 {
@@ -12,10 +12,10 @@ namespace cuckoo
 
 void init()
 {
-	moves.fill(Move::nullmove());
-	keyDiffs.fill(0);
+    moves.fill(Move::nullmove());
+    keyDiffs.fill(0);
 
-	uint32_t count = 0;
+    uint32_t count = 0;
 
     using enum Color;
     using enum PieceType;
@@ -35,13 +35,13 @@ void init()
                             pieceAttacks = attacks::knightAttacks(Square(from));
                             break;
                         case PieceType::BISHOP:
-                            pieceAttacks = attacks::bishopAttacks(Square(from), Bitboard(0));
+                            pieceAttacks = attacks::bishopAttacks(Square(from), EMPTY_BB);
                             break;
                         case PieceType::ROOK:
-                            pieceAttacks = attacks::rookAttacks(Square(from), Bitboard(0));
+                            pieceAttacks = attacks::rookAttacks(Square(from), EMPTY_BB);
                             break;
                         case PieceType::QUEEN:
-                            pieceAttacks = attacks::queenAttacks(Square(from), Bitboard(0));
+                            pieceAttacks = attacks::queenAttacks(Square(from), EMPTY_BB);
                             break;
                         case PieceType::KING:
                             pieceAttacks = attacks::kingAttacks(Square(from));

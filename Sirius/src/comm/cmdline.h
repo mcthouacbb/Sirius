@@ -1,7 +1,7 @@
 #pragma once
 
-#include "icomm.h"
 #include "book.h"
+#include "icomm.h"
 
 namespace comm
 {
@@ -31,6 +31,7 @@ public:
     void run();
     virtual void reportSearchInfo(const SearchInfo& info) const override;
     virtual void reportBestMove(Move bestMove) const override;
+
 private:
     bool execCommand(const std::string& command);
     Command getCommand(const std::string& command) const;

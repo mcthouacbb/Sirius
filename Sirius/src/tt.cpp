@@ -44,7 +44,8 @@ uint64_t mulhi64(uint64_t a, uint64_t b)
 }
 #endif
 
-void* alignedAlloc(size_t alignment, size_t size) {
+void* alignedAlloc(size_t alignment, size_t size)
+{
 #ifdef _WIN32
     return _aligned_malloc(size, alignment);
 #else
@@ -52,7 +53,8 @@ void* alignedAlloc(size_t alignment, size_t size) {
 #endif
 }
 
-void alignedFree(void* ptr) {
+void alignedFree(void* ptr)
+{
     if (ptr == nullptr)
         return;
 #ifdef _WIN32
@@ -62,6 +64,19 @@ void alignedFree(void* ptr) {
 #endif
 }
 
+int retrieveScore(int score, int ply)
+{
+    if (isMateScore(score))
+        score -= score < 0 ? -ply : ply;
+    return score;
+}
+
+int storeScore(int score, int ply)
+{
+    if (isMateScore(score))
+        score += score < 0 ? -ply : ply;
+    return score;
+}
 
 TT::TT(size_t sizeMB)
     : m_Buckets(nullptr), m_Size(0), m_CurrAge(0)
@@ -84,24 +99,6 @@ void TT::resize(int mb, int numThreads)
     m_Size = buckets;
     reset(numThreads);
     m_CurrAge = 0;
-}
-
-inline int retrieveScore(int score, int ply)
-{
-    if (isMateScore(score))
-    {
-        score -= score < 0 ? -ply : ply;
-    }
-    return score;
-}
-
-inline int storeScore(int score, int ply)
-{
-    if (isMateScore(score))
-    {
-        score += score < 0 ? -ply : ply;
-    }
-    return score;
 }
 
 bool TT::probe(ZKey key, int ply, ProbedTTData& ttData)
@@ -137,7 +134,8 @@ bool TT::probe(ZKey key, int ply, ProbedTTData& ttData)
     return true;
 }
 
-void TT::store(ZKey key, int depth, int ply, int score, int staticEval, Move move, bool pv, TTEntry::Bound bound)
+void TT::store(ZKey key, int depth, int ply, int score, int staticEval, Move move, bool pv,
+    TTEntry::Bound bound)
 {
     // 16 bit keys to save space
     // idea from JW
@@ -161,29 +159,21 @@ void TT::store(ZKey key, int depth, int ply, int score, int staticEval, Move mov
         }
     }
 
-    // only overwrite the move if new move is not a null move or the entry is from a different position
+    // only overwrite the move if new move is not a null move
+    // or the entry is from a different position
     // idea from stockfish and ethereal
     TTEntry& replace = bucket.entries[replaceIdx];
     if (move != Move() || replace.key16 != key16)
         replace.bestMove = move;
 
-    // only overwrite if we have exact bound, different position, or same position and depth is not significantly worse
-    // idea from stockfish and ethereal
-    /*if (bound != TTEntry::Bound::EXACT &&
-        entry.key16 == key16 &&
-        depth < entry.depth - 2)
-        return;*/
-
-    if (bound == TTEntry::Bound::EXACT ||
-        replace.key16 != key16 ||
-        depth >= replace.depth - 2 - 2 * pv ||
-        replace.gen() != m_CurrAge)
+    if (bound == TTEntry::Bound::EXACT || replace.key16 != key16
+        || depth >= replace.depth - 2 - 2 * pv || replace.gen() != m_CurrAge)
     {
         replace.key16 = key16;
         replace.staticEval = staticEval;
         replace.depth = static_cast<uint8_t>(depth);
         replace.score = static_cast<int16_t>(storeScore(score, ply));
-        replace.genBoundPV = TTEntry::makeGenBoundPV(pv, static_cast<uint8_t>(m_CurrAge), bound);
+        replace.setGenBoundPV(pv, static_cast<uint8_t>(m_CurrAge), bound);
     }
 }
 
@@ -210,8 +200,10 @@ uint32_t TT::index(uint64_t key) const
 int TT::hashfull() const
 {
     int count = 0;
-    for (int i = 0; i < 1000; i++) {
-        for (int j = 0; j < ENTRY_COUNT; j++) {
+    for (int i = 0; i < 1000; i++)
+    {
+        for (int j = 0; j < ENTRY_COUNT; j++)
+        {
             const auto& entry = m_Buckets[i].entries[j];
             if (entry.bound() != TTEntry::Bound::NONE && entry.gen() == m_CurrAge)
                 count++;

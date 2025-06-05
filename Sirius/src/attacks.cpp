@@ -137,6 +137,7 @@ constexpr uint64_t bishopMagics[64] = {
     0x40102000a0a60140ULL,
 };
 
+// clang-format off
 constexpr uint32_t rookIndexBits[64] = {
     12, 11, 11, 11, 11, 11, 11, 12,
     11, 10, 10, 10, 10, 10, 10, 11,
@@ -159,6 +160,8 @@ constexpr uint32_t bishopIndexBits[64] = {
     6, 5, 5, 5, 5, 5, 5, 6
 };
 
+// clang-format on
+
 Bitboard rays[64][8] = {};
 
 Bitboard getRay(Square sq, Direction dir)
@@ -173,7 +176,7 @@ inline Bitboard& rayFrom(uint32_t idx, Direction dir)
 
 Bitboard getMaskBlockerIdx(Bitboard mask, uint32_t idx)
 {
-    Bitboard blockers = Bitboard(0);
+    Bitboard blockers = EMPTY_BB;
     while (mask.any())
     {
         Square lsb = mask.poplsb();
@@ -191,7 +194,7 @@ void initRays()
         Bitboard bb = Bitboard::fromSquare(Square(square));
 
         Bitboard tmp = bb;
-        Bitboard result = Bitboard(0);
+        Bitboard result = EMPTY_BB;
         while (tmp.any())
         {
             tmp = tmp.north();
@@ -200,7 +203,7 @@ void initRays()
         rayFrom(square, Direction::NORTH) = result;
 
         tmp = bb;
-        result = Bitboard(0);
+        result = EMPTY_BB;
         while (tmp.any())
         {
             tmp = tmp.south();
@@ -209,7 +212,7 @@ void initRays()
         rayFrom(square, Direction::SOUTH) = result;
 
         tmp = bb;
-        result = Bitboard(0);
+        result = EMPTY_BB;
         while (tmp.any())
         {
             tmp = tmp.east();
@@ -218,7 +221,7 @@ void initRays()
         rayFrom(square, Direction::EAST) = result;
 
         tmp = bb;
-        result = Bitboard(0);
+        result = EMPTY_BB;
         while (tmp.any())
         {
             tmp = tmp.west();
@@ -227,7 +230,7 @@ void initRays()
         rayFrom(square, Direction::WEST) = result;
 
         tmp = bb;
-        result = Bitboard(0);
+        result = EMPTY_BB;
         while (tmp.any())
         {
             tmp = tmp.northEast();
@@ -236,7 +239,7 @@ void initRays()
         rayFrom(square, Direction::NORTH_EAST) = result;
 
         tmp = bb;
-        result = Bitboard(0);
+        result = EMPTY_BB;
         while (tmp.any())
         {
             tmp = tmp.northWest();
@@ -245,7 +248,7 @@ void initRays()
         rayFrom(square, Direction::NORTH_WEST) = result;
 
         tmp = bb;
-        result = Bitboard(0);
+        result = EMPTY_BB;
         while (tmp.any())
         {
             tmp = tmp.southEast();
@@ -254,7 +257,7 @@ void initRays()
         rayFrom(square, Direction::SOUTH_EAST) = result;
 
         tmp = bb;
-        result = Bitboard(0);
+        result = EMPTY_BB;
         while (tmp.any())
         {
             tmp = tmp.southWest();
@@ -352,31 +355,17 @@ void init()
 
         attackData.kingAttacks[square] = king;
 
-        Bitboard knight =
-            bb.north().northEast() |
-            bb.north().northWest() |
-            bb.south().southEast() |
-            bb.south().southWest() |
-            bb.east().northEast() |
-            bb.east().southEast() |
-            bb.west().northWest() |
-            bb.west().southWest();
+        Bitboard knight = bb.north().northEast() | bb.north().northWest() | bb.south().southEast()
+            | bb.south().southWest() | bb.east().northEast() | bb.east().southEast()
+            | bb.west().northWest() | bb.west().southWest();
         attackData.knightAttacks[square] = knight;
 
         attackData.pawnAttacks[static_cast<int>(Color::WHITE)][square] = pawnAttacks<Color::WHITE>(bb);
         attackData.pawnAttacks[static_cast<int>(Color::BLACK)][square] = pawnAttacks<Color::BLACK>(bb);
     }
 
-    Direction allDirs[] = {
-        Direction::NORTH,
-        Direction::SOUTH,
-        Direction::EAST,
-        Direction::WEST,
-        Direction::NORTH_EAST,
-        Direction::NORTH_WEST,
-        Direction::SOUTH_EAST,
-        Direction::SOUTH_WEST
-    };
+    Direction allDirs[] = {Direction::NORTH, Direction::SOUTH, Direction::EAST, Direction::WEST,
+        Direction::NORTH_EAST, Direction::NORTH_WEST, Direction::SOUTH_EAST, Direction::SOUTH_WEST};
     for (uint32_t src = 0; src < 64; src++)
     {
         for (uint32_t dst = 0; dst < 64; dst++)
@@ -405,13 +394,15 @@ void init()
         white |= white << 8;
         white |= white << 16;
         white |= white << 32;
-        attackData.passedPawnMasks[static_cast<int>(Color::WHITE)][i] = white | white.west() | white.east();
+        attackData.passedPawnMasks[static_cast<int>(Color::WHITE)][i] =
+            white | white.west() | white.east();
 
         Bitboard black = Bitboard::fromSquare(Square(i)) >> 8;
         black |= black >> 8;
         black |= black >> 16;
         black |= black >> 32;
-        attackData.passedPawnMasks[static_cast<int>(Color::BLACK)][i] = black | black.west() | black.east();
+        attackData.passedPawnMasks[static_cast<int>(Color::BLACK)][i] =
+            black | black.west() | black.east();
 
         Bitboard file = white | black | Bitboard::fromSquare(Square(i));
         attackData.isolatedPawnMasks[i] = file.west() | file.east();
@@ -444,11 +435,10 @@ void init()
     Bitboard* currBishop = attackData.bishopAttacks.data();
     for (uint32_t square = 0; square < 64; square++)
     {
-        Bitboard rookMask =
-            (getRay(Square(square), Direction::NORTH) & ~RANK_8_BB) |
-            (getRay(Square(square), Direction::SOUTH) & ~RANK_1_BB) |
-            (getRay(Square(square), Direction::EAST) & ~FILE_H_BB) |
-            (getRay(Square(square), Direction::WEST) & ~FILE_A_BB);
+        Bitboard rookMask = (getRay(Square(square), Direction::NORTH) & ~RANK_8_BB)
+            | (getRay(Square(square), Direction::SOUTH) & ~RANK_1_BB)
+            | (getRay(Square(square), Direction::EAST) & ~FILE_H_BB)
+            | (getRay(Square(square), Direction::WEST) & ~FILE_A_BB);
 
         attackData.rookTable[square].magic = rookMagics[square];
         attackData.rookTable[square].shift = 64 - rookIndexBits[square];
@@ -458,17 +448,17 @@ void init()
         for (uint32_t i = 0; i < (1u << rookIndexBits[square]); i++)
         {
             Bitboard blockers = getMaskBlockerIdx(rookMask, i);
-            uint32_t idx = static_cast<uint32_t>((blockers.value() * rookMagics[square]) >> (64 - rookIndexBits[square]));
+            uint32_t idx = static_cast<uint32_t>(
+                (blockers.value() * rookMagics[square]) >> (64 - rookIndexBits[square]));
             attackData.rookTable[square].attackData[idx] = getRookAttacksSlow(Square(square), blockers);
             currRook++;
         }
 
-
-        Bitboard bishopMask = ~EDGE_SQUARES &
-            (getRay(Square(square), Direction::NORTH_EAST) |
-                getRay(Square(square), Direction::NORTH_WEST) |
-                getRay(Square(square), Direction::SOUTH_EAST) |
-                getRay(Square(square), Direction::SOUTH_WEST));
+        Bitboard bishopMask = ~EDGE_SQUARES
+            & (getRay(Square(square), Direction::NORTH_EAST)
+                | getRay(Square(square), Direction::NORTH_WEST)
+                | getRay(Square(square), Direction::SOUTH_EAST)
+                | getRay(Square(square), Direction::SOUTH_WEST));
 
         attackData.bishopTable[square].magic = bishopMagics[square];
         attackData.bishopTable[square].shift = 64 - bishopIndexBits[square];
@@ -477,13 +467,14 @@ void init()
         for (uint32_t i = 0; i < (1u << bishopIndexBits[square]); i++)
         {
             Bitboard blockers = getMaskBlockerIdx(bishopMask, i);
-            uint32_t idx = static_cast<uint32_t>((blockers.value() * bishopMagics[square]) >> (64 - bishopIndexBits[square]));
+            uint32_t idx = static_cast<uint32_t>(
+                (blockers.value() * bishopMagics[square]) >> (64 - bishopIndexBits[square]));
 
-            attackData.bishopTable[square].attackData[idx] = getBishopAttacksSlow(Square(square), blockers);
+            attackData.bishopTable[square].attackData[idx] =
+                getBishopAttacksSlow(Square(square), blockers);
             currBishop++;
         }
     }
 }
-
 
 }
