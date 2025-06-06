@@ -141,9 +141,4 @@ const PawnStructure& EvalState::pawnStructure() const
     return currEntry().pawnStructure;
 }
 
-int EvalState::phase() const
-{
-    return currEntry().psqtState.phase;
-}
-
 }

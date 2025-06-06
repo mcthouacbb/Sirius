@@ -44,8 +44,6 @@ set(SRCS
     "src/eval/pawn_structure.cpp"
     "src/eval/pawn_structure.h"
     "src/eval/pawn_table.h"
-    "src/eval/phase.cpp"
-    "src/eval/phase.h"
     "src/eval/psqt_state.cpp"
     "src/eval/psqt_state.h"
 

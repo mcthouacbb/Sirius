@@ -361,9 +361,12 @@ int evaluate(const Board& board, search::SearchThread* thread)
 
     int mg = eval.mg();
     int eg = eval.eg() * scale / SCALE_FACTOR_NORMAL;
-    int phase = thread->evalState.phase();
+    int phase = 4 * board.pieces(PieceType::QUEEN).popcount()
+        + 2 * board.pieces(PieceType::ROOK).popcount()
+        + (board.pieces(PieceType::BISHOP) | board.pieces(PieceType::KNIGHT)).popcount();
+    phase = std::clamp(phase, 0, 24);
 
-    return (color == WHITE ? 1 : -1) * eval::getFullEval(mg, eg, phase);
+    return (color == WHITE ? 1 : -1) * ((mg * phase + eg * (24 - phase)) / 24);
 }
 
 int evaluateSingle(const Board& board)
@@ -392,9 +395,12 @@ int evaluateSingle(const Board& board)
 
     int mg = eval.mg();
     int eg = eval.eg() * scale / SCALE_FACTOR_NORMAL;
-    int phase = evalState.phase();
+    int phase = 4 * board.pieces(PieceType::QUEEN).popcount()
+        + 2 * board.pieces(PieceType::ROOK).popcount()
+        + (board.pieces(PieceType::BISHOP) | board.pieces(PieceType::KNIGHT)).popcount();
+    phase = std::clamp(phase, 0, 24);
 
-    return (color == WHITE ? 1 : -1) * eval::getFullEval(mg, eg, phase);
+    return (color == WHITE ? 1 : -1) * ((mg * phase + eg * (24 - phase)) / 24);
 }
 
 }
