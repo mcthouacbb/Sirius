@@ -7,7 +7,7 @@ namespace attacks
 template<typename T>
 using DirectionArray = EnumArray<T, Direction, 8>;
 
-constexpr uint64_t rookMagics[64] = {
+constexpr std::array<uint64_t, 64> rookMagics = {
     0xa8002c000108020ULL,
     0x6c00049b0002001ULL,
     0x100200010090040ULL,
@@ -74,7 +74,7 @@ constexpr uint64_t rookMagics[64] = {
     0x26002114058042ULL,
 };
 
-constexpr uint64_t bishopMagics[64] = {
+constexpr std::array<uint64_t, 64> bishopMagics = {
     0x89a1121896040240ULL,
     0x2004844802002010ULL,
     0x2068080051921000ULL,
@@ -142,7 +142,7 @@ constexpr uint64_t bishopMagics[64] = {
 };
 
 // clang-format off
-constexpr uint32_t rookIndexBits[64] = {
+constexpr std::array<uint32_t, 64> rookIndexBits = {
     12, 11, 11, 11, 11, 11, 11, 12,
     11, 10, 10, 10, 10, 10, 10, 11,
     11, 10, 10, 10, 10, 10, 10, 11,
@@ -153,7 +153,7 @@ constexpr uint32_t rookIndexBits[64] = {
     12, 11, 11, 11, 11, 11, 11, 12
 };
 
-constexpr uint32_t bishopIndexBits[64] = {
+constexpr std::array<uint32_t, 64> bishopIndexBits = {
     6, 5, 5, 5, 5, 5, 5, 6,
     5, 5, 5, 5, 5, 5, 5, 5,
     5, 5, 7, 7, 7, 7, 5, 5,
