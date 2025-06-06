@@ -23,6 +23,7 @@ struct SearchStack
 
     Move playedMove;
     Piece movedPiece;
+    bool quiet;
     Move excludedMove;
 
     std::array<Move, 2> killers;
@@ -33,6 +34,7 @@ struct SearchStack
 
     int staticEval;
     int eval;
+    Bitboard threats;
 
     uint32_t failHighCount;
 };

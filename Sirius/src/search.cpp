@@ -253,6 +253,7 @@ void Search::makeMove(SearchThread& thread, SearchStack* stack, Move move, int h
     stack->contHistEntry = &thread.history.contHistEntry(thread.board, move);
     stack->histScore = histScore;
     stack->playedMove = move;
+    stack->quiet = moveIsQuiet(thread.board, move);
     stack->movedPiece = movingPiece(thread.board, move);
     stack->contCorrEntry = &thread.history.contCorrEntry(thread.board, move);
 
@@ -270,6 +271,7 @@ void Search::unmakeMove(SearchThread& thread, SearchStack* stack)
     stack->histScore = 0;
     stack->playedMove = Move::nullmove();
     stack->movedPiece = Piece::NONE;
+    stack->quiet = false;
     stack->contCorrEntry = nullptr;
 }
 
@@ -490,7 +492,15 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         && stack->staticEval > -(stack - 1)->staticEval + 1;
 
     (stack + 1)->killers = {};
-    Bitboard threats = board.threats();
+    Bitboard threats = stack->threats = board.threats();
+
+    if (!inCheck && rootPly > 0 && (stack - 1)->playedMove != Move::nullmove()
+        && (stack - 1)->staticEval != SCORE_NONE && (stack - 1)->quiet)
+    {
+        int bonus = std::clamp(-5 * (stack->staticEval + (stack - 1)->staticEval), -50, 100);
+        history.updateMainHist(
+            (stack - 1)->playedMove, (stack - 1)->threats, ~board.sideToMove(), bonus);
+    }
 
     // whole node pruning(~228 elo)
     if (!pvNode && !inCheck && !excluded)
