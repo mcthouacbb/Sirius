@@ -3,7 +3,6 @@
 
 #include "attacks.h"
 #include "bench.h"
-#include "comm/cmdline.h"
 #include "comm/icomm.h"
 #include "comm/uci.h"
 #include "cuckoo.h"
@@ -30,12 +29,6 @@ int main(int argc, char** argv)
     std::string mode;
     std::getline(std::cin, mode);
 
-    if (mode == "cmdline")
-    {
-        comm::CmdLine cmdLine;
-        comm::currComm = &cmdLine;
-        cmdLine.run();
-    }
 #ifdef EXTERNAL_TUNE
     else if (mode == "wfconfig")
     {
@@ -45,8 +38,8 @@ int main(int argc, char** argv)
     {
         search::printOpenBenchConfig();
     }
-#endif
     else
+#endif
     {
         comm::UCI uci;
         comm::currComm = &uci;

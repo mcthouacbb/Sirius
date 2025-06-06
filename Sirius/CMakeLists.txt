@@ -47,10 +47,6 @@ set(SRCS
     "src/eval/psqt_state.cpp"
     "src/eval/psqt_state.h"
 
-    "src/comm/book.cpp"
-    "src/comm/book.h"
-    "src/comm/cmdline.cpp"
-    "src/comm/cmdline.h"
     "src/comm/fen.cpp"
     "src/comm/fen.h"
     "src/comm/icomm.cpp"
