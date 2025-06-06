@@ -158,7 +158,8 @@ public:
     int getQuietStats(
         Move move, Bitboard threats, Piece movingPiece, const SearchStack* stack, int ply) const;
     int getNoisyStats(const Board& board, Move move) const;
-    int correctStaticEval(const Board& board, int staticEval, const SearchStack* stack, int ply) const;
+    int correctionValue(const Board& board, const SearchStack* stack, int ply) const;
+    int correctStaticEval(int staticEval, int correctionValue) const;
 
     void clear();
     void updateQuietStats(const Board& board, Move move, const SearchStack* stack, int ply, int bonus);

@@ -81,7 +81,7 @@ int History::getNoisyStats(const Board& board, Move move) const
     return getCaptHist(board, move);
 }
 
-int History::correctStaticEval(const Board& board, int staticEval, const SearchStack* stack, int ply) const
+int History::correctionValue(const Board& board, const SearchStack* stack, int ply) const
 {
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
@@ -126,7 +126,12 @@ int History::correctStaticEval(const Board& board, int staticEval, const SearchS
     correction += search::contCorr6Weight * contCorrEntry(6);
     correction += search::contCorr7Weight * contCorrEntry(7);
 
-    int corrected = staticEval + correction / (256 * CORR_HIST_SCALE);
+    return correction / 256;
+}
+
+int History::correctStaticEval(int staticEval, int correctionValue) const
+{
+    int corrected = staticEval + correctionValue / CORR_HIST_SCALE;
     return std::clamp(corrected, -SCORE_MATE_IN_MAX + 1, SCORE_MATE_IN_MAX - 1);
 }
 
