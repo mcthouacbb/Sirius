@@ -20,8 +20,7 @@ int main(int argc, char** argv)
 
     if (argc > 1 && std::string(argv[1]) == "bench")
     {
-        Board board;
-        std::unique_ptr<search::Search> bencher = std::make_unique<search::Search>(board);
+        std::unique_ptr<search::Search> bencher = std::make_unique<search::Search>();
         runBench(*bencher, BENCH_DEPTH);
         return 0;
     }

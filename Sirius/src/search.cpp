@@ -117,8 +117,8 @@ void SearchThread::join()
     thread.join();
 }
 
-Search::Search(Board& board)
-    : m_Board(board), m_ShouldStop(false), m_TT(64)
+Search::Search()
+    : m_ShouldStop(false), m_TT(64)
 {
     setThreads(1);
 }
@@ -153,7 +153,7 @@ void Search::run(const SearchLimits& limits, const Board& board)
 
     m_ShouldStop.store(false, std::memory_order_relaxed);
 
-    m_TimeMan.setLimits(limits, m_Board.sideToMove());
+    m_TimeMan.setLimits(limits, board.sideToMove());
     m_TimeMan.startSearch();
 
     for (auto& thread : m_Threads)
@@ -388,7 +388,7 @@ BenchData Search::benchSearch(int depth, const Board& board)
     thread->limits = limits;
     thread->board = board;
 
-    m_TimeMan.setLimits(limits, m_Board.sideToMove());
+    m_TimeMan.setLimits(limits, board.sideToMove());
     m_TimeMan.startSearch();
 
     m_ShouldStop.store(false, std::memory_order_relaxed);

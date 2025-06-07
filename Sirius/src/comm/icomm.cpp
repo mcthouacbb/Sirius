@@ -6,7 +6,6 @@ namespace comm
 IComm* currComm;
 
 IComm::IComm()
-    : m_Board(), m_Search(m_Board)
 {
     calcLegalMoves();
 }
