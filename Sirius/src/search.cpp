@@ -687,6 +687,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             else if (ttData.score <= alpha && cutnode)
                 extension = -1;
         }
+        else if (!root && rootPly < 2 * thread.rootDepth && depth <= 7 && move == ttData.move && !inCheck
+            && stack->staticEval <= alpha - 25 && ttData.bound == TTEntry::Bound::UPPER_BOUND)
+            extension = 1;
 
         m_TT.prefetch(board.keyAfter(move));
         uint64_t nodesBefore = thread.nodes;
