@@ -13,11 +13,15 @@
 
 #include "../search_params.h"
 
-namespace comm
+namespace uci
 {
+
+UCI* uci;
 
 UCI::UCI()
 {
+    calcLegalMoves();
+
     const auto& hashCallback = [this](const UCIOption& option)
     {
         m_Search.setTTSize(static_cast<int>(option.intValue()));
@@ -44,6 +48,29 @@ UCI::UCI()
                 })});
     }
 #endif
+}
+
+void UCI::setToFen(const char* fen, bool frc)
+{
+    m_Board.setToFen(fen, frc);
+    calcLegalMoves();
+}
+
+void UCI::makeMove(Move move)
+{
+    m_Board.makeMove(move);
+    calcLegalMoves();
+}
+
+void UCI::calcLegalMoves()
+{
+    m_LegalMoves.clear();
+    genMoves<MoveGenType::LEGAL>(m_Board, m_LegalMoves);
+}
+
+std::unique_lock<std::mutex> UCI::lockStdout() const
+{
+    return std::unique_lock<std::mutex>(m_StdoutMutex);
 }
 
 void UCI::run(std::string cmd)
@@ -130,7 +157,7 @@ void UCI::prettyPrintSearchInfo(const SearchInfo& info) const
     {
         MoveList moves;
         genMoves<MoveGenType::LEGAL>(board, moves);
-        std::cout << comm::convMoveToSAN(board, moves, *move) << ' ';
+        std::cout << uci::convMoveToSAN(board, moves, *move) << ' ';
         board.makeMove(*move);
     }
 
@@ -166,7 +193,7 @@ void UCI::printUCISearchInfo(const SearchInfo& info) const
     std::cout << " pv ";
     for (const Move* move = info.pvBegin; move != info.pvEnd; move++)
     {
-        std::cout << comm::convMoveToUCI(m_Board, *move) << ' ';
+        std::cout << uci::convMoveToUCI(m_Board, *move) << ' ';
     }
     std::cout << std::endl;
 }
@@ -174,7 +201,7 @@ void UCI::printUCISearchInfo(const SearchInfo& info) const
 void UCI::reportBestMove(Move bestMove) const
 {
     auto lock = lockStdout();
-    std::cout << "bestmove " << comm::convMoveToUCI(m_Board, bestMove) << std::endl;
+    std::cout << "bestmove " << uci::convMoveToUCI(m_Board, bestMove) << std::endl;
 }
 
 bool UCI::execCommand(const std::string& command)
@@ -328,7 +355,7 @@ void UCI::positionCommand(std::istringstream& stream)
                 while (stream.tellg() != -1)
                 {
                     stream >> tok;
-                    MoveStrFind find = comm::findMoveFromUCI(m_Board, m_LegalMoves, tok.c_str());
+                    MoveStrFind find = uci::findMoveFromUCI(m_Board, m_LegalMoves, tok.c_str());
                     Move move = find.move;
                     makeMove(move);
                 }
@@ -347,7 +374,7 @@ void UCI::positionCommand(std::istringstream& stream)
             fen += ' ' + tok;
         }
 
-        if (!comm::isValidFen(fen.c_str()))
+        if (!uci::isValidFen(fen.c_str()))
             return;
         setToFen(fen.c_str(), m_Options["UCI_Chess960"].boolValue());
 
@@ -356,7 +383,7 @@ void UCI::positionCommand(std::istringstream& stream)
             while (stream.tellg() != -1)
             {
                 stream >> tok;
-                MoveStrFind find = comm::findMoveFromUCI(m_Board, m_LegalMoves, tok.c_str());
+                MoveStrFind find = uci::findMoveFromUCI(m_Board, m_LegalMoves, tok.c_str());
                 Move move = find.move;
                 makeMove(move);
             }

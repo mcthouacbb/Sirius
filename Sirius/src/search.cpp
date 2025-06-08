@@ -1,10 +1,9 @@
 #include "search.h"
-#include "comm/icomm.h"
-#include "comm/move.h"
 #include "eval/eval.h"
 #include "move_ordering.h"
 #include "movegen.h"
 #include "search_params.h"
+#include "uci/uci.h"
 
 #include <algorithm>
 #include <climits>
@@ -321,7 +320,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
             info.pvBegin = thread.stack[0].pv.data();
             info.pvEnd = thread.stack[0].pv.data() + thread.stack[0].pvLength;
             info.score = searchScore;
-            comm::currComm->reportSearchInfo(info);
+            uci::uci->reportSearchInfo(info);
         }
         uint64_t bmNodes = thread.findRootMove(bestMove).nodes;
         if (thread.isMainThread() && m_TimeMan.stopSoft(bestMove, bmNodes, thread.nodes, thread.limits))
@@ -332,7 +331,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
         m_ShouldStop.store(true, std::memory_order_relaxed);
 
     if (report)
-        comm::currComm->reportBestMove(bestMove);
+        uci::uci->reportBestMove(bestMove);
 
     return score;
 }

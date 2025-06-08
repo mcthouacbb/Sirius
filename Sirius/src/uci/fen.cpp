@@ -1,6 +1,6 @@
 #include "fen.h"
 
-namespace comm
+namespace uci
 {
 
 bool isValidFen(const char* fen)

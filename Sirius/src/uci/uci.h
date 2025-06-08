@@ -1,19 +1,23 @@
 #pragma once
 
-#include "icomm.h"
+#include "../board.h"
+#include "../movegen.h"
+#include "../search.h"
+#include "../time_man.h"
 #include "uci_option.h"
+
 
 #include <sstream>
 #include <unordered_map>
 
-namespace comm
+namespace uci
 {
 
-class UCI : public IComm
+class UCI
 {
 public:
     UCI();
-    virtual ~UCI() override = default;
+    ~UCI() = default;
 
     enum class Command
     {
@@ -35,10 +39,15 @@ public:
     };
 
     void run(std::string cmd);
-    virtual void reportSearchInfo(const SearchInfo& info) const override;
-    virtual void reportBestMove(Move bestMove) const override;
+    void reportSearchInfo(const SearchInfo& info) const;
+    void reportBestMove(Move bestMove) const;
 
 private:
+    std::unique_lock<std::mutex> lockStdout() const;
+    void calcLegalMoves();
+    void setToFen(const char* fen, bool frc = false);
+    void makeMove(Move move);
+
     void prettyPrintSearchInfo(const SearchInfo& info) const;
     void printUCISearchInfo(const SearchInfo& info) const;
 
@@ -54,7 +63,14 @@ private:
     void perftCommand(std::istringstream& stream);
     void benchCommand();
 
+    mutable std::mutex m_StdoutMutex;
+    Board m_Board;
+    MoveList m_LegalMoves;
+    search::Search m_Search;
+
     std::unordered_map<std::string, UCIOption> m_Options;
 };
+
+extern UCI* uci;
 
 }

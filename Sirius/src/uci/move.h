@@ -3,7 +3,7 @@
 #include "../board.h"
 #include "../movegen.h"
 
-namespace comm
+namespace uci
 {
 
 struct MoveStrFind

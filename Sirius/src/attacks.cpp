@@ -166,7 +166,7 @@ constexpr std::array<uint32_t, 64> bishopIndexBits = {
 
 // clang-format on
 
-std::array<DirectionArray<Bitboard>, 8> rays = {};
+std::array<DirectionArray<Bitboard>, 64> rays = {};
 
 constexpr std::array<Direction, 8> allDirections = {Direction::NORTH, Direction::SOUTH,
     Direction::EAST, Direction::WEST, Direction::NORTH_EAST, Direction::NORTH_WEST,

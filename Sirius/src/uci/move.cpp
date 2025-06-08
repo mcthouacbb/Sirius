@@ -1,6 +1,6 @@
 #include "move.h"
 
-namespace comm
+namespace uci
 {
 
 const char promoChars[4] = {'N', 'B', 'R', 'Q'};

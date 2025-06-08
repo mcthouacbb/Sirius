@@ -3,13 +3,12 @@
 
 #include "attacks.h"
 #include "bench.h"
-#include "comm/icomm.h"
-#include "comm/uci.h"
 #include "cuckoo.h"
 #include "eval/endgame.h"
 #include "eval/eval.h"
 #include "search_params.h"
 #include "sirius.h"
+#include "uci/uci.h"
 
 int main(int argc, char** argv)
 {
@@ -40,8 +39,8 @@ int main(int argc, char** argv)
     else
 #endif
     {
-        comm::UCI uci;
-        comm::currComm = &uci;
+        uci::UCI uci;
+        uci::uci = &uci;
         uci.run(mode);
     }
     return 0;

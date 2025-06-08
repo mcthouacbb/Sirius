@@ -6,6 +6,9 @@
 #include <string_view>
 #include <variant>
 
+namespace uci
+{
+
 // currently only supports integers
 class UCIOption
 {
@@ -107,4 +110,6 @@ inline const UCIOption::IntData& UCIOption::intData() const
 inline const std::string& UCIOption::name() const
 {
     return m_Name;
+}
+
 }
