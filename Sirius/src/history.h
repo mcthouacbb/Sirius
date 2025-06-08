@@ -164,7 +164,7 @@ public:
     void updateQuietStats(const Board& board, Move move, const SearchStack* stack, int ply, int bonus);
     void updateContHist(Move move, Piece movingPiece, const SearchStack* stack, int ply, int bonus);
     void updateNoisyStats(const Board& board, Move move, int bonus);
-    void updateCorrHist(const Board& board, int bonus, int depth, const SearchStack* stack, int ply);
+    void updateCorrHist(const Board& board, int bonus, int depth, const SearchStack* stack, int ply, bool pvNode);
 
 private:
     int getMainHist(Move move, Bitboard threats, Color color) const;
