@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../board.h"
 #include "eval_state.h"
 

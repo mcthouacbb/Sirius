@@ -158,7 +158,6 @@ public:
 
     std::string stringRep() const;
     std::string fenStr() const;
-    std::string epdStr() const;
 
     void makeMove(Move move);
     void makeMove(Move move, eval::EvalState& evalState);

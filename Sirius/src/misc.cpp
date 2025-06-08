@@ -15,20 +15,26 @@ void printBoard(const Board& board)
     std::cout << "GamePly: " << board.gamePly() << std::endl;
     std::cout << "HalfMoveClock: " << board.halfMoveClock() << std::endl;
     std::cout << "CastlingRights: ";
-    if (board.castlingRights().value() != 0)
-    {
-        if (board.castlingRights().has(CastlingRights::WHITE_KING_SIDE))
-            std::cout << 'K';
-        if (board.castlingRights().has(CastlingRights::WHITE_QUEEN_SIDE))
-            std::cout << 'Q';
-        if (board.castlingRights().has(CastlingRights::BLACK_KING_SIDE))
-            std::cout << 'k';
-        if (board.castlingRights().has(CastlingRights::BLACK_QUEEN_SIDE))
-            std::cout << 'q';
-    }
+    if (board.castlingRights().value() == 0)
+        std::cout << '-';
     else
     {
-        std::cout << '-';
+        if (board.castlingRights().has(CastlingRights::WHITE_KING_SIDE))
+            std::cout << (!board.isFRC()
+                    ? 'K'
+                    : 'A' + board.castlingRookSq(Color::WHITE, CastleSide::KING_SIDE).file());
+        if (board.castlingRights().has(CastlingRights::WHITE_QUEEN_SIDE))
+            std::cout << (!board.isFRC()
+                    ? 'Q'
+                    : 'A' + board.castlingRookSq(Color::WHITE, CastleSide::QUEEN_SIDE).file());
+        if (board.castlingRights().has(CastlingRights::BLACK_KING_SIDE))
+            std::cout << (!board.isFRC()
+                    ? 'k'
+                    : 'a' + board.castlingRookSq(Color::BLACK, CastleSide::KING_SIDE).file());
+        if (board.castlingRights().has(CastlingRights::BLACK_QUEEN_SIDE))
+            std::cout << (!board.isFRC()
+                    ? 'q'
+                    : 'a' + board.castlingRookSq(Color::BLACK, CastleSide::QUEEN_SIDE).file());
     }
     std::cout << std::endl;
     std::cout << "Side to move: " << (board.sideToMove() == Color::WHITE ? "WHITE" : "BLACK")

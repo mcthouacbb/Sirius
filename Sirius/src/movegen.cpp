@@ -87,19 +87,19 @@ void genKingMoves(const Board& board, MoveList& moves)
     {
         if (board.checkers().empty())
         {
-            uint32_t kscBit = 1 << (2 * static_cast<int>(color));
-            uint32_t qscBit = 2 << (2 * static_cast<int>(color));
+            CastlingRights kingSide(color, CastleSide::KING_SIDE);
+            CastlingRights queenSide(color, CastleSide::QUEEN_SIDE);
 
             Square kingSideRook = board.castlingRookSq(color, CastleSide::KING_SIDE);
             Square queenSideRook = board.castlingRookSq(color, CastleSide::QUEEN_SIDE);
 
-            if ((board.castlingRights().value() & kscBit)
+            if (board.castlingRights().has(kingSide)
                 && !board.castlingBlocked(color, CastleSide::KING_SIDE))
             {
                 moves.push_back(Move(kingSq, kingSideRook, MoveType::CASTLE));
             }
 
-            if ((board.castlingRights().value() & qscBit)
+            if (board.castlingRights().has(queenSide)
                 && !board.castlingBlocked(color, CastleSide::QUEEN_SIDE))
             {
                 moves.push_back(Move(kingSq, queenSideRook, MoveType::CASTLE));

@@ -1,9 +1,11 @@
 #pragma once
 
+#include "castling.h"
 #include "defs.h"
 #include "util/multi_array.h"
 #include "util/prng.h"
 #include <cstdint>
+
 
 namespace zobrist
 {
