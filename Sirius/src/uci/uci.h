@@ -6,7 +6,6 @@
 #include "../time_man.h"
 #include "uci_option.h"
 
-
 #include <sstream>
 #include <unordered_map>
 

@@ -6,7 +6,6 @@
 #include "util/prng.h"
 #include <cstdint>
 
-
 namespace zobrist
 {
 
