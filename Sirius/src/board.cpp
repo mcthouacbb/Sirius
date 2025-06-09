@@ -541,20 +541,6 @@ bool Board::castlingBlocked(Color color, CastleSide side) const
     return (m_CastlingData.blockSquares(color, side) & allPieces()).any();
 }
 
-bool Board::isPassedPawn(Square square) const
-{
-    Piece pce = pieceAt(square);
-    Bitboard mask = attacks::passedPawnMask(getPieceColor(pce), square);
-    return (mask & pieces(~getPieceColor(pce), PieceType::PAWN)).empty();
-}
-
-bool Board::isIsolatedPawn(Square square) const
-{
-    Piece pce = pieceAt(square);
-    Bitboard mask = attacks::isolatedPawnMask(square);
-    return (mask & pieces(getPieceColor(pce), PieceType::PAWN)).empty();
-}
-
 Bitboard Board::pinnersBlockers(Square square, Bitboard attackers, Bitboard& pinners) const
 {
     Bitboard queens = pieces(PieceType::QUEEN);

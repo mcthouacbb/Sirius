@@ -202,9 +202,6 @@ public:
     Bitboard attackersTo(Square square, Bitboard blockers) const;
     bool castlingBlocked(Color color, CastleSide side) const;
 
-    bool isPassedPawn(Square square) const;
-    bool isIsolatedPawn(Square square) const;
-
     Bitboard pinnersBlockers(Square square, Bitboard attackers, Bitboard& pinners) const;
 
     Bitboard checkers() const;
