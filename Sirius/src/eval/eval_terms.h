@@ -51,19 +51,36 @@ inline bool pawnShieldStormChanged(const Board& board, const EvalUpdates& update
     return true;
 }
 
-inline bool knightOutpostsChanged(const EvalUpdates& updates)
+inline bool knightOutpostsChanged(const Board& board, const EvalUpdates& updates)
 {
-    return updates.changedPieces.hasAny(PieceSet(PieceType::PAWN, PieceType::KNIGHT));
+    if (!updates.changedPieces.hasAny(PieceSet(PieceType::PAWN, PieceType::KNIGHT)))
+        return false;
+
+    // if there are no knights left on the board
+    if (board.pieces(PieceType::KNIGHT).empty() && !updates.changedPieces.has(PieceType::KNIGHT))
+        return false;
+
+    return true;
 }
 
-inline bool bishopPawnsChanged(const EvalUpdates& updates)
+inline bool bishopPawnsChanged(const Board& board, const EvalUpdates& updates)
 {
-    return updates.changedPieces.hasAny(PieceSet(PieceType::PAWN, PieceType::BISHOP));
+    if (!updates.changedPieces.hasAny(PieceSet(PieceType::PAWN, PieceType::BISHOP)))
+        return false;
+
+    // if there are no bishops left on the board
+    if (board.pieces(PieceType::BISHOP).empty() && !updates.changedPieces.has(PieceType::BISHOP))
+        return false;
+
+    return true;
 }
 
-inline bool rookOpenChanged(const EvalUpdates& updates)
+inline bool rookOpenChanged(const Board& board, const EvalUpdates& updates)
 {
     if (!updates.changedPieces.hasAny(PieceSet(PieceType::PAWN, PieceType::ROOK)))
+        return false;
+
+    if (board.pieces(PieceType::ROOK).empty() && !updates.changedPieces.has(PieceType::ROOK))
         return false;
 
     // a pawn push cannot change the openness of a file
@@ -80,10 +97,17 @@ inline bool rookOpenChanged(const EvalUpdates& updates)
     return true;
 }
 
-inline bool minorBehindPawnChanged(const EvalUpdates& updates)
+inline bool minorBehindPawnChanged(const Board& board, const EvalUpdates& updates)
 {
-    return updates.changedPieces.hasAny(
-        PieceSet(PieceType::PAWN, PieceType::KNIGHT, PieceType::BISHOP));
+    if (!updates.changedPieces.hasAny(PieceSet(PieceType::PAWN, PieceType::KNIGHT, PieceType::BISHOP)))
+        return false;
+
+    // if there are no knights or bishops left on the board
+    if ((board.pieces(PieceType::BISHOP) | board.pieces(PieceType::KNIGHT)).empty()
+        && !updates.changedPieces.hasAny(PieceSet(PieceType::KNIGHT, PieceType::BISHOP)))
+        return false;
+
+    return true;
 }
 
 } // namespace eval_terms

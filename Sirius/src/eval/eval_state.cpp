@@ -88,23 +88,23 @@ void EvalState::push(const Board& board, const EvalUpdates& updates)
     else
         currEntry().pawnShieldStorm = oldEntry.pawnShieldStorm;
 
-    if (eval_terms::knightOutpostsChanged(updates))
+    if (eval_terms::knightOutpostsChanged(board, updates))
         currEntry().knightOutposts = evaluateKnightOutposts<WHITE>(board, currEntry().pawnStructure)
             - evaluateKnightOutposts<BLACK>(board, currEntry().pawnStructure);
     else
         currEntry().knightOutposts = oldEntry.knightOutposts;
 
-    if (eval_terms::bishopPawnsChanged(updates))
+    if (eval_terms::bishopPawnsChanged(board, updates))
         currEntry().bishopPawns = evaluateBishopPawns<WHITE>(board) - evaluateBishopPawns<BLACK>(board);
     else
         currEntry().bishopPawns = oldEntry.bishopPawns;
 
-    if (eval_terms::rookOpenChanged(updates))
+    if (eval_terms::rookOpenChanged(board, updates))
         currEntry().rookOpen = evaluateRookOpen<WHITE>(board) - evaluateRookOpen<BLACK>(board);
     else
         currEntry().rookOpen = oldEntry.rookOpen;
 
-    if (eval_terms::minorBehindPawnChanged(updates))
+    if (eval_terms::minorBehindPawnChanged(board, updates))
         currEntry().minorBehindPawn =
             evaluateMinorBehindPawn<WHITE>(board) - evaluateMinorBehindPawn<BLACK>(board);
     else
@@ -140,5 +140,4 @@ const PawnStructure& EvalState::pawnStructure() const
 {
     return currEntry().pawnStructure;
 }
-
 }
