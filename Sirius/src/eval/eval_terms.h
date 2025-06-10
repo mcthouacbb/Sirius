@@ -40,7 +40,15 @@ inline bool bishopPawnsChanged(const EvalUpdates& updates)
 
 inline bool rookOpenChanged(const EvalUpdates& updates)
 {
-    return updates.changedPieces.hasAny(PieceSet(PieceType::PAWN, PieceType::ROOK));
+    if (!updates.changedPieces.hasAny(PieceSet(PieceType::PAWN, PieceType::ROOK)))
+        return false;
+
+    // a pawn push cannot change the openness of a file
+    if (updates.type == MoveType::NONE && updates.move->movedPiece == PieceType::PAWN
+        && (updates.move->from - updates.move->to == 8 || updates.move->from - updates.move->to == -8))
+        return false;
+
+    return true;
 }
 
 inline bool minorBehindPawnChanged(const EvalUpdates& updates)
