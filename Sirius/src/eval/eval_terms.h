@@ -97,7 +97,7 @@ inline bool rookOpenChanged(const Board& board, const EvalUpdates& updates)
 
     // a pawn push cannot change the openness of a file
     if (updates.type == MoveType::NONE && updates.move->movedPiece == PieceType::PAWN
-        && (updates.move->from - updates.move->to == 8 || updates.move->from - updates.move->to == -8))
+        && (updates.move->from - updates.move->to) % 8 == 0)
         return false;
 
     // moving a rook along a file cannot change the openness of a file
