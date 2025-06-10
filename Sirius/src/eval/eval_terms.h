@@ -72,6 +72,10 @@ inline bool bishopPawnsChanged(const Board& board, const EvalUpdates& updates)
     if (board.pieces(PieceType::BISHOP).empty() && !updates.changedPieces.has(PieceType::BISHOP))
         return false;
 
+    if (updates.type == MoveType::NONE && updates.move->movedPiece == PieceType::BISHOP
+        && updates.captured != PieceType::PAWN && updates.captured != PieceType::BISHOP)
+        return false;
+
     return true;
 }
 
