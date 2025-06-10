@@ -91,6 +91,7 @@ inline bool rookOpenChanged(const Board& board, const EvalUpdates& updates)
     if (!updates.changedPieces.hasAny(PieceSet(PieceType::PAWN, PieceType::ROOK)))
         return false;
 
+    // if there are no rooks left on the board
     if (board.pieces(PieceType::ROOK).empty() && !updates.changedPieces.has(PieceType::ROOK))
         return false;
 
