@@ -75,12 +75,12 @@ void EvalState::push(const Board& board, const EvalUpdates& updates)
         currEntry().psqtState.removePiece(getPieceColor(add.piece), getPieceType(add.piece), add.square);
     }
 
-    if (updates.changedPieces.hasAny(eval_terms::pawnStructure.deps))
+    if (eval_terms::pawnStructureChanged(updates))
         evaluatePawns(board, currEntry().pawnStructure, m_PawnTable);
     else
         currEntry().pawnStructure = oldEntry.pawnStructure;
 
-    if (updates.changedPieces.hasAny(eval_terms::pawnShieldStorm.deps))
+    if (eval_terms::pawnShieldStormChanged(updates))
     {
         currEntry().pawnShieldStorm[WHITE] = evaluateStormShield<WHITE>(board);
         currEntry().pawnShieldStorm[BLACK] = evaluateStormShield<BLACK>(board);
@@ -88,23 +88,23 @@ void EvalState::push(const Board& board, const EvalUpdates& updates)
     else
         currEntry().pawnShieldStorm = oldEntry.pawnShieldStorm;
 
-    if (updates.changedPieces.hasAny(eval_terms::knightOutposts.deps))
+    if (eval_terms::knightOutpostsChanged(updates))
         currEntry().knightOutposts = evaluateKnightOutposts<WHITE>(board, currEntry().pawnStructure)
             - evaluateKnightOutposts<BLACK>(board, currEntry().pawnStructure);
     else
         currEntry().knightOutposts = oldEntry.knightOutposts;
 
-    if (updates.changedPieces.hasAny(eval_terms::bishopPawns.deps))
+    if (eval_terms::bishopPawnsChanged(updates))
         currEntry().bishopPawns = evaluateBishopPawns<WHITE>(board) - evaluateBishopPawns<BLACK>(board);
     else
         currEntry().bishopPawns = oldEntry.bishopPawns;
 
-    if (updates.changedPieces.hasAny(eval_terms::rookOpen.deps))
+    if (eval_terms::rookOpenChanged(updates))
         currEntry().rookOpen = evaluateRookOpen<WHITE>(board) - evaluateRookOpen<BLACK>(board);
     else
         currEntry().rookOpen = oldEntry.rookOpen;
 
-    if (updates.changedPieces.hasAny(eval_terms::minorBehindPawn.deps))
+    if (eval_terms::minorBehindPawnChanged(updates))
         currEntry().minorBehindPawn =
             evaluateMinorBehindPawn<WHITE>(board) - evaluateMinorBehindPawn<BLACK>(board);
     else

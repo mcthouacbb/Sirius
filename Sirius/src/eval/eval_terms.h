@@ -2,7 +2,7 @@
 
 #include "../bitboard.h"
 #include "../defs.h"
-#include "../util/piece_set.h"
+#include "eval_state.h"
 #include <bitset>
 #include <type_traits>
 
@@ -18,18 +18,36 @@ namespace eval_terms
 
 using enum PieceType;
 
-struct EvalTerm
+inline bool pawnStructureChanged(const EvalUpdates& updates)
 {
-    PieceSet deps;
-};
+    return updates.changedPieces.has(PieceType::PAWN);
+}
 
-constexpr EvalTerm pawnStructure = {PieceSet(PAWN)};
-constexpr EvalTerm passers = {PieceSet(PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING)};
-constexpr EvalTerm pawnShieldStorm = {PieceSet(PAWN, KING)};
-constexpr EvalTerm knightOutposts = {PieceSet(PAWN, KNIGHT)};
-constexpr EvalTerm bishopPawns = {PieceSet(PAWN, BISHOP)};
-constexpr EvalTerm rookOpen = {PieceSet(PAWN, ROOK)};
-constexpr EvalTerm minorBehindPawn = {PieceSet(PAWN, KNIGHT, BISHOP)};
+inline bool pawnShieldStormChanged(const EvalUpdates& updates)
+{
+    return updates.changedPieces.hasAny(PieceSet(PieceType::PAWN, PieceType::KING));
+}
+
+inline bool knightOutpostsChanged(const EvalUpdates& updates)
+{
+    return updates.changedPieces.hasAny(PieceSet(PieceType::PAWN, PieceType::KNIGHT));
+}
+
+inline bool bishopPawnsChanged(const EvalUpdates& updates)
+{
+    return updates.changedPieces.hasAny(PieceSet(PieceType::PAWN, PieceType::BISHOP));
+}
+
+inline bool rookOpenChanged(const EvalUpdates& updates)
+{
+    return updates.changedPieces.hasAny(PieceSet(PieceType::PAWN, PieceType::ROOK));
+}
+
+inline bool minorBehindPawnChanged(const EvalUpdates& updates)
+{
+    return updates.changedPieces.hasAny(
+        PieceSet(PieceType::PAWN, PieceType::KNIGHT, PieceType::BISHOP));
+}
 
 } // namespace eval_terms
 

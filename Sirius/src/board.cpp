@@ -274,21 +274,23 @@ void Board::makeMove(Move move, eval::EvalState* evalState)
         currState().zkey.updateEP(currState().epSquare & 7);
 
     eval::EvalUpdates updates;
+    updates.type = move.type();
 
     switch (move.type())
     {
         case MoveType::NONE:
         {
             Piece srcPiece = pieceAt(move.fromSq());
-
             Piece dstPiece = pieceAt(move.toSq());
 
             if (dstPiece != Piece::NONE)
             {
+                updates.captured = getPieceType(dstPiece);
                 currState().halfMoveClock = 0;
                 removePiece(move.toSq(), updates);
             }
 
+            updates.move = eval::EvalUpdates::Move{getPieceType(srcPiece), move.fromSq(), move.toSq()};
             movePiece(move.fromSq(), move.toSq(), updates);
 
             if (getPieceType(srcPiece) == PieceType::PAWN)

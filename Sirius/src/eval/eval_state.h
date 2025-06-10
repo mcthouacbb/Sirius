@@ -17,8 +17,20 @@ struct EvalUpdates
         Piece piece;
         Square square;
     };
+    struct Move
+    {
+        PieceType movedPiece;
+        Square from;
+        Square to;
+    };
+    MoveType type;
+    // these 2 fields only exist if type is MoveType::NONE
+    std::optional<Move> move;
+    PieceType captured = PieceType::NONE;
+
     StaticVector<Update, 2> adds;
     StaticVector<Update, 2> removes;
+
     PieceSet changedPieces;
 
     void pushAdd(Update update)
