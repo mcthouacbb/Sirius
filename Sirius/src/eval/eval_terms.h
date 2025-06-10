@@ -114,10 +114,21 @@ inline bool minorBehindPawnChanged(const Board& board, const EvalUpdates& update
     if (!updates.changedPieces.hasAny(PieceSet(PieceType::PAWN, PieceType::KNIGHT, PieceType::BISHOP)))
         return false;
 
-    // if there are no knights or bishops left on the board
-    if ((board.pieces(PieceType::BISHOP) | board.pieces(PieceType::KNIGHT)).empty()
-        && !updates.changedPieces.hasAny(PieceSet(PieceType::KNIGHT, PieceType::BISHOP)))
+    Bitboard minors = board.pieces(PieceType::BISHOP) | board.pieces(PieceType::KNIGHT);
+
+    // if there are no minor pieces left on the board
+    if (minors.empty() && !updates.changedPieces.hasAny(PieceSet(PieceType::KNIGHT, PieceType::BISHOP)))
         return false;
+
+    // if there were no minors near the pawn
+    if (updates.type == MoveType::NONE && updates.move->movedPiece == PieceType::PAWN
+        && updates.captured != PieceType::KNIGHT && updates.captured != PieceType::BISHOP)
+    {
+        Bitboard bb = Bitboard::fromSquare(updates.move->from) | Bitboard::fromSquare(updates.move->to);
+        Bitboard affected = bb.north() | bb.south();
+        if ((affected & minors).empty())
+            return false;
+    }
 
     return true;
 }
