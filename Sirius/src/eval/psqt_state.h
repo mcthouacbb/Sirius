@@ -3,7 +3,6 @@
 #include "../defs.h"
 #include "../util/enum_array.h"
 #include "combined_psqt.h"
-#include "phase.h"
 
 #include <iostream>
 
@@ -44,7 +43,6 @@ struct Accumulator
 
 struct PsqtState
 {
-    int phase;
     ColorArray<Accumulator> accumulators;
 
     void init();
@@ -56,20 +54,17 @@ struct PsqtState
 
 inline void PsqtState::init()
 {
-    phase = TOTAL_PHASE;
     accumulators.fill({{ScorePair(0, 0), ScorePair(0, 0)}});
 }
 
 inline void PsqtState::addPiece(Color color, PieceType piece, Square square)
 {
     accumulators[color].addPiece(color, piece, square);
-    phase -= getPiecePhase(piece);
 }
 
 inline void PsqtState::removePiece(Color color, PieceType piece, Square square)
 {
     accumulators[color].removePiece(color, piece, square);
-    phase += getPiecePhase(piece);
 }
 
 inline void PsqtState::movePiece(Color color, PieceType piece, Square src, Square dst)

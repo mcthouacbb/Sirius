@@ -1,7 +1,7 @@
 #include "misc.h"
-#include "comm/move.h"
 #include "move_ordering.h"
 #include "movegen.h"
+#include "uci/move.h"
 #include <algorithm>
 #include <charconv>
 #include <chrono>
@@ -15,20 +15,26 @@ void printBoard(const Board& board)
     std::cout << "GamePly: " << board.gamePly() << std::endl;
     std::cout << "HalfMoveClock: " << board.halfMoveClock() << std::endl;
     std::cout << "CastlingRights: ";
-    if (board.castlingRights().value() != 0)
-    {
-        if (board.castlingRights().has(CastlingRights::WHITE_KING_SIDE))
-            std::cout << 'K';
-        if (board.castlingRights().has(CastlingRights::WHITE_QUEEN_SIDE))
-            std::cout << 'Q';
-        if (board.castlingRights().has(CastlingRights::BLACK_KING_SIDE))
-            std::cout << 'k';
-        if (board.castlingRights().has(CastlingRights::BLACK_QUEEN_SIDE))
-            std::cout << 'q';
-    }
+    if (board.castlingRights().value() == 0)
+        std::cout << '-';
     else
     {
-        std::cout << '-';
+        if (board.castlingRights().has(CastlingRights::WHITE_KING_SIDE))
+            std::cout << (!board.isFRC()
+                    ? 'K'
+                    : 'A' + board.castlingRookSq(Color::WHITE, CastleSide::KING_SIDE).file());
+        if (board.castlingRights().has(CastlingRights::WHITE_QUEEN_SIDE))
+            std::cout << (!board.isFRC()
+                    ? 'Q'
+                    : 'A' + board.castlingRookSq(Color::WHITE, CastleSide::QUEEN_SIDE).file());
+        if (board.castlingRights().has(CastlingRights::BLACK_KING_SIDE))
+            std::cout << (!board.isFRC()
+                    ? 'k'
+                    : 'a' + board.castlingRookSq(Color::BLACK, CastleSide::KING_SIDE).file());
+        if (board.castlingRights().has(CastlingRights::BLACK_QUEEN_SIDE))
+            std::cout << (!board.isFRC()
+                    ? 'q'
+                    : 'a' + board.castlingRookSq(Color::BLACK, CastleSide::QUEEN_SIDE).file());
     }
     std::cout << std::endl;
     std::cout << "Side to move: " << (board.sideToMove() == Color::WHITE ? "WHITE" : "BLACK")
@@ -61,7 +67,7 @@ uint64_t perft(Board& board, int depth)
         board.makeMove(move);
         uint64_t sub = perft<false>(board, depth - 1);
         if (print)
-            std::cout << comm::convMoveToUCI(board, move) << ": " << sub << std::endl;
+            std::cout << uci::convMoveToUCI(board, move) << ": " << sub << std::endl;
         count += sub;
         board.unmakeMove();
     }
@@ -78,12 +84,12 @@ void testSAN(Board& board, int depth)
 
     for (Move move : moves)
     {
-        std::string str = comm::convMoveToSAN(board, moves, move);
-        auto find = comm::findMoveFromSAN(board, moves, str.c_str());
+        std::string str = uci::convMoveToSAN(board, moves, move);
+        auto find = uci::findMoveFromSAN(board, moves, str.c_str());
         if (find.move != move)
         {
             std::cerr << board.stringRep() << std::endl;
-            std::cout << str << ' ' << comm::convMoveToUCI(board, move) << std::endl;
+            std::cout << str << ' ' << uci::convMoveToUCI(board, move) << std::endl;
             std::cerr << "No match " << std::endl;
             exit(1);
         }
@@ -91,7 +97,7 @@ void testSAN(Board& board, int depth)
         if (find.len != static_cast<int>(str.length()))
         {
             std::cerr << board.stringRep() << std::endl;
-            std::cerr << str << ' ' << comm::convMoveToUCI(board, move) << std::endl;
+            std::cerr << str << ' ' << uci::convMoveToUCI(board, move) << std::endl;
             std::cerr << "String wrong" << std::endl;
             exit(1);
         }
@@ -175,7 +181,7 @@ void testIsPseudoLegal(Board& board, int depth)
             if (!board.isPseudoLegal(move))
             {
                 std::cout << board.fenStr() << std::endl;
-                std::cout << comm::convMoveToUCI(board, move) << std::endl;
+                std::cout << uci::convMoveToUCI(board, move) << std::endl;
                 throw std::runtime_error("bruh");
             }
         }
@@ -288,16 +294,16 @@ void testSEE()
         MoveList moves;
         genMoves<MoveGenType::LEGAL>(board, moves);
 
-        auto find = comm::findMoveFromSAN(board, moves, line.c_str() + moveStart);
-        if (find.result == comm::MoveStrFind::Result::INVALID)
+        auto find = uci::findMoveFromSAN(board, moves, line.c_str() + moveStart);
+        if (find.result == uci::MoveStrFind::Result::INVALID)
         {
             throw std::runtime_error("Invalid move");
         }
-        if (find.result == comm::MoveStrFind::Result::NOT_FOUND)
+        if (find.result == uci::MoveStrFind::Result::NOT_FOUND)
         {
             throw std::runtime_error("Move not found");
         }
-        if (find.result == comm::MoveStrFind::Result::AMBIGUOUS)
+        if (find.result == uci::MoveStrFind::Result::AMBIGUOUS)
         {
             throw std::runtime_error("Ambiguous move");
         }
@@ -439,7 +445,7 @@ void testSANFind(const Board& board, const MoveList& moveList, int len)
             tmp /= charCount;
         }
 
-        comm::findMoveFromSAN(board, moveList, buf);
+        uci::findMoveFromSAN(board, moveList, buf);
     }
     delete[] buf;
 }

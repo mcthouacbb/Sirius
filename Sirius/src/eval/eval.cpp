@@ -17,6 +17,13 @@ struct EvalData
     ColorArray<ScorePair> attackWeight;
     ColorArray<int> attackCount;
     ColorArray<Bitboard> kingFlank;
+
+    void addAttacks(Color color, PieceType pieceType, Bitboard attacks)
+    {
+        attackedBy2[color] |= attacked[color] & attacks;
+        attacked[color] |= attacks;
+        attackedBy[color][pieceType] |= attacks;
+    }
 };
 
 using enum PieceType;
@@ -48,9 +55,7 @@ ScorePair evaluatePieces(const Board& board, EvalData& evalData)
         if (board.checkBlockers(us).has(sq))
             attacks &= attacks::inBetweenSquares(sq, board.kingSq(us));
 
-        evalData.attackedBy[us][piece] |= attacks;
-        evalData.attackedBy2[us] |= evalData.attacked[us] & attacks;
-        evalData.attacked[us] |= attacks;
+        evalData.addAttacks(us, piece, attacks);
 
         eval += MOBILITY[static_cast<int>(piece) - static_cast<int>(KNIGHT)]
                         [(attacks & evalData.mobilityArea[us]).popcount()];
@@ -309,12 +314,10 @@ void initEvalData(const Board& board, EvalData& evalData, const PawnStructure& p
 
     evalData.mobilityArea[us] =
         ~pawnStructure.pawnAttacks[them] & ~Bitboard::fromSquare(ourKing) & ~blockedPawns;
-    evalData.attacked[us] = evalData.attackedBy[us][PAWN] = pawnStructure.pawnAttacks[us];
+    evalData.addAttacks(us, PieceType::PAWN, pawnStructure.pawnAttacks[us]);
 
     Bitboard ourKingAtks = attacks::kingAttacks(ourKing);
-    evalData.attackedBy[us][KING] = ourKingAtks;
-    evalData.attackedBy2[us] = evalData.attacked[us] & ourKingAtks;
-    evalData.attacked[us] |= ourKingAtks;
+    evalData.addAttacks(us, PieceType::KING, ourKingAtks);
     evalData.kingRing[us] = attacks::kingRing<us>(ourKing);
     evalData.kingFlank[us] = attacks::kingFlank(us, ourKing.file());
 }
@@ -358,9 +361,12 @@ int evaluate(const Board& board, search::SearchThread* thread)
 
     int mg = eval.mg();
     int eg = eval.eg() * scale / SCALE_FACTOR_NORMAL;
-    int phase = thread->evalState.phase();
+    int phase = 4 * board.pieces(PieceType::QUEEN).popcount()
+        + 2 * board.pieces(PieceType::ROOK).popcount()
+        + (board.pieces(PieceType::BISHOP) | board.pieces(PieceType::KNIGHT)).popcount();
+    phase = std::clamp(phase, 0, 24);
 
-    return (color == WHITE ? 1 : -1) * eval::getFullEval(mg, eg, phase);
+    return (color == WHITE ? 1 : -1) * ((mg * phase + eg * (24 - phase)) / 24);
 }
 
 int evaluateSingle(const Board& board)
@@ -389,9 +395,12 @@ int evaluateSingle(const Board& board)
 
     int mg = eval.mg();
     int eg = eval.eg() * scale / SCALE_FACTOR_NORMAL;
-    int phase = evalState.phase();
+    int phase = 4 * board.pieces(PieceType::QUEEN).popcount()
+        + 2 * board.pieces(PieceType::ROOK).popcount()
+        + (board.pieces(PieceType::BISHOP) | board.pieces(PieceType::KNIGHT)).popcount();
+    phase = std::clamp(phase, 0, 24);
 
-    return (color == WHITE ? 1 : -1) * eval::getFullEval(mg, eg, phase);
+    return (color == WHITE ? 1 : -1) * ((mg * phase + eg * (24 - phase)) / 24);
 }
 
 }

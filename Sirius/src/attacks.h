@@ -55,7 +55,7 @@ struct AttackData
 extern AttackData attackData;
 
 template<Color c>
-inline Bitboard pawnEastAttacks(Bitboard pawns)
+constexpr Bitboard pawnEastAttacks(Bitboard pawns)
 {
     if constexpr (c == Color::WHITE)
         return pawns.northEast();
@@ -64,7 +64,7 @@ inline Bitboard pawnEastAttacks(Bitboard pawns)
 }
 
 template<Color c>
-inline Bitboard pawnWestAttacks(Bitboard pawns)
+constexpr Bitboard pawnWestAttacks(Bitboard pawns)
 {
     if constexpr (c == Color::WHITE)
         return pawns.northWest();
@@ -73,13 +73,13 @@ inline Bitboard pawnWestAttacks(Bitboard pawns)
 }
 
 template<Color c>
-inline Bitboard pawnAttacks(Bitboard pawns)
+constexpr Bitboard pawnAttacks(Bitboard pawns)
 {
     return pawnWestAttacks<c>(pawns) | pawnEastAttacks<c>(pawns);
 }
 
 template<Color c>
-inline Bitboard pawnPushes(Bitboard pawns)
+constexpr Bitboard pawnPushes(Bitboard pawns)
 {
     if constexpr (c == Color::WHITE)
         return pawns.north();
@@ -88,7 +88,7 @@ inline Bitboard pawnPushes(Bitboard pawns)
 }
 
 template<Color c>
-inline Bitboard fillUp(Bitboard bb)
+constexpr Bitboard fillUp(Bitboard bb)
 {
     if constexpr (c == Color::WHITE)
     {
@@ -106,7 +106,7 @@ inline Bitboard fillUp(Bitboard bb)
     }
 }
 
-inline Bitboard fillUp(Bitboard bb, Color c)
+constexpr Bitboard fillUp(Bitboard bb, Color c)
 {
     if (c == Color::WHITE)
         return attacks::fillUp<Color::WHITE>(bb);
@@ -115,7 +115,7 @@ inline Bitboard fillUp(Bitboard bb, Color c)
 }
 
 template<Color c>
-inline constexpr int pawnPushOffset()
+constexpr int pawnPushOffset()
 {
     return c == Color::WHITE ? 8 : -8;
 }
@@ -192,7 +192,7 @@ inline Bitboard queenAttacks(Square square, Bitboard blockers)
 }
 
 template<Color color>
-inline Bitboard kingRing(Square kingSq)
+constexpr Bitboard kingRing(Square kingSq)
 {
     Bitboard kingAtks = attacks::kingAttacks(kingSq);
     Bitboard kingRing = kingAtks | attacks::pawnPushes<color>(kingAtks);

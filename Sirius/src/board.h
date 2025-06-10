@@ -158,7 +158,6 @@ public:
 
     std::string stringRep() const;
     std::string fenStr() const;
-    std::string epdStr() const;
 
     void makeMove(Move move);
     void makeMove(Move move, eval::EvalState& evalState);
@@ -202,9 +201,6 @@ public:
     Bitboard attackersTo(Square square) const;
     Bitboard attackersTo(Square square, Bitboard blockers) const;
     bool castlingBlocked(Color color, CastleSide side) const;
-
-    bool isPassedPawn(Square square) const;
-    bool isIsolatedPawn(Square square) const;
 
     Bitboard pinnersBlockers(Square square, Bitboard attackers, Bitboard& pinners) const;
 

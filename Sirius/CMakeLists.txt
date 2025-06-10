@@ -44,24 +44,8 @@ set(SRCS
     "src/eval/pawn_structure.cpp"
     "src/eval/pawn_structure.h"
     "src/eval/pawn_table.h"
-    "src/eval/phase.cpp"
-    "src/eval/phase.h"
     "src/eval/psqt_state.cpp"
     "src/eval/psqt_state.h"
-
-    "src/comm/book.cpp"
-    "src/comm/book.h"
-    "src/comm/cmdline.cpp"
-    "src/comm/cmdline.h"
-    "src/comm/fen.cpp"
-    "src/comm/fen.h"
-    "src/comm/icomm.cpp"
-    "src/comm/icomm.h"
-    "src/comm/move.cpp"
-    "src/comm/move.h"
-    "src/comm/uci.cpp"
-    "src/comm/uci.h"
-    "src/comm/uci_option.h"
 
     "src/util/enum_array.h"
     "src/util/multi_array.h"
@@ -70,6 +54,14 @@ set(SRCS
     "src/util/piece_set.h"
     "src/util/prng.h"
     "src/util/string_split.h"
+
+    "src/uci/fen.cpp"
+    "src/uci/fen.h"
+    "src/uci/move.cpp"
+    "src/uci/move.h"
+    "src/uci/uci.cpp"
+    "src/uci/uci.h"
+    "src/uci/uci_option.h"
 )
 
 
