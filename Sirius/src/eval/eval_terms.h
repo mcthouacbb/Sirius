@@ -28,6 +28,8 @@ inline bool pawnShieldStormChanged(const Board& board, const EvalUpdates& update
 {
     if (!updates.changedPieces.hasAny(PieceSet(PieceType::PAWN, PieceType::KING)))
         return false;
+
+    // pawn moves not near the king cannot change the pawn shield/storm
     if (updates.type == MoveType::NONE && updates.move->movedPiece == PieceType::PAWN)
     {
         int whiteKingFile = std::clamp(board.kingSq(Color::WHITE).file(), FILE_B, FILE_G);
@@ -39,6 +41,12 @@ inline bool pawnShieldStormChanged(const Board& board, const EvalUpdates& update
             && std::abs(whiteKingFile - toFile) > 1 && std::abs(blackKingFile - toFile) > 1)
             return false;
     }
+
+    // the king moving vertically cannot change the pawn shield/storm score
+    if (updates.type == MoveType::NONE && updates.move->movedPiece == PieceType::KING
+        && updates.captured != PieceType::PAWN
+        && (updates.move->from - updates.move->to == 8 || updates.move->from - updates.move->to == -8))
+        return false;
 
     return true;
 }
