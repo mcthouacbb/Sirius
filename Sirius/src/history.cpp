@@ -85,16 +85,23 @@ int History::correctStaticEval(const Board& board, int staticEval, const SearchS
 {
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
-    int pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % CORR_HIST_ENTRIES];
-    int nonPawnStmEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(stm)]
-                                           [board.nonPawnKey(stm).value % CORR_HIST_ENTRIES];
+    int pawnEntry =
+        m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % CORR_HIST_ENTRIES].value(
+            staticEval);
+    int nonPawnStmEntry =
+        m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(stm)][board.nonPawnKey(stm).value % CORR_HIST_ENTRIES]
+            .value(staticEval);
     int nonPawnNstmEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(~stm)]
-                                            [board.nonPawnKey(~stm).value % CORR_HIST_ENTRIES];
-    int threatsEntry = m_ThreatsCorrHist[static_cast<int>(stm)][threatsKey % CORR_HIST_ENTRIES];
+                                            [board.nonPawnKey(~stm).value % CORR_HIST_ENTRIES]
+                                                .value(staticEval);
+    int threatsEntry =
+        m_ThreatsCorrHist[static_cast<int>(stm)][threatsKey % CORR_HIST_ENTRIES].value(staticEval);
     int minorPieceEntry =
-        m_MinorPieceCorrHist[static_cast<int>(stm)][board.minorPieceKey().value % CORR_HIST_ENTRIES];
+        m_MinorPieceCorrHist[static_cast<int>(stm)][board.minorPieceKey().value % CORR_HIST_ENTRIES].value(
+            staticEval);
     int majorPieceEntry =
-        m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % CORR_HIST_ENTRIES];
+        m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % CORR_HIST_ENTRIES].value(
+            staticEval);
 
     int correction = 0;
     correction += search::pawnCorrWeight * pawnEntry;
@@ -115,7 +122,8 @@ int History::correctStaticEval(const Board& board, int staticEval, const SearchS
         int value = 0;
         if (ply >= pliesBack && stack[-pliesBack].contCorrEntry != nullptr)
             value =
-                (*stack[-pliesBack].contCorrEntry)[packPieceIndices(prevPiece)][prevMove.toSq().value()];
+                (*stack[-pliesBack].contCorrEntry)[packPieceIndices(prevPiece)][prevMove.toSq().value()]
+                    .value(staticEval);
         return value;
     };
 
@@ -151,7 +159,8 @@ void History::updateNoisyStats(const Board& board, Move move, int bonus)
     updateCaptHist(board, move, bonus);
 }
 
-void History::updateCorrHist(const Board& board, int bonus, int depth, const SearchStack* stack, int ply)
+void History::updateCorrHist(
+    const Board& board, int bonus, int depth, const SearchStack* stack, int ply, int rawStaticEval)
 {
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
@@ -159,26 +168,26 @@ void History::updateCorrHist(const Board& board, int bonus, int depth, const Sea
     int weight = 2 * std::min(1 + depth, 16);
 
     auto& pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % CORR_HIST_ENTRIES];
-    pawnEntry.update(scaledBonus, weight);
+    pawnEntry.update(rawStaticEval, scaledBonus, weight);
 
     auto& nonPawnStmEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(stm)]
                                              [board.nonPawnKey(stm).value % CORR_HIST_ENTRIES];
-    nonPawnStmEntry.update(scaledBonus, weight);
+    nonPawnStmEntry.update(rawStaticEval, scaledBonus, weight);
 
     auto& nonPawnNstmEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(~stm)]
                                               [board.nonPawnKey(~stm).value % CORR_HIST_ENTRIES];
-    nonPawnNstmEntry.update(scaledBonus, weight);
+    nonPawnNstmEntry.update(rawStaticEval, scaledBonus, weight);
 
     auto& threatsEntry = m_ThreatsCorrHist[static_cast<int>(stm)][threatsKey % CORR_HIST_ENTRIES];
-    threatsEntry.update(scaledBonus, weight);
+    threatsEntry.update(rawStaticEval, scaledBonus, weight);
 
     auto& minorPieceEntry =
         m_MinorPieceCorrHist[static_cast<int>(stm)][board.minorPieceKey().value % CORR_HIST_ENTRIES];
-    minorPieceEntry.update(scaledBonus, weight);
+    minorPieceEntry.update(rawStaticEval, scaledBonus, weight);
 
     auto& majorPieceEntry =
         m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % CORR_HIST_ENTRIES];
-    majorPieceEntry.update(scaledBonus, weight);
+    majorPieceEntry.update(rawStaticEval, scaledBonus, weight);
 
     Move prevMove = ply > 0 ? stack[-1].playedMove : Move::nullmove();
     // use pawn to a1 as sentinel for null moves in contcorrhist
@@ -192,7 +201,7 @@ void History::updateCorrHist(const Board& board, int bonus, int depth, const Sea
         {
             auto& contCorrEntry =
                 (*stack[-pliesBack].contCorrEntry)[packPieceIndices(prevPiece)][prevMove.toSq().value()];
-            contCorrEntry.update(scaledBonus, weight);
+            contCorrEntry.update(rawStaticEval, scaledBonus, weight);
         }
     };
 

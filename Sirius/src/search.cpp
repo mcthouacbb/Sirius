@@ -839,7 +839,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         if (!inCheck && (bestMove == Move::nullmove() || moveIsQuiet(board, bestMove))
             && !(bound == TTEntry::Bound::LOWER_BOUND && stack->staticEval >= bestScore)
             && !(bound == TTEntry::Bound::UPPER_BOUND && stack->staticEval <= bestScore))
-            history.updateCorrHist(board, bestScore - stack->staticEval, depth, stack, rootPly);
+            history.updateCorrHist(
+                board, bestScore - stack->staticEval, depth, stack, rootPly, rawStaticEval);
 
         m_TT.store(board.zkey(), depth, rootPly, bestScore, rawStaticEval, bestMove, ttPV, bound);
     }

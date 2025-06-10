@@ -69,11 +69,11 @@ inline void HistoryEntry<MAX_VAL>::update(int bonus)
 
 constexpr int CORR_HIST_SCALE = 256;
 
-struct CorrHistEntry
+struct CorrHistValue
 {
 public:
-    CorrHistEntry() = default;
-    CorrHistEntry(int16_t value);
+    CorrHistValue() = default;
+    CorrHistValue(int16_t value);
 
     operator int() const;
 
@@ -83,22 +83,63 @@ private:
     int16_t m_Value;
 };
 
-inline CorrHistEntry::CorrHistEntry(int16_t value)
+inline CorrHistValue::CorrHistValue(int16_t value)
 {
     m_Value = value;
 }
 
-inline CorrHistEntry::operator int() const
+inline CorrHistValue::operator int() const
 {
     return m_Value;
 }
 
-inline void CorrHistEntry::update(int target, int weight)
+inline void CorrHistValue::update(int target, int weight)
 {
     int newValue = (m_Value * (256 - weight) + target * weight) / 256;
     newValue = std::clamp(
         newValue, m_Value - search::maxCorrHistUpdate, m_Value + search::maxCorrHistUpdate);
     m_Value = static_cast<int16_t>(std::clamp(newValue, -search::maxCorrHist, search::maxCorrHist));
+}
+
+struct CorrHistEntry
+{
+public:
+    CorrHistEntry() = default;
+    CorrHistEntry(int16_t value);
+
+    int value(int staticEval) const;
+
+    void update(int staticEval, int target, int weight);
+
+private:
+    CorrHistValue m_Winning;
+    CorrHistValue m_Drawish;
+    CorrHistValue m_Losing;
+};
+
+inline CorrHistEntry::CorrHistEntry(int16_t value)
+    : m_Winning(value), m_Drawish(value), m_Losing(value)
+{
+}
+
+inline int CorrHistEntry::value(int staticEval) const
+{
+    if (staticEval >= 200)
+        return m_Winning;
+    else if (staticEval <= -200)
+        return m_Losing;
+    else
+        return m_Drawish;
+}
+
+inline void CorrHistEntry::update(int staticEval, int target, int weight)
+{
+    if (staticEval >= 200)
+        m_Winning.update(target, weight);
+    else if (staticEval <= -200)
+        m_Losing.update(target, weight);
+    else
+        m_Drawish.update(target, weight);
 }
 
 static constexpr int HISTORY_MAX = 16384;
@@ -164,7 +205,8 @@ public:
     void updateQuietStats(const Board& board, Move move, const SearchStack* stack, int ply, int bonus);
     void updateContHist(Move move, Piece movingPiece, const SearchStack* stack, int ply, int bonus);
     void updateNoisyStats(const Board& board, Move move, int bonus);
-    void updateCorrHist(const Board& board, int bonus, int depth, const SearchStack* stack, int ply);
+    void updateCorrHist(const Board& board, int bonus, int depth, const SearchStack* stack, int ply,
+        int rawStaticEval);
 
 private:
     int getMainHist(Move move, Bitboard threats, Color color) const;
