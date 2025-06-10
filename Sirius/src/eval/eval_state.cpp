@@ -80,7 +80,7 @@ void EvalState::push(const Board& board, const EvalUpdates& updates)
     else
         currEntry().pawnStructure = oldEntry.pawnStructure;
 
-    if (eval_terms::pawnShieldStormChanged(updates))
+    if (eval_terms::pawnShieldStormChanged(board, updates))
     {
         currEntry().pawnShieldStorm[WHITE] = evaluateStormShield<WHITE>(board);
         currEntry().pawnShieldStorm[BLACK] = evaluateStormShield<BLACK>(board);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../bitboard.h"
+#include "../board.h"
 #include "../defs.h"
 #include "eval_state.h"
 #include <bitset>
@@ -23,9 +24,23 @@ inline bool pawnStructureChanged(const EvalUpdates& updates)
     return updates.changedPieces.has(PieceType::PAWN);
 }
 
-inline bool pawnShieldStormChanged(const EvalUpdates& updates)
+inline bool pawnShieldStormChanged(const Board& board, const EvalUpdates& updates)
 {
-    return updates.changedPieces.hasAny(PieceSet(PieceType::PAWN, PieceType::KING));
+    if (!updates.changedPieces.hasAny(PieceSet(PieceType::PAWN, PieceType::KING)))
+        return false;
+    if (updates.type == MoveType::NONE && updates.move->movedPiece == PieceType::PAWN)
+    {
+        int whiteKingFile = std::clamp(board.kingSq(Color::WHITE).file(), FILE_B, FILE_G);
+        int blackKingFile = std::clamp(board.kingSq(Color::BLACK).file(), FILE_B, FILE_G);
+
+        int fromFile = updates.move->from.file();
+        int toFile = updates.move->to.file();
+        if (std::abs(whiteKingFile - fromFile) > 1 && std::abs(blackKingFile - fromFile) > 1
+            && std::abs(whiteKingFile - toFile) > 1 && std::abs(blackKingFile - toFile) > 1)
+            return false;
+    }
+
+    return true;
 }
 
 inline bool knightOutpostsChanged(const EvalUpdates& updates)
