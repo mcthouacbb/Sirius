@@ -48,6 +48,12 @@ inline bool rookOpenChanged(const EvalUpdates& updates)
         && (updates.move->from - updates.move->to == 8 || updates.move->from - updates.move->to == -8))
         return false;
 
+    // moving a rook along a file cannot change the openness of a file
+    if (updates.type == MoveType::NONE && updates.move->movedPiece == PieceType::ROOK
+        && updates.captured != PieceType::PAWN && updates.captured != PieceType::ROOK
+        && (updates.move->from - updates.move->to) % 8 == 0)
+        return false;
+
     return true;
 }
 
