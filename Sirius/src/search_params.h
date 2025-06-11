@@ -85,7 +85,7 @@ SEARCH_PARAM(contCorr7Weight, 159, 96, 768, 64);
 
 SEARCH_PARAM(aspInitDelta, 8, 5, 30, 4);
 SEARCH_PARAM(minAspDepth, 6, 3, 7, 1);
-SEARCH_PARAM(aspWideningFactor, 3, 1, 32, 2);
+SEARCH_PARAM(aspWideningFactor, 48, 1, 512, 32);
 
 SEARCH_PARAM(minIIRDepth, 4, 2, 9, 1);
 
