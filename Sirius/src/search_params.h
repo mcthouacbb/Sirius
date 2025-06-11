@@ -110,6 +110,12 @@ SEARCH_PARAM(probcutMinDepth, 5, 4, 7, 1);
 SEARCH_PARAM(probcutBetaMargin, 201, 100, 300, 15);
 SEARCH_PARAM(probcutReduction, 4, 3, 6, 1);
 
+SEARCH_PARAM(mvvPawn, 800, -20000, 20000, 200);
+SEARCH_PARAM(mvvKnight, 2400, -20000, 20000, 200);
+SEARCH_PARAM(mvvBishop, 2400, -20000, 20000, 200);
+SEARCH_PARAM(mvvRook, 4800, -20000, 20000, 200);
+SEARCH_PARAM(mvvQueen, 7200, -20000, 20000, 200);
+
 SEARCH_PARAM(fpBaseMargin, 149, 60, 360, 12);
 SEARCH_PARAM(fpDepthMargin, 123, 10, 180, 12);
 SEARCH_PARAM(fpHistDivisor, 400, 256, 512, 16);

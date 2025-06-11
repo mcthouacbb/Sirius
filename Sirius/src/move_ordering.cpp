@@ -8,12 +8,22 @@ namespace
 
 int mvv(const Board& board, Move move)
 {
-    constexpr int MVV_VALUES[6] = {800, 2400, 2400, 4800, 7200};
-
-    int dstPiece = static_cast<int>(move.type() == MoveType::ENPASSANT
-            ? PieceType::PAWN
-            : getPieceType(board.pieceAt(move.toSq())));
-    return MVV_VALUES[dstPiece];
+    PieceType dstPiece = move.type() == MoveType::ENPASSANT
+        ? PieceType::PAWN
+        : getPieceType(board.pieceAt(move.toSq()));
+    switch (dstPiece)
+    {
+        case PieceType::PAWN:
+            return search::mvvPawn;
+        case PieceType::KNIGHT:
+            return search::mvvKnight;
+        case PieceType::BISHOP:
+            return search::mvvBishop;
+        case PieceType::ROOK:
+            return search::mvvRook;
+        case PieceType::QUEEN:
+            return search::mvvQueen;
+    }
 }
 
 int promotionBonus(Move move)
