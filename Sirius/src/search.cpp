@@ -664,7 +664,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         // singular extensions(~81 elo STC, ~91 elo LTC)
         if (doSE)
         {
-            int sBeta = std::max(-SCORE_MATE, ttData.score - sBetaScale * depth / 16);
+            int sBeta = std::max(-SCORE_MATE, ttData.score - sBetaScale * depth / 64);
             int sDepth = (depth - 1) / 2;
             stack->excludedMove = ttData.move;
 
