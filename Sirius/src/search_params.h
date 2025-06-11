@@ -119,6 +119,11 @@ SEARCH_PARAM(noisyFpMaxDepth, 5, 2, 9, 1);
 SEARCH_PARAM(noisyFPBaseMargin, 5, -100, 200, 10);
 SEARCH_PARAM(noisyFpDepthMargin, 122, 10, 360, 12);
 
+SEARCH_PARAM(lmpImpBase, 512, 128, 2048, 64);
+SEARCH_PARAM(lmpImpDepth, 256, 64, 512, 48);
+SEARCH_PARAM(lmpNonImpBase, 512, 128, 2048, 64);
+SEARCH_PARAM(lmpNonImpDepth, 128, 64, 512, 48);
+
 SEARCH_PARAM(lmpMinMovesBase, 2, 2, 7, 1);
 
 SEARCH_PARAM(seePruneMarginNoisy, -95, -120, -30, 6);
