@@ -1,7 +1,7 @@
 #include "search_params.h"
 
 #ifdef EXTERNAL_TUNE
-#include "comm/uci.h"
+#include "uci/uci.h"
 #endif
 
 #include "util/multi_array.h"

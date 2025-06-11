@@ -5,6 +5,8 @@
 #include <functional>
 #include <string>
 
+#define EXTERNAL_TUNE
+
 namespace search
 {
 
@@ -83,9 +85,9 @@ SEARCH_PARAM(contCorr5Weight, 200, 96, 768, 64);
 SEARCH_PARAM(contCorr6Weight, 173, 96, 768, 64);
 SEARCH_PARAM(contCorr7Weight, 159, 96, 768, 64);
 
-SEARCH_PARAM(aspInitDelta, 8, 5, 30, 4);
+SEARCH_PARAM(aspInitDelta, 8, 5, 30, 2);
 SEARCH_PARAM(minAspDepth, 6, 3, 7, 1);
-SEARCH_PARAM(aspWideningFactor, 48, 1, 512, 32);
+SEARCH_PARAM(aspWideningFactor, 48, 1, 512, 24);
 
 SEARCH_PARAM(minIIRDepth, 4, 2, 9, 1);
 
@@ -129,8 +131,6 @@ SEARCH_PARAM(lmpImpBase, 512, 128, 2048, 64);
 SEARCH_PARAM(lmpImpDepth, 256, 64, 512, 48);
 SEARCH_PARAM(lmpNonImpBase, 512, 128, 2048, 64);
 SEARCH_PARAM(lmpNonImpDepth, 128, 64, 512, 48);
-
-SEARCH_PARAM(lmpMinMovesBase, 2, 2, 7, 1);
 
 SEARCH_PARAM(seePruneMarginNoisy, -95, -120, -30, 6);
 SEARCH_PARAM(seePruneMarginQuiet, -58, -120, -30, 6);
