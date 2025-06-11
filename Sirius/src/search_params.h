@@ -64,7 +64,7 @@ SEARCH_PARAM(histMalusQuadratic, 320, 1, 1536, 64);
 SEARCH_PARAM(histMalusLinear, 258, 64, 384, 32);
 SEARCH_PARAM(histMalusOffset, 66, -384, 768, 64);
 
-SEARCH_PARAM(histBetaMargin, 45, 30, 120, 5);
+SEARCH_PARAM(histBetaMargin, 45, 10, 120, 5);
 
 // 256 corrhist units = 1 eval unit
 SEARCH_PARAM(maxCorrHist, 8329, 6144, 24576, 512);
@@ -83,16 +83,16 @@ SEARCH_PARAM(contCorr5Weight, 200, 96, 768, 64);
 SEARCH_PARAM(contCorr6Weight, 173, 96, 768, 64);
 SEARCH_PARAM(contCorr7Weight, 159, 96, 768, 64);
 
-SEARCH_PARAM(aspInitDelta, 8, 8, 30, 4);
+SEARCH_PARAM(aspInitDelta, 8, 5, 30, 4);
 SEARCH_PARAM(minAspDepth, 6, 3, 7, 1);
 SEARCH_PARAM(aspWideningFactor, 3, 1, 32, 2);
 
 SEARCH_PARAM(minIIRDepth, 4, 2, 9, 1);
 
 SEARCH_PARAM(rfpMaxDepth, 8, 4, 10, 1);
-SEARCH_PARAM(rfpImpMargin, 30, 30, 80, 8);
+SEARCH_PARAM(rfpImpMargin, 30, 20, 80, 8);
 SEARCH_PARAM(rfpNonImpMargin, 84, 50, 100, 8);
-SEARCH_PARAM(rfpOppWorsening, 15, 10, 100, 8);
+SEARCH_PARAM(rfpOppWorsening, 15, 5, 100, 8);
 SEARCH_PARAM(rfpHistDivisor, 413, 256, 512, 16);
 
 SEARCH_PARAM(razoringMaxDepth, 3, 1, 5, 1);
