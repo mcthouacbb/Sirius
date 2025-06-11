@@ -54,15 +54,15 @@ SEARCH_PARAM(bmStabilityScale, 959, 200, 1600, 40);
 SEARCH_PARAM(bmStabilityOffset, 283, 100, 1000, 40);
 SEARCH_PARAM(bmStabilityPower, -160, -250, -120, 8);
 
-SEARCH_PARAM(maxHistBonus, 2074, 1024, 3072, 256);
-SEARCH_PARAM(histBonusQuadratic, 8, 1, 8, 1);
+SEARCH_PARAM(maxHistBonus, 2074, 512, 3072, 256);
+SEARCH_PARAM(histBonusQuadratic, 512, 1, 1536, 64);
 SEARCH_PARAM(histBonusLinear, 212, 64, 384, 32);
-SEARCH_PARAM(histBonusOffset, 159, 64, 768, 64);
+SEARCH_PARAM(histBonusOffset, 159, -384, 768, 64);
 
-SEARCH_PARAM(maxHistMalus, 1024, 1024, 3072, 256);
-SEARCH_PARAM(histMalusQuadratic, 5, 1, 8, 1);
+SEARCH_PARAM(maxHistMalus, 1024, 512, 3072, 256);
+SEARCH_PARAM(histMalusQuadratic, 320, 1, 1536, 64);
 SEARCH_PARAM(histMalusLinear, 258, 64, 384, 32);
-SEARCH_PARAM(histMalusOffset, 66, 64, 768, 64);
+SEARCH_PARAM(histMalusOffset, 66, -384, 768, 64);
 
 SEARCH_PARAM(histBetaMargin, 45, 30, 120, 5);
 
