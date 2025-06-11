@@ -726,7 +726,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             if (score > alpha && reduced < newDepth)
             {
                 bool doDeeper =
-                    score > bestScore + doDeeperMarginBase + doDeeperMarginDepth * newDepth / 16;
+                    score > bestScore + doDeeperMarginBase + doDeeperMarginDepth * newDepth / 64;
                 bool doShallower = score < bestScore + doShallowerMargin;
                 newDepth += doDeeper - doShallower;
                 score = -search(thread, newDepth, stack + 1, -alpha - 1, -alpha, false, !cutnode);

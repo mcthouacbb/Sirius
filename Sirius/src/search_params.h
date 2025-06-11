@@ -146,7 +146,7 @@ SEARCH_PARAM(lmrQuietHistDivisor, 9037, 4096, 16384, 512);
 SEARCH_PARAM(lmrNoisyHistDivisor, 5955, 2048, 16384, 512);
 
 SEARCH_PARAM(doDeeperMarginBase, 35, 15, 55, 5);
-SEARCH_PARAM(doDeeperMarginDepth, 36, 8, 96, 5);
+SEARCH_PARAM(doDeeperMarginDepth, 144, 32, 384, 16);
 
 SEARCH_PARAM(doShallowerMargin, 8, 2, 15, 1);
 
