@@ -516,7 +516,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             && stack->staticEval >= beta + nmpEvalBaseMargin - nmpEvalDepthMargin * depth
             && nonPawns.multiple())
         {
-            int r = nmpBaseReduction + depth / nmpDepthReductionScale
+            int r = (nmpBaseReduction + depth * nmpDepthReductionScale) / 256
                 + std::min((stack->eval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
             makeNullMove(thread, stack);
             int nullScore = -search(thread, depth - r, stack + 1, -beta, -beta + 1, false, !cutnode);
