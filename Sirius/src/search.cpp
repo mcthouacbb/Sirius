@@ -850,7 +850,46 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 // quiescence search(~187 elo)
 int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int beta, bool pvNode)
 {
-    return eval::evaluate(thread.board, &thread);
+    stack->pvLength = 0;
+    int staticEval = eval::evaluate(thread.board, &thread);
+
+    if (staticEval >= beta)
+        return staticEval;
+
+    if (staticEval > alpha)
+        alpha = staticEval;
+
+    MoveList moves;
+    genMoves<MoveGenType::NOISY>(thread.board, moves);
+
+    int bestScore = staticEval;
+
+    for (Move move : moves)
+    {
+        if (!thread.board.isLegal(move))
+            continue;
+
+        makeMove(thread, stack, move, thread.history.getNoisyStats(thread.board, move));
+        int score = -qsearch(thread, stack, -beta, -alpha, pvNode);
+        unmakeMove(thread, stack);
+
+        if (score > bestScore)
+        {
+            bestScore = score;
+        }
+
+        if (score > alpha)
+        {
+            alpha = score;
+        }
+
+        if (score >= beta)
+        {
+            break;
+        }
+    }
+
+    return bestScore;
 }
 
 }
