@@ -11,6 +11,7 @@ int mvv(const Board& board, Move move)
     PieceType dstPiece = move.type() == MoveType::ENPASSANT
         ? PieceType::PAWN
         : getPieceType(board.pieceAt(move.toSq()));
+    assert(dstPiece != PieceType::NONE && dstPiece != PieceType::KING);
     switch (dstPiece)
     {
         case PieceType::PAWN:
@@ -24,6 +25,7 @@ int mvv(const Board& board, Move move)
         case PieceType::QUEEN:
             return search::mvvQueen;
     }
+    return 0;
 }
 
 int promotionBonus(Move move)
