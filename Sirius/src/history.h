@@ -111,13 +111,29 @@ using ContHist = MultiArray<CHEntry, 12, 64>;
 // capture history(~19 elo)
 using CaptHist = MultiArray<HistoryEntry<HISTORY_MAX>, 7, 12, 64, 2, 2>;
 
-// correction history(~104 elo)
 constexpr int CORR_HIST_ENTRIES = 16384;
-using PawnCorrHist = MultiArray<CorrHistEntry, 2, CORR_HIST_ENTRIES>;
-using NonPawnCorrHist = MultiArray<CorrHistEntry, 2, 2, CORR_HIST_ENTRIES>;
-using ThreatsCorrHist = MultiArray<CorrHistEntry, 2, CORR_HIST_ENTRIES>;
-using MinorPieceCorrHist = MultiArray<CorrHistEntry, 2, CORR_HIST_ENTRIES>;
-using MajorPieceCorrHist = MultiArray<CorrHistEntry, 2, CORR_HIST_ENTRIES>;
+
+struct CorrHist
+{
+    CorrHistEntry& get(Color color, uint64_t key)
+    {
+        return data[static_cast<int>(color)][key % CORR_HIST_ENTRIES];
+    }
+
+    const CorrHistEntry& get(Color color, uint64_t key) const
+    {
+        return data[static_cast<int>(color)][key % CORR_HIST_ENTRIES];
+    }
+
+    MultiArray<CorrHistEntry, 2, CORR_HIST_ENTRIES> data;
+};
+
+// correction history(~104 elo)
+using PawnCorrHist = CorrHist;
+using NonPawnCorrHist = ColorArray<CorrHist>;
+using ThreatsCorrHist = CorrHist;
+using MinorPieceCorrHist = CorrHist;
+using MajorPieceCorrHist = CorrHist;
 using ContCorrEntry = MultiArray<CorrHistEntry, 12, 64>;
 using ContCorrHist = MultiArray<ContCorrEntry, 12, 64>;
 
