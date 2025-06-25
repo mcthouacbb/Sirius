@@ -374,7 +374,7 @@ int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prev
             else
                 return searchScore;
         }
-        delta += delta * aspWideningFactor / 16;
+        delta += delta * aspWideningFactor / 256;
     }
 }
 
@@ -516,7 +516,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             && stack->staticEval >= beta + nmpEvalBaseMargin - nmpEvalDepthMargin * depth
             && nonPawns.multiple())
         {
-            int r = nmpBaseReduction + depth / nmpDepthReductionScale
+            int r = (nmpBaseReduction + depth * nmpDepthReductionScale) / 256
                 + std::min((stack->eval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
             makeNullMove(thread, stack);
             int nullScore = -search(thread, depth - r, stack + 1, -beta, -beta + 1, false, !cutnode);
@@ -636,8 +636,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             }
 
             // late move pruning(~23 elo)
-            if (!pvNode && !inCheck
-                && movesPlayed >= lmpMinMovesBase + depth * depth / (improving ? 1 : 2))
+            int lmpMargin = improving ? (lmpImpBase + depth * depth * lmpImpDepth) / 256
+                                      : (lmpNonImpBase + depth * depth * lmpNonImpDepth) / 256;
+            if (!pvNode && !inCheck && movesPlayed >= lmpMargin)
                 break;
 
             // static exchange evaluation pruning(~5 elo)
@@ -664,7 +665,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         // singular extensions(~81 elo STC, ~91 elo LTC)
         if (doSE)
         {
-            int sBeta = std::max(-SCORE_MATE, ttData.score - sBetaScale * depth / 16);
+            int sBeta = std::max(-SCORE_MATE, ttData.score - sBetaScale * depth / 64);
             int sDepth = (depth - 1) / 2;
             stack->excludedMove = ttData.move;
 
@@ -726,7 +727,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             if (score > alpha && reduced < newDepth)
             {
                 bool doDeeper =
-                    score > bestScore + doDeeperMarginBase + doDeeperMarginDepth * newDepth / 16;
+                    score > bestScore + doDeeperMarginBase + doDeeperMarginDepth * newDepth / 64;
                 bool doShallower = score < bestScore + doShallowerMargin;
                 newDepth += doDeeper - doShallower;
                 score = -search(thread, newDepth, stack + 1, -alpha - 1, -alpha, false, !cutnode);

@@ -28,7 +28,7 @@ int main(int argc, char** argv)
     std::getline(std::cin, mode);
 
 #ifdef EXTERNAL_TUNE
-    else if (mode == "wfconfig")
+    if (mode == "wfconfig")
     {
         search::printWeatherFactoryConfig();
     }
