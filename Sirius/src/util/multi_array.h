@@ -6,6 +6,7 @@
 // stormphrax yoink
 namespace internal
 {
+
 template<typename T, size_t N, size_t... Ns>
 struct MultiArrayImpl
 {
@@ -17,6 +18,7 @@ struct MultiArrayImpl<T, N>
 {
     using Type = std::array<T, N>;
 };
+
 }
 
 template<typename T, size_t... Ns>

@@ -34,7 +34,7 @@ void fillHistTable(std::array<T, N>& arr, int value)
 
 int historyBonus(int depth)
 {
-    int bonus = search::histBonusQuadratic * depth * depth;
+    int bonus = search::histBonusQuadratic * depth * depth / 64;
     bonus += search::histBonusLinear * depth;
     bonus -= search::histBonusOffset;
     // formula from berserk
@@ -43,7 +43,7 @@ int historyBonus(int depth)
 
 int historyMalus(int depth)
 {
-    int malus = search::histMalusQuadratic * depth * depth;
+    int malus = search::histMalusQuadratic * depth * depth / 64;
     malus += search::histMalusLinear * depth;
     malus -= search::histMalusOffset;
     // formula from berserk

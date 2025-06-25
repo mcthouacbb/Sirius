@@ -39,8 +39,8 @@ ScorePair PawnStructure::evaluate(const Board& board)
         Square sq = pawns.poplsb();
         Square push = sq + attacks::pawnPushOffset<us>();
         Bitboard attacks = attacks::pawnAttacks(us, sq);
-        Bitboard support =
-            attacks::passedPawnMask(them, push) & attacks::isolatedPawnMask(sq) & ourPawns;
+        Bitboard neighbors = attacks::isolatedPawnMask(sq) & ourPawns;
+        Bitboard support = attacks::passedPawnMask(them, push) & neighbors;
         Bitboard threats = attacks & theirPawns;
         Bitboard pushThreats = attacks::pawnPushes<us>(attacks) & theirPawns;
         Bitboard defenders = attacks::pawnAttacks(them, sq) & ourPawns;
@@ -49,9 +49,10 @@ ScorePair PawnStructure::evaluate(const Board& board)
 
         bool blocked = theirPawns.has(push);
         bool doubled = ourPawns.has(push);
+        bool isolated = neighbors.empty();
         bool backwards = (blocked || pushThreats.any()) && support.empty();
 
-        if (board.isPassedPawn(sq))
+        if (stoppers.empty())
             passedPawns |= Bitboard::fromSquare(sq);
         else if (stoppers == (pushThreats | threats) && phalanx.popcount() >= pushThreats.popcount())
         {
@@ -62,7 +63,7 @@ ScorePair PawnStructure::evaluate(const Board& board)
         if (doubled && threats.empty())
             eval += DOUBLED_PAWN[sq.file()];
 
-        if (threats.empty() && board.isIsolatedPawn(sq))
+        if (threats.empty() && isolated)
             eval += ISOLATED_PAWN[sq.file()];
         else if (backwards)
             eval += BACKWARDS_PAWN[sq.relativeRank<us>()];

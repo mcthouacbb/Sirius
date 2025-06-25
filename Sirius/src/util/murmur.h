@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdint>
 
 constexpr uint64_t murmurHash3(uint64_t key)

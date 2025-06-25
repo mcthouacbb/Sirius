@@ -49,7 +49,6 @@ public:
     ScorePair psqtScore(const Board& board, Color c) const;
     ScorePair pawnShieldStormScore(Color c) const;
     const PawnStructure& pawnStructure() const;
-    int phase() const;
 
 private:
     void init(const Board& board, PawnTable* pawnTable);

@@ -112,10 +112,7 @@ done:
                 rookSq--;
             }
             m_CastlingData.setRookSquare(color, CastleSide::KING_SIDE, rookSq);
-            if (color == Color::WHITE)
-                currState().castlingRights |= CastlingRights::WHITE_KING_SIDE;
-            else
-                currState().castlingRights |= CastlingRights::BLACK_KING_SIDE;
+            currState().castlingRights |= CastlingRights(color, CastleSide::KING_SIDE);
         }
         else if (c == 'q')
         {
@@ -126,10 +123,7 @@ done:
                 rookSq++;
             }
             m_CastlingData.setRookSquare(color, CastleSide::QUEEN_SIDE, rookSq);
-            if (color == Color::WHITE)
-                currState().castlingRights |= CastlingRights::WHITE_QUEEN_SIDE;
-            else
-                currState().castlingRights |= CastlingRights::BLACK_QUEEN_SIDE;
+            currState().castlingRights |= CastlingRights(color, CastleSide::QUEEN_SIDE);
         }
         else if (c >= 'a' && c <= 'h')
         {
@@ -138,20 +132,7 @@ done:
             CastleSide side =
                 file > kingSq(color).file() ? CastleSide::KING_SIDE : CastleSide::QUEEN_SIDE;
             m_CastlingData.setRookSquare(color, side, Square(kingSq(color).rank(), file));
-            if (side == CastleSide::KING_SIDE)
-            {
-                if (color == Color::WHITE)
-                    currState().castlingRights |= CastlingRights::WHITE_KING_SIDE;
-                else
-                    currState().castlingRights |= CastlingRights::BLACK_KING_SIDE;
-            }
-            else
-            {
-                if (color == Color::WHITE)
-                    currState().castlingRights |= CastlingRights::WHITE_QUEEN_SIDE;
-                else
-                    currState().castlingRights |= CastlingRights::BLACK_QUEEN_SIDE;
-            }
+            currState().castlingRights |= CastlingRights(color, side);
         }
     }
 
@@ -276,63 +257,6 @@ std::string Board::fenStr() const
     return fen;
 }
 
-std::string Board::epdStr() const
-{
-    std::string epd = "";
-    int lastFile;
-    for (int j = 56; j >= 0; j -= 8)
-    {
-        lastFile = -1;
-        for (int i = j; i < j + 8; i++)
-        {
-            Piece piece = currState().squares[i];
-            if (piece != Piece::NONE)
-            {
-                int diff = i - j - lastFile;
-                if (diff > 1)
-                    epd += static_cast<char>((diff - 1) + '0');
-                epd += pieceChars[static_cast<int>(piece)];
-                lastFile = i - j;
-            }
-        }
-        int diff = 8 - lastFile;
-        if (diff > 1)
-            epd += static_cast<char>((diff - 1) + '0');
-        if (j != 0)
-            epd += '/';
-    }
-
-    epd += ' ';
-
-    epd += m_SideToMove == Color::WHITE ? "w " : "b ";
-
-    if (currState().castlingRights.value() == 0)
-        epd += '-';
-    else
-    {
-        if (currState().castlingRights.has(CastlingRights::WHITE_KING_SIDE))
-            epd += 'K';
-        if (currState().castlingRights.has(CastlingRights::WHITE_QUEEN_SIDE))
-            epd += 'Q';
-        if (currState().castlingRights.has(CastlingRights::BLACK_KING_SIDE))
-            epd += 'k';
-        if (currState().castlingRights.has(CastlingRights::BLACK_QUEEN_SIDE))
-            epd += 'q';
-    }
-
-    epd += ' ';
-
-    if (currState().epSquare == -1)
-        epd += '-';
-    else
-    {
-        epd += static_cast<char>((currState().epSquare & 7) + 'a');
-        epd += static_cast<char>((currState().epSquare >> 3) + '1');
-    }
-
-    return epd;
-}
-
 template<bool updateEval>
 void Board::makeMove(Move move, eval::EvalState* evalState)
 {
@@ -341,10 +265,6 @@ void Board::makeMove(Move move, eval::EvalState* evalState)
 
     currState().halfMoveClock = prev.halfMoveClock + 1;
     currState().pliesFromNull = prev.pliesFromNull + 1;
-    currState().epSquare = prev.epSquare;
-    currState().castlingRights = prev.castlingRights;
-    currState().zkey = prev.zkey;
-    currState().pawnKey = prev.pawnKey;
 
     m_GamePly++;
 
@@ -476,9 +396,6 @@ void Board::makeNullMove()
     currState().halfMoveClock = prev.halfMoveClock + 1;
     currState().pliesFromNull = 0;
     currState().epSquare = -1;
-    currState().castlingRights = prev.castlingRights;
-    currState().zkey = prev.zkey;
-    currState().pawnKey = prev.pawnKey;
     currState().repetitions = 0;
     currState().lastRepetition = 0;
 
@@ -624,20 +541,6 @@ bool Board::castlingBlocked(Color color, CastleSide side) const
     return (m_CastlingData.blockSquares(color, side) & allPieces()).any();
 }
 
-bool Board::isPassedPawn(Square square) const
-{
-    Piece pce = pieceAt(square);
-    Bitboard mask = attacks::passedPawnMask(getPieceColor(pce), square);
-    return (mask & pieces(~getPieceColor(pce), PieceType::PAWN)).empty();
-}
-
-bool Board::isIsolatedPawn(Square square) const
-{
-    Piece pce = pieceAt(square);
-    Bitboard mask = attacks::isolatedPawnMask(square);
-    return (mask & pieces(getPieceColor(pce), PieceType::PAWN)).empty();
-}
-
 Bitboard Board::pinnersBlockers(Square square, Bitboard attackers, Bitboard& pinners) const
 {
     Bitboard queens = pieces(PieceType::QUEEN);
@@ -678,6 +581,7 @@ bool Board::see(Move move, int margin) const
     int value = 0;
     switch (move.type())
     {
+        // TODO: Handle FRC since rook can be attacked after castling
         case MoveType::CASTLE:
             // rook and king cannot be attacked after castle
             return 0 >= margin;

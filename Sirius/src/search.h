@@ -127,7 +127,7 @@ struct SearchThread
 class Search
 {
 public:
-    Search(Board& board);
+    Search();
     ~Search();
 
     void newGame();
@@ -159,7 +159,6 @@ private:
     void makeNullMove(SearchThread& thread, SearchStack* stack);
     void unmakeNullMove(SearchThread& thread, SearchStack* stack);
 
-    Board& m_Board;
     std::atomic_bool m_ShouldStop;
     TT m_TT;
     TimeManager m_TimeMan;
