@@ -2,36 +2,6 @@
 #include "search.h"
 #include "zobrist.h"
 
-namespace
-{
-
-template<int MAX_VAL, size_t N>
-void fillHistTable(std::array<HistoryEntry<MAX_VAL>, N>& arr, int value)
-{
-    std::fill(arr.begin(), arr.end(), value);
-}
-
-template<size_t N>
-void fillHistTable(std::array<CorrHistEntry, N>& arr, int value)
-{
-    std::fill(arr.begin(), arr.end(), value);
-}
-
-template<size_t N>
-void fillHistTable(std::array<int, N>& arr, int value)
-{
-    std::fill(arr.begin(), arr.end(), value);
-}
-
-template<typename T, size_t N>
-void fillHistTable(std::array<T, N>& arr, int value)
-{
-    for (auto& elem : arr)
-        fillHistTable(elem, value);
-}
-
-}
-
 int historyBonus(int depth)
 {
     int bonus = search::histBonusQuadratic * depth * depth / 64;
@@ -52,15 +22,15 @@ int historyMalus(int depth)
 
 void History::clear()
 {
-    fillHistTable(m_MainHist, 0);
-    fillHistTable(m_ContHist, 0);
-    fillHistTable(m_CaptHist, 0);
-    fillHistTable(m_PawnCorrHist, 0);
-    fillHistTable(m_NonPawnCorrHist, 0);
-    fillHistTable(m_ThreatsCorrHist, 0);
-    fillHistTable(m_MinorPieceCorrHist, 0);
-    fillHistTable(m_MajorPieceCorrHist, 0);
-    fillHistTable(m_ContCorrHist, 0);
+    std::memset(&m_MainHist, 0, sizeof(m_MainHist));
+    std::memset(&m_ContHist, 0, sizeof(m_ContHist));
+    std::memset(&m_CaptHist, 0, sizeof(m_CaptHist));
+    std::memset(&m_PawnCorrHist, 0, sizeof(m_PawnCorrHist));
+    std::memset(&m_NonPawnCorrHist, 0, sizeof(m_NonPawnCorrHist));
+    std::memset(&m_ThreatsCorrHist, 0, sizeof(m_ThreatsCorrHist));
+    std::memset(&m_MinorPieceCorrHist, 0, sizeof(m_MinorPieceCorrHist));
+    std::memset(&m_MajorPieceCorrHist, 0, sizeof(m_MajorPieceCorrHist));
+    std::memset(&m_ContCorrHist, 0, sizeof(m_ContCorrHist));
 }
 
 int History::getQuietStats(
@@ -85,16 +55,12 @@ int History::correctStaticEval(const Board& board, int staticEval, const SearchS
 {
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
-    int pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % CORR_HIST_ENTRIES];
-    int nonPawnStmEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(stm)]
-                                           [board.nonPawnKey(stm).value % CORR_HIST_ENTRIES];
-    int nonPawnNstmEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(~stm)]
-                                            [board.nonPawnKey(~stm).value % CORR_HIST_ENTRIES];
-    int threatsEntry = m_ThreatsCorrHist[static_cast<int>(stm)][threatsKey % CORR_HIST_ENTRIES];
-    int minorPieceEntry =
-        m_MinorPieceCorrHist[static_cast<int>(stm)][board.minorPieceKey().value % CORR_HIST_ENTRIES];
-    int majorPieceEntry =
-        m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % CORR_HIST_ENTRIES];
+    int pawnEntry = m_PawnCorrHist.get(stm, board.pawnKey().value);
+    int nonPawnStmEntry = m_NonPawnCorrHist[stm].get(stm, board.nonPawnKey(stm).value);
+    int nonPawnNstmEntry = m_NonPawnCorrHist[stm].get(~stm, board.nonPawnKey(~stm).value);
+    int threatsEntry = m_ThreatsCorrHist.get(stm, threatsKey);
+    int minorPieceEntry = m_MinorPieceCorrHist.get(stm, board.minorPieceKey().value);
+    int majorPieceEntry = m_MajorPieceCorrHist.get(stm, board.majorPieceKey().value);
 
     int correction = 0;
     correction += search::pawnCorrWeight * pawnEntry;
@@ -158,26 +124,22 @@ void History::updateCorrHist(const Board& board, int bonus, int depth, const Sea
     int scaledBonus = bonus * CORR_HIST_SCALE;
     int weight = 2 * std::min(1 + depth, 16);
 
-    auto& pawnEntry = m_PawnCorrHist[static_cast<int>(stm)][board.pawnKey().value % CORR_HIST_ENTRIES];
+    auto& pawnEntry = m_PawnCorrHist.get(stm, board.pawnKey().value);
     pawnEntry.update(scaledBonus, weight);
 
-    auto& nonPawnStmEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(stm)]
-                                             [board.nonPawnKey(stm).value % CORR_HIST_ENTRIES];
+    auto& nonPawnStmEntry = m_NonPawnCorrHist[stm].get(stm, board.nonPawnKey(stm).value);
     nonPawnStmEntry.update(scaledBonus, weight);
 
-    auto& nonPawnNstmEntry = m_NonPawnCorrHist[static_cast<int>(stm)][static_cast<int>(~stm)]
-                                              [board.nonPawnKey(~stm).value % CORR_HIST_ENTRIES];
+    auto& nonPawnNstmEntry = m_NonPawnCorrHist[stm].get(~stm, board.nonPawnKey(~stm).value);
     nonPawnNstmEntry.update(scaledBonus, weight);
 
-    auto& threatsEntry = m_ThreatsCorrHist[static_cast<int>(stm)][threatsKey % CORR_HIST_ENTRIES];
+    auto& threatsEntry = m_ThreatsCorrHist.get(stm, threatsKey);
     threatsEntry.update(scaledBonus, weight);
 
-    auto& minorPieceEntry =
-        m_MinorPieceCorrHist[static_cast<int>(stm)][board.minorPieceKey().value % CORR_HIST_ENTRIES];
+    auto& minorPieceEntry = m_MinorPieceCorrHist.get(stm, board.minorPieceKey().value);
     minorPieceEntry.update(scaledBonus, weight);
 
-    auto& majorPieceEntry =
-        m_MajorPieceCorrHist[static_cast<int>(stm)][board.majorPieceKey().value % CORR_HIST_ENTRIES];
+    auto& majorPieceEntry = m_MajorPieceCorrHist.get(stm, board.majorPieceKey().value);
     majorPieceEntry.update(scaledBonus, weight);
 
     Move prevMove = ply > 0 ? stack[-1].playedMove : Move::nullmove();
