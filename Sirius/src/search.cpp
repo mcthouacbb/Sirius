@@ -747,6 +747,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
         unmakeMove(thread, stack);
 
+        if (m_ShouldStop)
+            return alpha;
+
         if (root)
         {
             RootMove& rootMove = thread.findRootMove(move);
@@ -762,9 +765,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 rootMove.score = SCORE_NONE;
             }
         }
-
-        if (m_ShouldStop)
-            return alpha;
 
         if (score > bestScore)
         {
