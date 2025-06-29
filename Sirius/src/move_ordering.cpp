@@ -56,7 +56,7 @@ int MoveOrdering::scoreNoisy(Move move) const
     {
         int hist = m_History.getNoisyStats(m_Board, move);
         int score = hist + mvv(m_Board, move);
-        return score + CAPTURE_SCORE * m_Board.see(move, -score / 32);
+        return score + CAPTURE_SCORE;
     }
     else
     {
@@ -118,6 +118,7 @@ ScoredMove MoveOrdering::selectMove()
                 m_MoveScores[i] = scoreNoisy(m_Moves[i]);
 
             m_NoisyEnd = m_Moves.size();
+            m_BadNoisyEnd = 0;
 
             // fallthrough
         case GOOD_NOISY:
@@ -126,10 +127,12 @@ ScoredMove MoveOrdering::selectMove()
                 ScoredMove scoredMove = selectHighest();
                 if (scoredMove.move == m_TTMove)
                     continue;
-                if (scoredMove.score < PROMOTION_SCORE - 50000)
+                if (moveIsCapture(m_Board, scoredMove.move)
+                    && !m_Board.see(scoredMove.move, -(scoredMove.score - CAPTURE_SCORE) / 32))
                 {
-                    m_Curr--;
-                    break;
+                    m_Moves[m_BadNoisyEnd] = scoredMove.move;
+                    m_MoveScores[m_BadNoisyEnd++] = scoredMove.score - CAPTURE_SCORE;
+                    continue;
                 }
                 return scoredMove;
             }
@@ -166,8 +169,10 @@ ScoredMove MoveOrdering::selectMove()
             // fallthrough
         case GEN_QUIETS:
             ++m_Stage;
+            m_Curr = 0;
+            m_Moves.resize(m_BadNoisyEnd);
             genMoves<MoveGenType::QUIET>(m_Board, m_Moves);
-            for (uint32_t i = m_NoisyEnd; i < m_Moves.size(); i++)
+            for (uint32_t i = m_BadNoisyEnd; i < m_Moves.size(); i++)
                 m_MoveScores[i] = scoreQuiet(m_Moves[i]);
 
             // fallthrough

@@ -71,5 +71,6 @@ private:
 
     uint32_t m_Curr;
     uint32_t m_NoisyEnd;
+    uint32_t m_BadNoisyEnd;
     MovePickStage m_Stage;
 };
