@@ -959,7 +959,6 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
                     stack->pv[i + 1] = (stack + 1)->pv[i];
 
                 alpha = bestScore;
-                bound = TTEntry::Bound::EXACT;
             }
 
             if (bestScore >= beta)
