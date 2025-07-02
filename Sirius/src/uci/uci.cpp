@@ -10,6 +10,7 @@
 #include "fen.h"
 #include "move.h"
 #include "uci.h"
+#include "wdl.h"
 
 #include "../search_params.h"
 
@@ -34,7 +35,8 @@ UCI::UCI()
         {"Hash", UCIOption("Hash", {64, 64, 1, 33554432}, hashCallback)},
         {"Threads", UCIOption("Threads", {1, 1, 1, 2048}, threadsCallback)},
         {"MoveOverhead", UCIOption("MoveOverhead", {10, 10, 1, 100})},
-        {"PrettyPrint", UCIOption("PrettyPrint", UCIOption::BoolData{true})}};
+        {"PrettyPrint", UCIOption("PrettyPrint", UCIOption::BoolData{true})},
+        {"UCI_ShowWDL", UCIOption("UCI_ShowWDL", UCIOption::BoolData{true})}};
 #ifdef EXTERNAL_TUNE
     for (auto& param : search::searchParams())
     {
@@ -136,18 +138,42 @@ void UCI::prettyPrintSearchInfo(const SearchInfo& info) const
     {
         if (info.score > 0)
         {
-            std::cout << "    #" << std::left << std::setw(4) << std::setfill(' ')
+            std::cout << "     #" << std::left << std::setw(4) << std::setfill(' ')
                       << ((SCORE_MATE - info.score) + 1) / 2;
         }
         else
         {
-            std::cout << "   #-" << std::left << std::setw(4) << std::setfill(' ')
+            std::cout << "    #-" << std::left << std::setw(4) << std::setfill(' ')
                       << (info.score + SCORE_MATE) / 2;
         }
     }
     else
     {
-        std::cout << std::right << std::setw(5) << std::setfill(' ') << info.score << "cp  ";
+        std::cout << std::right << std::setw(6) << std::setfill(' ') << info.score << "cp  ";
+    }
+
+    if (m_Options.at("UCI_ShowWDL").boolValue())
+    {
+        if (isMateScore(info.score) && info.score > 0)
+        {
+            std::cout << " ( 100%W   0%D   0%L ) ";
+        }
+        else if (isMateScore(info.score) && info.score < 0)
+        {
+            std::cout << " (   0%W   0%D 100%L ) ";
+        }
+        else
+        {
+            WDL wdl = expectedWDL(m_Board, info.score);
+
+            int win = static_cast<int>(std::round(wdl.winProb * 100));
+            int loss = static_cast<int>(std::round(wdl.lossProb * 100));
+            int draw = 100 - win - loss;
+
+            std::cout << " ( " << std::setw(3) << std::setfill(' ') << win << "%W " << std::setw(3)
+                      << std::setfill(' ') << draw << "%D " << std::setw(3) << std::setfill(' ')
+                      << loss << "%L ) ";
+        }
     }
 
     Board board;
@@ -187,7 +213,29 @@ void UCI::printUCISearchInfo(const SearchInfo& info) const
     }
     else
     {
-        std::cout << "cp " << info.score;
+        std::cout << "cp " << normalizedScore(info.score);
+    }
+
+    if (m_Options.at("UCI_ShowWDL").boolValue())
+    {
+        if (isMateScore(info.score) && info.score > 0)
+        {
+            std::cout << " wdl 1000 0 0";
+        }
+        else if (isMateScore(info.score) && info.score < 0)
+        {
+            std::cout << " wdl 0 0 1000";
+        }
+        else
+        {
+            WDL wdl = expectedWDL(m_Board, info.score);
+
+            int win = static_cast<int>(std::round(wdl.winProb * 1000));
+            int loss = static_cast<int>(std::round(wdl.lossProb * 1000));
+            int draw = 1000 - win - loss;
+
+            std::cout << " wdl " << win << ' ' << draw << ' ' << loss;
+        }
     }
 
     std::cout << " pv ";
