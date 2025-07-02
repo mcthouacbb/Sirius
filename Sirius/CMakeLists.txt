@@ -47,6 +47,10 @@ set(SRCS
     "src/eval/psqt_state.cpp"
     "src/eval/psqt_state.h"
 
+    "src/eval/bae/bae.h"
+    "src/eval/bae/bae.cpp"
+    "src/eval/bae/bae_params.h"
+
     "src/util/enum_array.h"
     "src/util/multi_array.h"
     "src/util/murmur.h"

@@ -1,8 +1,10 @@
 #include "eval.h"
 #include "../attacks.h"
 #include "../util/enum_array.h"
+#include "bae/bae.h"
 #include "endgame.h"
 #include "pawn_structure.h"
+
 
 namespace eval
 {
@@ -340,7 +342,8 @@ void nonIncrementalEval(const Board& board, const EvalState& evalState,
 
 int evaluate(const Board& board, search::SearchThread* thread)
 {
-    auto endgameEval = endgames::probeEvalFunc(board);
+    return evaluateSingle(board);
+    /*auto endgameEval = endgames::probeEvalFunc(board);
     if (endgameEval != nullptr)
         return (*endgameEval)(board, thread->evalState);
 
@@ -366,12 +369,13 @@ int evaluate(const Board& board, search::SearchThread* thread)
         + (board.pieces(PieceType::BISHOP) | board.pieces(PieceType::KNIGHT)).popcount();
     phase = std::clamp(phase, 0, 24);
 
-    return (color == WHITE ? 1 : -1) * ((mg * phase + eg * (24 - phase)) / 24);
+    return (color == WHITE ? 1 : -1) * ((mg * phase + eg * (24 - phase)) / 24);*/
 }
 
 int evaluateSingle(const Board& board)
 {
-    EvalState evalState;
+    return Eval::evaluate(board);
+    /*EvalState evalState;
     evalState.initSingle(board);
 
     auto endgame = endgames::probeEvalFunc(board);
@@ -400,7 +404,7 @@ int evaluateSingle(const Board& board)
         + (board.pieces(PieceType::BISHOP) | board.pieces(PieceType::KNIGHT)).popcount();
     phase = std::clamp(phase, 0, 24);
 
-    return (color == WHITE ? 1 : -1) * ((mg * phase + eg * (24 - phase)) / 24);
+    return (color == WHITE ? 1 : -1) * ((mg * phase + eg * (24 - phase)) / 24);*/
 }
 
 }
