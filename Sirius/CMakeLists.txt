@@ -62,6 +62,7 @@ set(SRCS
     "src/uci/uci.cpp"
     "src/uci/uci.h"
     "src/uci/uci_option.h"
+    "src/uci/wdl.h"
 )
 
 

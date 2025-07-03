@@ -25,7 +25,7 @@ HEADERS := Sirius/src/attacks.h Sirius/src/bench.h Sirius/src/bitboard.h Sirius/
 	Sirius/src/util/static_vector.h Sirius/src/util/string_split.h Sirius/src/eval/combined_psqt.h \
 	Sirius/src/eval/endgame.h Sirius/src/eval/eval_constants.h Sirius/src/eval/eval_state.h Sirius/src/eval/eval_terms.h \
 	Sirius/src/eval/eval.h Sirius/src/eval/pawn_structure.h Sirius/src/eval/pawn_table.h Sirius/src/eval/psqt_state.h \
-	Sirius/src/uci/fen.h Sirius/src/uci/move.h Sirius/src/uci/uci_option.h Sirius/src/uci/uci.h
+	Sirius/src/uci/fen.h Sirius/src/uci/move.h Sirius/src/uci/uci_option.h Sirius/src/uci/uci.h Sirius/src/uci/wdl.h
 
 CXX := clang++
 CXXFLAGS := -std=c++20 -O3 -flto -DNDEBUG -march=native
