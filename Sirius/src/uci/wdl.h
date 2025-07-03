@@ -6,9 +6,8 @@
 
 namespace uci
 {
-
-constexpr double as[] = {-412.68396633, 1138.34624335, -1064.76420906, 441.46636437};
-constexpr double bs[] = {-109.72871711, 309.87996679, -275.78524440, 116.98051856};
+constexpr double as[] = {-420.12493420, 1155.97899531, -1074.82879152, 441.44515956};
+constexpr double bs[] = {-106.59407292, 300.77010455, -267.28444080, 114.30281819};
 constexpr int NormalizeToPawnValue = 102;
 
 constexpr int normalizedScore(int raw)
