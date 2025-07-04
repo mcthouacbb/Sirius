@@ -1,17 +1,18 @@
 # Sirius
 
 A UCI chess engine written in c++.
-Sirius does not come with a gui. To play against it, you should download a chess GUI that supports the Universal Chess Interface(UCI) protocol
+Sirius does not come with a gui. To play against it or use it, you should download a chess GUI or tournament runner that supports the Universal Chess Interface(UCI) protocol
 
 ## Strength
 See [Releases](https://github.com/mcthouacbb/Sirius/releases)
 
 | Version | Release Date | [CCRL Blitz](https://www.computerchess.org.uk/ccrl/404/) | [CCRL 40/15](https://www.computerchess.org.uk/ccrl/4040/) |
 | --- | --- | --- | --- |
-| 5.0 | 2023-10-27 | N/A | 2677 |
-| 6.0 | 2024-02-17 | N/A | 2963 |
+| 5.0 | 2023-10-27 | N/A | 2678 |
+| 6.0 | 2024-02-17 | N/A | 2965 |
 | 7.0 | 2024-07-09 | N/A | 3221 |
-| 8.0 | 2024-10-05 | 3438 | 3352 |
+| 8.0 | 2024-10-05 | 3435 | 3357 |
+| 9.0 | 2025-07-03 | N/A | N/A |
 
 ## Usage
 Sirius can be used with any UCI Chess GUI or matchrunner including Arena, Cutechess, Cutechess-cli, Fastchess, Banksia, and more.
@@ -39,18 +40,27 @@ You can also play it on [Lichess](https://lichess.org/@/Sirius_Bot)(Though it's 
     - Minors behind pawns
     - Bishop pair
     - Bishop same color pawns
+    - Long diagonal bishop
     - Pawn Structure
         - Passed pawns
         - Isolated pawns
+        - Backwards pawns
+        - Doubled pawns
         - Defended pawns
         - Pawn phalanxes
         - Passed pawn Distance to Kings
+        - Candidate passed pawns
     - King Safety
-        -  King-pawn storm/shield
-        -  Safe and unsafe checks from enemy pieces
-        -  King ring attacks
+        - King-pawn storm/shield
+        - Safe and unsafe checks from enemy pieces
+        - King ring attacks
+        - Weak squares in the king ring
+        - Attacks and defenses to the king flank
+        - Existence of attacking queen
+        - Quadratic safety adjustment formula
     - Complexity eval
     - Endgame scaling
+    - Specialized evaluation and scaling for known endgames
     - Tuning via Texel's Tuning Method
         - [https://github.com/mcthouacbb/Sirius-Tune-2](https://github.com/mcthouacbb/Sirius-Tune-2)
 - Search
@@ -70,6 +80,7 @@ You can also play it on [Lichess](https://lichess.org/@/Sirius_Bot)(Though it's 
         - SEE Pruning
         - Quiescence Search Futility Pruning
         - Quiescence Search Late Move Pruning
+        - Quiet Check Evasions
     - Transposition Table
     - Selectivity
         - Check Extensions
@@ -82,17 +93,19 @@ You can also play it on [Lichess](https://lichess.org/@/Sirius_Bot)(Though it's 
         - Reverse Futility Pruning
         - Null Move Pruning
         - Futility Pruning
+        - Noisy/Capture Futility Pruning
         - Late Move Pruning
         - History Pruning
         - SEE Pruning
         - Late Move Reductions
         - Internal Iterative Reductions
+        - Probcut
     - Miscellaneous
-      	- Improving Heuristic
-      	- Node count time management
+        - Improving Heuristic
+        - Node count time management
         - Best move stability time management
-      	- tt score adjustment
-      	- Various static evaluation correction histories
+        - tt score adjustment
+        - Various static evaluation correction histories
         - TTPV
         - Staged move generation
         - Lazy SMP
@@ -111,8 +124,10 @@ You can also play it on [Lichess](https://lichess.org/@/Sirius_Bot)(Though it's 
 ## UCI options
 | Name             |  Type   | Default value |       Valid values        | Description                                                                          |
 |:-----------------|:-------:|:-------------:|:-------------------------:|:------------------------------------------------------------------------------------:|
-| Hash             | integer |      64       |        [1, 65536]         | Size of the transposition table in Megabytes.                                        |
-| Threads          | integer |       1       |         [1, 256]          | Number of threads used to search.                                                    |
+| UCI_Chess960     | boolean |   false       |        true, false        | Whether to enable chess960(usually set by the GUI/match runner)                      |
+| UCI_ShowWDL      | boolean |    true       |        true, false        | Whether to show estimated win, draw, and loss probabilities when printing info       |
+| Hash             | integer |      64       |       [1, 33554432]       | Size of the transposition table in Megabytes.                                        |
+| Threads          | integer |       1       |        [1, 2048]          | Number of threads used to search.                                                    |
 | MoveOverhead     | integer |      10       |         [1, 100]          | Amount of time subtracted to account for overhead between engine and gui.            |
 | PrettyPrint      | boolean |   false       |        true, false        | Whether to pretty print uci output. Defaults to true if UCI is not first command     |
 
@@ -139,6 +154,7 @@ Do not use the Makefile, it is intended for building with OpenBench only
 - [Berserk](https://github.com/jhonnold/berserk), another good reference engine
 - [Weiss](https://github.com/TerjeKir/Weiss)
 - [Stash](https://github.com/mhouppin/stash-bot)
+- [Perseus](https://github.com/TheRealGioviok/Perseus-Engine)
 - Crafty
 - Zurichess
 - The Engine Programming Discord Server, and the people in it
