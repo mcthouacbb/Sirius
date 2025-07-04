@@ -12,6 +12,7 @@ See [Releases](https://github.com/mcthouacbb/Sirius/releases)
 | 6.0 | 2024-02-17 | N/A | 2965 |
 | 7.0 | 2024-07-09 | N/A | 3221 |
 | 8.0 | 2024-10-05 | 3435 | 3357 |
+| 9.0 | 2025-07-03 | N/A | N/A |
 
 ## Usage
 Sirius can be used with any UCI Chess GUI or matchrunner including Arena, Cutechess, Cutechess-cli, Fastchess, Banksia, and more.
