@@ -482,7 +482,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         }
     }
 
-    int corrplexity = inCheck ? 0 : stack->eval - rawStaticEval;
+    int corrplexity = inCheck ? 0 : std::abs(stack->eval - rawStaticEval);
     bool ttPV = pvNode || (ttHit && ttData.pv);
     // Improving heuristic(~31 elo)
     bool improving = !inCheck && rootPly > 1 && stack->staticEval > (stack - 2)->staticEval;
@@ -720,7 +720,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             reduction -= ttPV;
             reduction -= givesCheck;
             reduction -= inCheck;
-            reduction -= std::abs(corrplexity) > lmrCorrplexityMargin;
+            reduction -= corrplexity > lmrCorrplexityMargin;
             reduction += cutnode;
             reduction += (stack + 1)->failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin);
 
