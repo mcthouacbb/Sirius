@@ -10,14 +10,14 @@ constexpr double as[] = {-420.12493420, 1155.97899531, -1074.82879152, 441.44515
 constexpr double bs[] = {-106.59407292, 300.77010455, -267.28444080, 114.30281819};
 constexpr int NormalizeToPawnValue = 102;
 
-constexpr int normalizedScore(int raw)
+inline int normalizedScore(int raw)
 {
     if (isMateScore(raw))
         return raw;
     return raw * 100 / NormalizeToPawnValue;
 }
 
-double expectedWinRate(double a, double b, int score)
+inline double expectedWinRate(double a, double b, int score)
 {
     return 1.0 / (1.0 + std::exp(-(static_cast<double>(score) - a) / b));
 }
@@ -28,7 +28,7 @@ struct WDL
     float lossProb;
 };
 
-WDL expectedWDL(const Board& board, int score)
+inline WDL expectedWDL(const Board& board, int score)
 {
     int material = board.pieces(PieceType::PAWN).popcount()
         + 3 * (board.pieces(PieceType::KNIGHT) | board.pieces(PieceType::BISHOP)).popcount()
