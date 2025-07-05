@@ -276,10 +276,12 @@ ScorePair evaluateComplexity(const Board& board, const PawnStructure& pawnStruct
     Bitboard pawns = board.pieces(PAWN);
     bool pawnsBothSides = (pawns & KING_SIDE).any() && (pawns & QUEEN_SIDE).any();
     bool pawnEndgame = board.allPieces() == (pawns | board.pieces(KING));
+    int pawnTension = (pawnStructure.pawnAttacks[WHITE] & board.pieces(BLACK, PAWN)).popcount()
+        + (pawnStructure.pawnAttacks[BLACK] & board.pieces(WHITE, PAWN)).popcount();
 
     ScorePair complexity = COMPLEXITY_PAWNS * pawns.popcount()
         + COMPLEXITY_PAWNS_BOTH_SIDES * pawnsBothSides + COMPLEXITY_PAWN_ENDGAME * pawnEndgame
-        + COMPLEXITY_OFFSET;
+        + COMPLEXITY_PAWN_TENSION * pawnTension + COMPLEXITY_OFFSET;
 
     int egSign = (eval.eg() > 0) - (eval.eg() < 0);
 
