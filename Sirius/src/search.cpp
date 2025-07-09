@@ -596,6 +596,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     int movesPlayed = 0;
     bool noisyTTMove = ttData.move != Move::nullmove() && !moveIsQuiet(board, ttData.move);
 
+    thread.evalState.update(board);
+
     ScoredMove scoredMove = {};
     while ((scoredMove = ordering.selectMove()).score != MoveOrdering::NO_MOVE)
     {
