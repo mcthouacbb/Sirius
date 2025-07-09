@@ -129,29 +129,45 @@ void EvalState::update(const Board& board)
     using enum Color;
 
     if (!currEntry().pawnStructure.updated)
+    {
+        currEntry().pawnStructure.updated = true;
         evaluatePawns(board, currEntry().pawnStructure.data, m_PawnTable);
+    }
 
     if (!currEntry().pawnShieldStorm.updated)
     {
+        currEntry().pawnShieldStorm.updated = true;
         currEntry().pawnShieldStorm.data[WHITE] = evaluateStormShield<WHITE>(board);
         currEntry().pawnShieldStorm.data[BLACK] = evaluateStormShield<BLACK>(board);
     }
 
     if (!currEntry().knightOutposts.updated)
+    {
+        currEntry().knightOutposts.updated = true;
         currEntry().knightOutposts.data =
             evaluateKnightOutposts<WHITE>(board, currEntry().pawnStructure.data)
             - evaluateKnightOutposts<BLACK>(board, currEntry().pawnStructure.data);
+    }
 
     if (!currEntry().bishopPawns.updated)
+    {
+        currEntry().bishopPawns.updated = true;
         currEntry().bishopPawns.data =
             evaluateBishopPawns<WHITE>(board) - evaluateBishopPawns<BLACK>(board);
+    }
 
     if (!currEntry().rookOpen.updated)
+    {
+        currEntry().rookOpen.updated = true;
         currEntry().rookOpen.data = evaluateRookOpen<WHITE>(board) - evaluateRookOpen<BLACK>(board);
+    }
 
     if (!currEntry().minorBehindPawn.updated)
+    {
+        currEntry().minorBehindPawn.updated = true;
         currEntry().minorBehindPawn.data =
             evaluateMinorBehindPawn<WHITE>(board) - evaluateMinorBehindPawn<BLACK>(board);
+    }
 }
 
 ScorePair EvalState::score(const Board& board) const
