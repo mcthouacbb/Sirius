@@ -367,7 +367,7 @@ void Board::makeMove(Move move, eval::EvalState* evalState)
     calcRepetitions();
 
     if constexpr (updateEval)
-        evalState->push(*this, updates);
+        evalState->push(updates);
 }
 
 template<bool updateEval>

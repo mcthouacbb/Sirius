@@ -42,21 +42,32 @@ void EvalState::init(const Board& board, PawnTable* pawnTable)
         }
     }
 
-    evaluatePawns(board, currEntry().pawnStructure, m_PawnTable);
-    currEntry().pawnShieldStorm[WHITE] = evaluateStormShield<WHITE>(board);
-    currEntry().pawnShieldStorm[BLACK] = evaluateStormShield<BLACK>(board);
-    currEntry().knightOutposts = evaluateKnightOutposts<WHITE>(board, currEntry().pawnStructure)
-        - evaluateKnightOutposts<BLACK>(board, currEntry().pawnStructure);
-    currEntry().bishopPawns = evaluateBishopPawns<WHITE>(board) - evaluateBishopPawns<BLACK>(board);
-    currEntry().rookOpen = evaluateRookOpen<WHITE>(board) - evaluateRookOpen<BLACK>(board);
-    currEntry().minorBehindPawn =
+    evaluatePawns(board, currEntry().pawnStructure.data, m_PawnTable);
+    currEntry().pawnStructure.updated = true;
+
+    currEntry().pawnShieldStorm.data[WHITE] = evaluateStormShield<WHITE>(board);
+    currEntry().pawnShieldStorm.data[BLACK] = evaluateStormShield<BLACK>(board);
+    currEntry().pawnShieldStorm.updated = true;
+
+    currEntry().knightOutposts.data =
+        evaluateKnightOutposts<WHITE>(board, currEntry().pawnStructure.data)
+        - evaluateKnightOutposts<BLACK>(board, currEntry().pawnStructure.data);
+    currEntry().knightOutposts.updated = true;
+
+    currEntry().bishopPawns.data =
+        evaluateBishopPawns<WHITE>(board) - evaluateBishopPawns<BLACK>(board);
+    currEntry().bishopPawns.updated = true;
+
+    currEntry().rookOpen.data = evaluateRookOpen<WHITE>(board) - evaluateRookOpen<BLACK>(board);
+    currEntry().rookOpen.updated = true;
+
+    currEntry().minorBehindPawn.data =
         evaluateMinorBehindPawn<WHITE>(board) - evaluateMinorBehindPawn<BLACK>(board);
+    currEntry().minorBehindPawn.updated = true;
 }
 
-void EvalState::push(const Board& board, const EvalUpdates& updates)
+void EvalState::push(const EvalUpdates& updates)
 {
-    using enum Color;
-
     const auto& oldEntry = currEntry();
     m_CurrEntry++;
 
@@ -75,40 +86,37 @@ void EvalState::push(const Board& board, const EvalUpdates& updates)
         currEntry().psqtState.removePiece(getPieceColor(add.piece), getPieceType(add.piece), add.square);
     }
 
-    if (updates.changedPieces.hasAny(eval_terms::pawnStructure.deps))
-        evaluatePawns(board, currEntry().pawnStructure, m_PawnTable);
-    else
+    if (oldEntry.pawnStructure.updated && !updates.changedPieces.hasAny(eval_terms::pawnStructure.deps))
         currEntry().pawnStructure = oldEntry.pawnStructure;
-
-    if (updates.changedPieces.hasAny(eval_terms::pawnShieldStorm.deps))
-    {
-        currEntry().pawnShieldStorm[WHITE] = evaluateStormShield<WHITE>(board);
-        currEntry().pawnShieldStorm[BLACK] = evaluateStormShield<BLACK>(board);
-    }
     else
+        currEntry().pawnStructure.updated = false;
+
+    if (oldEntry.pawnShieldStorm.updated
+        && !updates.changedPieces.hasAny(eval_terms::pawnShieldStorm.deps))
         currEntry().pawnShieldStorm = oldEntry.pawnShieldStorm;
-
-    if (updates.changedPieces.hasAny(eval_terms::knightOutposts.deps))
-        currEntry().knightOutposts = evaluateKnightOutposts<WHITE>(board, currEntry().pawnStructure)
-            - evaluateKnightOutposts<BLACK>(board, currEntry().pawnStructure);
     else
+        currEntry().pawnShieldStorm.updated = false;
+
+    if (oldEntry.knightOutposts.updated && !updates.changedPieces.hasAny(eval_terms::knightOutposts.deps))
         currEntry().knightOutposts = oldEntry.knightOutposts;
-
-    if (updates.changedPieces.hasAny(eval_terms::bishopPawns.deps))
-        currEntry().bishopPawns = evaluateBishopPawns<WHITE>(board) - evaluateBishopPawns<BLACK>(board);
     else
+        currEntry().knightOutposts.updated = false;
+
+    if (oldEntry.bishopPawns.updated && !updates.changedPieces.hasAny(eval_terms::bishopPawns.deps))
         currEntry().bishopPawns = oldEntry.bishopPawns;
-
-    if (updates.changedPieces.hasAny(eval_terms::rookOpen.deps))
-        currEntry().rookOpen = evaluateRookOpen<WHITE>(board) - evaluateRookOpen<BLACK>(board);
     else
+        currEntry().bishopPawns.updated = false;
+
+    if (oldEntry.rookOpen.updated && !updates.changedPieces.hasAny(eval_terms::rookOpen.deps))
         currEntry().rookOpen = oldEntry.rookOpen;
-
-    if (updates.changedPieces.hasAny(eval_terms::minorBehindPawn.deps))
-        currEntry().minorBehindPawn =
-            evaluateMinorBehindPawn<WHITE>(board) - evaluateMinorBehindPawn<BLACK>(board);
     else
+        currEntry().rookOpen.updated = false;
+
+    if (oldEntry.minorBehindPawn.updated
+        && !updates.changedPieces.hasAny(eval_terms::minorBehindPawn.deps))
         currEntry().minorBehindPawn = oldEntry.minorBehindPawn;
+    else
+        currEntry().minorBehindPawn.updated = false;
 }
 
 void EvalState::pop()
@@ -116,11 +124,41 @@ void EvalState::pop()
     m_CurrEntry--;
 }
 
+void EvalState::update(const Board& board)
+{
+    using enum Color;
+
+    if (!currEntry().pawnStructure.updated)
+        evaluatePawns(board, currEntry().pawnStructure.data, m_PawnTable);
+
+    if (!currEntry().pawnShieldStorm.updated)
+    {
+        currEntry().pawnShieldStorm.data[WHITE] = evaluateStormShield<WHITE>(board);
+        currEntry().pawnShieldStorm.data[BLACK] = evaluateStormShield<BLACK>(board);
+    }
+
+    if (!currEntry().knightOutposts.updated)
+        currEntry().knightOutposts.data =
+            evaluateKnightOutposts<WHITE>(board, currEntry().pawnStructure.data)
+            - evaluateKnightOutposts<BLACK>(board, currEntry().pawnStructure.data);
+
+    if (!currEntry().bishopPawns.updated)
+        currEntry().bishopPawns.data =
+            evaluateBishopPawns<WHITE>(board) - evaluateBishopPawns<BLACK>(board);
+
+    if (!currEntry().rookOpen.updated)
+        currEntry().rookOpen.data = evaluateRookOpen<WHITE>(board) - evaluateRookOpen<BLACK>(board);
+
+    if (!currEntry().minorBehindPawn.updated)
+        currEntry().minorBehindPawn.data =
+            evaluateMinorBehindPawn<WHITE>(board) - evaluateMinorBehindPawn<BLACK>(board);
+}
+
 ScorePair EvalState::score(const Board& board) const
 {
-    return currEntry().psqtState.evaluate(board) + currEntry().pawnStructure.score
-        + currEntry().knightOutposts + currEntry().bishopPawns + currEntry().rookOpen
-        + currEntry().minorBehindPawn;
+    return currEntry().psqtState.evaluate(board) + currEntry().pawnStructure.data.score
+        + currEntry().knightOutposts.data + currEntry().bishopPawns.data + currEntry().rookOpen.data
+        + currEntry().minorBehindPawn.data;
 }
 
 ScorePair EvalState::psqtScore(const Board& board, Color c) const
@@ -133,12 +171,12 @@ ScorePair EvalState::psqtScore(const Board& board, Color c) const
 
 ScorePair EvalState::pawnShieldStormScore(Color c) const
 {
-    return currEntry().pawnShieldStorm[c];
+    return currEntry().pawnShieldStorm.data[c];
 }
 
 const PawnStructure& EvalState::pawnStructure() const
 {
-    return currEntry().pawnStructure;
+    return currEntry().pawnStructure.data;
 }
 
 }

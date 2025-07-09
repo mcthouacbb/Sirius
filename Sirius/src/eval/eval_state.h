@@ -42,9 +42,10 @@ public:
     void initSingle(const Board& board);
     void init(const Board& board, PawnTable& pawnTable);
 
-    void push(const Board& board, const EvalUpdates& updates);
+    void push(const EvalUpdates& updates);
     void pop();
 
+    void update(const Board& board);
     ScorePair score(const Board& board) const;
     ScorePair psqtScore(const Board& board, Color c) const;
     ScorePair pawnShieldStormScore(Color c) const;
@@ -54,15 +55,22 @@ private:
     void init(const Board& board, PawnTable* pawnTable);
     struct StackEntry
     {
+        template<typename T>
+        struct Lazy
+        {
+            T data;
+            bool updated;
+        };
+
         EvalUpdates updates;
 
         PsqtState psqtState;
-        PawnStructure pawnStructure;
-        ColorArray<ScorePair> pawnShieldStorm;
-        ScorePair knightOutposts;
-        ScorePair bishopPawns;
-        ScorePair rookOpen;
-        ScorePair minorBehindPawn;
+        Lazy<PawnStructure> pawnStructure;
+        Lazy<ColorArray<ScorePair>> pawnShieldStorm;
+        Lazy<ScorePair> knightOutposts;
+        Lazy<ScorePair> bishopPawns;
+        Lazy<ScorePair> rookOpen;
+        Lazy<ScorePair> minorBehindPawn;
     };
 
     StackEntry& currEntry()

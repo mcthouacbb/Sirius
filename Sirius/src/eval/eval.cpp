@@ -344,6 +344,8 @@ int evaluate(const Board& board, search::SearchThread* thread)
     if (endgameEval != nullptr)
         return (*endgameEval)(board, thread->evalState);
 
+    thread->evalState.update(board);
+
     Color color = board.sideToMove();
     ScorePair eval = thread->evalState.score(board);
 
