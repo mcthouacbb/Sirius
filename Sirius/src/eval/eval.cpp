@@ -66,6 +66,11 @@ ScorePair evaluatePieces(const Board& board, EvalData& evalData)
                 KING_ATTACKER_WEIGHT[static_cast<int>(piece) - static_cast<int>(KNIGHT)];
             evalData.attackCount[us] += kingRingAtks.popcount();
         }
+        else
+        {
+            if (piece == ROOK && (Bitboard::fileBB(sq.file()) & evalData.kingRing[them]).any())
+                eval += ROOK_ON_KING_RING;
+        }
 
         if (piece == BISHOP && (attacks & CENTER_SQUARES).multiple())
             eval += LONG_DIAG_BISHOP;
