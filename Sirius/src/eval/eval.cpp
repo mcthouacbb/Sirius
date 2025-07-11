@@ -263,6 +263,9 @@ ScorePair evaluatePassedPawns(
 
             eval += OUR_PASSER_PROXIMITY[Square::chebyshev(ourKing, pushSq)];
             eval += THEIR_PASSER_PROXIMITY[Square::chebyshev(theirKing, pushSq)];
+
+            if (evalData.attacked[us].has(pushSq))
+                eval += PASSER_DEFENDED_PUSH[rank];
         }
     }
 
