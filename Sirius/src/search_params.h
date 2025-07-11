@@ -116,14 +116,15 @@ SEARCH_PARAM(mvvBishop, 2382, -20000, 20000, 200);
 SEARCH_PARAM(mvvRook, 4799, -20000, 20000, 200);
 SEARCH_PARAM(mvvQueen, 7140, -20000, 20000, 200);
 
+SEARCH_PARAM(fpMaxDepth, 8, 4, 9, 1);
 SEARCH_PARAM(fpBaseMargin, 145, 60, 360, 12);
 SEARCH_PARAM(fpDepthMargin, 130, 10, 180, 12);
 SEARCH_PARAM(fpHistDivisor, 406, 256, 512, 16);
-SEARCH_PARAM(fpMaxDepth, 8, 4, 9, 1);
 
 SEARCH_PARAM(noisyFpMaxDepth, 5, 2, 9, 1);
 SEARCH_PARAM(noisyFPBaseMargin, 1, -100, 200, 10);
 SEARCH_PARAM(noisyFpDepthMargin, 110, 10, 360, 12);
+SEARCH_PARAM(noisyFpHistDivisor, 250, 100, 512, 16);
 
 SEARCH_PARAM(lmpImpBase, 518, 128, 2048, 64);
 SEARCH_PARAM(lmpImpDepth, 301, 64, 512, 48);
