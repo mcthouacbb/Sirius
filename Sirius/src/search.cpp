@@ -625,8 +625,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 continue;
             }
 
-            // capture futility pruning
-            fpMargin = noisyFPBaseMargin + noisyFpDepthMargin * depth;
+            // noisy futility pruning
+            fpMargin = std::max(
+                noisyFPBaseMargin + noisyFpDepthMargin * depth + histScore / noisyFpHistDivisor, 20);
             if (depth <= noisyFpMaxDepth && !quiet && !inCheck && alpha < SCORE_WIN
                 && stack->staticEval + fpMargin <= alpha)
             {
