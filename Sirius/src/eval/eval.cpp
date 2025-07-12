@@ -264,6 +264,12 @@ ScorePair evaluatePassedPawns(
             eval += OUR_PASSER_PROXIMITY[Square::chebyshev(ourKing, pushSq)];
             eval += THEIR_PASSER_PROXIMITY[Square::chebyshev(theirKing, pushSq)];
 
+            Bitboard queeningPath =
+                attacks::passedPawnMask(us, passer) & Bitboard::fileBB(passer.file());
+
+            if ((evalData.attacked[them] & queeningPath).empty())
+                eval += PASSER_SAFE_QUEENING_PATH[rank];
+
             if (evalData.attacked[us].has(pushSq))
                 eval += PASSER_DEFENDED_PUSH[rank];
         }
