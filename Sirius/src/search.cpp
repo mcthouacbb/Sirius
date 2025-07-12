@@ -639,7 +639,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             // late move pruning(~23 elo)
             int lmpMargin = improving ? (lmpImpBase + depth * depth * lmpImpDepth) / 256
                                       : (lmpNonImpBase + depth * depth * lmpNonImpDepth) / 256;
-            if (!pvNode && !inCheck && movesPlayed >= lmpMargin)
+            if (!inCheck && movesPlayed >= lmpMargin)
                 break;
 
             // static exchange evaluation pruning(~5 elo)
@@ -649,7 +649,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 int max = seeCaptHistMax * depth;
                 seeMargin -= std::clamp(histScore / seeCaptHistDivisor, -max, max);
             }
-            if (!pvNode && !board.see(move, seeMargin))
+            if (!board.see(move, seeMargin))
                 continue;
 
             // history pruning(~14 elo)
