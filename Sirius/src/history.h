@@ -196,7 +196,8 @@ private:
     CaptHist m_CaptHist;
     PawnCorrHist m_PawnCorrHist;
     NonPawnCorrHist m_NonPawnCorrHist;
-    ThreatsCorrHist m_ThreatsCorrHist;
+    ThreatsCorrHist m_OurThreatsCorrHist;
+    ThreatsCorrHist m_OppThreatsCorrHist;
     MinorPieceCorrHist m_MinorPieceCorrHist;
     MajorPieceCorrHist m_MajorPieceCorrHist;
     ContCorrHist m_ContCorrHist;

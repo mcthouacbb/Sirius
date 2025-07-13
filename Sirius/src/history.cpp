@@ -27,7 +27,8 @@ void History::clear()
     std::memset(&m_CaptHist, 0, sizeof(m_CaptHist));
     std::memset(&m_PawnCorrHist, 0, sizeof(m_PawnCorrHist));
     std::memset(&m_NonPawnCorrHist, 0, sizeof(m_NonPawnCorrHist));
-    std::memset(&m_ThreatsCorrHist, 0, sizeof(m_ThreatsCorrHist));
+    std::memset(&m_OurThreatsCorrHist, 0, sizeof(m_OurThreatsCorrHist));
+    std::memset(&m_OppThreatsCorrHist, 0, sizeof(m_OppThreatsCorrHist));
     std::memset(&m_MinorPieceCorrHist, 0, sizeof(m_MinorPieceCorrHist));
     std::memset(&m_MajorPieceCorrHist, 0, sizeof(m_MajorPieceCorrHist));
     std::memset(&m_ContCorrHist, 0, sizeof(m_ContCorrHist));
@@ -54,11 +55,13 @@ int History::getNoisyStats(const Board& board, Move move) const
 int History::correctStaticEval(const Board& board, int staticEval, const SearchStack* stack, int ply) const
 {
     Color stm = board.sideToMove();
+    uint64_t ourThreatsKey = murmurHash3((board.ourThreats() & board.pieces(~stm)).value());
     uint64_t oppThreatsKey = murmurHash3((board.oppThreats() & board.pieces(stm)).value());
     int pawnEntry = m_PawnCorrHist.get(stm, board.pawnKey().value);
     int nonPawnStmEntry = m_NonPawnCorrHist[stm].get(stm, board.nonPawnKey(stm).value);
     int nonPawnNstmEntry = m_NonPawnCorrHist[stm].get(~stm, board.nonPawnKey(~stm).value);
-    int threatsEntry = m_ThreatsCorrHist.get(stm, oppThreatsKey);
+    int ourThreatsEntry = m_OurThreatsCorrHist.get(stm, ourThreatsKey);
+    int oppThreatsEntry = m_OppThreatsCorrHist.get(stm, oppThreatsKey);
     int minorPieceEntry = m_MinorPieceCorrHist.get(stm, board.minorPieceKey().value);
     int majorPieceEntry = m_MajorPieceCorrHist.get(stm, board.majorPieceKey().value);
 
@@ -66,7 +69,8 @@ int History::correctStaticEval(const Board& board, int staticEval, const SearchS
     correction += search::pawnCorrWeight * pawnEntry;
     correction += search::nonPawnStmCorrWeight * nonPawnStmEntry;
     correction += search::nonPawnNstmCorrWeight * nonPawnNstmEntry;
-    correction += search::threatsCorrWeight * threatsEntry;
+    correction += search::ourThreatsCorrWeight * ourThreatsEntry;
+    correction += search::oppThreatsCorrWeight * oppThreatsEntry;
     correction += search::minorCorrWeight * minorPieceEntry;
     correction += search::majorCorrWeight * majorPieceEntry;
 
@@ -120,6 +124,7 @@ void History::updateNoisyStats(const Board& board, Move move, int bonus)
 void History::updateCorrHist(const Board& board, int bonus, int depth, const SearchStack* stack, int ply)
 {
     Color stm = board.sideToMove();
+    uint64_t ourThreatsKey = murmurHash3((board.ourThreats() & board.pieces(~stm)).value());
     uint64_t oppThreatsKey = murmurHash3((board.oppThreats() & board.pieces(stm)).value());
     int scaledBonus = bonus * CORR_HIST_SCALE;
     int weight = 2 * std::min(1 + depth, 16);
@@ -133,8 +138,11 @@ void History::updateCorrHist(const Board& board, int bonus, int depth, const Sea
     auto& nonPawnNstmEntry = m_NonPawnCorrHist[stm].get(~stm, board.nonPawnKey(~stm).value);
     nonPawnNstmEntry.update(scaledBonus, weight);
 
-    auto& threatsEntry = m_ThreatsCorrHist.get(stm, oppThreatsKey);
-    threatsEntry.update(scaledBonus, weight);
+    auto& ourThreatsEntry = m_OurThreatsCorrHist.get(stm, ourThreatsKey);
+    ourThreatsEntry.update(scaledBonus, weight);
+
+    auto& oppThreatsEntry = m_OppThreatsCorrHist.get(stm, oppThreatsKey);
+    oppThreatsEntry.update(scaledBonus, weight);
 
     auto& minorPieceEntry = m_MinorPieceCorrHist.get(stm, board.minorPieceKey().value);
     minorPieceEntry.update(scaledBonus, weight);
