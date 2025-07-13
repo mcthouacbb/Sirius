@@ -489,7 +489,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         && stack->staticEval > -(stack - 1)->staticEval + 1;
 
     (stack + 1)->killers = {};
-    Bitboard threats = board.threats();
+    Bitboard threats = board.oppThreats();
 
     // whole node pruning(~228 elo)
     if (!pvNode && !inCheck && !excluded)

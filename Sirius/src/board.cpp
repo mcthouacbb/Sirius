@@ -1032,7 +1032,12 @@ void Board::updateCheckInfo()
 
 void Board::calcThreats()
 {
-    Color color = ~m_SideToMove;
+    calcThreats(Color::WHITE);
+    calcThreats(Color::BLACK);
+}
+
+void Board::calcThreats(Color color)
+{
     Bitboard threats = EMPTY_BB;
     Bitboard occupied = allPieces();
 
@@ -1069,7 +1074,7 @@ void Board::calcThreats()
 
     threats |= attacks::kingAttacks(kingSq(color));
 
-    currState().threats = threats;
+    currState().threats[color] = threats;
 }
 
 void Board::calcRepetitions()
