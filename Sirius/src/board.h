@@ -213,6 +213,8 @@ public:
     bool isLegal(Move move) const;
     ZKey keyAfter(Move move) const;
 
+    static constexpr int seePieceValue(PieceType type);
+
 private:
     template<bool updateEval>
     void makeMove(Move move, eval::EvalState* evalState);
@@ -231,8 +233,6 @@ private:
     void addPiece(Square pos, Piece piece, eval::EvalUpdates& updates);
     void removePiece(Square pos, eval::EvalUpdates& updates);
     void movePiece(Square src, Square dst, eval::EvalUpdates& updates);
-
-    int seePieceValue(PieceType type) const;
 
     static constexpr std::array<int, 6> SEE_PIECE_VALUES = {100, 450, 450, 675, 1300, 0};
 
@@ -437,7 +437,7 @@ inline Bitboard Board::threats() const
     return currState().threats;
 }
 
-inline int Board::seePieceValue(PieceType type) const
+constexpr int Board::seePieceValue(PieceType type)
 {
     return SEE_PIECE_VALUES[static_cast<int>(type)];
 }

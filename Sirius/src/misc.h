@@ -22,3 +22,6 @@ void testSEE();
 void runTests(Board& board, bool fast);
 
 void testSANFind(const Board& board, const MoveList& moveList, int len);
+
+int seeExact(const Board& board, Move move);
+int fullyLegalSEE(const Board& board, Move move);

@@ -449,3 +449,84 @@ void testSANFind(const Board& board, const MoveList& moveList, int len)
     }
     delete[] buf;
 }
+
+int seeExact(const Board& board, Move move)
+{
+    int lower = -Board::seePieceValue(PieceType::QUEEN) - 1;
+    int upper = Board::seePieceValue(PieceType::QUEEN) + 1;
+
+    while (true)
+    {
+        int mid = (lower + upper) / 2;
+        if (!board.see(move, mid))
+        {
+            upper = mid;
+        }
+        else if (board.see(move, mid + 1))
+        {
+            lower = mid;
+        }
+        else
+        {
+            return mid;
+        }
+    }
+}
+
+int moveGain(const Board& board, Move move)
+{
+    if (move.type() == MoveType::CASTLE)
+        return 0;
+
+    PieceType captured;
+    if (move.type() == MoveType::ENPASSANT)
+        captured = PieceType::PAWN;
+    else
+        captured = getPieceType(board.pieceAt(move.toSq()));
+
+    int result = 0;
+    if (captured != PieceType::NONE)
+        result += Board::seePieceValue(captured);
+
+    if (move.type() == MoveType::PROMOTION)
+        result += Board::seePieceValue(promoPiece(move.promotion()))
+            - Board::seePieceValue(PieceType::PAWN);
+    return result;
+}
+
+int fullyLegalSEE(Board& board, Square toSq)
+{
+    MoveList moves;
+    genMoves<MoveGenType::LEGAL>(board, moves);
+
+    int bestScore = 0;
+    for (Move move : moves)
+    {
+        if (move.toSq() != toSq)
+            continue;
+
+        if (moveIsQuiet(board, move))
+        {
+            std::cout << "wait how?" << std::endl;
+            continue;
+        }
+
+        int gain = moveGain(board, move);
+        board.makeMove(move);
+        int score = gain - fullyLegalSEE(board, toSq);
+        board.unmakeMove();
+
+        if (score > bestScore)
+            bestScore = score;
+    }
+
+    return bestScore;
+}
+
+int fullyLegalSEE(const Board& board, Move move)
+{
+    Board copy = board;
+    copy.makeMove(move);
+
+    return moveGain(board, move) - fullyLegalSEE(copy, move.toSq());
+}
