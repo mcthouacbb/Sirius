@@ -509,7 +509,7 @@ int fullyLegalSEE(Board& board, Square toSq, int ply, Stats& stats)
             continue;
 
         PieceType pt = getPieceType(board.pieceAt(move.fromSq()));
-        if (pt != PieceType::PAWN)
+        if (move.type() != MoveType::PROMOTION)
         {
             if (prevPT == PieceType::NONE)
                 prevPT = pt;
