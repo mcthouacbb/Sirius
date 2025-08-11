@@ -577,7 +577,7 @@ bool Board::see(Move move, int margin) const
     Square dst = move.toSq();
 
     Bitboard allPieces = this->allPieces() ^ Bitboard::fromSquare(src);
-    Bitboard attackers = attackersTo(dst, allPieces) ^ Bitboard::fromSquare(src);
+    Bitboard attackers = attackersTo(dst, allPieces) & ~Bitboard::fromSquare(src);
 
     int value = 0;
     switch (move.type())
