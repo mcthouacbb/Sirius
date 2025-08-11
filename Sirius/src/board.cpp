@@ -703,7 +703,7 @@ bool Board::see(Move move, int margin) const
     else
         initPinned(sideToMove);
 
-    if (pinners(~sideToMove).has(move.fromSq()))
+    if (pinners(~sideToMove).has(move.fromSq()) || multiCheckBlockers(~sideToMove).has(move.fromSq()))
         recomputePinned(~sideToMove);
     else
         initPinned(~sideToMove);
