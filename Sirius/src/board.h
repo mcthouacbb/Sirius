@@ -17,6 +17,7 @@ struct CheckInfo
     Bitboard checkers;
     std::array<Bitboard, 2> pinners;
     std::array<Bitboard, 2> blockers;
+    ColorArray<Bitboard> multiBlockers;
 };
 
 struct BoardState
@@ -202,7 +203,8 @@ public:
     Bitboard attackersTo(Square square, Bitboard blockers) const;
     bool castlingBlocked(Color color, CastleSide side) const;
 
-    Bitboard pinnersBlockers(Square square, Bitboard attackers, Bitboard& pinners) const;
+    Bitboard pinnersBlockers(Square square, Bitboard attackers, Bitboard& pinners, Bitboard& multiBlockers) const;
+    Bitboard pinnersBlockers(Square square, Bitboard occ, Bitboard attackers, Bitboard& pinners, Bitboard& multiBlockers) const;
 
     Bitboard checkers() const;
     Bitboard checkBlockers(Color color) const;
@@ -212,6 +214,8 @@ public:
     bool isPseudoLegal(Move move) const;
     bool isLegal(Move move) const;
     ZKey keyAfter(Move move) const;
+
+    static constexpr int seePieceValue(PieceType type);
 
 private:
     template<bool updateEval>
@@ -223,6 +227,7 @@ private:
     const BoardState& currState() const;
     BoardState& currState();
     Bitboard pinners(Color color) const;
+    Bitboard multiCheckBlockers(Color color) const;
 
     void updateCheckInfo();
     void calcThreats();
@@ -231,8 +236,6 @@ private:
     void addPiece(Square pos, Piece piece, eval::EvalUpdates& updates);
     void removePiece(Square pos, eval::EvalUpdates& updates);
     void movePiece(Square src, Square dst, eval::EvalUpdates& updates);
-
-    int seePieceValue(PieceType type) const;
 
     static constexpr std::array<int, 6> SEE_PIECE_VALUES = {100, 450, 450, 675, 1300, 0};
 
@@ -427,6 +430,11 @@ inline Bitboard Board::pinners(Color color) const
     return currState().checkInfo.pinners[static_cast<int>(color)];
 }
 
+inline Bitboard Board::multiCheckBlockers(Color color) const
+{
+    return currState().checkInfo.multiBlockers[color];
+}
+
 inline Bitboard Board::checkBlockers(Color color) const
 {
     return currState().checkInfo.blockers[static_cast<int>(color)];
@@ -437,7 +445,7 @@ inline Bitboard Board::threats() const
     return currState().threats;
 }
 
-inline int Board::seePieceValue(PieceType type) const
+constexpr int Board::seePieceValue(PieceType type)
 {
     return SEE_PIECE_VALUES[static_cast<int>(type)];
 }

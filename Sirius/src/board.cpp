@@ -541,7 +541,14 @@ bool Board::castlingBlocked(Color color, CastleSide side) const
     return (m_CastlingData.blockSquares(color, side) & allPieces()).any();
 }
 
-Bitboard Board::pinnersBlockers(Square square, Bitboard attackers, Bitboard& pinners) const
+Bitboard Board::pinnersBlockers(
+    Square square, Bitboard attackers, Bitboard& pinners, Bitboard& multiBlockers) const
+{
+    return pinnersBlockers(square, allPieces(), attackers, pinners, multiBlockers);
+}
+
+Bitboard Board::pinnersBlockers(Square square, Bitboard occ, Bitboard attackers, Bitboard& pinners,
+    Bitboard& multiBlockers) const
 {
     Bitboard queens = pieces(PieceType::QUEEN);
     attackers &= (attacks::rookAttacks(square, EMPTY_BB) & (pieces(PieceType::ROOK) | queens))
@@ -549,10 +556,9 @@ Bitboard Board::pinnersBlockers(Square square, Bitboard attackers, Bitboard& pin
 
     Bitboard blockers = EMPTY_BB;
     pinners = EMPTY_BB;
+    multiBlockers = EMPTY_BB;
 
-    Bitboard blockMask = allPieces() ^ attackers;
-
-    Bitboard sameColor = pieces(getPieceColor(pieceAt(square)));
+    Bitboard blockMask = occ ^ attackers;
 
     while (attackers.any())
     {
@@ -563,9 +569,10 @@ Bitboard Board::pinnersBlockers(Square square, Bitboard attackers, Bitboard& pin
         if (between.one())
         {
             blockers |= between;
-            if ((between & sameColor).any())
-                pinners |= Bitboard::fromSquare(attacker);
+            pinners |= Bitboard::fromSquare(attacker);
         }
+        else
+            multiBlockers |= between;
     }
     return blockers;
 }
@@ -573,13 +580,24 @@ Bitboard Board::pinnersBlockers(Square square, Bitboard attackers, Bitboard& pin
 // mostly from stockfish
 bool Board::see(Move move, int margin) const
 {
+    constexpr Bitboard PROMO_RANKS = RANK_1_BB | RANK_8_BB;
+    constexpr int PROMO_GAIN = seePieceValue(PieceType::QUEEN) - seePieceValue(PieceType::PAWN);
+
     Square src = move.fromSq();
     Square dst = move.toSq();
 
     Bitboard allPieces = this->allPieces() ^ Bitboard::fromSquare(src);
-    Bitboard attackers = attackersTo(dst, allPieces) ^ Bitboard::fromSquare(src);
+
+    if (move.type() == MoveType::ENPASSANT)
+    {
+        int offset = m_SideToMove == Color::WHITE ? -8 : 8;
+        allPieces ^= Bitboard::fromSquare(move.toSq() + offset);
+    }
+
+    Bitboard attackers = attackersTo(dst, allPieces) & ~Bitboard::fromSquare(src);
 
     int value = 0;
+    bool discoveredCheck = false;
     switch (move.type())
     {
         // TODO: Handle FRC since rook can be attacked after castling
@@ -593,8 +611,14 @@ bool Board::see(Move move, int margin) const
                 value = -margin;
             else
                 value = seePieceValue(type) - margin;
-            if (value < 0)
+
+            bool canPromo = PROMO_RANKS.has(move.toSq())
+                && (attackers & pieces(~sideToMove(), PieceType::PAWN)).any();
+            if (value < -PROMO_GAIN * canPromo)
                 return false;
+            if (checkBlockers(~sideToMove()).has(move.fromSq())
+                && !attacks::aligned(move.fromSq(), move.toSq(), kingSq(~sideToMove())))
+                discoveredCheck = true;
             value = seePieceValue(getPieceType(pieceAt(src))) - value;
             break;
         }
@@ -609,6 +633,9 @@ bool Board::see(Move move, int margin) const
                 value += seePieceValue(type) - margin;
             if (value < 0)
                 return false;
+            if (checkBlockers(~sideToMove()).has(move.fromSq())
+                && !attacks::aligned(move.fromSq(), move.toSq(), kingSq(~sideToMove())))
+                discoveredCheck = true;
 
             value = seePieceValue(promo) - value;
             break;
@@ -621,7 +648,10 @@ bool Board::see(Move move, int margin) const
             break;
     }
 
-    if (value <= 0)
+    bool canPromo =
+        PROMO_RANKS.has(move.toSq()) && (attackers & pieces(~sideToMove(), PieceType::PAWN)).any();
+
+    if (value <= -PROMO_GAIN * canPromo)
         return true;
 
     Color sideToMove = m_SideToMove;
@@ -631,27 +661,70 @@ bool Board::see(Move move, int margin) const
 
     bool us = false;
 
-    Bitboard whitePinned = checkBlockers(Color::WHITE) & pieces(Color::WHITE);
-    Bitboard blackPinned = checkBlockers(Color::BLACK) & pieces(Color::BLACK);
+    struct SEECheckInfo
+    {
+        ColorArray<Bitboard> blockers;
+        ColorArray<Bitboard> pinners;
+        ColorArray<Bitboard> pinned;
+        ColorArray<Bitboard> multiBlockers;
+    };
 
-    Bitboard whiteKingRay = attacks::alignedSquares(dst, kingSq(Color::WHITE));
-    Bitboard blackKingRay = attacks::alignedSquares(dst, kingSq(Color::BLACK));
+    SEECheckInfo checkInfo = {};
 
-    Bitboard whitePinnedAligned = whiteKingRay & whitePinned;
-    Bitboard blackPinnedAligned = blackKingRay & blackPinned;
+    ColorArray<Bitboard> kingRays;
+    kingRays[Color::WHITE] = attacks::alignedSquares(dst, kingSq(Color::WHITE));
+    kingRays[Color::BLACK] = attacks::alignedSquares(dst, kingSq(Color::BLACK));
 
-    Bitboard pinned = whitePinned | blackPinned;
-    Bitboard pinnedAligned = whitePinnedAligned | blackPinnedAligned;
+    auto clearPinned = [&](Color color)
+    {
+        checkInfo.pinners[color] = EMPTY_BB;
+        checkInfo.blockers[color] = EMPTY_BB;
+        checkInfo.pinned[color] = EMPTY_BB;
+        checkInfo.multiBlockers[color] = EMPTY_BB;
+    };
+
+    auto recomputePinned = [&](Color color)
+    {
+        checkInfo.pinners[color] = EMPTY_BB;
+
+        checkInfo.blockers[color] = pinnersBlockers(kingSq(color), allPieces,
+            allPieces & pieces(~color), checkInfo.pinners[color], checkInfo.multiBlockers[color]);
+
+        checkInfo.pinned[color] = checkInfo.blockers[color] & pieces(color) & ~kingRays[color];
+    };
+
+    auto initPinned = [&](Color color)
+    {
+        checkInfo.blockers[color] = checkBlockers(color);
+        checkInfo.pinned[color] = checkInfo.blockers[color] & pieces(color) & ~kingRays[color];
+        checkInfo.multiBlockers[color] = multiCheckBlockers(color);
+        checkInfo.pinners[color] = pinners(color);
+    };
+
+    if (multiCheckBlockers(sideToMove).has(move.fromSq()))
+        recomputePinned(sideToMove);
+    else
+        initPinned(sideToMove);
+
+    if (pinners(~sideToMove).has(move.fromSq()) || multiCheckBlockers(~sideToMove).has(move.fromSq()))
+        recomputePinned(~sideToMove);
+    else
+        initPinned(~sideToMove);
 
     while (true)
     {
         sideToMove = ~sideToMove;
         Bitboard stmAttackers = attackers & pieces(sideToMove);
-        if ((pinners(sideToMove) & allPieces).any())
-            stmAttackers &= ~pinned | pinnedAligned;
+        stmAttackers &= ~checkInfo.pinned[sideToMove];
+
+        if (discoveredCheck)
+            stmAttackers &= pieces(PieceType::KING);
+        discoveredCheck = false;
 
         if (stmAttackers.empty())
             return !us;
+
+        Square capturer;
 
         if (Bitboard pawns = (stmAttackers & pieces(PieceType::PAWN)); pawns.any())
         {
@@ -660,8 +733,17 @@ bool Board::see(Move move, int margin) const
             attackers ^= pawn;
             attackers |= (attacks::bishopAttacks(dst, allPieces) & allPieces & diagPieces);
 
+            capturer = pawn.lsb();
+
+            if (checkInfo.blockers[~sideToMove].has(pawn.lsb())
+                && !attacks::aligned(pawn.lsb(), move.toSq(), kingSq(~sideToMove)))
+                discoveredCheck = true;
+
             value = seePieceValue(PieceType::PAWN) - value;
-            if (value < static_cast<int>(us))
+
+            bool canPromo = PROMO_RANKS.has(move.toSq())
+                && (attackers & pieces(~sideToMove, PieceType::PAWN)).any();
+            if (value < static_cast<int>(us) - PROMO_GAIN * canPromo)
                 return us;
         }
         else if (Bitboard knights = (stmAttackers & pieces(PieceType::KNIGHT)); knights.any())
@@ -670,8 +752,16 @@ bool Board::see(Move move, int margin) const
             allPieces ^= knight;
             attackers ^= knight;
 
+            capturer = knight.lsb();
+
+            if (checkInfo.blockers[~sideToMove].has(knight.lsb()))
+                discoveredCheck = true;
+
             value = seePieceValue(PieceType::KNIGHT) - value;
-            if (value < static_cast<int>(us))
+
+            bool canPromo = PROMO_RANKS.has(move.toSq())
+                && (attackers & pieces(~sideToMove, PieceType::PAWN)).any();
+            if (value < static_cast<int>(us) - PROMO_GAIN * canPromo)
                 return us;
         }
         else if (Bitboard bishops = (stmAttackers & pieces(PieceType::BISHOP)); bishops.any())
@@ -681,8 +771,16 @@ bool Board::see(Move move, int margin) const
             attackers ^= bishop;
             attackers |= (attacks::bishopAttacks(dst, allPieces) & allPieces & diagPieces);
 
+            capturer = bishop.lsb();
+
+            if (checkInfo.blockers[~sideToMove].has(bishop.lsb()))
+                discoveredCheck = true;
+
             value = seePieceValue(PieceType::BISHOP) - value;
-            if (value < static_cast<int>(us))
+
+            bool canPromo = PROMO_RANKS.has(move.toSq())
+                && (attackers & pieces(~sideToMove, PieceType::PAWN)).any();
+            if (value < static_cast<int>(us) - PROMO_GAIN * canPromo)
                 return us;
         }
         else if (Bitboard rooks = (stmAttackers & pieces(PieceType::ROOK)); rooks.any())
@@ -692,8 +790,16 @@ bool Board::see(Move move, int margin) const
             attackers ^= rook;
             attackers |= (attacks::rookAttacks(dst, allPieces) & allPieces & straightPieces);
 
+            capturer = rook.lsb();
+
+            if (checkInfo.blockers[~sideToMove].has(rook.lsb()))
+                discoveredCheck = true;
+
             value = seePieceValue(PieceType::ROOK) - value;
-            if (value < static_cast<int>(us))
+
+            bool canPromo = PROMO_RANKS.has(move.toSq())
+                && (attackers & pieces(~sideToMove, PieceType::PAWN)).any();
+            if (value < static_cast<int>(us) - PROMO_GAIN * canPromo)
                 return us;
         }
         else if (Bitboard queens = (stmAttackers & pieces(PieceType::QUEEN)); queens.any())
@@ -704,8 +810,13 @@ bool Board::see(Move move, int margin) const
             attackers |= (attacks::bishopAttacks(dst, allPieces) & allPieces & diagPieces)
                 | (attacks::rookAttacks(dst, allPieces) & allPieces & straightPieces);
 
+            capturer = queen.lsb();
+
             value = seePieceValue(PieceType::QUEEN) - value;
-            if (value < static_cast<int>(us))
+
+            bool canPromo = PROMO_RANKS.has(move.toSq())
+                && (attackers & pieces(~sideToMove, PieceType::PAWN)).any();
+            if (value < static_cast<int>(us) - PROMO_GAIN * canPromo)
                 return us;
         }
         else if ((stmAttackers & pieces(PieceType::KING)).any())
@@ -721,6 +832,26 @@ bool Board::see(Move move, int margin) const
         }
 
         us = !us;
+
+        if (checkInfo.multiBlockers[Color::WHITE].has(capturer))
+            recomputePinned(Color::WHITE);
+        else if (checkInfo.pinners[Color::WHITE].has(capturer))
+        {
+            if (checkInfo.pinners[Color::WHITE].one())
+                clearPinned(Color::WHITE);
+            else
+                recomputePinned(Color::WHITE);
+        }
+
+        if (checkInfo.multiBlockers[Color::BLACK].has(capturer))
+            recomputePinned(Color::BLACK);
+        else if (checkInfo.pinners[Color::BLACK].has(capturer))
+        {
+            if (checkInfo.pinners[Color::BLACK].one())
+                clearPinned(Color::BLACK);
+            else
+                recomputePinned(Color::BLACK);
+        }
     }
 
     return us;
@@ -1026,9 +1157,11 @@ void Board::updateCheckInfo()
 
     currState().checkInfo.checkers = attackersTo(~m_SideToMove, kingSq);
     currState().checkInfo.blockers[static_cast<int>(Color::WHITE)] = pinnersBlockers(whiteKingSq,
-        pieces(Color::BLACK), currState().checkInfo.pinners[static_cast<int>(Color::WHITE)]);
+        pieces(Color::BLACK), currState().checkInfo.pinners[static_cast<int>(Color::WHITE)],
+        currState().checkInfo.multiBlockers[Color::WHITE]);
     currState().checkInfo.blockers[static_cast<int>(Color::BLACK)] = pinnersBlockers(blackKingSq,
-        pieces(Color::WHITE), currState().checkInfo.pinners[static_cast<int>(Color::BLACK)]);
+        pieces(Color::WHITE), currState().checkInfo.pinners[static_cast<int>(Color::BLACK)],
+        currState().checkInfo.multiBlockers[Color::BLACK]);
 }
 
 void Board::calcThreats()
