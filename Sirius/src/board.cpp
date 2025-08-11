@@ -580,6 +580,7 @@ bool Board::see(Move move, int margin) const
     Bitboard attackers = attackersTo(dst, allPieces) & ~Bitboard::fromSquare(src);
 
     int value = 0;
+    bool discoveredCheck = false;
     switch (move.type())
     {
         // TODO: Handle FRC since rook can be attacked after castling
@@ -595,6 +596,9 @@ bool Board::see(Move move, int margin) const
                 value = seePieceValue(type) - margin;
             if (value < 0)
                 return false;
+            if (checkBlockers(~sideToMove()).has(move.fromSq())
+                && !attacks::aligned(move.fromSq(), move.toSq(), kingSq(~sideToMove())))
+                discoveredCheck = true;
             value = seePieceValue(getPieceType(pieceAt(src))) - value;
             break;
         }
@@ -609,6 +613,9 @@ bool Board::see(Move move, int margin) const
                 value += seePieceValue(type) - margin;
             if (value < 0)
                 return false;
+            if (checkBlockers(~sideToMove()).has(move.fromSq())
+                && !attacks::aligned(move.fromSq(), move.toSq(), kingSq(~sideToMove())))
+                discoveredCheck = true;
 
             value = seePieceValue(promo) - value;
             break;
@@ -650,6 +657,10 @@ bool Board::see(Move move, int margin) const
         if ((pinners(sideToMove) & allPieces).any())
             stmAttackers &= ~pinned | pinnedAligned;
 
+        if (discoveredCheck)
+            stmAttackers &= pieces(PieceType::KING);
+        discoveredCheck = false;
+
         if (stmAttackers.empty())
             return !us;
 
@@ -660,6 +671,9 @@ bool Board::see(Move move, int margin) const
             attackers ^= pawn;
             attackers |= (attacks::bishopAttacks(dst, allPieces) & allPieces & diagPieces);
 
+            if (checkBlockers(~sideToMove).has(pawn.lsb()))
+                discoveredCheck = true;
+
             value = seePieceValue(PieceType::PAWN) - value;
             if (value < static_cast<int>(us))
                 return us;
@@ -669,6 +683,9 @@ bool Board::see(Move move, int margin) const
             Bitboard knight = knights.lsbBB();
             allPieces ^= knight;
             attackers ^= knight;
+
+            if (checkBlockers(~sideToMove).has(knight.lsb()))
+                discoveredCheck = true;
 
             value = seePieceValue(PieceType::KNIGHT) - value;
             if (value < static_cast<int>(us))
@@ -681,6 +698,9 @@ bool Board::see(Move move, int margin) const
             attackers ^= bishop;
             attackers |= (attacks::bishopAttacks(dst, allPieces) & allPieces & diagPieces);
 
+            if (checkBlockers(~sideToMove).has(bishop.lsb()))
+                discoveredCheck = true;
+
             value = seePieceValue(PieceType::BISHOP) - value;
             if (value < static_cast<int>(us))
                 return us;
@@ -691,6 +711,9 @@ bool Board::see(Move move, int margin) const
             allPieces ^= rook;
             attackers ^= rook;
             attackers |= (attacks::rookAttacks(dst, allPieces) & allPieces & straightPieces);
+
+            if (checkBlockers(~sideToMove).has(rook.lsb()))
+                discoveredCheck = true;
 
             value = seePieceValue(PieceType::ROOK) - value;
             if (value < static_cast<int>(us))
