@@ -653,34 +653,55 @@ bool Board::see(Move move, int margin) const
 
     bool us = false;
 
-    Bitboard whitePinned = checkBlockers(Color::WHITE) & pieces(Color::WHITE);
-    Bitboard blackPinned = checkBlockers(Color::BLACK) & pieces(Color::BLACK);
+    struct SEECheckInfo
+    {
+        ColorArray<Bitboard> blockers;
+        ColorArray<Bitboard> pinners;
+        ColorArray<Bitboard> pinned;
+    };
+
+    SEECheckInfo checkInfo = {};
 
     Bitboard whiteKingRay = attacks::alignedSquares(dst, kingSq(Color::WHITE));
     Bitboard blackKingRay = attacks::alignedSquares(dst, kingSq(Color::BLACK));
 
-    Bitboard whitePinnedAligned = whiteKingRay & whitePinned;
-    Bitboard blackPinnedAligned = blackKingRay & blackPinned;
-
-    Bitboard pinned = whitePinned | blackPinned;
-    Bitboard pinnedAligned = whitePinnedAligned | blackPinnedAligned;
+    Bitboard pinned;
+    Bitboard pinnedAligned;
 
     auto recomputePinned = [&]()
     {
-        Bitboard dummyPinners;
-        whitePinned =
-            pinnersBlockers(kingSq(Color::WHITE), allPieces, allPieces & pieces(Color::BLACK), dummyPinners)
-            & pieces(Color::WHITE);
-        blackPinned =
-            pinnersBlockers(kingSq(Color::BLACK), allPieces, allPieces & pieces(Color::WHITE), dummyPinners)
-            & pieces(Color::BLACK);
+        checkInfo.pinners = {};
 
-        pinned = whitePinned | blackPinned;
-        pinnedAligned = (whiteKingRay & whitePinned) | (blackKingRay & blackPinned);
+        checkInfo.blockers[Color::WHITE] = pinnersBlockers(kingSq(Color::WHITE), allPieces,
+            allPieces & pieces(Color::BLACK), checkInfo.pinners[Color::WHITE]);
+        checkInfo.blockers[Color::BLACK] = pinnersBlockers(kingSq(Color::BLACK), allPieces,
+            allPieces & pieces(Color::WHITE), checkInfo.pinners[Color::BLACK]);
+
+        checkInfo.pinned[Color::WHITE] = checkInfo.blockers[Color::WHITE] & pieces(Color::WHITE);
+        checkInfo.pinned[Color::BLACK] = checkInfo.blockers[Color::BLACK] & pieces(Color::BLACK);
+
+        pinned = checkInfo.pinned[Color::WHITE] | checkInfo.pinned[Color::BLACK];
+        pinnedAligned = (whiteKingRay & checkInfo.pinned[Color::WHITE])
+            | (blackKingRay & checkInfo.pinned[Color::BLACK]);
     };
 
     if (pinners(~sideToMove).has(move.fromSq()))
         recomputePinned();
+    else
+    {
+        checkInfo.blockers[Color::WHITE] = checkBlockers(Color::WHITE);
+        checkInfo.blockers[Color::BLACK] = checkBlockers(Color::BLACK);
+
+        checkInfo.pinned[Color::WHITE] = checkInfo.blockers[Color::WHITE] & pieces(Color::WHITE);
+        checkInfo.pinned[Color::BLACK] = checkInfo.blockers[Color::BLACK] & pieces(Color::BLACK);
+
+        checkInfo.pinners[Color::WHITE] = pinners(Color::WHITE);
+        checkInfo.pinners[Color::WHITE] = pinners(Color::BLACK);
+
+        pinned = checkInfo.pinned[Color::WHITE] | checkInfo.pinned[Color::BLACK];
+        pinnedAligned = (whiteKingRay & checkInfo.pinned[Color::WHITE])
+            | (blackKingRay & checkInfo.pinned[Color::BLACK]);
+    }
 
     while (true)
     {
@@ -703,7 +724,7 @@ bool Board::see(Move move, int margin) const
             attackers ^= pawn;
             attackers |= (attacks::bishopAttacks(dst, allPieces) & allPieces & diagPieces);
 
-            if (checkBlockers(~sideToMove).has(pawn.lsb())
+            if (checkInfo.blockers[~sideToMove].has(pawn.lsb())
                 && !attacks::aligned(pawn.lsb(), move.toSq(), kingSq(~sideToMove)))
                 discoveredCheck = true;
 
@@ -720,7 +741,7 @@ bool Board::see(Move move, int margin) const
             allPieces ^= knight;
             attackers ^= knight;
 
-            if (checkBlockers(~sideToMove).has(knight.lsb()))
+            if (checkInfo.blockers[~sideToMove].has(knight.lsb()))
                 discoveredCheck = true;
 
             value = seePieceValue(PieceType::KNIGHT) - value;
@@ -737,7 +758,7 @@ bool Board::see(Move move, int margin) const
             attackers ^= bishop;
             attackers |= (attacks::bishopAttacks(dst, allPieces) & allPieces & diagPieces);
 
-            if (checkBlockers(~sideToMove).has(bishop.lsb()))
+            if (checkInfo.blockers[~sideToMove].has(bishop.lsb()))
                 discoveredCheck = true;
 
             value = seePieceValue(PieceType::BISHOP) - value;
@@ -754,7 +775,7 @@ bool Board::see(Move move, int margin) const
             attackers ^= rook;
             attackers |= (attacks::rookAttacks(dst, allPieces) & allPieces & straightPieces);
 
-            if (checkBlockers(~sideToMove).has(rook.lsb()))
+            if (checkInfo.blockers[~sideToMove].has(rook.lsb()))
                 discoveredCheck = true;
 
             value = seePieceValue(PieceType::ROOK) - value;
