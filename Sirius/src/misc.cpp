@@ -563,8 +563,7 @@ void addMoveToSuite(const Board& board, Move move)
         weight += 6 * (move.promotion() == Promotion::QUEEN && moveIsCapture(board, move));
     }
 
-    if ((board.zkey().value / 64 % 8) < 4
-        && (weight > 15 || (weight > 5 && board.zkey().value % 64 == 0)))
+    if (weight > 15 || (weight > 5 && board.zkey().value % 64 == 0))
     {
         cases.insert(board.fenStr() + ";" + uci::convMoveToUCI(board, move) + ";"
             + std::to_string(result.score) + "\n");
