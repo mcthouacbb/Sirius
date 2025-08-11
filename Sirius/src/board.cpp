@@ -674,7 +674,8 @@ bool Board::see(Move move, int margin) const
             attackers ^= pawn;
             attackers |= (attacks::bishopAttacks(dst, allPieces) & allPieces & diagPieces);
 
-            if (checkBlockers(~sideToMove).has(pawn.lsb()))
+            if (checkBlockers(~sideToMove).has(pawn.lsb())
+                && !attacks::aligned(pawn.lsb(), move.toSq(), kingSq(~sideToMove)))
                 discoveredCheck = true;
 
             value = seePieceValue(PieceType::PAWN) - value;
