@@ -203,6 +203,7 @@ public:
     bool castlingBlocked(Color color, CastleSide side) const;
 
     Bitboard pinnersBlockers(Square square, Bitboard attackers, Bitboard& pinners) const;
+    Bitboard pinnersBlockers(Square square, Bitboard occ, Bitboard attackers, Bitboard& pinners) const;
 
     Bitboard checkers() const;
     Bitboard checkBlockers(Color color) const;

@@ -543,6 +543,11 @@ bool Board::castlingBlocked(Color color, CastleSide side) const
 
 Bitboard Board::pinnersBlockers(Square square, Bitboard attackers, Bitboard& pinners) const
 {
+    return pinnersBlockers(square, allPieces(), attackers, pinners);
+}
+
+Bitboard Board::pinnersBlockers(Square square, Bitboard occ, Bitboard attackers, Bitboard& pinners) const
+{
     Bitboard queens = pieces(PieceType::QUEEN);
     attackers &= (attacks::rookAttacks(square, EMPTY_BB) & (pieces(PieceType::ROOK) | queens))
         | (attacks::bishopAttacks(square, EMPTY_BB) & (pieces(PieceType::BISHOP) | queens));
@@ -550,7 +555,7 @@ Bitboard Board::pinnersBlockers(Square square, Bitboard attackers, Bitboard& pin
     Bitboard blockers = EMPTY_BB;
     pinners = EMPTY_BB;
 
-    Bitboard blockMask = allPieces() ^ attackers;
+    Bitboard blockMask = occ ^ attackers;
 
     Bitboard sameColor = pieces(getPieceColor(pieceAt(square)));
 
@@ -653,12 +658,26 @@ bool Board::see(Move move, int margin) const
     Bitboard pinned = whitePinned | blackPinned;
     Bitboard pinnedAligned = whitePinnedAligned | blackPinnedAligned;
 
+    auto recomputePinned = [&]()
+    {
+        Bitboard dummyPinners;
+        whitePinned =
+            pinnersBlockers(kingSq(Color::WHITE), allPieces, allPieces & pieces(Color::BLACK), dummyPinners)
+            & pieces(Color::WHITE);
+        blackPinned =
+            pinnersBlockers(kingSq(Color::BLACK), allPieces, allPieces & pieces(Color::WHITE), dummyPinners)
+            & pieces(Color::BLACK);
+
+        pinned = whitePinned | blackPinned;
+        pinnedAligned = (whiteKingRay & whitePinned) | (blackKingRay & blackPinned);
+    };
+
     while (true)
     {
         sideToMove = ~sideToMove;
         Bitboard stmAttackers = attackers & pieces(sideToMove);
-        if ((pinners(sideToMove) & allPieces).any())
-            stmAttackers &= ~pinned | pinnedAligned;
+        // if ((pinners(sideToMove) & allPieces).any())
+        stmAttackers &= ~pinned | pinnedAligned;
 
         if (discoveredCheck)
             stmAttackers &= pieces(PieceType::KING);
@@ -763,6 +782,8 @@ bool Board::see(Move move, int margin) const
         }
 
         us = !us;
+
+        recomputePinned();
     }
 
     return us;
