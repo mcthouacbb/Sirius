@@ -502,10 +502,19 @@ int fullyLegalSEE(Board& board, Square toSq, int ply, Stats& stats)
     genMoves<MoveGenType::LEGAL>(board, moves);
 
     int bestScore = 0;
+    bool nonKingMove = false;
     for (Move move : moves)
     {
         if (move.toSq() != toSq)
             continue;
+
+        if (getPieceType(board.pieceAt(move.fromSq())) == PieceType::KING)
+        {
+            if (nonKingMove)
+                continue;
+        }
+        else
+            nonKingMove = true;
 
         if (moveIsQuiet(board, move))
         {
