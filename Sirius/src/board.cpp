@@ -560,8 +560,6 @@ Bitboard Board::pinnersBlockers(Square square, Bitboard occ, Bitboard attackers,
 
     Bitboard blockMask = occ ^ attackers;
 
-    Bitboard sameColor = pieces(getPieceColor(pieceAt(square)));
-
     while (attackers.any())
     {
         Square attacker = attackers.poplsb();
@@ -571,8 +569,7 @@ Bitboard Board::pinnersBlockers(Square square, Bitboard occ, Bitboard attackers,
         if (between.one())
         {
             blockers |= between;
-            if ((between & sameColor).any())
-                pinners |= Bitboard::fromSquare(attacker);
+            pinners |= Bitboard::fromSquare(attacker);
         }
         else
             multiBlockers |= between;
