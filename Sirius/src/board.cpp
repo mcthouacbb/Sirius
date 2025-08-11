@@ -662,45 +662,33 @@ bool Board::see(Move move, int margin) const
 
     SEECheckInfo checkInfo = {};
 
-    Bitboard whiteKingRay = attacks::alignedSquares(dst, kingSq(Color::WHITE));
-    Bitboard blackKingRay = attacks::alignedSquares(dst, kingSq(Color::BLACK));
+    ColorArray<Bitboard> kingRays;
+    kingRays[Color::WHITE] = attacks::alignedSquares(dst, kingSq(Color::WHITE));
+    kingRays[Color::BLACK] = attacks::alignedSquares(dst, kingSq(Color::BLACK));
 
-    Bitboard pinned;
-    Bitboard pinnedAligned;
-
-    auto recomputePinned = [&]()
+    auto recomputePinned = [&](Color color)
     {
-        checkInfo.pinners = {};
+        checkInfo.pinners[color] = EMPTY_BB;
 
-        checkInfo.blockers[Color::WHITE] = pinnersBlockers(kingSq(Color::WHITE), allPieces,
-            allPieces & pieces(Color::BLACK), checkInfo.pinners[Color::WHITE]);
-        checkInfo.blockers[Color::BLACK] = pinnersBlockers(kingSq(Color::BLACK), allPieces,
-            allPieces & pieces(Color::WHITE), checkInfo.pinners[Color::BLACK]);
+        checkInfo.blockers[color] = pinnersBlockers(kingSq(color), allPieces,
+            allPieces & pieces(~color), checkInfo.pinners[color]);
 
-        checkInfo.pinned[Color::WHITE] = checkInfo.blockers[Color::WHITE] & pieces(Color::WHITE);
-        checkInfo.pinned[Color::BLACK] = checkInfo.blockers[Color::BLACK] & pieces(Color::BLACK);
-
-        pinned = checkInfo.pinned[Color::WHITE] | checkInfo.pinned[Color::BLACK];
-        pinnedAligned = (whiteKingRay & checkInfo.pinned[Color::WHITE])
-            | (blackKingRay & checkInfo.pinned[Color::BLACK]);
+        checkInfo.pinned[color] = checkInfo.blockers[color] & pieces(color) & ~kingRays[color];
     };
 
+    auto initPinned = [&](Color color)
+    {
+        checkInfo.blockers[color] = checkBlockers(color);
+        checkInfo.pinned[color] = checkInfo.blockers[color] & pieces(color) & ~kingRays[color];
+        checkInfo.pinners[color] = pinners(color);
+    };
+
+    initPinned(sideToMove);
     if (pinners(~sideToMove).has(move.fromSq()))
-        recomputePinned();
+        recomputePinned(~sideToMove);
     else
     {
-        checkInfo.blockers[Color::WHITE] = checkBlockers(Color::WHITE);
-        checkInfo.blockers[Color::BLACK] = checkBlockers(Color::BLACK);
-
-        checkInfo.pinned[Color::WHITE] = checkInfo.blockers[Color::WHITE] & pieces(Color::WHITE);
-        checkInfo.pinned[Color::BLACK] = checkInfo.blockers[Color::BLACK] & pieces(Color::BLACK);
-
-        checkInfo.pinners[Color::WHITE] = pinners(Color::WHITE);
-        checkInfo.pinners[Color::WHITE] = pinners(Color::BLACK);
-
-        pinned = checkInfo.pinned[Color::WHITE] | checkInfo.pinned[Color::BLACK];
-        pinnedAligned = (whiteKingRay & checkInfo.pinned[Color::WHITE])
-            | (blackKingRay & checkInfo.pinned[Color::BLACK]);
+        initPinned(~sideToMove);
     }
 
     while (true)
@@ -708,7 +696,7 @@ bool Board::see(Move move, int margin) const
         sideToMove = ~sideToMove;
         Bitboard stmAttackers = attackers & pieces(sideToMove);
         // if ((pinners(sideToMove) & allPieces).any())
-        stmAttackers &= ~pinned | pinnedAligned;
+        stmAttackers &= ~checkInfo.pinned[sideToMove];
 
         if (discoveredCheck)
             stmAttackers &= pieces(PieceType::KING);
@@ -814,7 +802,8 @@ bool Board::see(Move move, int margin) const
 
         us = !us;
 
-        recomputePinned();
+        recomputePinned(Color::WHITE);
+        recomputePinned(Color::BLACK);
     }
 
     return us;
