@@ -573,13 +573,24 @@ Bitboard Board::pinnersBlockers(Square square, Bitboard attackers, Bitboard& pin
 // mostly from stockfish
 bool Board::see(Move move, int margin) const
 {
+    constexpr Bitboard PROMO_RANKS = RANK_1_BB | RANK_8_BB;
+    constexpr int PROMO_GAIN = seePieceValue(PieceType::QUEEN) - seePieceValue(PieceType::PAWN);
+
     Square src = move.fromSq();
     Square dst = move.toSq();
 
     Bitboard allPieces = this->allPieces() ^ Bitboard::fromSquare(src);
-    Bitboard attackers = attackersTo(dst, allPieces) ^ Bitboard::fromSquare(src);
+
+    if (move.type() == MoveType::ENPASSANT)
+    {
+        int offset = m_SideToMove == Color::WHITE ? -8 : 8;
+        allPieces ^= Bitboard::fromSquare(move.toSq() + offset);
+    }
+
+    Bitboard attackers = attackersTo(dst, allPieces) & ~Bitboard::fromSquare(src);
 
     int value = 0;
+    bool discoveredCheck = false;
     switch (move.type())
     {
         // TODO: Handle FRC since rook can be attacked after castling
@@ -593,8 +604,14 @@ bool Board::see(Move move, int margin) const
                 value = -margin;
             else
                 value = seePieceValue(type) - margin;
-            if (value < 0)
+
+            bool canPromo = PROMO_RANKS.has(move.toSq())
+                && (attackers & pieces(~sideToMove(), PieceType::PAWN)).any();
+            if (value < -PROMO_GAIN * canPromo)
                 return false;
+            if (checkBlockers(~sideToMove()).has(move.fromSq())
+                && !attacks::aligned(move.fromSq(), move.toSq(), kingSq(~sideToMove())))
+                discoveredCheck = true;
             value = seePieceValue(getPieceType(pieceAt(src))) - value;
             break;
         }
@@ -609,6 +626,9 @@ bool Board::see(Move move, int margin) const
                 value += seePieceValue(type) - margin;
             if (value < 0)
                 return false;
+            if (checkBlockers(~sideToMove()).has(move.fromSq())
+                && !attacks::aligned(move.fromSq(), move.toSq(), kingSq(~sideToMove())))
+                discoveredCheck = true;
 
             value = seePieceValue(promo) - value;
             break;
@@ -621,7 +641,10 @@ bool Board::see(Move move, int margin) const
             break;
     }
 
-    if (value <= 0)
+    bool canPromo =
+        PROMO_RANKS.has(move.toSq()) && (attackers & pieces(~sideToMove(), PieceType::PAWN)).any();
+
+    if (value <= -PROMO_GAIN * canPromo)
         return true;
 
     Color sideToMove = m_SideToMove;
@@ -650,6 +673,10 @@ bool Board::see(Move move, int margin) const
         if ((pinners(sideToMove) & allPieces).any())
             stmAttackers &= ~pinned | pinnedAligned;
 
+        if (discoveredCheck)
+            stmAttackers &= pieces(PieceType::KING);
+        discoveredCheck = false;
+
         if (stmAttackers.empty())
             return !us;
 
@@ -660,8 +687,15 @@ bool Board::see(Move move, int margin) const
             attackers ^= pawn;
             attackers |= (attacks::bishopAttacks(dst, allPieces) & allPieces & diagPieces);
 
+            if (checkBlockers(~sideToMove).has(pawn.lsb())
+                && !attacks::aligned(pawn.lsb(), move.toSq(), kingSq(~sideToMove)))
+                discoveredCheck = true;
+
             value = seePieceValue(PieceType::PAWN) - value;
-            if (value < static_cast<int>(us))
+
+            bool canPromo = PROMO_RANKS.has(move.toSq())
+                && (attackers & pieces(~sideToMove, PieceType::PAWN)).any();
+            if (value < static_cast<int>(us) - PROMO_GAIN * canPromo)
                 return us;
         }
         else if (Bitboard knights = (stmAttackers & pieces(PieceType::KNIGHT)); knights.any())
@@ -670,8 +704,14 @@ bool Board::see(Move move, int margin) const
             allPieces ^= knight;
             attackers ^= knight;
 
+            if (checkBlockers(~sideToMove).has(knight.lsb()))
+                discoveredCheck = true;
+
             value = seePieceValue(PieceType::KNIGHT) - value;
-            if (value < static_cast<int>(us))
+
+            bool canPromo = PROMO_RANKS.has(move.toSq())
+                && (attackers & pieces(~sideToMove, PieceType::PAWN)).any();
+            if (value < static_cast<int>(us) - PROMO_GAIN * canPromo)
                 return us;
         }
         else if (Bitboard bishops = (stmAttackers & pieces(PieceType::BISHOP)); bishops.any())
@@ -681,8 +721,14 @@ bool Board::see(Move move, int margin) const
             attackers ^= bishop;
             attackers |= (attacks::bishopAttacks(dst, allPieces) & allPieces & diagPieces);
 
+            if (checkBlockers(~sideToMove).has(bishop.lsb()))
+                discoveredCheck = true;
+
             value = seePieceValue(PieceType::BISHOP) - value;
-            if (value < static_cast<int>(us))
+
+            bool canPromo = PROMO_RANKS.has(move.toSq())
+                && (attackers & pieces(~sideToMove, PieceType::PAWN)).any();
+            if (value < static_cast<int>(us) - PROMO_GAIN * canPromo)
                 return us;
         }
         else if (Bitboard rooks = (stmAttackers & pieces(PieceType::ROOK)); rooks.any())
@@ -692,8 +738,14 @@ bool Board::see(Move move, int margin) const
             attackers ^= rook;
             attackers |= (attacks::rookAttacks(dst, allPieces) & allPieces & straightPieces);
 
+            if (checkBlockers(~sideToMove).has(rook.lsb()))
+                discoveredCheck = true;
+
             value = seePieceValue(PieceType::ROOK) - value;
-            if (value < static_cast<int>(us))
+
+            bool canPromo = PROMO_RANKS.has(move.toSq())
+                && (attackers & pieces(~sideToMove, PieceType::PAWN)).any();
+            if (value < static_cast<int>(us) - PROMO_GAIN * canPromo)
                 return us;
         }
         else if (Bitboard queens = (stmAttackers & pieces(PieceType::QUEEN)); queens.any())
@@ -705,7 +757,10 @@ bool Board::see(Move move, int margin) const
                 | (attacks::rookAttacks(dst, allPieces) & allPieces & straightPieces);
 
             value = seePieceValue(PieceType::QUEEN) - value;
-            if (value < static_cast<int>(us))
+
+            bool canPromo = PROMO_RANKS.has(move.toSq())
+                && (attackers & pieces(~sideToMove, PieceType::PAWN)).any();
+            if (value < static_cast<int>(us) - PROMO_GAIN * canPromo)
                 return us;
         }
         else if ((stmAttackers & pieces(PieceType::KING)).any())
