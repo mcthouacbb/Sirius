@@ -715,7 +715,6 @@ bool Board::see(Move move, int margin) const
     {
         sideToMove = ~sideToMove;
         Bitboard stmAttackers = attackers & pieces(sideToMove);
-        // if ((pinners(sideToMove) & allPieces).any())
         stmAttackers &= ~checkInfo.pinned[sideToMove];
 
         if (discoveredCheck)
@@ -834,20 +833,25 @@ bool Board::see(Move move, int margin) const
 
         us = !us;
 
-        if (checkInfo.pinners[Color::WHITE].has(capturer))
-            recomputePinned(Color::WHITE);
-
         if (checkInfo.multiBlockers[Color::WHITE].has(capturer))
             recomputePinned(Color::WHITE);
-
-        if (checkInfo.pinners[Color::BLACK].has(capturer))
-            recomputePinned(Color::BLACK);
+        else if (checkInfo.pinners[Color::WHITE].has(capturer))
+        {
+            if (checkInfo.pinners[Color::WHITE].one())
+                clearPinned(Color::WHITE);
+            else
+                recomputePinned(Color::WHITE);
+        }
 
         if (checkInfo.multiBlockers[Color::BLACK].has(capturer))
             recomputePinned(Color::BLACK);
-
-        // recomputePinned(Color::WHITE);
-        // recomputePinned(Color::BLACK);
+        else if (checkInfo.pinners[Color::BLACK].has(capturer))
+        {
+            if (checkInfo.pinners[Color::BLACK].one())
+                clearPinned(Color::BLACK);
+            else
+                recomputePinned(Color::BLACK);
+        }
     }
 
     return us;
