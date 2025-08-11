@@ -672,6 +672,9 @@ bool Board::see(Move move, int margin) const
         pinnedAligned = (whiteKingRay & whitePinned) | (blackKingRay & blackPinned);
     };
 
+    if (pinners(~sideToMove).has(move.fromSq()))
+        recomputePinned();
+
     while (true)
     {
         sideToMove = ~sideToMove;
