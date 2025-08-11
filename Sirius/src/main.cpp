@@ -53,10 +53,11 @@ int main(int argc, char** argv)
             std::cout << "MOVE NOT FOUND" << std::endl;
         }
         int threshold = 0;
-        std::from_chars(segments[7].data(), segments[7].data() + segments[7].size(), threshold);
+        if (segments.size() >= 8)
+            std::from_chars(segments[7].data(), segments[7].data() + segments[7].size(), threshold);
         std::cout << "\"true\" SEE score: " << fullyLegalSEE(board, move).score << std::endl;
-        std::cout << "Current SEE score: " << seeExact(board, move) << std::endl;
         std::cout << std::boolalpha << board.see(move, threshold) << std::endl;
+        std::cout << "Current SEE score: " << seeExact(board, move) << std::endl;
     }
 
     return 0;
