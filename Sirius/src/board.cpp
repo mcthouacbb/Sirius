@@ -802,8 +802,8 @@ bool Board::see(Move move, int margin) const
 
         us = !us;
 
-        recomputePinned(Color::WHITE);
-        recomputePinned(Color::BLACK);
+        //recomputePinned(Color::WHITE);
+        //recomputePinned(Color::BLACK);
     }
 
     return us;
