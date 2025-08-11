@@ -38,6 +38,7 @@ struct BoardState
     ZKey pawnKey;
     CheckInfo checkInfo;
     Bitboard threats;
+    PieceTypeArray<Bitboard> pieceThreats;
 
     void addPiece(Square pos, Color color, PieceType pieceType)
     {
@@ -207,6 +208,7 @@ public:
     Bitboard checkers() const;
     Bitboard checkBlockers(Color color) const;
     Bitboard threats() const;
+    Bitboard threatsBy(PieceType piece) const;
 
     bool see(Move move, int margin) const;
     bool isPseudoLegal(Move move) const;
@@ -435,6 +437,11 @@ inline Bitboard Board::checkBlockers(Color color) const
 inline Bitboard Board::threats() const
 {
     return currState().threats;
+}
+
+inline Bitboard Board::threatsBy(PieceType piece) const
+{
+    return currState().pieceThreats[piece];
 }
 
 inline int Board::seePieceValue(PieceType type) const

@@ -1033,7 +1033,8 @@ void Board::updateCheckInfo()
 void Board::calcThreats()
 {
     Color color = ~m_SideToMove;
-    Bitboard threats = EMPTY_BB;
+    currState().threats = EMPTY_BB;
+    currState().pieceThreats.fill(EMPTY_BB);
     Bitboard occupied = allPieces();
 
     Bitboard queens = pieces(color, PieceType::QUEEN);
@@ -1042,34 +1043,54 @@ void Board::calcThreats()
     Bitboard knights = pieces(color, PieceType::KNIGHT);
     Bitboard pawns = pieces(color, PieceType::PAWN);
 
-    rooks |= queens;
+    while (queens.any())
+    {
+        Square queen = queens.poplsb();
+        Bitboard attacks = attacks::queenAttacks(queen, occupied);
+        currState().threats |= attacks;
+        currState().pieceThreats[PieceType::QUEEN] |= attacks;
+    }
+
     while (rooks.any())
     {
         Square rook = rooks.poplsb();
-        threats |= attacks::rookAttacks(rook, occupied);
+        Bitboard attacks = attacks::rookAttacks(rook, occupied);
+        currState().threats |= attacks;
+        currState().pieceThreats[PieceType::ROOK] |= attacks;
     }
 
-    bishops |= queens;
     while (bishops.any())
     {
         Square bishop = bishops.poplsb();
-        threats |= attacks::bishopAttacks(bishop, occupied);
+        Bitboard attacks = attacks::bishopAttacks(bishop, occupied);
+        currState().threats |= attacks;
+        currState().pieceThreats[PieceType::BISHOP] |= attacks;
     }
 
     while (knights.any())
     {
         Square knight = knights.poplsb();
-        threats |= attacks::knightAttacks(knight);
+        Bitboard attacks = attacks::knightAttacks(knight);
+        currState().threats |= attacks;
+        currState().pieceThreats[PieceType::KNIGHT] |= attacks;
     }
 
     if (color == Color::WHITE)
-        threats |= attacks::pawnAttacks<Color::WHITE>(pawns);
+    {
+        Bitboard pawnAttacks = attacks::pawnAttacks<Color::WHITE>(pawns);
+        currState().threats |= pawnAttacks;
+        currState().pieceThreats[PieceType::PAWN] |= pawnAttacks;
+    }
     else
-        threats |= attacks::pawnAttacks<Color::BLACK>(pawns);
+    {
+        Bitboard pawnAttacks = attacks::pawnAttacks<Color::BLACK>(pawns);
+        currState().threats |= pawnAttacks;
+        currState().pieceThreats[PieceType::PAWN] |= pawnAttacks;
+    }
 
-    threats |= attacks::kingAttacks(kingSq(color));
-
-    currState().threats = threats;
+    Bitboard kingAttacks = attacks::kingAttacks(kingSq(color));
+    currState().threats |= kingAttacks;
+    currState().pieceThreats[PieceType::KING] |= kingAttacks;
 }
 
 void Board::calcRepetitions()

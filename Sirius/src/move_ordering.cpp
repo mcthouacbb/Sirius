@@ -66,7 +66,33 @@ int MoveOrdering::scoreNoisy(Move move) const
 
 int MoveOrdering::scoreQuiet(Move move) const
 {
-    return m_History.getQuietStats(move, m_Board.threats(), movingPiece(m_Board, move), m_Stack, m_Ply);
+    int score =
+        m_History.getQuietStats(move, m_Board.threats(), movingPiece(m_Board, move), m_Stack, m_Ply);
+    PieceType moving = getPieceType(m_Board.pieceAt(move.fromSq()));
+
+    if (moving == PieceType::QUEEN)
+    {
+        Bitboard lesserThreats = m_Board.threatsBy(PieceType::PAWN) | m_Board.threatsBy(PieceType::KNIGHT)
+            | m_Board.threatsBy(PieceType::BISHOP) | m_Board.threatsBy(PieceType::ROOK);
+        score += 12228 * lesserThreats.has(move.fromSq());
+        score -= 11264 * lesserThreats.has(move.toSq());
+    }
+    else if (moving == PieceType::ROOK)
+    {
+        Bitboard lesserThreats = m_Board.threatsBy(PieceType::PAWN)
+            | m_Board.threatsBy(PieceType::KNIGHT)
+            | m_Board.threatsBy(PieceType::BISHOP);
+        score += 10240 * lesserThreats.has(move.fromSq());
+        score -= 9216 * lesserThreats.has(move.toSq());
+    }
+    else if (moving == PieceType::BISHOP || moving == PieceType::KNIGHT)
+    {
+        Bitboard lesserThreats = m_Board.threatsBy(PieceType::PAWN);
+        score += 8192 * lesserThreats.has(move.fromSq());
+        score -= 7168 * lesserThreats.has(move.toSq());
+    }
+
+    return score;
 }
 
 int MoveOrdering::scoreMoveQSearch(Move move) const
