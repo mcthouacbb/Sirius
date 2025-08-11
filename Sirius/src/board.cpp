@@ -702,12 +702,11 @@ bool Board::see(Move move, int margin) const
         recomputePinned(sideToMove);
     else
         initPinned(sideToMove);
+
     if (pinners(~sideToMove).has(move.fromSq()))
         recomputePinned(~sideToMove);
     else
-    {
         initPinned(~sideToMove);
-    }
 
     while (true)
     {
