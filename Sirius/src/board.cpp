@@ -666,6 +666,13 @@ bool Board::see(Move move, int margin) const
     kingRays[Color::WHITE] = attacks::alignedSquares(dst, kingSq(Color::WHITE));
     kingRays[Color::BLACK] = attacks::alignedSquares(dst, kingSq(Color::BLACK));
 
+    auto clearPinned = [&](Color color)
+    {
+        checkInfo.pinners[color] = EMPTY_BB;
+        checkInfo.blockers[color] = EMPTY_BB;
+        checkInfo.pinned[color] = EMPTY_BB;
+    };
+
     auto recomputePinned = [&](Color color)
     {
         checkInfo.pinners[color] = EMPTY_BB;
@@ -705,12 +712,16 @@ bool Board::see(Move move, int margin) const
         if (stmAttackers.empty())
             return !us;
 
+        Square capturer;
+
         if (Bitboard pawns = (stmAttackers & pieces(PieceType::PAWN)); pawns.any())
         {
             Bitboard pawn = pawns.lsbBB();
             allPieces ^= pawn;
             attackers ^= pawn;
             attackers |= (attacks::bishopAttacks(dst, allPieces) & allPieces & diagPieces);
+
+            capturer = pawn.lsb();
 
             if (checkInfo.blockers[~sideToMove].has(pawn.lsb())
                 && !attacks::aligned(pawn.lsb(), move.toSq(), kingSq(~sideToMove)))
@@ -729,6 +740,8 @@ bool Board::see(Move move, int margin) const
             allPieces ^= knight;
             attackers ^= knight;
 
+            capturer = knight.lsb();
+
             if (checkInfo.blockers[~sideToMove].has(knight.lsb()))
                 discoveredCheck = true;
 
@@ -745,6 +758,8 @@ bool Board::see(Move move, int margin) const
             allPieces ^= bishop;
             attackers ^= bishop;
             attackers |= (attacks::bishopAttacks(dst, allPieces) & allPieces & diagPieces);
+
+            capturer = bishop.lsb();
 
             if (checkInfo.blockers[~sideToMove].has(bishop.lsb()))
                 discoveredCheck = true;
@@ -763,6 +778,8 @@ bool Board::see(Move move, int margin) const
             attackers ^= rook;
             attackers |= (attacks::rookAttacks(dst, allPieces) & allPieces & straightPieces);
 
+            capturer = rook.lsb();
+
             if (checkInfo.blockers[~sideToMove].has(rook.lsb()))
                 discoveredCheck = true;
 
@@ -780,6 +797,8 @@ bool Board::see(Move move, int margin) const
             attackers ^= queen;
             attackers |= (attacks::bishopAttacks(dst, allPieces) & allPieces & diagPieces)
                 | (attacks::rookAttacks(dst, allPieces) & allPieces & straightPieces);
+
+            capturer = queen.lsb();
 
             value = seePieceValue(PieceType::QUEEN) - value;
 
@@ -801,6 +820,12 @@ bool Board::see(Move move, int margin) const
         }
 
         us = !us;
+
+        if (checkInfo.pinners[Color::WHITE].has(capturer))
+            recomputePinned(Color::WHITE);
+
+        if (checkInfo.pinners[Color::BLACK].has(capturer))
+            recomputePinned(Color::BLACK);
 
         //recomputePinned(Color::WHITE);
         //recomputePinned(Color::BLACK);
