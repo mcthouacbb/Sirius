@@ -551,15 +551,24 @@ void addMoveToSuite(const Board& board, Move move)
     auto result = fullyLegalSEE(board, move);
     int currSEE = seeExact(board, move);
 
-    int weight = 0;
-    weight += !moveIsQuiet(board, move);
+    int weight = -1;
+    weight += 3 * moveIsCapture(board, move);
     weight += result.stats.seldepth * result.stats.seldepth;
     weight += result.stats.hasPromo * 5;
     weight += (move.type() == MoveType::ENPASSANT) * 2;
     weight += (currSEE != result.score) * 10;
+    if (move.type() == MoveType::PROMOTION)
+    {
+        weight += move.promotion() == Promotion::QUEEN ? 2 : -3;
+        weight += 6 * (move.promotion() == Promotion::QUEEN && moveIsCapture(board, move));
+    }
 
-    if ((board.zkey().value / 64 % 8) < 4 && (weight > 15 || (weight > 5 && board.zkey().value % 64 == 0)))
-        cases.insert(board.fenStr() + ";" + uci::convMoveToUCI(board, move) + ";" + std::to_string(result.score) + "\n");
+    if ((board.zkey().value / 64 % 8) < 4
+        && (weight > 15 || (weight > 5 && board.zkey().value % 64 == 0)))
+    {
+        cases.insert(board.fenStr() + ";" + uci::convMoveToUCI(board, move) + ";"
+            + std::to_string(result.score) + "\n");
+    }
 }
 
 void finalizeSuite()
