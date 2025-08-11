@@ -39,3 +39,4 @@ int seeExact(const Board& board, Move move);
 LegalSEEResult fullyLegalSEE(const Board& board, Move move);
 void addMoveToSuite(const Board& board, Move move);
 void finalizeSuite();
+void runSuite();

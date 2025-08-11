@@ -2,6 +2,7 @@
 #include "move_ordering.h"
 #include "movegen.h"
 #include "uci/move.h"
+#include "util/string_split.h"
 #include <algorithm>
 #include <charconv>
 #include <chrono>
@@ -576,4 +577,43 @@ void finalizeSuite()
     std::ofstream file{"legal_see_suite.epd"};
     for (auto testCase : cases)
         file << testCase;
+}
+
+void runSuite()
+{
+    std::ifstream file{"legal_see_suite.epd"};
+    if (!file.is_open())
+    {
+        std::cout << "SEE test suite file not open" << std::endl;
+        return;
+    }
+
+    int pass = 0;
+    int fail = 0;
+
+    Board board;
+    std::string line;
+    while (std::getline(file, line))
+    {
+        auto parts = splitByChar(line, ';');
+        board.setToFen(parts[0]);
+        MoveList legals;
+        genMoves<MoveGenType::LEGAL>(board, legals);
+        auto result = uci::findMoveFromUCI(board, legals, parts[1].c_str());
+        Move move = result.move;
+        int correct;
+        std::from_chars(parts[2].data(), parts[2].data() + parts[2].size(), correct);
+
+        int score = seeExact(board, move);
+        if (score == correct)
+        {
+            pass++;
+        }
+        else
+        {
+            fail++;
+            std::cout << "Failed " << parts[0] << " " << parts[1] << ": Expected " << correct
+                      << " got " << score << std::endl;
+        }
+    }
 }

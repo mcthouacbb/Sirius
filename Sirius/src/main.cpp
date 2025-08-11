@@ -32,6 +32,8 @@ int main(int argc, char** argv)
     {
         std::string stuff;
         std::getline(std::cin, stuff);
+        if (stuff == "runSuite")
+            runSuite();
         auto segments = splitBySpaces(stuff);
         auto fen = segments[0];
         fen += ' ' + segments[1];
@@ -50,8 +52,11 @@ int main(int argc, char** argv)
         {
             std::cout << "MOVE NOT FOUND" << std::endl;
         }
+        int threshold = 0;
+        std::from_chars(segments[7].data(), segments[7].data() + segments[7].size(), threshold);
         std::cout << "\"true\" SEE score: " << fullyLegalSEE(board, move).score << std::endl;
         std::cout << "Current SEE score: " << seeExact(board, move) << std::endl;
+        std::cout << std::boolalpha << board.see(move, threshold) << std::endl;
     }
 
     return 0;
