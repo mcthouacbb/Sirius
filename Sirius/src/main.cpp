@@ -24,6 +24,7 @@ int main(int argc, char** argv)
     {
         std::unique_ptr<search::Search> bencher = std::make_unique<search::Search>();
         runBench(*bencher, BENCH_DEPTH);
+        finalizeSuite();
         return 0;
     }
 
@@ -49,7 +50,7 @@ int main(int argc, char** argv)
         {
             std::cout << "MOVE NOT FOUND" << std::endl;
         }
-        std::cout << "\"true\" SEE score: " << fullyLegalSEE(board, move) << std::endl;
+        std::cout << "\"true\" SEE score: " << fullyLegalSEE(board, move).score << std::endl;
         std::cout << "Current SEE score: " << seeExact(board, move) << std::endl;
     }
 

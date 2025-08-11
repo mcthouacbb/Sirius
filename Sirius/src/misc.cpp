@@ -6,6 +6,7 @@
 #include <charconv>
 #include <chrono>
 #include <fstream>
+#include <unordered_set>
 #include <vector>
 
 void printBoard(const Board& board)
@@ -452,8 +453,8 @@ void testSANFind(const Board& board, const MoveList& moveList, int len)
 
 int seeExact(const Board& board, Move move)
 {
-    int lower = -Board::seePieceValue(PieceType::QUEEN) - 1;
-    int upper = Board::seePieceValue(PieceType::QUEEN) + 1;
+    int lower = -10000;
+    int upper = 10000;
 
     while (true)
     {
@@ -494,7 +495,7 @@ int moveGain(const Board& board, Move move)
     return result;
 }
 
-int fullyLegalSEE(Board& board, Square toSq)
+int fullyLegalSEE(Board& board, Square toSq, int ply, Stats& stats)
 {
     MoveList moves;
     genMoves<MoveGenType::LEGAL>(board, moves);
@@ -511,9 +512,12 @@ int fullyLegalSEE(Board& board, Square toSq)
             continue;
         }
 
+        stats.seldepth = std::max(stats.seldepth, ply);
+        stats.hasPromo |= move.type() == MoveType::PROMOTION;
+
         int gain = moveGain(board, move);
         board.makeMove(move);
-        int score = gain - fullyLegalSEE(board, toSq);
+        int score = gain - fullyLegalSEE(board, toSq, ply + 1, stats);
         board.unmakeMove();
 
         if (score > bestScore)
@@ -523,10 +527,45 @@ int fullyLegalSEE(Board& board, Square toSq)
     return bestScore;
 }
 
-int fullyLegalSEE(const Board& board, Move move)
+LegalSEEResult fullyLegalSEE(const Board& board, Move move)
 {
+    if (move.type() == MoveType::CASTLE)
+        return {0, {}};
+
     Board copy = board;
     copy.makeMove(move);
 
-    return moveGain(board, move) - fullyLegalSEE(copy, move.toSq());
+    Stats stats = {};
+    stats.hasPromo |= move.type() == MoveType::PROMOTION;
+
+    int score = moveGain(board, move) - fullyLegalSEE(copy, move.toSq(), 1, stats);
+    return {score, stats};
+}
+
+std::unordered_set<std::string> cases;
+int total;
+
+void addMoveToSuite(const Board& board, Move move)
+{
+    total++;
+    auto result = fullyLegalSEE(board, move);
+    int currSEE = seeExact(board, move);
+
+    int weight = 0;
+    weight += !moveIsQuiet(board, move);
+    weight += result.stats.seldepth * result.stats.seldepth;
+    weight += result.stats.hasPromo * 5;
+    weight += (move.type() == MoveType::ENPASSANT) * 2;
+    weight += (currSEE != result.score) * 10;
+
+    if ((board.zkey().value / 64 % 8) < 4 && (weight > 15 || (weight > 5 && board.zkey().value % 64 == 0)))
+        cases.insert(board.fenStr() + ";" + uci::convMoveToUCI(board, move) + ";" + std::to_string(result.score) + "\n");
+}
+
+void finalizeSuite()
+{
+    std::cout << "final / total: " << cases.size() << " / " << total << std::endl;
+    std::ofstream file{"legal_see_suite.epd"};
+    for (auto testCase : cases)
+        file << testCase;
 }

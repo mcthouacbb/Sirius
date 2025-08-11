@@ -1,5 +1,6 @@
 #include "search.h"
 #include "eval/eval.h"
+#include "misc.h"
 #include "move_ordering.h"
 #include "movegen.h"
 #include "search_params.h"
@@ -604,6 +605,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             continue;
         if (!board.isLegal(move))
             continue;
+        addMoveToSuite(board, move);
 
         bool quiet = moveIsQuiet(board, move);
         Piece movedPiece = movingPiece(board, move);
@@ -931,6 +933,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
         auto [move, moveScore] = scoredMove;
         if (!board.isLegal(move))
             continue;
+        addMoveToSuite(board, move);
         if (bestScore > -SCORE_WIN && !board.see(move, 0))
             continue;
         if (!inCheck && futility <= alpha && !board.see(move, 1))

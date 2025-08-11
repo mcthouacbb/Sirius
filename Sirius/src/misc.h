@@ -23,5 +23,19 @@ void runTests(Board& board, bool fast);
 
 void testSANFind(const Board& board, const MoveList& moveList, int len);
 
+struct Stats
+{
+    int seldepth;
+    bool hasPromo;
+};
+
+struct LegalSEEResult
+{
+    int score;
+    Stats stats;
+};
+
 int seeExact(const Board& board, Move move);
-int fullyLegalSEE(const Board& board, Move move);
+LegalSEEResult fullyLegalSEE(const Board& board, Move move);
+void addMoveToSuite(const Board& board, Move move);
+void finalizeSuite();
