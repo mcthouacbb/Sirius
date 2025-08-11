@@ -614,7 +614,10 @@ bool Board::see(Move move, int margin) const
                 value = -margin;
             else
                 value = seePieceValue(type) - margin;
-            if (value < 0)
+
+            bool canPromo = PROMO_RANKS.has(move.toSq())
+                && (attackers & pieces(~sideToMove(), PieceType::PAWN)).any();
+            if (value < -PROMO_GAIN * canPromo)
                 return false;
             if (checkBlockers(~sideToMove()).has(move.fromSq())
                 && !attacks::aligned(move.fromSq(), move.toSq(), kingSq(~sideToMove())))
@@ -648,7 +651,10 @@ bool Board::see(Move move, int margin) const
             break;
     }
 
-    if (value <= 0)
+    bool canPromo =
+        PROMO_RANKS.has(move.toSq()) && (attackers & pieces(~sideToMove(), PieceType::PAWN)).any();
+
+    if (value <= -PROMO_GAIN * canPromo)
         return true;
 
     Color sideToMove = m_SideToMove;
