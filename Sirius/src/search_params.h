@@ -5,6 +5,8 @@
 #include <functional>
 #include <string>
 
+#define EXTERNAL_TUNE
+
 namespace search
 {
 
