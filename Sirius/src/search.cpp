@@ -713,16 +713,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             && moveScore <= MoveOrdering::FIRST_KILLER_SCORE)
         {
             int reduction = baseLMR;
-
-            reduction += !improving;
-            reduction += noisyTTMove;
-            reduction -= ttPV;
-            reduction -= givesCheck;
-            reduction -= inCheck;
-            reduction -= std::abs(stack->staticEval - rawStaticEval) > lmrCorrplexityMargin;
-            reduction += cutnode;
-            reduction += (stack + 1)->failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin);
-
             int reduced = std::min(std::max(newDepth - reduction, 1), newDepth);
             score = -search(thread, reduced, stack + 1, -alpha - 1, -alpha, false, true);
             if (score > alpha && reduced < newDepth)
