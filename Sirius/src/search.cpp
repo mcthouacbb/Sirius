@@ -719,7 +719,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             reduction -= ttPV;
             reduction -= givesCheck;
             reduction -= inCheck;
-            reduction -= std::abs(stack->eval - rawStaticEval) > lmrCorrplexityMargin;
+            reduction -= std::abs(stack->staticEval - rawStaticEval) > lmrCorrplexityMargin;
             reduction += cutnode;
             reduction += (stack + 1)->failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin);
 
