@@ -33,6 +33,8 @@ set(SRCS
 
     "src/datagen/marlinformat.cpp"
     "src/datagen/marlinformat.h"
+    "src/datagen/viriformat.cpp"
+    "src/datagen/viriformat.h"
 
     "src/eval/combined_psqt.h"
     "src/eval/endgame.h"
