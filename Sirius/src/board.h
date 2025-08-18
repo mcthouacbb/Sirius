@@ -153,6 +153,7 @@ public:
     static constexpr const char* defaultFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     Board();
+    Board(const BoardState& state, const CastlingData& castlingData, Color stm, int gamePly);
 
     void setToFen(const std::string_view& fen, bool frc = false);
 
