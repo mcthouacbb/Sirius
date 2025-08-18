@@ -38,7 +38,7 @@ PackedBoard packToMarlinFormat(const Board& board, int score, WDL wdl)
             }
         }
 
-        result.pieces.set(index++, (static_cast<uint8_t>(color) << 4) | static_cast<uint8_t>(code));
+        result.pieces.set(index++, (static_cast<uint8_t>(color) << 3) | static_cast<uint8_t>(code));
     }
 
     int epSquare = board.epSquare() == -1 ? 64 : board.epSquare();
@@ -51,16 +51,11 @@ PackedBoard packToMarlinFormat(const Board& board, int score, WDL wdl)
     return result;
 }
 
-struct MarlinFormatLoad
-{
-    Board board;
-    int score;
-    WDL wdl;
-};
-
 MarlinFormatLoad loadFromMarlinFormat(const PackedBoard& packedBoard)
 {
     BoardState state = {};
+    state.squares.fill(Piece::NONE);
+
     Bitboard occ = Bitboard(packedBoard.occ);
     size_t index = 0;
     ColorArray<StaticVector<Square, 2>> castlingRooks = {};
@@ -69,7 +64,7 @@ MarlinFormatLoad loadFromMarlinFormat(const PackedBoard& packedBoard)
     {
         Square sq = occ.poplsb();
         int piece = packedBoard.pieces.get(index++);
-        Color color = static_cast<Color>(piece >> 4);
+        Color color = static_cast<Color>(piece >> 3);
         PieceCode code = static_cast<PieceCode>(piece & 0x7);
 
         PieceType pieceType =

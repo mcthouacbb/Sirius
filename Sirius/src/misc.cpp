@@ -2,6 +2,7 @@
 #include "move_ordering.h"
 #include "movegen.h"
 #include "uci/move.h"
+#include "datagen/marlinformat.h"
 #include <algorithm>
 #include <charconv>
 #include <chrono>
@@ -272,6 +273,35 @@ void testQuietGen(Board& board, int depth)
     {
         board.makeMove(move);
         testQuietGen(board, depth - 1);
+        board.unmakeMove();
+    }
+}
+
+void testMarlinformat(Board& board, int depth)
+{
+    if (depth == 0)
+    {
+        PackedBoard packedBoard = packToMarlinFormat(board, 5823, WDL::BLACK_WIN);
+        auto [newBoard, score, wdl] = loadFromMarlinFormat(packedBoard);
+
+        if (newBoard.fenStr() != board.fenStr())
+        {
+            std::cout << "Failed: " << board.fenStr() << std::endl;
+            std::cout << "    New fen is " << newBoard.fenStr() << std::endl;
+        }
+
+        if (score != 5823)
+            std::cout << "Failed, got score " << score << std::endl;
+        if (wdl != WDL::BLACK_WIN)
+            std::cout << "Failed, expected black win WDL" << std::endl;
+    }
+    MoveList moves;
+    genMoves<MoveGenType::LEGAL>(board, moves);
+
+    for (Move move : moves)
+    {
+        board.makeMove(move);
+        testMarlinformat(board, depth - 1);
         board.unmakeMove();
     }
 }

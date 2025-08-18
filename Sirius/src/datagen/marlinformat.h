@@ -6,12 +6,12 @@ struct U4Array32
 
     uint8_t get(size_t index) const
     {
-        return data[index / 2] >> (4 * (index % 2));
+        return (data[index / 2] >> (4 * (index % 2))) & 0xF;
     }
 
-    uint8_t set(size_t index, uint8_t value)
+    void set(size_t index, uint8_t value)
     {
-        assert(value < 15);
+        assert(value < 16);
         data[index / 2] |= (value << (4 * (index % 2)));
     }
 };
@@ -35,3 +35,13 @@ struct PackedBoard
 
     uint8_t padding;
 };
+
+struct MarlinFormatLoad
+{
+    Board board;
+    int score;
+    WDL wdl;
+};
+
+PackedBoard packToMarlinFormat(const Board& board, int score, WDL wdl);
+MarlinFormatLoad loadFromMarlinFormat(const PackedBoard& packedBoard);
