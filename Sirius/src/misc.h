@@ -17,6 +17,8 @@ void testQuietGen(Board& board, int depth);
 
 void testIsPseudoLegal(Board& board, int depth);
 
+void testMarlinformat(Board& board, int depth);
+
 void testSEE();
 
 void runTests(Board& board, bool fast);
