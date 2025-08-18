@@ -2,6 +2,9 @@
 #include "../util/static_vector.h"
 #include <tuple>
 
+namespace marlinformat
+{
+
 enum class PieceCode
 {
     PAWN,
@@ -13,7 +16,7 @@ enum class PieceCode
     CASTLING_ROOK
 };
 
-PackedBoard packToMarlinFormat(const Board& board, int score, WDL wdl)
+PackedBoard packBoard(const Board& board, int score, WDL wdl)
 {
     PackedBoard result = {};
     Bitboard occ = board.allPieces();
@@ -51,7 +54,7 @@ PackedBoard packToMarlinFormat(const Board& board, int score, WDL wdl)
     return result;
 }
 
-MarlinFormatLoad loadFromMarlinFormat(const PackedBoard& packedBoard)
+MarlinFormatUnpack unpackBoard(const PackedBoard& packedBoard)
 {
     BoardState state = {};
     state.squares.fill(Piece::NONE);
@@ -110,4 +113,6 @@ MarlinFormatLoad loadFromMarlinFormat(const PackedBoard& packedBoard)
 
     Board board(state, castlingData, stm, gamePly);
     return {board, packedBoard.score, packedBoard.wdl};
+}
+
 }
