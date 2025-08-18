@@ -1,5 +1,8 @@
 #include "../board.h"
 
+namespace marlinformat
+{
+
 struct U4Array32
 {
     std::array<uint8_t, 16> data;
@@ -36,12 +39,14 @@ struct PackedBoard
     uint8_t padding;
 };
 
-struct MarlinFormatLoad
+struct MarlinFormatUnpack
 {
     Board board;
     int score;
     WDL wdl;
 };
 
-PackedBoard packToMarlinFormat(const Board& board, int score, WDL wdl);
-MarlinFormatLoad loadFromMarlinFormat(const PackedBoard& packedBoard);
+PackedBoard packBoard(const Board& board, int score, WDL wdl);
+MarlinFormatUnpack unpackBoard(const PackedBoard& packedBoard);
+
+}

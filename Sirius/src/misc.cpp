@@ -1,8 +1,8 @@
 #include "misc.h"
+#include "datagen/marlinformat.h"
 #include "move_ordering.h"
 #include "movegen.h"
 #include "uci/move.h"
-#include "datagen/marlinformat.h"
 #include <algorithm>
 #include <charconv>
 #include <chrono>
@@ -281,8 +281,9 @@ void testMarlinformat(Board& board, int depth)
 {
     if (depth == 0)
     {
-        PackedBoard packedBoard = packToMarlinFormat(board, 5823, WDL::BLACK_WIN);
-        auto [newBoard, score, wdl] = loadFromMarlinFormat(packedBoard);
+        marlinformat::PackedBoard packedBoard =
+            marlinformat::packBoard(board, 5823, marlinformat::WDL::BLACK_WIN);
+        auto [newBoard, score, wdl] = marlinformat::unpackBoard(packedBoard);
 
         if (newBoard.fenStr() != board.fenStr())
         {
@@ -292,7 +293,7 @@ void testMarlinformat(Board& board, int depth)
 
         if (score != 5823)
             std::cout << "Failed, got score " << score << std::endl;
-        if (wdl != WDL::BLACK_WIN)
+        if (wdl != marlinformat::WDL::BLACK_WIN)
             std::cout << "Failed, expected black win WDL" << std::endl;
     }
     MoveList moves;
