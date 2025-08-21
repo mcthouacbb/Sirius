@@ -56,7 +56,7 @@ Board genOpening(std::mt19937& gen)
 viriformat::Game runGame(std::mt19937& gen)
 {
     Board startpos = genOpening(gen);
-    search::Search search(8);
+    ColorArray<search::Search> searches = {search::Search(8), search::Search(8)};
     SearchLimits limits = {};
     limits.softNodes = 5000;
     limits.maxDepth = MAX_PLY;
@@ -68,7 +68,7 @@ viriformat::Game runGame(std::mt19937& gen)
 
     for (;;)
     {
-        auto [score, move] = search.datagenSearch(limits, board);
+        auto [score, move] = searches[board.sideToMove()].datagenSearch(limits, board);
         if (board.sideToMove() == Color::BLACK)
             score = -score;
         game.moves.push_back({viriformat::ViriMove(move), score});
