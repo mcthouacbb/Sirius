@@ -59,6 +59,7 @@ viriformat::Game runGame(std::mt19937& gen)
     search::Search search(8);
     SearchLimits limits = {};
     limits.softNodes = 5000;
+    limits.maxDepth = MAX_PLY;
 
     Board board = startpos;
     marlinformat::WDL wdl = marlinformat::WDL::DRAW;
@@ -119,7 +120,7 @@ void runDatagen(uint32_t threadID, std::string filename, std::mutex& coutLock)
                 std::chrono::duration_cast<std::chrono::duration<float>>(currTime - prevTime).count();
             std::unique_lock<std::mutex> lock(coutLock);
             std::cout << "Thread " << threadID << " wrote " << totalGames << " total games" << std::endl;
-            std::cout << "    128 games in the last " << seconds << "s, " << totalGames / seconds
+            std::cout << "    128 games in the last " << seconds << "s, " << 128.0 / seconds
                       << " games/s" << std::endl;
             std::cout << "    average positions/game: "
                       << static_cast<float>(totalPositions) / static_cast<float>(totalGames)

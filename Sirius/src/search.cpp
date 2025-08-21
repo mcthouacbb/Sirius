@@ -403,7 +403,7 @@ BenchData Search::benchSearch(int depth, const Board& board)
 std::pair<int, Move> Search::datagenSearch(const SearchLimits& limits, const Board& board)
 {
     std::unique_ptr<SearchThread> thread = std::make_unique<SearchThread>(0, std::thread());
-    thread->limits;
+    thread->limits = limits;
     thread->board = board;
     m_TimeMan.setLimits(limits, board.sideToMove());
     m_TimeMan.startSearch();
