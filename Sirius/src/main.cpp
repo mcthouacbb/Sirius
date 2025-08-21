@@ -20,7 +20,7 @@ int main(int argc, char** argv)
 
     std::mutex mutex;
 
-    runDatagen(0, "datagen.bin", mutex);
+    datagen::runDatagen(0, "datagen.bin", mutex);
 
     if (argc > 1 && std::string(argv[1]) == "bench")
     {
