@@ -127,7 +127,7 @@ struct SearchThread
 class Search
 {
 public:
-    Search();
+    Search(size_t hash = 64);
     ~Search();
 
     void newGame();
@@ -137,6 +137,7 @@ public:
     void setThreads(int count);
     bool searching() const;
     BenchData benchSearch(int depth, const Board& board);
+    std::pair<int, Move> datagenSearch(const SearchLimits& limits, const Board& board);
 
     void setTTSize(int mb)
     {
@@ -147,7 +148,7 @@ private:
     void joinThreads();
     void threadLoop(SearchThread& thread);
 
-    int iterDeep(SearchThread& thread, bool report, bool normalSearch);
+    std::pair<int, Move> iterDeep(SearchThread& thread, bool report, bool normalSearch);
     int aspWindows(SearchThread& thread, int depth, Move& bestMove, int prevScore);
 
     int search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta,

@@ -116,8 +116,8 @@ void SearchThread::join()
     thread.join();
 }
 
-Search::Search()
-    : m_ShouldStop(false), m_TT(64)
+Search::Search(size_t hash)
+    : m_ShouldStop(false), m_TT(hash)
 {
     setThreads(1);
 }
@@ -286,7 +286,7 @@ void Search::unmakeNullMove(SearchThread& thread, SearchStack* stack)
     stack->contCorrEntry = nullptr;
 }
 
-int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
+std::pair<int, Move> Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
 {
     int maxDepth = std::min(thread.limits.maxDepth, MAX_PLY - 1);
     int score = 0;
@@ -333,7 +333,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
     if (report)
         uci::uci->reportBestMove(bestMove);
 
-    return score;
+    return {score, bestMove};
 }
 
 // Aspiration windows(~108 elo)
@@ -398,6 +398,19 @@ BenchData Search::benchSearch(int depth, const Board& board)
     data.nodes = thread->nodes;
 
     return data;
+}
+
+std::pair<int, Move> Search::datagenSearch(const SearchLimits& limits, const Board& board)
+{
+    std::unique_ptr<SearchThread> thread = std::make_unique<SearchThread>(0, std::thread());
+    thread->limits;
+    thread->board = board;
+    m_TimeMan.setLimits(limits, board.sideToMove());
+    m_TimeMan.startSearch();
+
+    m_ShouldStop.store(false, std::memory_order_relaxed);
+
+    return iterDeep(*thread, false, false);
 }
 
 int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta,
