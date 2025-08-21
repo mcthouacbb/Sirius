@@ -7,6 +7,9 @@
 #include <fstream>
 #include <random>
 
+namespace datagen
+{
+
 enum class GameResult
 {
     MATED,
@@ -88,7 +91,7 @@ viriformat::Game runGame(std::mt19937& gen)
         }
     }
 
-    game.startpos = marlinformat::packBoard(board, 0, wdl);
+    game.startpos = marlinformat::packBoard(startpos, 0, wdl);
     return game;
 }
 
@@ -99,7 +102,7 @@ void runDatagen(uint32_t threadID, std::string filename, std::mutex& coutLock)
     std::cout << "Thread " << threadID << " seed " << seed << std::endl;
     std::mt19937 gen(seed);
 
-    std::ofstream outFile(filename);
+    std::ofstream outFile(filename, std::ios::binary);
 
     auto startTime = std::chrono::steady_clock::now();
     auto prevTime = startTime;
@@ -129,4 +132,6 @@ void runDatagen(uint32_t threadID, std::string filename, std::mutex& coutLock)
             prevTime = currTime;
         }
     }
+}
+
 }
