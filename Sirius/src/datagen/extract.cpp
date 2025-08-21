@@ -1,0 +1,52 @@
+#include "extract.h"
+#include "viriformat.h"
+#include <fstream>
+
+namespace datagen
+{
+
+void extract(std::string dataFilename, std::string outputFilename)
+{
+    std::ifstream inputFile(dataFilename, std::ios::binary);
+    std::ofstream outputFile(outputFilename, std::ios::app);
+    std::vector<viriformat::Game> games;
+
+    if (!inputFile.is_open())
+        std::cout << "Could not open file " << dataFilename << std::endl;
+
+    while (inputFile.peek() != EOF)
+    {
+        std::cout << "tellg(): " << inputFile.tellg() << std::endl;
+        auto game = viriformat::Game::read(inputFile);
+
+        games.push_back(game);
+    }
+
+    std::cout << games.size() << std::endl;
+    for (auto game : games)
+    {
+        auto [board, score, wdl] = marlinformat::unpackBoard(game.startpos);
+        for (auto [move, score] : game.moves)
+        {
+            outputFile << board.fenStr() << " | ";
+            outputFile << score << "cp | ";
+            switch (wdl)
+            {
+                case marlinformat::WDL::BLACK_WIN:
+                    outputFile << "0.0";
+                    break;
+                case marlinformat::WDL::DRAW:
+                    outputFile << "0.5";
+                    break;
+                case marlinformat::WDL::WHITE_WIN:
+                    outputFile << "1.0";
+                    break;
+            }
+            outputFile << '\n';
+
+            board.makeMove(move.toMove());
+        }
+    }
+}
+
+}

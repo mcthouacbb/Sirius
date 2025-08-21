@@ -13,16 +13,16 @@ endif
 SOURCES := Sirius/src/attacks.cpp Sirius/src/bench.cpp Sirius/src/board.cpp Sirius/src/cuckoo.cpp \
 	Sirius/src/history.cpp Sirius/src/main.cpp Sirius/src/misc.cpp Sirius/src/move_ordering.cpp \
 	Sirius/src/movegen.cpp Sirius/src/search.cpp Sirius/src/search_params.cpp Sirius/src/time_man.cpp \
-	Sirius/src/tt.cpp Sirius/src/datagen/datagen.cpp Sirius/src/datagen/marlinformat.cpp Sirius/src/datagen/viriformat.cpp \
-	Sirius/src/eval/endgame.cpp Sirius/src/eval/eval.cpp Sirius/src/eval/eval_state.cpp Sirius/src/eval/eval_terms.cpp \
-	Sirius/src/eval/pawn_structure.cpp Sirius/src/eval/psqt_state.cpp Sirius/src/uci/fen.cpp Sirius/src/uci/move.cpp \
-	Sirius/src/uci/uci.cpp
+	Sirius/src/tt.cpp Sirius/src/datagen/datagen.cpp Sirius/src/datagen/extract.cpp Sirius/src/datagen/marlinformat.cpp \
+	Sirius/src/datagen/viriformat.cpp Sirius/src/eval/endgame.cpp Sirius/src/eval/eval.cpp Sirius/src/eval/eval_state.cpp \
+	Sirius/src/eval/eval_terms.cpp Sirius/src/eval/pawn_structure.cpp Sirius/src/eval/psqt_state.cpp Sirius/src/uci/fen.cpp \
+	Sirius/src/uci/move.cpp Sirius/src/uci/uci.cpp
 
 HEADERS := Sirius/src/attacks.h Sirius/src/bench.h Sirius/src/bitboard.h Sirius/src/board.h \
 	Sirius/src/castling.h Sirius/src/cuckoo.h Sirius/src/defs.h Sirius/src/history.h Sirius/src/misc.h \
 	Sirius/src/move_ordering.h Sirius/src/movegen.h Sirius/src/search_params.h Sirius/src/search.h \
 	Sirius/src/sirius.h Sirius/src/time_man.h Sirius/src/tt.h Sirius/src/zobrist.h Sirius/src/datagen/datagen.h \
-	Sirius/src/datagen/marlinformat.h Sirius/src/datagen/viriformat.h Sirius/src/util/enum_array.h \
+	Sirius/src/datagen/extract.h Sirius/src/datagen/marlinformat.h Sirius/src/datagen/viriformat.h Sirius/src/util/enum_array.h \
 	Sirius/src/util/multi_array.h Sirius/src/util/murmur.h Sirius/src/util/piece_set.h Sirius/src/util/prng.h \
 	Sirius/src/util/static_vector.h Sirius/src/util/string_split.h Sirius/src/eval/combined_psqt.h \
 	Sirius/src/eval/endgame.h Sirius/src/eval/eval_constants.h Sirius/src/eval/eval_state.h \

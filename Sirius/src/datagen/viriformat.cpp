@@ -94,10 +94,11 @@ Game Game::read(std::istream& is)
     {
         uint32_t moveData;
         is.read(reinterpret_cast<char*>(&moveData), 4);
+
         if (moveData == NULL_TERMINATOR)
             break;
 
-        ViriMove move(moveData & 0xFF);
+        ViriMove move(moveData & 0xFFFF);
         int16_t score = static_cast<int16_t>(moveData >> 16);
         result.moves.push_back({move, score});
     }
