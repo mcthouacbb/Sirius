@@ -1,3 +1,5 @@
+#pragma once
+
 #include "marlinformat.h"
 
 namespace viriformat

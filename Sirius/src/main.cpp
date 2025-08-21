@@ -5,6 +5,7 @@
 #include "bench.h"
 #include "cuckoo.h"
 #include "datagen/datagen.h"
+#include "datagen/extract.h"
 #include "eval/endgame.h"
 #include "eval/eval.h"
 #include "search_params.h"
@@ -18,9 +19,11 @@ int main(int argc, char** argv)
     search::init();
     eval::endgames::init();
 
-    std::mutex mutex;
+    // std::mutex mutex;
 
-    datagen::runDatagen(0, "datagen.bin", mutex);
+    // datagen::runDatagen(0, "datagen.bin", mutex);
+
+    datagen::extract("datagen.bin", "data.txt");
 
     if (argc > 1 && std::string(argv[1]) == "bench")
     {
