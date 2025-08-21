@@ -12,6 +12,7 @@ struct SearchLimits
     int maxDepth;
     Duration maxTime;
     uint64_t maxNodes;
+    uint64_t softNodes;
 
     struct
     {
