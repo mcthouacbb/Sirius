@@ -34,7 +34,8 @@ public:
         PERFT,
         RUN_PERFT_TESTS,
         EVAL,
-        BENCH
+        BENCH,
+        DATAGEN
     };
 
     void run(std::string cmd);
@@ -61,6 +62,7 @@ private:
     void evalCommand();
     void perftCommand(std::istringstream& stream);
     void benchCommand();
+    void datagenCommand(std::istringstream& stream);
 
     mutable std::mutex m_StdoutMutex;
     Board m_Board;
