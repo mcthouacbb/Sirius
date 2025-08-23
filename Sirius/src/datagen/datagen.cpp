@@ -6,12 +6,14 @@
 #include "viriformat.h"
 #include <atomic>
 #include <csignal>
+#include <filesystem>
 #include <fstream>
 #include <random>
 
 namespace datagen
 {
 
+constexpr uint32_t BATCH_SIZE = 128;
 std::atomic_bool stop = false;
 
 enum class GameResult
@@ -60,12 +62,13 @@ Board genOpening(std::mt19937& gen)
     }
 }
 
-viriformat::Game runGame(std::mt19937& gen)
+viriformat::Game runGame(std::mt19937& gen, const Config& config)
 {
     Board startpos = genOpening(gen);
     ColorArray<search::Search> searches = {search::Search(8), search::Search(8)};
     SearchLimits limits = {};
-    limits.softNodes = 5000;
+    limits.softNodes = config.softLimit;
+    limits.maxNodes = config.hardLimit;
     limits.maxDepth = MAX_PLY;
 
     Board board = startpos;
@@ -99,7 +102,12 @@ viriformat::Game runGame(std::mt19937& gen)
     return game;
 }
 
-void datagenThread(uint32_t threadID, std::string filename, uint32_t& gamesLeft, std::mutex& mutex)
+std::string tmpFilename(int threadID)
+{
+    return "datagen_tmp" + std::to_string(threadID) + ".bin";
+};
+
+void datagenThread(uint32_t threadID, const Config& config, uint32_t& gamesLeft, std::mutex& mutex)
 {
     std::random_device rd;
     auto seed = rd();
@@ -109,7 +117,7 @@ void datagenThread(uint32_t threadID, std::string filename, uint32_t& gamesLeft,
     }
     std::mt19937 gen(seed);
 
-    std::ofstream outFile(filename, std::ios::binary);
+    std::ofstream outFile(tmpFilename(threadID), std::ios::binary);
 
     uint32_t totalGames = 0;
 
@@ -122,8 +130,8 @@ void datagenThread(uint32_t threadID, std::string filename, uint32_t& gamesLeft,
             std::unique_lock<std::mutex> lock(mutex);
             if (stop)
                 break;
-            if (gamesLeft >= 128)
-                gamesLeft -= 128;
+            if (gamesLeft >= BATCH_SIZE)
+                gamesLeft -= BATCH_SIZE;
             else
             {
                 stop = true;
@@ -132,11 +140,11 @@ void datagenThread(uint32_t threadID, std::string filename, uint32_t& gamesLeft,
             }
         }
 
-        totalGames += 128;
+        totalGames += BATCH_SIZE;
 
-        for (int i = 0; i < 128; i++)
+        for (int i = 0; i < BATCH_SIZE; i++)
         {
-            auto game = runGame(gen);
+            auto game = runGame(gen, config);
             game.write(outFile);
 
             totalPositions += game.moves.size() + 1;
@@ -147,9 +155,9 @@ void datagenThread(uint32_t threadID, std::string filename, uint32_t& gamesLeft,
             std::chrono::duration_cast<std::chrono::duration<float>>(currTime - startTime).count();
 
         std::unique_lock<std::mutex> lock(mutex);
-        std::cout << "Thread " << threadID << " wrote 128 games in the last " << seconds << "s, "
-                  << 128.0 / seconds << " games/s" << std::endl;
-        std::cout << "    average positions/game: " << static_cast<float>(totalPositions) / 128.0
+        std::cout << "Thread " << threadID << " wrote " << BATCH_SIZE << " games in the last "
+                  << seconds << "s, " << BATCH_SIZE / seconds << " games/s" << std::endl;
+        std::cout << "    average positions/game: " << static_cast<float>(totalPositions) / BATCH_SIZE
                   << std::endl;
     }
 
@@ -164,28 +172,48 @@ extern "C" void signalHandler(int sig)
     stop = true;
 }
 
-void runDatagen(uint32_t numGames, uint32_t numThreads)
+void runDatagen(Config config)
 {
-    std::cout << "Generating " << numGames << " games with " << numThreads << " threads" << std::endl;
+    config.numGames -= config.numGames % BATCH_SIZE;
+    std::cout << "Generating " << config.numGames << " games with " << config.numThreads
+              << " threads" << std::endl;
 
     std::vector<std::thread> threads;
     std::mutex lock;
     stop = false;
     std::signal(SIGINT, signalHandler);
 
-    uint32_t gamesLeft = numGames - numGames % 128;
+    uint32_t gamesLeft = config.numGames;
 
-    for (uint32_t i = 0; i < numThreads; i++)
+    for (uint32_t i = 0; i < config.numThreads; i++)
     {
         threads.push_back(std::thread(
-            [i, &lock, &gamesLeft]()
+            [i, &lock, &gamesLeft, &config]()
             {
-                datagenThread(i, std::string("datagen") + std::to_string(i) + ".bin", gamesLeft, lock);
+                datagenThread(i, config, gamesLeft, lock);
             }));
     }
 
     for (auto& thread : threads)
         thread.join();
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    std::ofstream outputFile(config.outputFilename, std::ios::binary);
+
+    for (uint32_t i = 0; i < config.numThreads; i++)
+    {
+        std::ifstream tmpFile(tmpFilename(i));
+        if (!tmpFile.is_open())
+        {
+            std::cout << "Could not open file " << tmpFilename(i) << " for writing to final output"
+                      << std::endl;
+            break;
+        }
+        outputFile << tmpFile.rdbuf();
+        if (!std::filesystem::remove(tmpFilename(i)))
+            std::cout << "Could not delete temporary file " << tmpFilename(i) << std::endl;
+    }
 }
 
 }

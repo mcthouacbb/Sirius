@@ -4,6 +4,7 @@
 #include <string>
 
 #include "../bench.h"
+#include "../datagen/datagen.h"
 #include "../eval/eval.h"
 #include "../misc.h"
 #include "../sirius.h"
@@ -316,6 +317,9 @@ bool UCI::execCommand(const std::string& command)
             if (!m_Search.searching())
                 benchCommand();
             break;
+        case Command::DATAGEN:
+            datagenCommand(stream);
+            break;
     }
     return false;
 }
@@ -348,6 +352,8 @@ UCI::Command UCI::getCommand(const std::string& command) const
         return Command::EVAL;
     else if (command == "bench")
         return Command::BENCH;
+    else if (command == "datagen")
+        return Command::DATAGEN;
 
     return Command::INVALID;
 }
@@ -587,6 +593,42 @@ void UCI::evalCommand()
 void UCI::benchCommand()
 {
     runBench(m_Search, BENCH_DEPTH);
+}
+
+void UCI::datagenCommand(std::istringstream& stream)
+{
+    std::string tok;
+    datagen::Config config = {};
+    config.softLimit = 5000;
+    config.hardLimit = 8000000;
+    config.numGames = 1000000;
+    config.numThreads = 8;
+    config.outputFilename = "datagen.bin";
+    while (stream.tellg() != -1)
+    {
+        stream >> tok;
+        if (tok == "softlimit")
+        {
+            stream >> config.softLimit;
+        }
+        else if (tok == "hardlimit")
+        {
+            stream >> config.hardLimit;
+        }
+        else if (tok == "games")
+        {
+            stream >> config.numGames;
+        }
+        else if (tok == "threads")
+        {
+            stream >> config.numThreads;
+        }
+        else if (tok == "outfile")
+        {
+            stream >> config.outputFilename;
+        }
+    }
+    datagen::runDatagen(config);
 }
 
 }
