@@ -4,11 +4,15 @@
 #include "../movegen.h"
 #include "../search.h"
 #include "viriformat.h"
+#include <atomic>
+#include <csignal>
 #include <fstream>
 #include <random>
 
 namespace datagen
 {
+
+std::atomic_bool stop = false;
 
 enum class GameResult
 {
@@ -95,43 +99,93 @@ viriformat::Game runGame(std::mt19937& gen)
     return game;
 }
 
-void runDatagen(uint32_t threadID, std::string filename, std::mutex& coutLock)
+void datagenThread(uint32_t threadID, std::string filename, uint32_t& gamesLeft, std::mutex& mutex)
 {
     std::random_device rd;
     auto seed = rd();
-    std::cout << "Thread " << threadID << " seed " << seed << std::endl;
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        std::cout << "Thread " << threadID << " seed " << seed << std::endl;
+    }
     std::mt19937 gen(seed);
 
     std::ofstream outFile(filename, std::ios::binary);
 
-    auto startTime = std::chrono::steady_clock::now();
-    auto prevTime = startTime;
     uint32_t totalGames = 0;
-    uint32_t totalPositions = 0;
 
-    for (;;)
+    while (!stop)
     {
-        auto game = runGame(gen);
-        game.write(outFile);
+        uint32_t totalPositions = 0;
+        auto startTime = std::chrono::steady_clock::now();
 
-        totalGames++;
-        totalPositions += game.moves.size() + 1;
-        if (totalGames % 128 == 0)
         {
-            auto currTime = std::chrono::steady_clock::now();
-            float seconds =
-                std::chrono::duration_cast<std::chrono::duration<float>>(currTime - prevTime).count();
-            std::unique_lock<std::mutex> lock(coutLock);
-            std::cout << "Thread " << threadID << " wrote " << totalGames << " total games" << std::endl;
-            std::cout << "    128 games in the last " << seconds << "s, " << 128.0 / seconds
-                      << " games/s" << std::endl;
-            std::cout << "    average positions/game: "
-                      << static_cast<float>(totalPositions) / static_cast<float>(totalGames)
-                      << std::endl;
-
-            prevTime = currTime;
+            std::unique_lock<std::mutex> lock(mutex);
+            if (stop)
+                break;
+            if (gamesLeft >= 128)
+                gamesLeft -= 128;
+            else
+            {
+                stop = true;
+                gamesLeft = 0;
+                break;
+            }
         }
+
+        totalGames += 128;
+
+        for (int i = 0; i < 128; i++)
+        {
+            auto game = runGame(gen);
+            game.write(outFile);
+
+            totalPositions += game.moves.size() + 1;
+        }
+
+        auto currTime = std::chrono::steady_clock::now();
+        float seconds =
+            std::chrono::duration_cast<std::chrono::duration<float>>(currTime - startTime).count();
+
+        std::unique_lock<std::mutex> lock(mutex);
+        std::cout << "Thread " << threadID << " wrote 128 games in the last " << seconds << "s, "
+                  << 128.0 / seconds << " games/s" << std::endl;
+        std::cout << "    average positions/game: " << static_cast<float>(totalPositions) / 128.0
+                  << std::endl;
     }
+
+    std::unique_lock<std::mutex> lock(mutex);
+    std::cout << "Thread " << threadID << " finished playing " << totalGames << " games" << std::endl;
+}
+
+extern "C" void signalHandler(int sig)
+{
+    if (sig != SIGINT)
+        return;
+    stop = true;
+}
+
+void runDatagen(uint32_t numGames, uint32_t numThreads)
+{
+    std::cout << "Generating " << numGames << " games with " << numThreads << " threads" << std::endl;
+
+    std::vector<std::thread> threads;
+    std::mutex lock;
+    stop = false;
+    std::signal(SIGINT, signalHandler);
+
+    uint32_t gamesLeft = numGames - numGames % 128;
+
+    for (uint32_t i = 0; i < numThreads; i++)
+    {
+        threads.push_back(std::thread(
+            [i, &lock, &gamesLeft]()
+            {
+                datagenThread(i, std::string("datagen") + std::to_string(i) + ".bin", gamesLeft, lock);
+            }));
+    }
+
+    for (auto& thread : threads)
+        thread.join();
 }
 
 }
