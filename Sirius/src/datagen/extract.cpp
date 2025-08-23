@@ -1,6 +1,9 @@
 #include "extract.h"
 #include "viriformat.h"
+#include <algorithm>
 #include <fstream>
+#include <random>
+#include <sstream>
 
 namespace datagen
 {
@@ -29,6 +32,7 @@ void extract(std::string dataFilename, std::string outputFilename)
 
     std::cout << "Finished loading " << games.size() << " games from " << dataFilename << std::endl;
 
+    std::vector<std::string> lines;
     uint32_t extracted = 0;
     for (auto game : games)
     {
@@ -43,24 +47,35 @@ void extract(std::string dataFilename, std::string outputFilename)
             }
 
             extracted++;
-            outputFile << board.fenStr() << " | ";
-            outputFile << score << "cp | ";
+            std::stringstream ss;
+            ss << board.fenStr() << " | ";
+            ss << score << "cp | ";
             switch (wdl)
             {
                 case marlinformat::WDL::BLACK_WIN:
-                    outputFile << "0.0";
+                    ss << "0.0";
                     break;
                 case marlinformat::WDL::DRAW:
-                    outputFile << "0.5";
+                    ss << "0.5";
                     break;
                 case marlinformat::WDL::WHITE_WIN:
-                    outputFile << "1.0";
+                    ss << "1.0";
                     break;
             }
-            outputFile << '\n';
+            ss << '\n';
+            lines.push_back(ss.str());
             board.makeMove(move);
         }
     }
+    std::cout << "Shuffling" << std::endl;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::shuffle(lines.begin(), lines.end(), gen);
+    std::cout << "Writing to output file" << std::endl;
+    for (const auto& line : lines)
+        outputFile << line;
+    outputFile.flush();
+
     std::cout << "Finished extracting " << extracted << " fens from " << games.size() << " games"
               << std::endl;
 }
