@@ -203,14 +203,17 @@ void runDatagen(Config config)
 
     for (uint32_t i = 0; i < config.numThreads; i++)
     {
-        std::ifstream tmpFile(tmpFilename(i));
+        std::ifstream tmpFile(tmpFilename(i), std::ios::binary);
         if (!tmpFile.is_open())
         {
             std::cout << "Could not open file " << tmpFilename(i) << " for writing to final output"
                       << std::endl;
             break;
         }
+        std::cout << "Merging games written from thread " << i << std::endl;
         outputFile << tmpFile.rdbuf();
+        std::cout << "Finished merging games written from thread " << i << std::endl;
+        tmpFile.close();
         if (!std::filesystem::remove(tmpFilename(i)))
             std::cout << "Could not delete temporary file " << tmpFilename(i) << std::endl;
     }
