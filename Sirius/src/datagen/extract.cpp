@@ -1,5 +1,7 @@
 #include "extract.h"
+#include "../move_ordering.h"
 #include "viriformat.h"
+
 #include <algorithm>
 #include <fstream>
 #include <random>
@@ -11,6 +13,8 @@ namespace datagen
 bool filterPos(const Board& board, Move move, int score, marlinformat::WDL wdl)
 {
     if (board.checkers().any())
+        return true;
+    if (moveIsCapture(board, move))
         return true;
     return false;
 }
