@@ -5,6 +5,13 @@
 namespace datagen
 {
 
+bool filterPos(const Board& board, Move move, int score, marlinformat::WDL wdl)
+{
+    if (board.checkers().any())
+        return true;
+    return false;
+}
+
 void extract(std::string dataFilename, std::string outputFilename)
 {
     std::ifstream inputFile(dataFilename, std::ios::binary);
@@ -26,29 +33,32 @@ void extract(std::string dataFilename, std::string outputFilename)
     for (auto game : games)
     {
         auto [board, score, wdl] = marlinformat::unpackBoard(game.startpos);
-        for (auto [move, score] : game.moves)
+        for (auto [viriMove, score] : game.moves)
         {
-            extracted++;
-            if (!board.checkers().any())
+            Move move = viriMove.toMove();
+            if (filterPos(board, move, score, wdl))
             {
-                outputFile << board.fenStr() << " | ";
-                outputFile << score << "cp | ";
-                switch (wdl)
-                {
-                    case marlinformat::WDL::BLACK_WIN:
-                        outputFile << "0.0";
-                        break;
-                    case marlinformat::WDL::DRAW:
-                        outputFile << "0.5";
-                        break;
-                    case marlinformat::WDL::WHITE_WIN:
-                        outputFile << "1.0";
-                        break;
-                }
-                outputFile << '\n';
+                board.makeMove(move);
+                continue;
             }
 
-            board.makeMove(move.toMove());
+            extracted++;
+            outputFile << board.fenStr() << " | ";
+            outputFile << score << "cp | ";
+            switch (wdl)
+            {
+                case marlinformat::WDL::BLACK_WIN:
+                    outputFile << "0.0";
+                    break;
+                case marlinformat::WDL::DRAW:
+                    outputFile << "0.5";
+                    break;
+                case marlinformat::WDL::WHITE_WIN:
+                    outputFile << "1.0";
+                    break;
+            }
+            outputFile << '\n';
+            board.makeMove(move);
         }
     }
     std::cout << "Finished extracting " << extracted << " fens from " << games.size() << " games"
