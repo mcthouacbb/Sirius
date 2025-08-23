@@ -29,21 +29,24 @@ void extract(std::string dataFilename, std::string outputFilename)
         for (auto [move, score] : game.moves)
         {
             extracted++;
-            outputFile << board.fenStr() << " | ";
-            outputFile << score << "cp | ";
-            switch (wdl)
+            if (!board.checkers().any())
             {
-                case marlinformat::WDL::BLACK_WIN:
-                    outputFile << "0.0";
-                    break;
-                case marlinformat::WDL::DRAW:
-                    outputFile << "0.5";
-                    break;
-                case marlinformat::WDL::WHITE_WIN:
-                    outputFile << "1.0";
-                    break;
+                outputFile << board.fenStr() << " | ";
+                outputFile << score << "cp | ";
+                switch (wdl)
+                {
+                    case marlinformat::WDL::BLACK_WIN:
+                        outputFile << "0.0";
+                        break;
+                    case marlinformat::WDL::DRAW:
+                        outputFile << "0.5";
+                        break;
+                    case marlinformat::WDL::WHITE_WIN:
+                        outputFile << "1.0";
+                        break;
+                }
+                outputFile << '\n';
             }
-            outputFile << '\n';
 
             board.makeMove(move.toMove());
         }
