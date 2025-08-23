@@ -22,7 +22,6 @@ void extract(std::string dataFilename, std::string outputFilename)
 
     std::cout << "Finished loading " << games.size() << " games from " << dataFilename << std::endl;
 
-    std::cout << games.size() << std::endl;
     uint32_t extracted = 0;
     for (auto game : games)
     {
