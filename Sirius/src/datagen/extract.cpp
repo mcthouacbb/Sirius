@@ -16,18 +16,20 @@ void extract(std::string dataFilename, std::string outputFilename)
 
     while (inputFile.peek() != EOF)
     {
-        std::cout << "tellg(): " << inputFile.tellg() << std::endl;
         auto game = viriformat::Game::read(inputFile);
-
         games.push_back(game);
     }
 
+    std::cout << "Finished loading " << games.size() << " games from " << dataFilename << std::endl;
+
     std::cout << games.size() << std::endl;
+    uint32_t extracted = 0;
     for (auto game : games)
     {
         auto [board, score, wdl] = marlinformat::unpackBoard(game.startpos);
         for (auto [move, score] : game.moves)
         {
+            extracted++;
             outputFile << board.fenStr() << " | ";
             outputFile << score << "cp | ";
             switch (wdl)
@@ -47,6 +49,8 @@ void extract(std::string dataFilename, std::string outputFilename)
             board.makeMove(move.toMove());
         }
     }
+    std::cout << "Finished extracting " << extracted << " fens from " << games.size() << " games"
+              << std::endl;
 }
 
 }

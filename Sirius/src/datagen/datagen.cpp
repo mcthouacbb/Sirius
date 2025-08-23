@@ -177,6 +177,8 @@ void runDatagen(Config config)
     config.numGames -= config.numGames % BATCH_SIZE;
     std::cout << "Generating " << config.numGames << " games with " << config.numThreads
               << " threads" << std::endl;
+    std::cout << "Using " << config.hardLimit << " nodes hard limit and " << config.softLimit
+              << " nodes soft limit" << std::endl;
 
     std::vector<std::thread> threads;
     std::mutex lock;
