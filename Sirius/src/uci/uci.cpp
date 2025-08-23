@@ -5,6 +5,7 @@
 
 #include "../bench.h"
 #include "../datagen/datagen.h"
+#include "../datagen/extract.h"
 #include "../eval/eval.h"
 #include "../misc.h"
 #include "../sirius.h"
@@ -320,6 +321,9 @@ bool UCI::execCommand(const std::string& command)
         case Command::DATAGEN:
             datagenCommand(stream);
             break;
+        case Command::EXTRACT:
+            extractCommand(stream);
+            break;
     }
     return false;
 }
@@ -354,6 +358,8 @@ UCI::Command UCI::getCommand(const std::string& command) const
         return Command::BENCH;
     else if (command == "datagen")
         return Command::DATAGEN;
+    else if (command == "extract")
+        return Command::EXTRACT;
 
     return Command::INVALID;
 }
@@ -629,6 +635,14 @@ void UCI::datagenCommand(std::istringstream& stream)
         }
     }
     datagen::runDatagen(config);
+}
+
+void UCI::extractCommand(std::istringstream& stream)
+{
+    std::string inputFilename, outputFilename;
+    stream >> inputFilename >> outputFilename;
+
+    datagen::extract(inputFilename, outputFilename);
 }
 
 }
