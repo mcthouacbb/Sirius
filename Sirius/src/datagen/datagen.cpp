@@ -159,6 +159,7 @@ void datagenThread(uint32_t threadID, const Config& config, uint32_t& gamesLeft,
                   << seconds << "s, " << BATCH_SIZE / seconds << " games/s" << std::endl;
         std::cout << "    average positions/game: " << static_cast<float>(totalPositions) / BATCH_SIZE
                   << std::endl;
+        std::cout << "    " << totalGames << " total games written" << std::endl;
     }
 
     std::unique_lock<std::mutex> lock(mutex);
