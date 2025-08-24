@@ -152,8 +152,8 @@ SEARCH_PARAM(lmrMinMovesPv, 4, 2, 8, 1);
 SEARCH_PARAM(lmrFailHighCountMargin, 2, 2, 12, 1);
 SEARCH_PARAM(lmrCorrplexityMargin, 88, 40, 120, 5);
 
-SEARCH_PARAM_CALLBACK(lmrBase, 809, -50, 200, 110, updateLmrTable);
-SEARCH_PARAM_CALLBACK(lmrScale, 449, 180, 320, 50, updateLmrTable);
+SEARCH_PARAM_CALLBACK(lmrBase, 809, -512, 2048, 110, updateLmrTable);
+SEARCH_PARAM_CALLBACK(lmrScale, 449, 300, 600, 50, updateLmrTable);
 SEARCH_PARAM(lmrQuietHistDivisor, 9292, 4096, 16384, 512);
 SEARCH_PARAM(lmrNoisyHistDivisor, 5833, 2048, 16384, 512);
 
