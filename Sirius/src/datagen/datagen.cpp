@@ -64,6 +64,13 @@ Board genOpening(std::mt19937& gen)
 
 viriformat::Game runGame(std::mt19937& gen, const Config& config)
 {
+    constexpr int WIN_ADJ_THRESHOLD = 2000;
+    constexpr int WIN_ADJ_PLIES = 5;
+    constexpr int DRAW_ADJ_MOVE_NUM = 50;
+    constexpr int DRAW_ADJ_THRESHOLD = 7;
+    constexpr int DRAW_ADJ_PLIES = 8;
+    constexpr int MAX_OPENING_SCORE = 300;
+
     Board startpos = genOpening(gen);
     ColorArray<search::Search> searches = {search::Search(8), search::Search(8)};
     SearchLimits limits = {};
@@ -76,13 +83,62 @@ viriformat::Game runGame(std::mt19937& gen, const Config& config)
 
     viriformat::Game game = {};
 
+    int winPlies = 0;
+    int drawPlies = 0;
+    int lossPlies = 0;
+
     for (;;)
     {
         auto [score, move] = searches[board.sideToMove()].datagenSearch(limits, board);
         if (board.sideToMove() == Color::BLACK)
             score = -score;
+
+        if (game.moves.size() == 0 && score > MAX_OPENING_SCORE)
+        {
+            searches[board.sideToMove()].newGame();
+            board = startpos = genOpening(gen);
+            continue;
+        }
+
+        if (isMateScore(score))
+        {
+            wdl = score > 0 ? marlinformat::WDL::WHITE_WIN : marlinformat::WDL::BLACK_WIN;
+            break;
+        }
+
         game.moves.push_back({viriformat::ViriMove(move), score});
         board.makeMove(move);
+
+        if (score >= WIN_ADJ_THRESHOLD)
+            winPlies++;
+        else
+            winPlies = 0;
+
+        if (std::abs(score) < DRAW_ADJ_THRESHOLD && game.moves.size() >= DRAW_ADJ_MOVE_NUM * 2)
+            drawPlies++;
+        else
+            drawPlies = 0;
+
+        if (score <= -WIN_ADJ_THRESHOLD)
+            lossPlies++;
+        else
+            lossPlies = 0;
+
+        if (winPlies >= WIN_ADJ_PLIES)
+        {
+            wdl = marlinformat::WDL::WHITE_WIN;
+            break;
+        }
+        else if (drawPlies >= DRAW_ADJ_PLIES)
+        {
+            wdl = marlinformat::WDL::DRAW;
+            break;
+        }
+        else if (lossPlies >= WIN_ADJ_PLIES)
+        {
+            wdl = marlinformat::WDL::BLACK_WIN;
+            break;
+        }
 
         GameResult result = gameResult(board);
         if (result != GameResult::NON_TERMINAL)
