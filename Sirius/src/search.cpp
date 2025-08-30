@@ -484,7 +484,16 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     bool ttPV = pvNode || (ttHit && ttData.pv);
     // Improving heuristic(~31 elo)
-    bool improving = !inCheck && rootPly > 1 && stack->staticEval > (stack - 2)->staticEval;
+    bool improving = [&]()
+    {
+        if (inCheck)
+            return false;
+        if (rootPly > 1 && (stack - 2)->staticEval != SCORE_NONE)
+            return stack->staticEval > (stack - 2)->staticEval;
+        if (rootPly > 3 && (stack - 4)->staticEval != SCORE_NONE)
+            return stack->staticEval > (stack - 4)->staticEval;
+        return true;
+    }();
     bool oppWorsening = !inCheck && rootPly > 0 && (stack - 1)->staticEval != SCORE_NONE
         && stack->staticEval > -(stack - 1)->staticEval + 1;
 
