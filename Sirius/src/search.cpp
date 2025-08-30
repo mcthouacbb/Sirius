@@ -813,11 +813,15 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 int malus = historyMalus(histDepth);
                 if (quiet)
                 {
-                    history.updateQuietStats(board, move, stack, rootPly, bonus);
-                    for (Move quietMove : quietsTried)
+                    // avoid giving bonus for easy low depth cutoffs
+                    if (quietsTried.size() > 1 || depth >= 4)
                     {
-                        if (quietMove != move)
-                            history.updateQuietStats(board, quietMove, stack, rootPly, -malus);
+                        history.updateQuietStats(board, move, stack, rootPly, bonus);
+                        for (Move quietMove : quietsTried)
+                        {
+                            if (quietMove != move)
+                                history.updateQuietStats(board, quietMove, stack, rootPly, -malus);
+                        }
                     }
                 }
                 else
