@@ -909,7 +909,11 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     }
 
     if (stack->eval >= beta)
+    {
+        m_TT.store(board.zkey(), rootPly, 0, stack->eval, rawStaticEval, Move::nullmove(), ttPV,
+            TTEntry::Bound::LOWER_BOUND);
         return stack->eval;
+    }
     if (stack->eval > alpha)
         alpha = stack->eval;
 
