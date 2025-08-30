@@ -716,6 +716,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
             reduction += lmrNonImp * !improving;
             reduction += lmrNoisyTTMove * noisyTTMove;
+            reduction -= 512 * pvNode;
             reduction -= lmrTTPV * ttPV;
             reduction -= lmrGivesCheck * givesCheck;
             reduction -= lmrInCheck * inCheck;
