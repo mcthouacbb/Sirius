@@ -134,7 +134,7 @@ bool TT::probe(ZKey key, int ply, ProbedTTData& ttData)
     return true;
 }
 
-void TT::store(ZKey key, int depth, int ply, int score, int staticEval, Move move, bool pv,
+void TT::store(ZKey key, int ply, int depth, int score, int staticEval, Move move, bool pv,
     TTEntry::Bound bound)
 {
     // 16 bit keys to save space
