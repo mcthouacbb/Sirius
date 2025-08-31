@@ -484,7 +484,16 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     bool ttPV = pvNode || (ttHit && ttData.pv);
     // Improving heuristic(~31 elo)
-    bool improving = !inCheck && rootPly > 1 && stack->staticEval > (stack - 2)->staticEval;
+    bool improving = [&]()
+    {
+        if (inCheck)
+            return false;
+        if (rootPly > 1 && (stack - 2)->staticEval != SCORE_NONE)
+            return stack->staticEval > (stack - 2)->staticEval;
+        if (rootPly > 3 && (stack - 4)->staticEval != SCORE_NONE)
+            return stack->staticEval > (stack - 4)->staticEval;
+        return true;
+    }();
     bool oppWorsening = !inCheck && rootPly > 0 && (stack - 1)->staticEval != SCORE_NONE
         && stack->staticEval > -(stack - 1)->staticEval + 1;
 
@@ -568,7 +577,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
                 if (score >= probcutBeta)
                 {
-                    m_TT.store(board.zkey(), probcutDepth + 1, rootPly, score, rawStaticEval, move,
+                    m_TT.store(board.zkey(), rootPly, probcutDepth + 1, score, rawStaticEval, move,
                         ttPV, TTEntry::Bound::LOWER_BOUND);
                     return score;
                 }
@@ -845,7 +854,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             && !(bound == TTEntry::Bound::UPPER_BOUND && stack->staticEval <= bestScore))
             history.updateCorrHist(board, bestScore - stack->staticEval, depth, stack, rootPly);
 
-        m_TT.store(board.zkey(), depth, rootPly, bestScore, rawStaticEval, bestMove, ttPV, bound);
+        m_TT.store(board.zkey(), rootPly, depth, bestScore, rawStaticEval, bestMove, ttPV, bound);
     }
 
     return bestScore;
@@ -979,7 +988,7 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     if (inCheck && movesPlayed == 0)
         return -SCORE_MATE + rootPly;
 
-    m_TT.store(board.zkey(), 0, rootPly, bestScore, rawStaticEval, bestMove, ttPV, bound);
+    m_TT.store(board.zkey(), rootPly, 0, bestScore, rawStaticEval, bestMove, ttPV, bound);
 
     return bestScore;
 }
