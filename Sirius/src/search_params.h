@@ -148,12 +148,21 @@ SEARCH_PARAM(lmrMinDepth, 3, 2, 5, 1);
 SEARCH_PARAM(lmrMinMovesNonPv, 3, 1, 6, 1);
 SEARCH_PARAM(lmrMinMovesPv, 4, 2, 8, 1);
 SEARCH_PARAM(lmrFailHighCountMargin, 2, 2, 12, 1);
-SEARCH_PARAM(lmrCorrplexityMargin, 88, 40, 120, 5);
+SEARCH_PARAM(lmrCorrplexityMargin, 89, 40, 120, 5);
 
-SEARCH_PARAM_CALLBACK(lmrBase, 79, -50, 200, 10, updateLmrTable);
-SEARCH_PARAM_CALLBACK(lmrDivisor, 228, 180, 320, 10, updateLmrTable);
-SEARCH_PARAM(lmrQuietHistDivisor, 9292, 4096, 16384, 512);
-SEARCH_PARAM(lmrNoisyHistDivisor, 5833, 2048, 16384, 512);
+SEARCH_PARAM_CALLBACK(lmrBase, 733, -512, 2048, 110, updateLmrTable);
+SEARCH_PARAM_CALLBACK(lmrScale, 425, 300, 600, 50, updateLmrTable);
+SEARCH_PARAM(lmrQuietHistDivisor, 9141, 4096, 16384, 512);
+SEARCH_PARAM(lmrNoisyHistDivisor, 6283, 2048, 16384, 512);
+
+SEARCH_PARAM(lmrNonImp, 1384, 0, 2048, 256);
+SEARCH_PARAM(lmrNoisyTTMove, 1172, 0, 2048, 256);
+SEARCH_PARAM(lmrTTPV, 951, 0, 2048, 256);
+SEARCH_PARAM(lmrGivesCheck, 724, 0, 2048, 256);
+SEARCH_PARAM(lmrInCheck, 641, 0, 2048, 256);
+SEARCH_PARAM(lmrCorrplexity, 710, 0, 2048, 256);
+SEARCH_PARAM(lmrCutnode, 1409, 0, 2048, 256);
+SEARCH_PARAM(lmrFailHighCount, 957, 0, 2048, 256);
 
 SEARCH_PARAM(doDeeperMarginBase, 37, 15, 55, 5);
 SEARCH_PARAM(doDeeperMarginDepth, 139, 32, 384, 16);
