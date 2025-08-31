@@ -450,6 +450,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     bool ttHit = false;
 
     int rawStaticEval = SCORE_NONE;
+    int corrplexity = 0;
 
     if (!excluded)
     {
@@ -479,6 +480,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                     || (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= stack->eval)
                     || (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= stack->eval)))
                 stack->eval = ttData.score;
+            corrplexity = std::abs(stack->staticEval - rawStaticEval);
         }
     }
 
@@ -728,8 +730,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             reduction -= lmrTTPV * ttPV;
             reduction -= lmrGivesCheck * givesCheck;
             reduction -= lmrInCheck * inCheck;
-            reduction -=
-                lmrCorrplexity * (std::abs(stack->staticEval - rawStaticEval) > lmrCorrplexityMargin);
+            reduction -= lmrCorrplexity * (corrplexity > lmrCorrplexityMargin);
             reduction += lmrCutnode * cutnode;
             reduction += lmrFailHighCount
                 * ((stack + 1)->failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin));
