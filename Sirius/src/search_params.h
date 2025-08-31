@@ -5,8 +5,6 @@
 #include <functional>
 #include <string>
 
-#define EXTERNAL_TUNE
-
 namespace search
 {
 
@@ -150,21 +148,21 @@ SEARCH_PARAM(lmrMinDepth, 3, 2, 5, 1);
 SEARCH_PARAM(lmrMinMovesNonPv, 3, 1, 6, 1);
 SEARCH_PARAM(lmrMinMovesPv, 4, 2, 8, 1);
 SEARCH_PARAM(lmrFailHighCountMargin, 2, 2, 12, 1);
-SEARCH_PARAM(lmrCorrplexityMargin, 92, 40, 120, 5);
+SEARCH_PARAM(lmrCorrplexityMargin, 89, 40, 120, 5);
 
-SEARCH_PARAM_CALLBACK(lmrBase, 702, -512, 2048, 110, updateLmrTable);
-SEARCH_PARAM_CALLBACK(lmrScale, 450, 300, 600, 50, updateLmrTable);
-SEARCH_PARAM(lmrQuietHistDivisor, 8847, 4096, 16384, 512);
-SEARCH_PARAM(lmrNoisyHistDivisor, 6342, 2048, 16384, 512);
+SEARCH_PARAM_CALLBACK(lmrBase, 733, -512, 2048, 110, updateLmrTable);
+SEARCH_PARAM_CALLBACK(lmrScale, 425, 300, 600, 50, updateLmrTable);
+SEARCH_PARAM(lmrQuietHistDivisor, 9141, 4096, 16384, 512);
+SEARCH_PARAM(lmrNoisyHistDivisor, 6283, 2048, 16384, 512);
 
-SEARCH_PARAM(lmrNonImp, 1236, 0, 2048, 256);
-SEARCH_PARAM(lmrNoisyTTMove, 1145, 0, 2048, 256);
-SEARCH_PARAM(lmrTTPV, 1080, 0, 2048, 256);
-SEARCH_PARAM(lmrGivesCheck, 781, 0, 2048, 256);
-SEARCH_PARAM(lmrInCheck, 753, 0, 2048, 256);
-SEARCH_PARAM(lmrCorrplexity, 783, 0, 2048, 256);
-SEARCH_PARAM(lmrCutnode, 1254, 0, 2048, 256);
-SEARCH_PARAM(lmrFailHighCount, 1007, 0, 2048, 256);
+SEARCH_PARAM(lmrNonImp, 1384, 0, 2048, 256);
+SEARCH_PARAM(lmrNoisyTTMove, 1172, 0, 2048, 256);
+SEARCH_PARAM(lmrTTPV, 951, 0, 2048, 256);
+SEARCH_PARAM(lmrGivesCheck, 724, 0, 2048, 256);
+SEARCH_PARAM(lmrInCheck, 641, 0, 2048, 256);
+SEARCH_PARAM(lmrCorrplexity, 710, 0, 2048, 256);
+SEARCH_PARAM(lmrCutnode, 1409, 0, 2048, 256);
+SEARCH_PARAM(lmrFailHighCount, 957, 0, 2048, 256);
 
 SEARCH_PARAM(doDeeperMarginBase, 37, 15, 55, 5);
 SEARCH_PARAM(doDeeperMarginDepth, 139, 32, 384, 16);
