@@ -51,7 +51,8 @@ int History::getNoisyStats(const Board& board, Move move) const
     return getCaptHist(board, move);
 }
 
-int History::correctStaticEval(const Board& board, int staticEval, const SearchStack* stack, int ply) const
+History::CorrResult History::correctStaticEval(
+    const Board& board, int staticEval, const SearchStack* stack, int ply) const
 {
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
@@ -63,12 +64,19 @@ int History::correctStaticEval(const Board& board, int staticEval, const SearchS
     int majorPieceEntry = m_MajorPieceCorrHist.get(stm, board.majorPieceKey().value);
 
     int correction = 0;
-    correction += search::pawnCorrWeight * pawnEntry;
-    correction += search::nonPawnStmCorrWeight * nonPawnStmEntry;
-    correction += search::nonPawnNstmCorrWeight * nonPawnNstmEntry;
-    correction += search::threatsCorrWeight * threatsEntry;
-    correction += search::minorCorrWeight * minorPieceEntry;
-    correction += search::majorCorrWeight * majorPieceEntry;
+    uint64_t corrplexity = 0;
+    const auto addCorrection = [&](int weight, int corr)
+    {
+        correction += weight * corr;
+        corrplexity += static_cast<uint64_t>(weight) * static_cast<uint64_t>(corr * corr);
+    };
+
+    addCorrection(search::pawnCorrWeight, pawnEntry);
+    addCorrection(search::nonPawnStmCorrWeight, nonPawnStmEntry);
+    addCorrection(search::nonPawnNstmCorrWeight, nonPawnNstmEntry);
+    addCorrection(search::threatsCorrWeight, threatsEntry);
+    addCorrection(search::minorCorrWeight, minorPieceEntry);
+    addCorrection(search::majorCorrWeight, majorPieceEntry);
 
     Move prevMove = ply > 0 ? stack[-1].playedMove : Move::nullmove();
     // use pawn to a1 as sentinel for null moves in contcorrhist
@@ -85,15 +93,18 @@ int History::correctStaticEval(const Board& board, int staticEval, const SearchS
         return value;
     };
 
-    correction += search::contCorr2Weight * contCorrEntry(2);
-    correction += search::contCorr3Weight * contCorrEntry(3);
-    correction += search::contCorr4Weight * contCorrEntry(4);
-    correction += search::contCorr5Weight * contCorrEntry(5);
-    correction += search::contCorr6Weight * contCorrEntry(6);
-    correction += search::contCorr7Weight * contCorrEntry(7);
+    addCorrection(search::contCorr2Weight, contCorrEntry(2));
+    addCorrection(search::contCorr3Weight, contCorrEntry(3));
+    addCorrection(search::contCorr4Weight, contCorrEntry(4));
+    addCorrection(search::contCorr5Weight, contCorrEntry(5));
+    addCorrection(search::contCorr6Weight, contCorrEntry(6));
+    addCorrection(search::contCorr7Weight, contCorrEntry(7));
 
     int corrected = staticEval + correction / (256 * CORR_HIST_SCALE);
-    return std::clamp(corrected, -SCORE_MATE_IN_MAX + 1, SCORE_MATE_IN_MAX - 1);
+    CorrResult result = {};
+    result.staticEval = std::clamp(corrected, -SCORE_MATE_IN_MAX + 1, SCORE_MATE_IN_MAX - 1);
+    result.corrplexity = corrplexity / (256 * CORR_HIST_SCALE);
+    return result;
 }
 
 void History::updateQuietStats(const Board& board, Move move, const SearchStack* stack, int ply, int bonus)

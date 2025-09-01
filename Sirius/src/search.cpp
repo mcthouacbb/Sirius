@@ -472,7 +472,10 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         {
             rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
             // Correction history(~104 elo)
-            stack->staticEval = history.correctStaticEval(board, rawStaticEval, stack, rootPly);
+            auto result = history.correctStaticEval(board, rawStaticEval, stack, rootPly);
+            stack->staticEval = result.staticEval;
+            corrplexity = result.corrplexity;
+
             stack->eval = stack->staticEval;
             // use tt score as a better eval(~8 elo)
             if (ttHit
@@ -480,7 +483,6 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                     || (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= stack->eval)
                     || (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= stack->eval)))
                 stack->eval = ttData.score;
-            corrplexity = std::abs(stack->staticEval - rawStaticEval);
         }
     }
 
@@ -730,7 +732,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             reduction -= lmrTTPV * ttPV;
             reduction -= lmrGivesCheck * givesCheck;
             reduction -= lmrInCheck * inCheck;
-            reduction -= lmrCorrplexity * (corrplexity > lmrCorrplexityMargin);
+            reduction -= std::min(corrplexity / 1024, 2048);
             reduction += lmrCutnode * cutnode;
             reduction += lmrFailHighCount
                 * ((stack + 1)->failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin));
@@ -898,9 +900,8 @@ int Search::qsearch(SearchThread& thread, SearchStack* stack, int alpha, int bet
     {
         rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
         // Correction history(~104 elo)
-        stack->staticEval = inCheck
-            ? SCORE_NONE
-            : thread.history.correctStaticEval(board, rawStaticEval, stack, rootPly);
+        auto result = thread.history.correctStaticEval(board, rawStaticEval, stack, rootPly);
+        stack->staticEval = result.staticEval;
 
         // use tt score as a better eval(~8 elo)
         stack->eval = stack->staticEval;

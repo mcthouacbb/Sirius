@@ -174,7 +174,13 @@ public:
     int getQuietStats(
         Move move, Bitboard threats, Piece movingPiece, const SearchStack* stack, int ply) const;
     int getNoisyStats(const Board& board, Move move) const;
-    int correctStaticEval(const Board& board, int staticEval, const SearchStack* stack, int ply) const;
+    struct CorrResult
+    {
+        int staticEval;
+        uint64_t corrplexity;
+    };
+    CorrResult correctStaticEval(
+        const Board& board, int staticEval, const SearchStack* stack, int ply) const;
 
     void clear();
     void updateQuietStats(const Board& board, Move move, const SearchStack* stack, int ply, int bonus);
