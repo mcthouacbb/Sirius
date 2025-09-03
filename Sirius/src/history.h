@@ -105,6 +105,8 @@ static constexpr int HISTORY_MAX = 16384;
 
 // main history(~29 elo)
 using MainHist = MultiArray<HistoryEntry<HISTORY_MAX>, 2, 4096, 2, 2>;
+constexpr int PAWN_HIST_ENTRIES = 512;
+using PawnHist = MultiArray<HistoryEntry<HISTORY_MAX>, PAWN_HIST_ENTRIES, 12, 64>;
 // continuation history(~40 elo)
 using CHEntry = MultiArray<HistoryEntry<HISTORY_MAX>, 12, 64>;
 using ContHist = MultiArray<CHEntry, 12, 64>;
@@ -171,8 +173,8 @@ public:
         return m_ContCorrHist[packPieceIndices(movingPiece(board, move))][move.toSq().value()];
     }
 
-    int getQuietStats(
-        Move move, Bitboard threats, Piece movingPiece, const SearchStack* stack, int ply) const;
+    int getQuietStats(Move move, Bitboard threats, Piece movingPiece, ZKey pawnKey,
+        const SearchStack* stack, int ply) const;
     int getNoisyStats(const Board& board, Move move) const;
     int correctStaticEval(const Board& board, int staticEval, const SearchStack* stack, int ply) const;
 
@@ -184,14 +186,17 @@ public:
 
 private:
     int getMainHist(Move move, Bitboard threats, Color color) const;
+    int getPawnHist(Move move, Piece movingPiece, ZKey pawnKey) const;
     int getContHist(Move move, Piece movingPiece, const CHEntry* entry) const;
     int getCaptHist(const Board& board, Move move) const;
 
     void updateMainHist(const Board& board, Move move, int bonus);
+    void updatePawnHist(const Board& board, Move move, int bonus);
     void updateContHist(Move move, Piece movingPiece, CHEntry* entry, int bonus);
     void updateCaptHist(const Board& board, Move move, int bonus);
 
     MainHist m_MainHist;
+    PawnHist m_PawnHist;
     ContHist m_ContHist;
     CaptHist m_CaptHist;
     PawnCorrHist m_PawnCorrHist;

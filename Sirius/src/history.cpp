@@ -23,6 +23,7 @@ int historyMalus(int depth)
 void History::clear()
 {
     std::memset(&m_MainHist, 0, sizeof(m_MainHist));
+    std::memset(&m_PawnHist, 0, sizeof(m_PawnHist));
     std::memset(&m_ContHist, 0, sizeof(m_ContHist));
     std::memset(&m_CaptHist, 0, sizeof(m_CaptHist));
     std::memset(&m_PawnCorrHist, 0, sizeof(m_PawnCorrHist));
@@ -33,10 +34,11 @@ void History::clear()
     std::memset(&m_ContCorrHist, 0, sizeof(m_ContCorrHist));
 }
 
-int History::getQuietStats(
-    Move move, Bitboard threats, Piece movingPiece, const SearchStack* stack, int ply) const
+int History::getQuietStats(Move move, Bitboard threats, Piece movingPiece, ZKey pawnKey,
+    const SearchStack* stack, int ply) const
 {
     int score = getMainHist(move, threats, getPieceColor(movingPiece));
+    score += getPawnHist(move, movingPiece, pawnKey);
     if (ply > 0 && stack[-1].contHistEntry != nullptr)
         score += getContHist(move, movingPiece, stack[-1].contHistEntry);
     if (ply > 1 && stack[-2].contHistEntry != nullptr)
@@ -99,6 +101,7 @@ int History::correctStaticEval(const Board& board, int staticEval, const SearchS
 void History::updateQuietStats(const Board& board, Move move, const SearchStack* stack, int ply, int bonus)
 {
     updateMainHist(board, move, bonus);
+    updatePawnHist(board, move, bonus);
     updateContHist(move, movingPiece(board, move), stack, ply, bonus);
 }
 
@@ -173,6 +176,11 @@ int History::getMainHist(Move move, Bitboard threats, Color color) const
     return m_MainHist[static_cast<int>(color)][move.fromTo()][srcThreat][dstThreat];
 }
 
+int History::getPawnHist(Move move, Piece movingPiece, ZKey pawnKey) const
+{
+    return m_PawnHist[pawnKey.value % PAWN_HIST_ENTRIES][packPieceIndices(movingPiece)][move.toSq().value()];
+}
+
 int History::getContHist(Move move, Piece movingPiece, const CHEntry* entry) const
 {
     return (*entry)[packPieceIndices(movingPiece)][move.toSq().value()];
@@ -192,6 +200,13 @@ void History::updateMainHist(const Board& board, Move move, int bonus)
     bool srcThreat = board.threats().has(move.fromSq());
     bool dstThreat = board.threats().has(move.toSq());
     m_MainHist[static_cast<int>(board.sideToMove())][move.fromTo()][srcThreat][dstThreat].update(bonus);
+}
+
+void History::updatePawnHist(const Board& board, Move move, int bonus)
+{
+    m_PawnHist[board.pawnKey().value % PAWN_HIST_ENTRIES]
+              [packPieceIndices(movingPiece(board, move))][move.toSq().value()]
+                  .update(bonus);
 }
 
 void History::updateContHist(Move move, Piece movingPiece, CHEntry* entry, int bonus)
