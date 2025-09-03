@@ -66,7 +66,8 @@ int MoveOrdering::scoreNoisy(Move move) const
 
 int MoveOrdering::scoreQuiet(Move move) const
 {
-    return m_History.getQuietStats(move, m_Board.threats(), movingPiece(m_Board, move), m_Stack, m_Ply);
+    return m_History.getQuietStats(
+        move, m_Board.threats(), movingPiece(m_Board, move), m_Board.pawnKey(), m_Stack, m_Ply);
 }
 
 int MoveOrdering::scoreMoveQSearch(Move move) const

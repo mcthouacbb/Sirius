@@ -619,8 +619,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         bool quiet = moveIsQuiet(board, move);
         Piece movedPiece = movingPiece(board, move);
         int baseLMR = lmrTable[std::min(depth, 63)][std::min(movesPlayed, 63)];
-        int histScore = quiet ? history.getQuietStats(move, threats, movedPiece, stack, rootPly)
-                              : history.getNoisyStats(board, move);
+        int histScore = quiet
+            ? history.getQuietStats(move, threats, movedPiece, board.pawnKey(), stack, rootPly)
+            : history.getNoisyStats(board, move);
         baseLMR -= 1024 * histScore / (quiet ? lmrQuietHistDivisor : lmrNoisyHistDivisor);
 
         // move loop pruning(~184 elo)
