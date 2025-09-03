@@ -457,7 +457,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         ttHit = m_TT.probe(board.zkey(), rootPly, ttData);
 
         // TT Cutoffs(~101 elo)
-        if (ttHit && !pvNode && ttData.depth >= depth
+        if (ttHit && !pvNode && ttData.depth >= depth + (ttData.score >= beta)
             && (ttData.bound == TTEntry::Bound::EXACT
                 || (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta)
                 || (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)))
