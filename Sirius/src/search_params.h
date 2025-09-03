@@ -145,8 +145,6 @@ SEARCH_PARAM(sBetaScale, 52, 24, 128, 4);
 SEARCH_PARAM(doubleExtMargin, 11, 0, 40, 2);
 
 SEARCH_PARAM(lmrMinDepth, 3, 2, 5, 1);
-SEARCH_PARAM(lmrMinMovesNonPv, 3, 1, 6, 1);
-SEARCH_PARAM(lmrMinMovesPv, 4, 2, 8, 1);
 SEARCH_PARAM(lmrFailHighCountMargin, 2, 2, 12, 1);
 SEARCH_PARAM(lmrCorrplexityMargin, 89, 40, 120, 5);
 
