@@ -693,7 +693,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                     extension = 1;
             }
             else if (sBeta >= beta)
+            {
+                if (!inCheck && sBeta > stack->staticEval)
+                    history.updateCorrHist(board, sBeta - stack->staticEval, sDepth, stack, rootPly);
                 return sBeta;
+            }
             else if (ttData.score >= beta)
                 extension = -2 + pvNode;
             else if (ttData.score <= alpha && cutnode)
