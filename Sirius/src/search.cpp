@@ -730,7 +730,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             reduction -= lmrTTPV * ttPV;
             reduction -= lmrGivesCheck * givesCheck;
             reduction -= lmrInCheck * inCheck;
-            reduction -= 6 * corrplexity;
+            reduction -= 10 * corrplexity;
             reduction += lmrCutnode * cutnode;
             reduction += lmrFailHighCount
                 * ((stack + 1)->failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin));
