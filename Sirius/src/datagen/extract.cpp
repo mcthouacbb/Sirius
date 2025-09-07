@@ -19,7 +19,7 @@ bool filterPos(const Board& board, Move move, int score, marlinformat::WDL wdl)
     return false;
 }
 
-void extract(std::string dataFilename, std::string outputFilename, uint32_t maxGames)
+void extract(std::string dataFilename, std::string outputFilename, uint32_t maxGames, uint32_t ppg)
 {
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -38,6 +38,7 @@ void extract(std::string dataFilename, std::string outputFilename, uint32_t maxG
     }
 
     std::cout << "Finished loading " << games.size() << " games from " << dataFilename << std::endl;
+    std::cout << "Sampling a maximum of " << ppg << " positions per game" << std::endl;
 
     std::vector<std::string> lines;
     uint32_t extracted = 0;
@@ -74,8 +75,8 @@ void extract(std::string dataFilename, std::string outputFilename, uint32_t maxG
             board.makeMove(move);
         }
 
-        extracted += std::min(static_cast<int>(positionLines.size()), 25);
-        std::sample(positionLines.begin(), positionLines.end(), std::back_inserter(lines), 25, gen);
+        extracted += std::min(static_cast<uint32_t>(positionLines.size()), ppg);
+        std::sample(positionLines.begin(), positionLines.end(), std::back_inserter(lines), ppg, gen);
     }
     std::cout << "Shuffling" << std::endl;
     std::shuffle(lines.begin(), lines.end(), gen);
