@@ -5,6 +5,6 @@
 namespace datagen
 {
 
-void extract(std::string dataFile, std::string outFile);
+void extract(std::string dataFile, std::string outFile, uint32_t maxGames);
 
 }

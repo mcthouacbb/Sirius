@@ -19,7 +19,7 @@ bool filterPos(const Board& board, Move move, int score, marlinformat::WDL wdl)
     return false;
 }
 
-void extract(std::string dataFilename, std::string outputFilename)
+void extract(std::string dataFilename, std::string outputFilename, uint32_t maxGames)
 {
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -31,7 +31,7 @@ void extract(std::string dataFilename, std::string outputFilename)
     if (!inputFile.is_open())
         std::cout << "Could not open file " << dataFilename << std::endl;
 
-    while (inputFile.peek() != EOF)
+    while (inputFile.peek() != EOF && games.size() < maxGames)
     {
         auto game = viriformat::Game::read(inputFile);
         games.push_back(game);
