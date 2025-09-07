@@ -21,6 +21,9 @@ bool filterPos(const Board& board, Move move, int score, marlinformat::WDL wdl)
 
 void extract(std::string dataFilename, std::string outputFilename)
 {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
     std::ifstream inputFile(dataFilename, std::ios::binary);
     std::ofstream outputFile(outputFilename, std::ios::app);
     std::vector<viriformat::Game> games;
@@ -40,6 +43,7 @@ void extract(std::string dataFilename, std::string outputFilename)
     uint32_t extracted = 0;
     for (auto game : games)
     {
+        std::vector<std::string> positionLines;
         auto [board, score, wdl] = marlinformat::unpackBoard(game.startpos);
         for (auto [viriMove, score] : game.moves)
         {
@@ -50,7 +54,6 @@ void extract(std::string dataFilename, std::string outputFilename)
                 continue;
             }
 
-            extracted++;
             std::stringstream ss;
             ss << board.fenStr() << " | ";
             ss << score << "cp | ";
@@ -67,13 +70,14 @@ void extract(std::string dataFilename, std::string outputFilename)
                     break;
             }
             ss << '\n';
-            lines.push_back(ss.str());
+            positionLines.push_back(ss.str());
             board.makeMove(move);
         }
+
+        extracted += std::min(static_cast<int>(positionLines.size()), 25);
+        std::sample(positionLines.begin(), positionLines.end(), std::back_inserter(lines), 25, gen);
     }
     std::cout << "Shuffling" << std::endl;
-    std::random_device rd;
-    std::mt19937 gen(rd());
     std::shuffle(lines.begin(), lines.end(), gen);
     std::cout << "Writing to output file" << std::endl;
     for (const auto& line : lines)
