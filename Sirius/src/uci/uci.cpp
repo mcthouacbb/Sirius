@@ -642,6 +642,7 @@ void UCI::extractCommand(std::istringstream& stream)
     std::string inputFilename, outputFilename;
     stream >> inputFilename >> outputFilename;
     uint32_t maxGames = UINT32_MAX;
+    uint32_t ppg = 10;
     std::string tok;
 
     while (stream.tellg() != -1)
@@ -651,9 +652,13 @@ void UCI::extractCommand(std::istringstream& stream)
         {
             stream >> maxGames;
         }
+        else if (tok == "ppg")
+        {
+            stream >> ppg;
+        }
     }
 
-    datagen::extract(inputFilename, outputFilename, maxGames);
+    datagen::extract(inputFilename, outputFilename, maxGames, ppg);
 }
 
 }
