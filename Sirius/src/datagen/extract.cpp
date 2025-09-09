@@ -10,6 +10,29 @@
 namespace datagen
 {
 
+namespace dists
+{
+
+constexpr float phaseScaleFactor(int phase)
+{
+    float oddScale = std::min(0.9f, -0.09793221f * (static_cast<float>(phase) - 23.0f) + 0.189393939f);
+    float p16sqr = (static_cast<float>(phase) - 16) * (static_cast<float>(phase) - 16);
+    float base = phase > 16 ? 1 - p16sqr / 73.1428571 : 1 - p16sqr / 269.473684;
+    if (phase % 2 == 1 && phase > 12)
+        return oddScale * base;
+    return base;
+}
+
+}
+
+int boardPhase(const Board& board)
+{
+    int phase = 4 * board.pieces(PieceType::QUEEN).popcount()
+        + 2 * board.pieces(PieceType::ROOK).popcount()
+        + (board.pieces(PieceType::BISHOP) | board.pieces(PieceType::KNIGHT)).popcount();
+    return std::min(phase, 24);
+}
+
 bool filterPos(const Board& board, Move move, int score, marlinformat::WDL wdl)
 {
     if (board.checkers().any())
@@ -17,6 +40,13 @@ bool filterPos(const Board& board, Move move, int score, marlinformat::WDL wdl)
     if (!moveIsQuiet(board, move))
         return true;
     return false;
+}
+
+bool dropPosition(float keepProb, std::mt19937& gen)
+{
+    std::uniform_real_distribution<float> dist(0.0, 1.0);
+    float u = dist(gen);
+    return u >= keepProb;
 }
 
 void extract(std::string dataFilename, std::string outputFilename, uint32_t maxGames, uint32_t ppg)
@@ -40,11 +70,15 @@ void extract(std::string dataFilename, std::string outputFilename, uint32_t maxG
     std::cout << "Finished loading " << games.size() << " games from " << dataFilename << std::endl;
     std::cout << "Sampling a maximum of " << ppg << " positions per game" << std::endl;
 
-    std::vector<std::string> lines;
-    uint32_t extracted = 0;
+    struct LineEntry
+    {
+        std::string line;
+        int phase;
+    };
+    std::vector<LineEntry> lines;
     for (auto game : games)
     {
-        std::vector<std::string> positionLines;
+        std::vector<LineEntry> positionLines;
         auto [board, score, wdl] = marlinformat::unpackBoard(game.startpos);
         for (auto [viriMove, score] : game.moves)
         {
@@ -71,21 +105,54 @@ void extract(std::string dataFilename, std::string outputFilename, uint32_t maxG
                     break;
             }
             ss << '\n';
-            positionLines.push_back(ss.str());
+            positionLines.push_back({ss.str(), boardPhase(board)});
             board.makeMove(move);
         }
 
-        extracted += std::min(static_cast<uint32_t>(positionLines.size()), ppg);
         std::sample(positionLines.begin(), positionLines.end(), std::back_inserter(lines), ppg, gen);
     }
+
+    std::cout << "Sampled " << lines.size() << " positions from " << games.size() << "games"
+              << std::endl;
+    std::cout << "Adjusting distribution" << std::endl;
+
+    uint32_t phaseCounts[25] = {};
+    for (const auto& lineEntry : lines)
+        phaseCounts[lineEntry.phase]++;
+
+    float phaseKeepProbs[25] = {};
+    float phaseNormConst = 100.0f;
+    for (int i = 0; i <= 24; i++)
+    {
+        float observed = static_cast<float>(phaseCounts[i]) / static_cast<float>(lines.size());
+        // this is not actually the desired probability, but it still works
+        float desired = dists::phaseScaleFactor(i);
+        phaseKeepProbs[i] = desired / observed;
+        phaseNormConst = std::min(phaseNormConst, observed / desired);
+    }
+
+    for (int i = 0; i <= 24; i++)
+        phaseKeepProbs[i] = std::min(phaseKeepProbs[i] * phaseNormConst, 1.0f);
+
+    for (int i = 0; i < lines.size(); i++)
+    {
+        const auto& line = lines[i];
+        if (dropPosition(phaseKeepProbs[line.phase], gen))
+        {
+            lines[i] = std::move(lines.back());
+            lines.pop_back();
+            i--;
+        }
+    }
+
     std::cout << "Shuffling" << std::endl;
     std::shuffle(lines.begin(), lines.end(), gen);
     std::cout << "Writing to output file" << std::endl;
-    for (const auto& line : lines)
-        outputFile << line;
+    for (const auto& lineEntry : lines)
+        outputFile << lineEntry.line;
     outputFile.flush();
 
-    std::cout << "Finished extracting " << extracted << " fens from " << games.size() << " games"
+    std::cout << "Finished extracting " << lines.size() << " fens from " << games.size() << " games"
               << std::endl;
 }
 
