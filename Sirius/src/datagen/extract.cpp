@@ -112,7 +112,7 @@ void extract(std::string dataFilename, std::string outputFilename, uint32_t maxG
         std::sample(positionLines.begin(), positionLines.end(), std::back_inserter(lines), ppg, gen);
     }
 
-    std::cout << "Sampled " << lines.size() << " positions from " << games.size() << "games"
+    std::cout << "Sampled " << lines.size() << " positions from " << games.size() << " games"
               << std::endl;
     std::cout << "Adjusting distribution" << std::endl;
 
