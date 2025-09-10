@@ -73,15 +73,15 @@ void extract(std::string dataFilename, std::string outputFilename, uint32_t maxG
     std::cout << "Finished loading " << games.size() << " games from " << dataFilename << std::endl;
     std::cout << "Sampling a maximum of " << ppg << " positions per game" << std::endl;
 
-    struct LineEntry
+    struct Position
     {
-        std::string line;
+        marlinformat::PackedBoard board;
         int phase;
     };
-    std::vector<LineEntry> lines;
+    std::vector<Position> positions;
     for (auto game : games)
     {
-        std::vector<LineEntry> positionLines;
+        std::vector<Position> currPositions;
         auto [board, score, wdl] = marlinformat::unpackBoard(game.startpos);
         for (auto [viriMove, score] : game.moves)
         {
@@ -92,42 +92,27 @@ void extract(std::string dataFilename, std::string outputFilename, uint32_t maxG
                 continue;
             }
 
-            std::stringstream ss;
-            ss << board.fenStr() << " | ";
-            ss << score << "cp | ";
-            switch (wdl)
-            {
-                case marlinformat::WDL::BLACK_WIN:
-                    ss << "0.0";
-                    break;
-                case marlinformat::WDL::DRAW:
-                    ss << "0.5";
-                    break;
-                case marlinformat::WDL::WHITE_WIN:
-                    ss << "1.0";
-                    break;
-            }
-            ss << '\n';
-            positionLines.push_back({ss.str(), boardPhase(board)});
+            marlinformat::PackedBoard packedBoard = marlinformat::packBoard(board, score, wdl);
+            currPositions.push_back({packedBoard, boardPhase(board)});
             board.makeMove(move);
         }
 
-        std::sample(positionLines.begin(), positionLines.end(), std::back_inserter(lines), ppg, gen);
+        std::sample(currPositions.begin(), currPositions.end(), std::back_inserter(positions), ppg, gen);
     }
 
-    std::cout << "Sampled " << lines.size() << " positions from " << games.size() << " games"
+    std::cout << "Sampled " << positions.size() << " positions from " << games.size() << " games"
               << std::endl;
     std::cout << "Adjusting distribution" << std::endl;
 
     uint32_t phaseCounts[25] = {};
-    for (const auto& lineEntry : lines)
-        phaseCounts[lineEntry.phase]++;
+    for (const auto& pos : positions)
+        phaseCounts[pos.phase]++;
 
     float phaseKeepProbs[25] = {};
     float phaseNormConst = 100.0f;
     for (int i = 0; i <= 24; i++)
     {
-        float observed = static_cast<float>(phaseCounts[i]) / static_cast<float>(lines.size());
+        float observed = static_cast<float>(phaseCounts[i]) / static_cast<float>(positions.size());
         // this is not actually the desired probability, but it still works
         float desired = dists::phaseScaleFactor(i);
         phaseKeepProbs[i] = desired / observed;
@@ -137,26 +122,45 @@ void extract(std::string dataFilename, std::string outputFilename, uint32_t maxG
     for (int i = 0; i <= 24; i++)
         phaseKeepProbs[i] = std::min(phaseKeepProbs[i] * phaseNormConst, 1.0f);
 
-    for (int i = 0; i < lines.size(); i++)
+    for (int i = 0; i < positions.size(); i++)
     {
-        const auto& line = lines[i];
-        if (dropPosition(phaseKeepProbs[line.phase], gen))
+        const auto& pos = positions[i];
+        if (dropPosition(phaseKeepProbs[pos.phase], gen))
         {
-            lines[i] = std::move(lines.back());
-            lines.pop_back();
+            positions[i] = std::move(positions.back());
+            positions.pop_back();
             i--;
         }
     }
 
     std::cout << "Shuffling" << std::endl;
-    std::shuffle(lines.begin(), lines.end(), gen);
+    std::shuffle(positions.begin(), positions.end(), gen);
     std::cout << "Writing to output file" << std::endl;
-    for (const auto& lineEntry : lines)
-        outputFile << lineEntry.line;
+    for (const auto& pos : positions)
+    {
+        auto [board, score, wdl] = marlinformat::unpackBoard(pos.board);
+        std::stringstream ss;
+        ss << board.fenStr() << " | ";
+        ss << score << "cp | ";
+        switch (wdl)
+        {
+            case marlinformat::WDL::BLACK_WIN:
+                ss << "0.0";
+                break;
+            case marlinformat::WDL::DRAW:
+                ss << "0.5";
+                break;
+            case marlinformat::WDL::WHITE_WIN:
+                ss << "1.0";
+                break;
+        }
+        ss << '\n';
+        outputFile << ss.str();
+    }
     outputFile.flush();
 
-    std::cout << "Finished extracting " << lines.size() << " fens from " << games.size() << " games"
-              << std::endl;
+    std::cout << "Finished extracting " << positions.size() << " fens from " << games.size()
+              << " games" << std::endl;
 }
 
 }
