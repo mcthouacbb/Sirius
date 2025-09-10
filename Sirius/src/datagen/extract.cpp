@@ -53,7 +53,9 @@ bool dropPosition(float keepProb, std::mt19937& gen)
 void extract(std::string dataFilename, std::string outputFilename, uint32_t maxGames, uint32_t ppg)
 {
     std::random_device rd;
-    std::mt19937 gen(rd());
+    auto seed = rd();
+    std::mt19937 gen(seed);
+    std::cout << "Using seed " << seed << std::endl;
 
     std::ifstream inputFile(dataFilename, std::ios::binary);
     std::ofstream outputFile(outputFilename, std::ios::app);
