@@ -13,11 +13,12 @@ namespace datagen
 namespace dists
 {
 
-constexpr float phaseScaleFactor(int phase)
+float phaseScaleFactor(int phase)
 {
     float oddScale = std::min(0.9f, -0.09793221f * (static_cast<float>(phase) - 23.0f) + 0.189393939f);
-    float p16sqr = (static_cast<float>(phase) - 16) * (static_cast<float>(phase) - 16);
-    float base = phase > 16 ? 1 - p16sqr / 73.1428571 : 1 - p16sqr / 269.473684;
+    float p16 = std::abs(static_cast<float>(phase) - 16.0f);
+    float base =
+        phase > 16 ? 1 - 0.875 * std::pow(p16 / 8.0f, 2) : 1 - 0.95 * std::pow(p16 / 16.0f, 2.0f);
     if (phase % 2 == 1 && phase > 12)
         return oddScale * base;
     return base;
