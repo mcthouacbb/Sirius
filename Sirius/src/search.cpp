@@ -622,7 +622,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         int histScore = quiet
             ? history.getQuietStats(move, threats, movedPiece, board.pawnKey(), stack, rootPly)
             : history.getNoisyStats(board, move);
-        baseLMR -= 1024 * histScore / (quiet ? lmrQuietHistDivisor : lmrNoisyHistDivisor);
+        // baseLMR -= 1024 * histScore / (quiet ? lmrQuietHistDivisor : lmrNoisyHistDivisor);
 
         // move loop pruning(~184 elo)
         if (!root && moveScore < MoveOrdering::SECOND_KILLER_SCORE && bestScore > -SCORE_WIN)
@@ -726,7 +726,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         {
             int reduction = baseLMR;
 
-            reduction += lmrNonImp * !improving;
+            /*reduction += lmrNonImp * !improving;
             reduction += lmrNoisyTTMove * noisyTTMove;
             reduction -= lmrTTPV * ttPV;
             reduction -= lmrGivesCheck * givesCheck;
@@ -734,7 +734,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             reduction -= lmrCorrplexity * (corrplexity > lmrCorrplexityMargin);
             reduction += lmrCutnode * cutnode;
             reduction += lmrFailHighCount
-                * ((stack + 1)->failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin));
+                * ((stack + 1)->failHighCount >= static_cast<uint32_t>(lmrFailHighCountMargin));*/
 
             int reduced = std::min(std::max(newDepth - reduction / 1024, 1), newDepth);
             score = -search(thread, reduced, stack + 1, -alpha - 1, -alpha, false, true);
