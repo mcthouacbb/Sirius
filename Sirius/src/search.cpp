@@ -634,6 +634,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             if (lmrDepth <= fpMaxDepth && quiet && !inCheck && alpha < SCORE_WIN
                 && stack->staticEval + fpMargin <= alpha)
             {
+                if (!isMateScore(bestScore) && bestScore <= stack->staticEval + fpMargin)
+                    bestScore = stack->staticEval + fpMargin;
                 continue;
             }
 
