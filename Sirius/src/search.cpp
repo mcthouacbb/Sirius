@@ -529,6 +529,14 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         {
             int r = nmpBaseReduction + depth * nmpDepthReductionScale;
             r += std::min(nmpEvalReductionScale * (stack->eval - beta) / 256, nmpMaxEvalReduction);
+            if (board.isPseudoLegal(ttData.move))
+            {
+                int ttMoveHist = moveIsQuiet(board, ttData.move)
+                    ? history.getQuietStats(ttData.move, threats,
+                          board.pieceAt(ttData.move.fromSq()), board.pawnKey(), stack, rootPly)
+                    : history.getNoisyStats(board, ttData.move);
+                r += ttMoveHist / 256;
+            }
             r /= 256;
             makeNullMove(thread, stack);
             int nullScore = -search(thread, depth - r, stack + 1, -beta, -beta + 1, false, !cutnode);
