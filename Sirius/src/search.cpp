@@ -659,6 +659,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 int max = seeCaptHistMax * depth;
                 seeMargin -= std::clamp(histScore / seeCaptHistDivisor, -max, max);
             }
+            else
+            {
+                int max = 75 * depth;
+                seeMargin -= std::clamp(histScore / 48, -max, max);
+            }
             if (!board.see(move, seeMargin))
                 continue;
 
