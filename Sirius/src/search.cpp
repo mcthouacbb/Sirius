@@ -755,7 +755,11 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             score = -search(thread, newDepth, stack + 1, -alpha - 1, -alpha, false, !cutnode);
 
         if (pvNode && (movesPlayed == 1 || score > alpha))
+        {
+            if (ttData.depth > 1 && move == ttData.move && thread.rootDepth > 8)
+                newDepth = std::max(newDepth, 1);
             score = -search(thread, newDepth, stack + 1, -beta, -alpha, true, false);
+        }
 
         unmakeMove(thread, stack);
 
