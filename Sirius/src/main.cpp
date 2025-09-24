@@ -4,6 +4,7 @@
 #include "attacks.h"
 #include "bench.h"
 #include "cuckoo.h"
+#include "datagen/stats.h"
 #include "eval/endgame.h"
 #include "eval/eval.h"
 #include "search_params.h"
@@ -21,6 +22,12 @@ int main(int argc, char** argv)
     {
         std::unique_ptr<search::Search> bencher = std::make_unique<search::Search>();
         runBench(*bencher, BENCH_DEPTH);
+        return 0;
+    }
+
+    if (argc > 2 && std::string(argv[1]) == "datastats")
+    {
+        datagen::computeStats(std::string(argv[2]));
         return 0;
     }
 

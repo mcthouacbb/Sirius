@@ -37,6 +37,8 @@ set(SRCS
     "src/datagen/extract.h"
     "src/datagen/marlinformat.cpp"
     "src/datagen/marlinformat.h"
+    "src/datagen/stats.cpp"
+    "src/datagen/stats.h"
     "src/datagen/viriformat.cpp"
     "src/datagen/viriformat.h"
 
