@@ -57,7 +57,7 @@ std::string genDFRCFen(std::mt19937& gen)
             return std::tolower(c);
         });
     // I'm too lazy to do shredder fen
-    return whiteBackrank + "/8/8/8/8/8/8/" + blackBackrank + " w KQkq - 0 1";
+    return blackBackrank + "/pppppppp/8/8/8/8/PPPPPPPP/" + whiteBackrank + " w KQkq - 0 1";
 }
 
 Board genOpening(std::mt19937& gen, bool DFRC)
