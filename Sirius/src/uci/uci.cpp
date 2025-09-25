@@ -644,6 +644,10 @@ void UCI::datagenCommand(std::istringstream& stream)
         {
             stream >> config.outputFilename;
         }
+        else if (tok == "dfrc")
+        {
+            config.DFRC = true;
+        }
     }
     datagen::runDatagen(config);
 }

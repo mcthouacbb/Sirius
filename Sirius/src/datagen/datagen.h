@@ -15,6 +15,7 @@ struct Config
     u32 hardLimit;
     u32 numGames;
     u32 numThreads;
+    bool DFRC;
     std::string outputFilename;
 };
 
