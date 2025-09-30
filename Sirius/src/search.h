@@ -158,7 +158,7 @@ private:
     void reportUCIInfo(const SearchThread& thread, int multiPVIdx, int depth) const;
 
     std::pair<int, Move> iterDeep(SearchThread& thread, bool report);
-    int aspWindows(SearchThread& thread, int depth, Move& bestMove, int prevScore, bool report);
+    int aspWindows(SearchThread& thread, int depth, int prevScore, bool report);
 
     int search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta,
         bool pvNode, bool cutnode);

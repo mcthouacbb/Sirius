@@ -317,14 +317,8 @@ std::pair<int, Move> Search::iterDeep(SearchThread& thread, bool report)
     {
         thread.rootDepth = depth;
         thread.selDepth = 0;
-        int searchScore = aspWindows(thread, depth, bestMove, score, report);
+        int searchScore = aspWindows(thread, depth, score, report);
         thread.sortRootMoves();
-        // DEBUG lol
-        if (bestMove != thread.rootMoves[0].move)
-        {
-            std::cerr << "Error: incorrect root move" << std::endl;
-            std::terminate();
-        }
         if (m_ShouldStop)
             break;
         score = searchScore;
@@ -347,7 +341,7 @@ std::pair<int, Move> Search::iterDeep(SearchThread& thread, bool report)
 }
 
 // Aspiration windows(~108 elo)
-int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prevScore, bool report)
+int Search::aspWindows(SearchThread& thread, int depth, int prevScore, bool report)
 {
     // 1 second
     constexpr Duration ASP_WIDEN_REPORT_DELAY = Duration(1000);
@@ -384,7 +378,6 @@ int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prev
         }
         else
         {
-            bestMove = thread.stack[0].pv[0];
             if (searchScore >= beta)
             {
                 beta = std::min(beta + delta, SCORE_MAX);
