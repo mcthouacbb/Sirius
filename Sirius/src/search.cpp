@@ -238,7 +238,7 @@ void Search::threadLoop(SearchThread& thread)
             case WakeFlag::QUIT:
                 return;
             case WakeFlag::SEARCH:
-                iterDeep(thread, thread.isMainThread(), true);
+                iterDeep(thread, thread.isMainThread());
                 break;
             case WakeFlag::NONE:
                 // unreachable;
@@ -303,7 +303,7 @@ void Search::reportUCIInfo(const SearchThread& thread, int multiPVIdx, int depth
     uci::uci->reportSearchInfo(info);
 }
 
-int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
+int Search::iterDeep(SearchThread& thread, bool report)
 {
     int maxDepth = std::min(thread.limits.maxDepth, MAX_PLY - 1);
     int score = 0;
@@ -312,8 +312,6 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
     thread.reset();
     thread.evalState.init(thread.board, thread.pawnTable);
     thread.initRootMoves();
-
-    report = report && normalSearch;
 
     for (int depth = 1; depth <= maxDepth; depth++)
     {
@@ -351,6 +349,9 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
 // Aspiration windows(~108 elo)
 int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prevScore, bool report)
 {
+    // 1 second
+    constexpr Duration ASP_WIDEN_REPORT_DELAY = Duration(1000);
+
     int delta = aspInitDelta + prevScore * prevScore / 16384;
     int alpha = -SCORE_MAX;
     int beta = SCORE_MAX;
@@ -371,7 +372,8 @@ int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prev
         if (m_ShouldStop)
             return searchScore;
 
-        if (report && (searchScore <= alpha || searchScore >= beta) /* && thread.nodes > 10000000*/)
+        if (report && (searchScore <= alpha || searchScore >= beta)
+            && m_TimeMan.elapsed() > ASP_WIDEN_REPORT_DELAY)
             reportUCIInfo(thread, 0, depth);
 
         if (searchScore <= alpha)
@@ -409,7 +411,7 @@ BenchData Search::benchSearch(int depth, const Board& board)
 
     m_ShouldStop.store(false, std::memory_order_relaxed);
 
-    iterDeep(*thread, false, false);
+    iterDeep(*thread, false);
 
     BenchData data = {};
     data.nodes = thread->nodes;
