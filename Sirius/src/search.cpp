@@ -286,6 +286,23 @@ void Search::unmakeNullMove(SearchThread& thread, SearchStack* stack)
     stack->contCorrEntry = nullptr;
 }
 
+void Search::reportUCIInfo(const SearchThread& thread, int multiPVIdx, int depth) const
+{
+    SearchInfo info;
+    info.nodes = 0;
+    for (auto& searchThread : m_Threads)
+        info.nodes += searchThread->nodes.load(std::memory_order_relaxed);
+    info.depth = depth;
+    info.selDepth = thread.rootMoves[multiPVIdx].selDepth;
+    info.hashfull = m_TT.hashfull();
+    info.time = m_TimeMan.elapsed();
+    info.pv = thread.rootMoves[multiPVIdx].pv;
+    info.score = thread.rootMoves[multiPVIdx].displayScore;
+    info.lowerbound = thread.rootMoves[multiPVIdx].lowerbound;
+    info.upperbound = thread.rootMoves[multiPVIdx].upperbound;
+    uci::uci->reportSearchInfo(info);
+}
+
 int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
 {
     int maxDepth = std::min(thread.limits.maxDepth, MAX_PLY - 1);
@@ -302,28 +319,23 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
     {
         thread.rootDepth = depth;
         thread.selDepth = 0;
-        int searchScore = aspWindows(thread, depth, bestMove, score);
+        int searchScore = aspWindows(thread, depth, bestMove, score, report);
         thread.sortRootMoves();
+        // DEBUG lol
+        if (bestMove != thread.rootMoves[0].move)
+        {
+            std::cerr << "Error: incorrect root move" << std::endl;
+            std::terminate();
+        }
         if (m_ShouldStop)
             break;
         score = searchScore;
         if (report)
-        {
-            SearchInfo info;
-            info.nodes = 0;
-            for (auto& searchThread : m_Threads)
-                info.nodes += searchThread->nodes.load(std::memory_order_relaxed);
-            info.depth = depth;
-            info.selDepth = thread.selDepth;
-            info.hashfull = m_TT.hashfull();
-            info.time = m_TimeMan.elapsed();
-            info.pvBegin = thread.stack[0].pv.data();
-            info.pvEnd = thread.stack[0].pv.data() + thread.stack[0].pvLength;
-            info.score = searchScore;
-            uci::uci->reportSearchInfo(info);
-        }
-        uint64_t bmNodes = thread.findRootMove(bestMove).nodes;
-        if (thread.isMainThread() && m_TimeMan.stopSoft(bestMove, bmNodes, thread.nodes, thread.limits))
+            reportUCIInfo(thread, 0, depth);
+
+        uint64_t bmNodes = thread.rootMoves[0].nodes;
+        if (thread.isMainThread()
+            && m_TimeMan.stopSoft(thread.rootMoves[0].move, bmNodes, thread.nodes, thread.limits))
             break;
     }
 
@@ -337,7 +349,7 @@ int Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
 }
 
 // Aspiration windows(~108 elo)
-int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prevScore)
+int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prevScore, bool report)
 {
     int delta = aspInitDelta + prevScore * prevScore / 16384;
     int alpha = -SCORE_MAX;
@@ -354,8 +366,13 @@ int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prev
     {
         int searchScore =
             search(thread, std::max(aspDepth, 1), &thread.stack[0], alpha, beta, true, false);
+
+        thread.sortRootMoves();
         if (m_ShouldStop)
             return searchScore;
+
+        if (report && (searchScore <= alpha || searchScore >= beta) /* && thread.nodes > 10000000*/)
+            reportUCIInfo(thread, 0, depth);
 
         if (searchScore <= alpha)
         {
@@ -770,7 +787,25 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
             if (movesPlayed == 1 || score > alpha)
             {
-                rootMove.score = score;
+                rootMove.displayScore = rootMove.score = score;
+                rootMove.selDepth = thread.selDepth;
+                rootMove.lowerbound = false;
+                rootMove.upperbound = false;
+
+                if (score >= beta)
+                {
+                    rootMove.displayScore = beta;
+                    rootMove.lowerbound = true;
+                }
+                else if (score <= alpha)
+                {
+                    rootMove.displayScore = alpha;
+                    rootMove.upperbound = true;
+                }
+
+                rootMove.pv = {move};
+                for (int i = 0; i < (stack + 1)->pvLength; i++)
+                    rootMove.pv.push_back((stack + 1)->pv[i]);
             }
             else
             {

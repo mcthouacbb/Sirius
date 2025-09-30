@@ -133,23 +133,30 @@ void UCI::prettyPrintSearchInfo(const SearchInfo& info) const
     std::cout << info.hashfull % 10 << "%";
     std::cout << "  ";
 
+    std::string bound_str = "  ";
+    if (info.lowerbound)
+        bound_str = ">=";
+    else if (info.upperbound)
+        bound_str = "<=";
+
     // score
     if (isMateScore(info.score))
     {
         if (info.score > 0)
         {
-            std::cout << "     #" << std::left << std::setw(4) << std::setfill(' ')
-                      << ((SCORE_MATE - info.score) + 1) / 2;
+            std::cout << "   " << bound_str << "  #" << std::left << std::setw(4)
+                      << std::setfill(' ') << ((SCORE_MATE - info.score) + 1) / 2;
         }
         else
         {
-            std::cout << "    #-" << std::left << std::setw(4) << std::setfill(' ')
-                      << (info.score + SCORE_MATE) / 2;
+            std::cout << "   " << bound_str << " #-" << std::left << std::setw(4)
+                      << std::setfill(' ') << (info.score + SCORE_MATE) / 2;
         }
     }
     else
     {
-        std::cout << std::right << std::setw(6) << std::setfill(' ') << info.score << "cp  ";
+        std::cout << "  " << bound_str << std::right << std::setw(6) << std::setfill(' ')
+                  << info.score << "cp  ";
     }
 
     if (m_Options.at("UCI_ShowWDL").boolValue())
@@ -179,12 +186,12 @@ void UCI::prettyPrintSearchInfo(const SearchInfo& info) const
     Board board;
     board.setToFen(m_Board.fenStr());
 
-    for (const Move* move = info.pvBegin; move != info.pvEnd; move++)
+    for (Move move : info.pv)
     {
         MoveList moves;
         genMoves<MoveGenType::LEGAL>(board, moves);
-        std::cout << uci::convMoveToSAN(board, moves, *move) << ' ';
-        board.makeMove(*move);
+        std::cout << uci::convMoveToSAN(board, moves, move) << ' ';
+        board.makeMove(move);
     }
 
     std::cout << std::endl;
@@ -216,6 +223,10 @@ void UCI::printUCISearchInfo(const SearchInfo& info) const
         std::cout << "cp " << normalizedScore(info.score);
     }
 
+    if (info.lowerbound)
+        std::cout << " lowerbound";
+    else if (info.upperbound)
+        std::cout << " upperbound";
     if (m_Options.at("UCI_ShowWDL").boolValue())
     {
         if (isMateScore(info.score) && info.score > 0)
@@ -239,9 +250,9 @@ void UCI::printUCISearchInfo(const SearchInfo& info) const
     }
 
     std::cout << " pv ";
-    for (const Move* move = info.pvBegin; move != info.pvEnd; move++)
+    for (Move move : info.pv)
     {
-        std::cout << uci::convMoveToUCI(m_Board, *move) << ' ';
+        std::cout << uci::convMoveToUCI(m_Board, move) << ' ';
     }
     std::cout << std::endl;
 }
