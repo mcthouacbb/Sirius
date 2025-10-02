@@ -83,12 +83,20 @@ ScorePair evaluateThreats(const Board& board, const EvalData& evalData)
 
     Bitboard defendedBB = evalData.attackedBy2[them] | evalData.attackedBy[them][PAWN]
         | (evalData.attacked[them] & ~evalData.attackedBy2[us]);
+    Bitboard safe = ~defendedBB
+        | (evalData.attacked[us] & ~evalData.attackedBy[them][PAWN] & ~evalData.attackedBy2[them]);
+    Bitboard nonPawnEnemies = board.pieces(them) & ~board.pieces(PAWN);
 
-    Bitboard pawnThreats = evalData.attackedBy[us][PAWN] & board.pieces(them);
-    while (pawnThreats.any())
+    Bitboard unsafePawns = board.pieces(us, PieceType::PAWN) & ~safe;
+    Bitboard unsafePawnThreats = attacks::pawnAttacks<us>(unsafePawns) & nonPawnEnemies;
+    eval += THREAT_BY_UNSAFE_PAWN * unsafePawnThreats.popcount();
+
+    Bitboard safePawns = board.pieces(us, PieceType::PAWN) & safe;
+    Bitboard safePawnThreats = attacks::pawnAttacks<us>(safePawns) & nonPawnEnemies;
+    while (safePawnThreats.any())
     {
-        PieceType threatened = getPieceType(board.pieceAt(pawnThreats.poplsb()));
-        eval += THREAT_BY_PAWN[static_cast<int>(threatened)];
+        PieceType threatened = getPieceType(board.pieceAt(safePawnThreats.poplsb()));
+        eval += THREAT_BY_SAFE_PAWN[static_cast<int>(threatened)];
     }
 
     Bitboard knightThreats = evalData.attackedBy[us][KNIGHT] & board.pieces(them);
@@ -134,10 +142,6 @@ ScorePair evaluateThreats(const Board& board, const EvalData& evalData)
         eval += THREAT_BY_KING[static_cast<int>(threatened)];
     }
 
-    Bitboard nonPawnEnemies = board.pieces(them) & ~board.pieces(PAWN);
-
-    Bitboard safe = ~defendedBB
-        | (evalData.attacked[us] & ~evalData.attackedBy[them][PAWN] & ~evalData.attackedBy2[them]);
     Bitboard pushes = attacks::pawnPushes<us>(board.pieces(us, PAWN)) & ~board.allPieces();
     pushes |= attacks::pawnPushes<us>(pushes & Bitboard::nthRank<us, RANK_3>()) & ~board.allPieces();
 
