@@ -307,7 +307,6 @@ std::pair<int, Move> Search::iterDeep(SearchThread& thread, bool report)
 {
     int maxDepth = std::min(thread.limits.maxDepth, MAX_PLY - 1);
     int score = 0;
-    Move bestMove = Move::nullmove();
 
     thread.reset();
     thread.evalState.init(thread.board, thread.pawnTable);
@@ -335,7 +334,7 @@ std::pair<int, Move> Search::iterDeep(SearchThread& thread, bool report)
         m_ShouldStop.store(true, std::memory_order_relaxed);
 
     if (report)
-        uci::uci->reportBestMove(bestMove);
+        uci::uci->reportBestMove(thread.rootMoves[0].move);
 
     return {score, bestMove};
 }
