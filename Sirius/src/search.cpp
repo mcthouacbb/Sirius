@@ -336,7 +336,7 @@ std::pair<int, Move> Search::iterDeep(SearchThread& thread, bool report)
     if (report)
         uci::uci->reportBestMove(thread.rootMoves[0].move);
 
-    return {score, bestMove};
+    return {score, thread.rootMoves[0].move};
 }
 
 // Aspiration windows(~108 elo)
@@ -421,7 +421,7 @@ std::pair<int, Move> Search::datagenSearch(const SearchLimits& limits, const Boa
 
     m_ShouldStop.store(false, std::memory_order_relaxed);
 
-    return iterDeep(*thread, false, false);
+    return iterDeep(*thread, false);
 }
 
 int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta,
