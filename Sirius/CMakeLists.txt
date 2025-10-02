@@ -31,6 +31,17 @@ set(SRCS
     "src/tt.h"
     "src/zobrist.h"
 
+    "src/datagen/datagen.cpp"
+    "src/datagen/datagen.h"
+    "src/datagen/extract.cpp"
+    "src/datagen/extract.h"
+    "src/datagen/marlinformat.cpp"
+    "src/datagen/marlinformat.h"
+    "src/datagen/stats.cpp"
+    "src/datagen/stats.h"
+    "src/datagen/viriformat.cpp"
+    "src/datagen/viriformat.h"
+
     "src/eval/combined_psqt.h"
     "src/eval/endgame.h"
     "src/eval/endgame.cpp"

@@ -13,6 +13,20 @@ Board::Board()
     setToFen(defaultFen);
 }
 
+Board::Board(const BoardState& state, const CastlingData& castlingData, Color stm, int gamePly)
+{
+    m_States.clear();
+    m_States.push_back(state);
+    m_FRC = true;
+    m_CastlingData = castlingData;
+    m_SideToMove = stm;
+    m_GamePly = gamePly;
+
+    m_CastlingData.initMasks();
+    updateCheckInfo();
+    calcThreats();
+}
+
 void Board::setToFen(const std::string_view& fen, bool frc)
 {
     auto parts = splitBySpaces(fen);
