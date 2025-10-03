@@ -181,6 +181,7 @@ ScorePair evaluateKings(const Board& board, const EvalData& evalData, const Eval
 {
     constexpr Color them = ~us;
 
+    Square ourKing = board.kingSq(us);
     Square theirKing = board.kingSq(them);
 
     ScorePair eval = ScorePair(0, 0);
@@ -230,6 +231,16 @@ ScorePair evaluateKings(const Board& board, const EvalData& evalData, const Eval
         + flankAttacks2.popcount() * KING_FLANK_ATTACKS[1];
     eval += flankDefenses.popcount() * KING_FLANK_DEFENSES[0]
         + flankDefenses2.popcount() * KING_FLANK_DEFENSES[1];
+
+    int ourKingFile = ourKing.file();
+    int theirKingFile = theirKing.file();
+    if (ourKing.file() >= FILE_E)
+    {
+        ourKingFile ^= 7;
+        theirKingFile ^= 7;
+    }
+
+    eval += SAFETY_KING_FILES[ourKingFile / 2][theirKingFile / 2];
 
     eval += SAFETY_OFFSET;
 
