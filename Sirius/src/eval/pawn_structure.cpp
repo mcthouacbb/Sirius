@@ -61,10 +61,10 @@ ScorePair PawnStructure::evaluate(const Board& board)
         }
 
         if (doubled && threats.empty())
-            eval += DOUBLED_PAWN[sq.file()];
+            eval += DOUBLED_PAWN[std::min(sq.file(), sq.file() ^ 7)];
 
         if (threats.empty() && isolated)
-            eval += ISOLATED_PAWN[sq.file()];
+            eval += ISOLATED_PAWN[std::min(sq.file(), sq.file() ^ 7)];
         else if (backwards)
             eval += BACKWARDS_PAWN[sq.relativeRank<us>()];
     }
