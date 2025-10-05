@@ -238,7 +238,7 @@ void Search::threadLoop(SearchThread& thread)
             case WakeFlag::QUIT:
                 return;
             case WakeFlag::SEARCH:
-                iterDeep(thread, thread.isMainThread(), true);
+                iterDeep(thread, thread.isMainThread());
                 break;
             case WakeFlag::NONE:
                 // unreachable;
@@ -286,44 +286,47 @@ void Search::unmakeNullMove(SearchThread& thread, SearchStack* stack)
     stack->contCorrEntry = nullptr;
 }
 
-std::pair<int, Move> Search::iterDeep(SearchThread& thread, bool report, bool normalSearch)
+void Search::reportUCIInfo(const SearchThread& thread, int multiPVIdx, int depth) const
+{
+    SearchInfo info;
+    info.nodes = 0;
+    for (auto& searchThread : m_Threads)
+        info.nodes += searchThread->nodes.load(std::memory_order_relaxed);
+    info.depth = depth;
+    info.selDepth = thread.rootMoves[multiPVIdx].selDepth;
+    info.hashfull = m_TT.hashfull();
+    info.time = m_TimeMan.elapsed();
+    info.pv = thread.rootMoves[multiPVIdx].pv;
+    info.score = thread.rootMoves[multiPVIdx].displayScore;
+    info.lowerbound = thread.rootMoves[multiPVIdx].lowerbound;
+    info.upperbound = thread.rootMoves[multiPVIdx].upperbound;
+    uci::uci->reportSearchInfo(info);
+}
+
+std::pair<int, Move> Search::iterDeep(SearchThread& thread, bool report)
 {
     int maxDepth = std::min(thread.limits.maxDepth, MAX_PLY - 1);
     int score = 0;
-    Move bestMove = Move::nullmove();
 
     thread.reset();
     thread.evalState.init(thread.board, thread.pawnTable);
     thread.initRootMoves();
 
-    report = report && normalSearch;
-
     for (int depth = 1; depth <= maxDepth; depth++)
     {
         thread.rootDepth = depth;
         thread.selDepth = 0;
-        int searchScore = aspWindows(thread, depth, bestMove, score);
+        int searchScore = aspWindows(thread, depth, score, report);
         thread.sortRootMoves();
         if (m_ShouldStop)
             break;
         score = searchScore;
         if (report)
-        {
-            SearchInfo info;
-            info.nodes = 0;
-            for (auto& searchThread : m_Threads)
-                info.nodes += searchThread->nodes.load(std::memory_order_relaxed);
-            info.depth = depth;
-            info.selDepth = thread.selDepth;
-            info.hashfull = m_TT.hashfull();
-            info.time = m_TimeMan.elapsed();
-            info.pvBegin = thread.stack[0].pv.data();
-            info.pvEnd = thread.stack[0].pv.data() + thread.stack[0].pvLength;
-            info.score = searchScore;
-            uci::uci->reportSearchInfo(info);
-        }
-        uint64_t bmNodes = thread.findRootMove(bestMove).nodes;
-        if (thread.isMainThread() && m_TimeMan.stopSoft(bestMove, bmNodes, thread.nodes, thread.limits))
+            reportUCIInfo(thread, 0, depth);
+
+        uint64_t bmNodes = thread.rootMoves[0].nodes;
+        if (thread.isMainThread()
+            && m_TimeMan.stopSoft(thread.rootMoves[0].move, bmNodes, thread.nodes, thread.limits))
             break;
     }
 
@@ -331,14 +334,17 @@ std::pair<int, Move> Search::iterDeep(SearchThread& thread, bool report, bool no
         m_ShouldStop.store(true, std::memory_order_relaxed);
 
     if (report)
-        uci::uci->reportBestMove(bestMove);
+        uci::uci->reportBestMove(thread.rootMoves[0].move);
 
-    return {score, bestMove};
+    return {score, thread.rootMoves[0].move};
 }
 
 // Aspiration windows(~108 elo)
-int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prevScore)
+int Search::aspWindows(SearchThread& thread, int depth, int prevScore, bool report)
 {
+    // 1 second
+    constexpr Duration ASP_WIDEN_REPORT_DELAY = Duration(1000);
+
     int delta = aspInitDelta + prevScore * prevScore / 16384;
     int alpha = -SCORE_MAX;
     int beta = SCORE_MAX;
@@ -354,8 +360,14 @@ int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prev
     {
         int searchScore =
             search(thread, std::max(aspDepth, 1), &thread.stack[0], alpha, beta, true, false);
+
+        thread.sortRootMoves();
         if (m_ShouldStop)
             return searchScore;
+
+        if (report && (searchScore <= alpha || searchScore >= beta)
+            && m_TimeMan.elapsed() > ASP_WIDEN_REPORT_DELAY)
+            reportUCIInfo(thread, 0, depth);
 
         if (searchScore <= alpha)
         {
@@ -365,7 +377,6 @@ int Search::aspWindows(SearchThread& thread, int depth, Move& bestMove, int prev
         }
         else
         {
-            bestMove = thread.stack[0].pv[0];
             if (searchScore >= beta)
             {
                 beta = std::min(beta + delta, SCORE_MAX);
@@ -392,7 +403,7 @@ BenchData Search::benchSearch(int depth, const Board& board)
 
     m_ShouldStop.store(false, std::memory_order_relaxed);
 
-    iterDeep(*thread, false, false);
+    iterDeep(*thread, false);
 
     BenchData data = {};
     data.nodes = thread->nodes;
@@ -410,7 +421,7 @@ std::pair<int, Move> Search::datagenSearch(const SearchLimits& limits, const Boa
 
     m_ShouldStop.store(false, std::memory_order_relaxed);
 
-    return iterDeep(*thread, false, false);
+    return iterDeep(*thread, false);
 }
 
 int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta,
@@ -783,7 +794,25 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
             if (movesPlayed == 1 || score > alpha)
             {
-                rootMove.score = score;
+                rootMove.displayScore = rootMove.score = score;
+                rootMove.selDepth = thread.selDepth;
+                rootMove.lowerbound = false;
+                rootMove.upperbound = false;
+
+                if (score >= beta)
+                {
+                    rootMove.displayScore = beta;
+                    rootMove.lowerbound = true;
+                }
+                else if (score <= alpha)
+                {
+                    rootMove.displayScore = alpha;
+                    rootMove.upperbound = true;
+                }
+
+                rootMove.pv = {move};
+                for (int i = 0; i < (stack + 1)->pvLength; i++)
+                    rootMove.pv.push_back((stack + 1)->pv[i]);
             }
             else
             {

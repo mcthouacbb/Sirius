@@ -44,8 +44,10 @@ struct SearchInfo
     int hashfull;
     uint64_t nodes;
     Duration time;
-    const Move *pvBegin, *pvEnd;
+    std::vector<Move> pv;
     int score;
+    bool lowerbound;
+    bool upperbound;
 };
 
 struct BenchData
@@ -67,10 +69,15 @@ enum class WakeFlag
 
 struct RootMove
 {
-    Move move;
+    Move move = Move::nullmove();
     uint64_t nodes = 0;
     int score = SCORE_NONE;
     int previousScore = SCORE_NONE;
+    int displayScore = SCORE_NONE;
+    int selDepth = 0;
+    bool lowerbound = false;
+    bool upperbound = false;
+    std::vector<Move> pv;
 
     RootMove(Move move);
 };
@@ -148,8 +155,10 @@ private:
     void joinThreads();
     void threadLoop(SearchThread& thread);
 
-    std::pair<int, Move> iterDeep(SearchThread& thread, bool report, bool normalSearch);
-    int aspWindows(SearchThread& thread, int depth, Move& bestMove, int prevScore);
+    void reportUCIInfo(const SearchThread& thread, int multiPVIdx, int depth) const;
+
+    std::pair<int, Move> iterDeep(SearchThread& thread, bool report);
+    int aspWindows(SearchThread& thread, int depth, int prevScore, bool report);
 
     int search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta,
         bool pvNode, bool cutnode);
