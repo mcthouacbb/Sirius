@@ -60,6 +60,11 @@ ScorePair PawnStructure::evaluate(const Board& board)
             eval += CANDIDATE_PASSER[defended][sq.relativeRank<us>()];
         }
 
+        if (phalanx.any())
+            eval += PAWN_PHALANX[sq.relativeRank<us>()];
+        if (defenders.any())
+            eval += DEFENDED_PAWN[sq.relativeRank<us>()];
+
         if (doubled && threats.empty())
             eval += DOUBLED_PAWN[std::min(sq.file(), sq.file() ^ 7)];
 
@@ -68,14 +73,6 @@ ScorePair PawnStructure::evaluate(const Board& board)
         else if (backwards)
             eval += BACKWARDS_PAWN[sq.relativeRank<us>()];
     }
-
-    Bitboard phalanx = ourPawns & ourPawns.west();
-    while (phalanx.any())
-        eval += PAWN_PHALANX[phalanx.poplsb().relativeRank<us>()];
-
-    Bitboard defended = ourPawns & pawnAttacks[us];
-    while (defended.any())
-        eval += DEFENDED_PAWN[defended.poplsb().relativeRank<us>()];
 
     return eval;
 }
