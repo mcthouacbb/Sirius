@@ -247,7 +247,7 @@ ScorePair evaluateKings(const Board& board, const EvalData& evalData, const Eval
 
     eval += KING_STRANDED * closestPawn;
 
-    return safety;
+    return eval;
 }
 
 template<Color us>
