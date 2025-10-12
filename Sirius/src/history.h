@@ -44,6 +44,7 @@ public:
     operator int() const;
 
     void update(int bonus);
+    void update(int base, int bonus);
 
 private:
     int16_t m_Value;
@@ -65,6 +66,13 @@ template<int MAX_VAL>
 inline void HistoryEntry<MAX_VAL>::update(int bonus)
 {
     m_Value += bonus - m_Value * std::abs(bonus) / MAX_VAL;
+}
+
+template<int MAX_VAL>
+inline void HistoryEntry<MAX_VAL>::update(int base, int bonus)
+{
+    int newValue = bonus - base * std::abs(bonus) / MAX_VAL;
+    m_Value = std::clamp(newValue, -MAX_VAL, MAX_VAL);
 }
 
 constexpr int CORR_HIST_SCALE = 256;
@@ -192,7 +200,7 @@ private:
 
     void updateMainHist(const Board& board, Move move, int bonus);
     void updatePawnHist(const Board& board, Move move, int bonus);
-    void updateContHist(Move move, Piece movingPiece, CHEntry* entry, int bonus);
+    void updateContHist(Move move, Piece movingPiece, CHEntry* entry, int base, int bonus);
     void updateCaptHist(const Board& board, Move move, int bonus);
 
     MainHist m_MainHist;

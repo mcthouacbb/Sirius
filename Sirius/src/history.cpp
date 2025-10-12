@@ -107,12 +107,20 @@ void History::updateQuietStats(const Board& board, Move move, const SearchStack*
 
 void History::updateContHist(Move move, Piece movingPiece, const SearchStack* stack, int ply, int bonus)
 {
+    int conthist = 0;
     if (ply > 0 && stack[-1].contHistEntry != nullptr)
-        updateContHist(move, movingPiece, stack[-1].contHistEntry, bonus);
+        conthist += getContHist(move, movingPiece, stack[-1].contHistEntry);
     if (ply > 1 && stack[-2].contHistEntry != nullptr)
-        updateContHist(move, movingPiece, stack[-2].contHistEntry, bonus);
+        conthist += getContHist(move, movingPiece, stack[-2].contHistEntry);
     if (ply > 3 && stack[-4].contHistEntry != nullptr)
-        updateContHist(move, movingPiece, stack[-4].contHistEntry, bonus);
+        conthist += getContHist(move, movingPiece, stack[-4].contHistEntry);
+
+    if (ply > 0 && stack[-1].contHistEntry != nullptr)
+        updateContHist(move, movingPiece, stack[-1].contHistEntry, conthist, bonus);
+    if (ply > 1 && stack[-2].contHistEntry != nullptr)
+        updateContHist(move, movingPiece, stack[-2].contHistEntry, conthist, bonus);
+    if (ply > 3 && stack[-4].contHistEntry != nullptr)
+        updateContHist(move, movingPiece, stack[-4].contHistEntry, conthist, bonus);
 }
 
 void History::updateNoisyStats(const Board& board, Move move, int bonus)
@@ -209,9 +217,9 @@ void History::updatePawnHist(const Board& board, Move move, int bonus)
                   .update(bonus);
 }
 
-void History::updateContHist(Move move, Piece movingPiece, CHEntry* entry, int bonus)
+void History::updateContHist(Move move, Piece movingPiece, CHEntry* entry, int base, int bonus)
 {
-    (*entry)[packPieceIndices(movingPiece)][move.toSq().value()].update(bonus);
+    (*entry)[packPieceIndices(movingPiece)][move.toSq().value()].update(base, bonus);
 }
 
 void History::updateCaptHist(const Board& board, Move move, int bonus)
