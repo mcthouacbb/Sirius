@@ -120,12 +120,14 @@ void History::updateNoisyStats(const Board& board, Move move, int bonus)
     updateCaptHist(board, move, bonus);
 }
 
-void History::updateCorrHist(const Board& board, int bonus, int depth, const SearchStack* stack, int ply)
+void History::updateCorrHist(
+    const Board& board, int bonus, int depth, int complexity, const SearchStack* stack, int ply)
 {
     Color stm = board.sideToMove();
     uint64_t threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
     int scaledBonus = bonus * CORR_HIST_SCALE;
-    int weight = 2 * std::min(1 + depth, 16);
+    float weight = 2 * std::min(1 + depth, 16) / 256.0f;
+    // weight *= 1.0f + std::log2(static_cast<float>(complexity + 1)) / 10.0f;
 
     auto& pawnEntry = m_PawnCorrHist.get(stm, board.pawnKey().value);
     pawnEntry.update(scaledBonus, weight);

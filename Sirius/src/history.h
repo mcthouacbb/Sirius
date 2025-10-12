@@ -77,7 +77,7 @@ public:
 
     operator int() const;
 
-    void update(int target, int weight);
+    void update(int target, float weight);
 
 private:
     int16_t m_Value;
@@ -93,9 +93,9 @@ inline CorrHistEntry::operator int() const
     return m_Value;
 }
 
-inline void CorrHistEntry::update(int target, int weight)
+inline void CorrHistEntry::update(int target, float weight)
 {
-    int newValue = (m_Value * (256 - weight) + target * weight) / 256;
+    int newValue = m_Value * (1.0f - weight) + target * weight;
     newValue = std::clamp(
         newValue, m_Value - search::maxCorrHistUpdate, m_Value + search::maxCorrHistUpdate);
     m_Value = static_cast<int16_t>(std::clamp(newValue, -search::maxCorrHist, search::maxCorrHist));
@@ -182,7 +182,8 @@ public:
     void updateQuietStats(const Board& board, Move move, const SearchStack* stack, int ply, int bonus);
     void updateContHist(Move move, Piece movingPiece, const SearchStack* stack, int ply, int bonus);
     void updateNoisyStats(const Board& board, Move move, int bonus);
-    void updateCorrHist(const Board& board, int bonus, int depth, const SearchStack* stack, int ply);
+    void updateCorrHist(const Board& board, int bonus, int depth, int complexity,
+        const SearchStack* stack, int ply);
 
 private:
     int getMainHist(Move move, Bitboard threats, Color color) const;

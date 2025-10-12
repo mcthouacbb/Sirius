@@ -475,6 +475,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
     int rawStaticEval = SCORE_NONE;
     int corrplexity = 0;
+    int complexity = 0;
 
     if (!excluded)
     {
@@ -504,6 +505,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                     || (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= stack->eval)
                     || (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= stack->eval)))
                 stack->eval = ttData.score;
+            complexity = std::abs(stack->eval - stack->staticEval);
             corrplexity = std::abs(stack->staticEval - rawStaticEval);
         }
     }
@@ -894,7 +896,8 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         if (!inCheck && (bestMove == Move::nullmove() || moveIsQuiet(board, bestMove))
             && !(bound == TTEntry::Bound::LOWER_BOUND && stack->staticEval >= bestScore)
             && !(bound == TTEntry::Bound::UPPER_BOUND && stack->staticEval <= bestScore))
-            history.updateCorrHist(board, bestScore - stack->staticEval, depth, stack, rootPly);
+            history.updateCorrHist(
+                board, bestScore - stack->staticEval, depth, complexity, stack, rootPly);
 
         m_TT.store(board.zkey(), rootPly, depth, bestScore, rawStaticEval, bestMove, ttPV, bound);
     }
