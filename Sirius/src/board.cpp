@@ -1049,6 +1049,7 @@ void Board::calcThreats()
 {
     Color color = ~m_SideToMove;
     Bitboard threats = EMPTY_BB;
+    Bitboard winningThreats = EMPTY_BB;
     Bitboard occupied = allPieces();
 
     Bitboard queens = pieces(color, PieceType::QUEEN);
@@ -1057,34 +1058,51 @@ void Board::calcThreats()
     Bitboard knights = pieces(color, PieceType::KNIGHT);
     Bitboard pawns = pieces(color, PieceType::PAWN);
 
-    rooks |= queens;
+    while (queens.any())
+    {
+        Square queen = queens.poplsb();
+        threats |= attacks::queenAttacks(queen, occupied);
+    }
+
+    Bitboard targets = pieces(~color, PieceType::QUEEN);
+
     while (rooks.any())
     {
         Square rook = rooks.poplsb();
-        threats |= attacks::rookAttacks(rook, occupied);
+        Bitboard attacks = attacks::rookAttacks(rook, occupied);
+        threats |= attacks;
+        winningThreats |= attacks & targets;
     }
 
-    bishops |= queens;
+    targets |= pieces(~color, PieceType::ROOK);
+
     while (bishops.any())
     {
         Square bishop = bishops.poplsb();
-        threats |= attacks::bishopAttacks(bishop, occupied);
+        Bitboard attacks = attacks::bishopAttacks(bishop, occupied);
+        threats |= attacks;
+        winningThreats |= attacks & targets;
     }
 
     while (knights.any())
     {
         Square knight = knights.poplsb();
-        threats |= attacks::knightAttacks(knight);
+        Bitboard attacks = attacks::knightAttacks(knight);
+        threats |= attacks;
+        winningThreats |= attacks & targets;
     }
 
-    if (color == Color::WHITE)
-        threats |= attacks::pawnAttacks<Color::WHITE>(pawns);
-    else
-        threats |= attacks::pawnAttacks<Color::BLACK>(pawns);
+    targets |= pieces(~color, PieceType::KNIGHT) | pieces(~color, PieceType::BISHOP);
+
+    Bitboard pawnAttacks = color == Color::WHITE ? attacks::pawnAttacks<Color::WHITE>(pawns)
+                                                 : attacks::pawnAttacks<Color::BLACK>(pawns);
+    threats |= pawnAttacks;
+    winningThreats |= pawnAttacks & targets;
 
     threats |= attacks::kingAttacks(kingSq(color));
 
     currState().threats = threats;
+    currState().winningThreats = winningThreats;
 }
 
 void Board::calcRepetitions()
