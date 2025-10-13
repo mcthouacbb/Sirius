@@ -130,6 +130,7 @@ void History::updateCorrHist(
     int scaledBonus = bonus * CORR_HIST_SCALE;
     float weight = 2 * std::min(1 + depth, 16) / 256.0f;
     weight *= 1.0f + std::log2(static_cast<float>(complexity + 1)) / 10.0f;
+    weight /= 1.3f;
 
     auto& pawnEntry = m_PawnCorrHist.get(stm, board.pawnKey().value);
     pawnEntry.update(scaledBonus, weight);
