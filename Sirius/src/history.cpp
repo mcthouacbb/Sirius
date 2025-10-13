@@ -2,6 +2,8 @@
 #include "search.h"
 #include "zobrist.h"
 
+#include <cmath>
+
 int historyBonus(int depth)
 {
     int bonus = search::histBonusQuadratic * depth * depth / 64;
