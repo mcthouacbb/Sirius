@@ -60,7 +60,6 @@ private:
         PawnStructure pawnStructure;
         ColorArray<ScorePair> pawnShieldStorm;
         ScorePair knightOutposts;
-        ScorePair bishopPawns;
         ScorePair rookOpen;
         ScorePair minorBehindPawn;
     };

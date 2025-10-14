@@ -67,8 +67,16 @@ ScorePair evaluatePieces(const Board& board, EvalData& evalData)
             evalData.attackCount[us] += kingRingAtks.popcount();
         }
 
-        if (piece == BISHOP && (attacks & CENTER_SQUARES).multiple())
-            eval += LONG_DIAG_BISHOP;
+        if (piece == BISHOP)
+        {
+            if ((attacks & CENTER_SQUARES).multiple())
+                eval += LONG_DIAG_BISHOP;
+
+            bool lightSquare = (Bitboard::fromSquare(sq) & LIGHT_SQUARES_BB).any();
+            Bitboard sameColorPawns =
+                board.pieces(us, PAWN) & (lightSquare ? LIGHT_SQUARES_BB : DARK_SQUARES_BB);
+            eval += BISHOP_PAWNS[std::min(sameColorPawns.popcount(), 6u)];
+        }
     }
 
     return eval;

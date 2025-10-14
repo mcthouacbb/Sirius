@@ -90,23 +90,6 @@ ScorePair evaluateKnightOutposts(const Board& board, const PawnStructure& pawnSt
 }
 
 template<Color us>
-ScorePair evaluateBishopPawns(const Board& board)
-{
-    Bitboard bishops = board.pieces(us, PieceType::BISHOP);
-
-    ScorePair eval = ScorePair(0, 0);
-    while (bishops.any())
-    {
-        Square sq = bishops.poplsb();
-        bool lightSquare = LIGHT_SQUARES_BB.has(sq);
-        Bitboard sameColorPawns =
-            board.pieces(us, PieceType::PAWN) & (lightSquare ? LIGHT_SQUARES_BB : DARK_SQUARES_BB);
-        eval += BISHOP_PAWNS[std::min(sameColorPawns.popcount(), 6u)];
-    }
-    return eval;
-}
-
-template<Color us>
 ScorePair evaluateRookOpen(const Board& board)
 {
     constexpr Color them = ~us;
@@ -146,9 +129,6 @@ template ScorePair evaluateKnightOutposts<Color::WHITE>(
     const Board& board, const PawnStructure& pawnStructure);
 template ScorePair evaluateKnightOutposts<Color::BLACK>(
     const Board& board, const PawnStructure& pawnStructure);
-
-template ScorePair evaluateBishopPawns<Color::WHITE>(const Board& board);
-template ScorePair evaluateBishopPawns<Color::BLACK>(const Board& board);
 
 template ScorePair evaluateRookOpen<Color::WHITE>(const Board& board);
 template ScorePair evaluateRookOpen<Color::BLACK>(const Board& board);

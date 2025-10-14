@@ -47,7 +47,6 @@ void EvalState::init(const Board& board, PawnTable* pawnTable)
     currEntry().pawnShieldStorm[BLACK] = evaluateStormShield<BLACK>(board);
     currEntry().knightOutposts = evaluateKnightOutposts<WHITE>(board, currEntry().pawnStructure)
         - evaluateKnightOutposts<BLACK>(board, currEntry().pawnStructure);
-    currEntry().bishopPawns = evaluateBishopPawns<WHITE>(board) - evaluateBishopPawns<BLACK>(board);
     currEntry().rookOpen = evaluateRookOpen<WHITE>(board) - evaluateRookOpen<BLACK>(board);
     currEntry().minorBehindPawn =
         evaluateMinorBehindPawn<WHITE>(board) - evaluateMinorBehindPawn<BLACK>(board);
@@ -94,11 +93,6 @@ void EvalState::push(const Board& board, const EvalUpdates& updates)
     else
         currEntry().knightOutposts = oldEntry.knightOutposts;
 
-    if (updates.changedPieces.hasAny(eval_terms::bishopPawns.deps))
-        currEntry().bishopPawns = evaluateBishopPawns<WHITE>(board) - evaluateBishopPawns<BLACK>(board);
-    else
-        currEntry().bishopPawns = oldEntry.bishopPawns;
-
     if (updates.changedPieces.hasAny(eval_terms::rookOpen.deps))
         currEntry().rookOpen = evaluateRookOpen<WHITE>(board) - evaluateRookOpen<BLACK>(board);
     else
@@ -119,8 +113,7 @@ void EvalState::pop()
 ScorePair EvalState::score(const Board& board) const
 {
     return currEntry().psqtState.evaluate(board) + currEntry().pawnStructure.score
-        + currEntry().knightOutposts + currEntry().bishopPawns + currEntry().rookOpen
-        + currEntry().minorBehindPawn;
+        + currEntry().knightOutposts + currEntry().rookOpen + currEntry().minorBehindPawn;
 }
 
 ScorePair EvalState::psqtScore(const Board& board, Color c) const

@@ -45,9 +45,6 @@ template<Color us>
 ScorePair evaluateKnightOutposts(const Board& board, const PawnStructure& pawnStructure);
 
 template<Color us>
-ScorePair evaluateBishopPawns(const Board& board);
-
-template<Color us>
 ScorePair evaluateRookOpen(const Board& board);
 
 template<Color us>
