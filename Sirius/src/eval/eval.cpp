@@ -34,6 +34,7 @@ ScorePair evaluatePieces(const Board& board, EvalData& evalData)
 {
     constexpr Color them = ~us;
     constexpr Bitboard CENTER_SQUARES = (RANK_4_BB | RANK_5_BB) & (FILE_D_BB | FILE_E_BB);
+    constexpr Bitboard CENTRAL_FILES = FILE_C_BB | FILE_D_BB | FILE_E_BB | FILE_F_BB;
 
     ScorePair eval = ScorePair(0, 0);
     Bitboard pieces = board.pieces(us, piece);
@@ -75,7 +76,10 @@ ScorePair evaluatePieces(const Board& board, EvalData& evalData)
             bool lightSquare = (Bitboard::fromSquare(sq) & LIGHT_SQUARES_BB).any();
             Bitboard sameColorPawns =
                 board.pieces(us, PAWN) & (lightSquare ? LIGHT_SQUARES_BB : DARK_SQUARES_BB);
-            eval += BISHOP_PAWNS[std::min(sameColorPawns.popcount(), 6u)];
+            Bitboard blocked = sameColorPawns & attacks::pawnPushes<them>(occupancy);
+            Bitboard blockedCentral = blocked & CENTRAL_FILES;
+            eval += BISHOP_PAWNS[std::min(sameColorPawns.popcount(), 6u)]
+                * (1 + blockedCentral.popcount());
         }
     }
 
