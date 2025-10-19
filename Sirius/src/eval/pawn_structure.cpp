@@ -47,6 +47,7 @@ ScorePair PawnStructure::evaluate(const Board& board)
         Bitboard phalanx = attacks::pawnAttacks(them, push) & ourPawns;
         Bitboard stoppers = attacks::passedPawnMask(us, sq) & theirPawns;
 
+        bool exposed = (stoppers & Bitboard::fileBB(sq.file())).empty();
         bool blocked = theirPawns.has(push);
         bool doubled = ourPawns.has(push);
         bool isolated = neighbors.empty();
@@ -64,9 +65,9 @@ ScorePair PawnStructure::evaluate(const Board& board)
             eval += DOUBLED_PAWN[std::min(sq.file(), sq.file() ^ 7)];
 
         if (threats.empty() && isolated)
-            eval += ISOLATED_PAWN[std::min(sq.file(), sq.file() ^ 7)];
+            eval += ISOLATED_PAWN[std::min(sq.file(), sq.file() ^ 7)] + ISOLATED_EXPOSED * exposed;
         else if (backwards)
-            eval += BACKWARDS_PAWN[sq.relativeRank<us>()];
+            eval += BACKWARDS_PAWN[sq.relativeRank<us>()] + BACKWARDS_EXPOSED * exposed;
     }
 
     Bitboard phalanx = ourPawns & ourPawns.west();
