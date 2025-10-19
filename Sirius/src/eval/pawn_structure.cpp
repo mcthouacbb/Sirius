@@ -65,9 +65,9 @@ ScorePair PawnStructure::evaluate(const Board& board)
             eval += DOUBLED_PAWN[std::min(sq.file(), sq.file() ^ 7)];
 
         if (threats.empty() && isolated)
-            eval += ISOLATED_PAWN[std::min(sq.file(), sq.file() ^ 7)] + exposed * ISOLATED_EXPOSED;
+            eval += ISOLATED_PAWN[std::min(sq.file(), sq.file() ^ 7)] + ISOLATED_EXPOSED * exposed;
         else if (backwards)
-            eval += BACKWARDS_PAWN[sq.relativeRank<us>()] + exposed * BACKWARDS_EXPOSED;
+            eval += BACKWARDS_PAWN[sq.relativeRank<us>()] + BACKWARDS_EXPOSED * exposed;
     }
 
     Bitboard phalanx = ourPawns & ourPawns.west();
