@@ -750,7 +750,9 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
 
             reduction += lmrNonImp * !improving;
             reduction += lmrNoisyTTMove * noisyTTMove;
-            reduction -= lmrTTPV * ttPV;
+            if (ttPV)
+                reduction -= lmrTTPV + lmrTTPVNonFailLow * (ttHit && ttData.score > alpha);
+
             reduction -= lmrGivesCheck * givesCheck;
             reduction -= lmrInCheck * inCheck;
             reduction -= lmrCorrplexity * (corrplexity > lmrCorrplexityMargin);
