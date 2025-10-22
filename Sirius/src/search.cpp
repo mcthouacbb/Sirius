@@ -726,6 +726,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
         m_TT.prefetch(board.keyAfter(move));
         uint64_t nodesBefore = thread.nodes;
 
+        bool badSeeQuiet = quiet && !board.see(move, 0);
         makeMove(thread, stack, move, histScore);
         movesPlayed++;
 
@@ -753,6 +754,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
             if (ttPV)
                 reduction -= lmrTTPV + lmrTTPVNonFailLow * (ttHit && ttData.score > alpha);
 
+            reduction += 1024 * badSeeQuiet;
             reduction -= lmrGivesCheck * givesCheck;
             reduction -= lmrInCheck * inCheck;
             reduction -= lmrCorrplexity * (corrplexity > lmrCorrplexityMargin);
