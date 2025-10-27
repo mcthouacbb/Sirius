@@ -261,6 +261,9 @@ ScorePair evaluatePassedPawns(
             bool controlled = evalData.attacked[them].has(pushSq);
             eval += PASSED_PAWN[blocked][controlled][rank];
 
+            int edgeDist = std::min(passer.file(), 7 - passer.file());
+            eval += PASSED_FILE * edgeDist;
+
             eval += OUR_PASSER_PROXIMITY[Square::chebyshev(ourKing, pushSq)];
             eval += THEIR_PASSER_PROXIMITY[Square::chebyshev(theirKing, pushSq)];
 
