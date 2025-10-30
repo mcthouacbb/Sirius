@@ -219,7 +219,9 @@ void History::updatePawnHist(const Board& board, Move move, int bonus)
 
 void History::updateContHist(Move move, Piece movingPiece, CHEntry* entry, int base, int bonus)
 {
-    (*entry)[packPieceIndices(movingPiece)][move.toSq().value()].update(base, bonus);
+    auto& contHistEntry = (*entry)[packPieceIndices(movingPiece)][move.toSq().value()];
+    base = (3 * contHistEntry + base) / 4;
+    contHistEntry.update(base, bonus);
 }
 
 void History::updateCaptHist(const Board& board, Move move, int bonus)
