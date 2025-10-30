@@ -59,7 +59,7 @@ private:
         PsqtState psqtState;
         PawnStructure pawnStructure;
         ColorArray<ScorePair> pawnShieldStorm;
-        ScorePair knightOutposts;
+        ScorePair outposts;
         ScorePair bishopPawns;
         ScorePair rookOpen;
         ScorePair minorBehindPawn;
