@@ -691,7 +691,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
                 break;
         }
 
-        bool doSE = !root && rootPly < 2 * thread.rootDepth && !excluded && depth >= seMinDepth
+        bool doSE = !root && rootPly < 2 * thread.rootDepth && !excluded && depth >= seMinDepth + ttPV
             && ttData.move == move && ttData.depth >= depth - seTTDepthMargin
             && ttData.bound != TTEntry::Bound::UPPER_BOUND && !isMateScore(ttData.score);
 
