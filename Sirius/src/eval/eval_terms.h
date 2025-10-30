@@ -24,7 +24,6 @@ struct EvalTerm
 };
 
 constexpr EvalTerm pawnStructure = {PieceSet(PAWN)};
-constexpr EvalTerm passers = {PieceSet(PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING)};
 constexpr EvalTerm pawnShieldStorm = {PieceSet(PAWN, KING)};
 constexpr EvalTerm knightOutposts = {PieceSet(PAWN, KNIGHT)};
 constexpr EvalTerm bishopPawns = {PieceSet(PAWN, BISHOP)};
