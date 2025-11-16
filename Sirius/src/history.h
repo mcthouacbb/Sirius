@@ -65,11 +65,11 @@ inline HistoryEntry<MAX_VAL>::operator int() const
 template<int MAX_VAL>
 inline void HistoryEntry<MAX_VAL>::update(int bonus)
 {
-    m_Value += bonus - m_Value * std::abs(bonus) / MAX_VAL;
+    update(bonus, m_Value);
 }
 
 template<int MAX_VAL>
-inline void HistoryEntry<MAX_VAL>::update(int base, int bonus)
+inline void HistoryEntry<MAX_VAL>::update(int bonus, int base)
 {
     int newValue = m_Value + bonus - base * std::abs(bonus) / MAX_VAL;
     m_Value = std::clamp(newValue, -MAX_VAL, MAX_VAL);
