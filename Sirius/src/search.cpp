@@ -531,7 +531,7 @@ int Search::search(SearchThread& thread, int depth, SearchStack* stack, int alph
     if (!pvNode && !inCheck && !excluded)
     {
         // reverse futility pruning(~86 elo)
-        int rfpMargin = (improving ? rfpImpMargin + 10 * oppEasyCapture : rfpNonImpMargin) * depth
+        int rfpMargin = (improving ? rfpImpMargin + 20 * oppEasyCapture : rfpNonImpMargin) * depth
             - rfpOppWorsening * oppWorsening + (stack - 1)->histScore / rfpHistDivisor;
         if (depth <= rfpMaxDepth && stack->eval >= std::max(rfpMargin, 20) + beta)
             return stack->eval;
