@@ -45,6 +45,8 @@ int History::getQuietStats(Move move, Bitboard threats, Piece movingPiece, ZKey 
         score += getContHist(move, movingPiece, stack[-2].contHistEntry);
     if (ply > 3 && stack[-4].contHistEntry != nullptr)
         score += getContHist(move, movingPiece, stack[-4].contHistEntry);
+    if (ply > 5 && stack[-6].contHistEntry != nullptr)
+        score += getContHist(move, movingPiece, stack[-6].contHistEntry) / 2;
     return score;
 }
 
@@ -114,6 +116,8 @@ void History::updateContHist(Move move, Piece movingPiece, const SearchStack* st
         conthist += getContHist(move, movingPiece, stack[-2].contHistEntry);
     if (ply > 3 && stack[-4].contHistEntry != nullptr)
         conthist += getContHist(move, movingPiece, stack[-4].contHistEntry);
+    if (ply > 5 && stack[-6].contHistEntry != nullptr)
+        conthist += getContHist(move, movingPiece, stack[-6].contHistEntry) / 2;
 
     if (ply > 0 && stack[-1].contHistEntry != nullptr)
         updateContHist(move, movingPiece, stack[-1].contHistEntry, conthist, bonus);
@@ -121,6 +125,8 @@ void History::updateContHist(Move move, Piece movingPiece, const SearchStack* st
         updateContHist(move, movingPiece, stack[-2].contHistEntry, conthist, bonus);
     if (ply > 3 && stack[-4].contHistEntry != nullptr)
         updateContHist(move, movingPiece, stack[-4].contHistEntry, conthist, bonus);
+    if (ply > 5 && stack[-6].contHistEntry != nullptr)
+        updateContHist(move, movingPiece, stack[-6].contHistEntry, conthist, bonus / 2);
 }
 
 void History::updateNoisyStats(const Board& board, Move move, int bonus)
