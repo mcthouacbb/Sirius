@@ -129,7 +129,7 @@ void genPieceMoves(const Board& board, MoveList& moves, Bitboard moveMask)
 template<MoveGenType type, Color color>
 void genPawnMoves(const Board& board, MoveList& moves, Bitboard moveMask)
 {
-    constexpr int PUSH_OFFSET = attacks::pawnPushOffset<color>();
+    constexpr i32 PUSH_OFFSET = attacks::pawnPushOffset<color>();
 
     Bitboard pawns = board.pieces(color, PieceType::PAWN);
     Bitboard allPieces = board.allPieces();

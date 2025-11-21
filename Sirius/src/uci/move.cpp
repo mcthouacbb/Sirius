@@ -8,8 +8,8 @@ const char pieceChars[5] = {'N', 'B', 'R', 'Q', 'K'};
 
 MoveStrFind findMoveFromUCI(const Board& board, const MoveList& legalMoves, const char* moveStr)
 {
-    int src = (moveStr[0] - 'a') + ((moveStr[1] - '1') << 3);
-    int dst = (moveStr[2] - 'a') + ((moveStr[3] - '1') << 3);
+    i32 src = (moveStr[0] - 'a') + ((moveStr[1] - '1') << 3);
+    i32 dst = (moveStr[2] - 'a') + ((moveStr[3] - '1') << 3);
 
     Promotion promotion = Promotion(-1);
     bool isPromotion = false;
@@ -59,16 +59,16 @@ MoveStrFind findMoveFromUCI(const Board& board, const MoveList& legalMoves, cons
 
 MoveStrFind findMoveFromSAN(const Board& board, const MoveList& legalMoves, const char* moveStr)
 {
-    int fromFile = -1;
-    int fromRank = -1;
-    int toFile = -1;
-    int toRank = -1;
+    i32 fromFile = -1;
+    i32 fromRank = -1;
+    i32 toFile = -1;
+    i32 toRank = -1;
     PieceType piece = PieceType::NONE;
     Promotion promotion = Promotion(-1);
     bool isPromotion = false;
     bool isCapture = false;
 
-    int moveLen = -1;
+    i32 moveLen = -1;
 
     if (moveStr[0] == '\0')
         return {MoveStrFind::Result::INVALID, Move::nullmove(), 0};
@@ -152,7 +152,7 @@ MoveStrFind findMoveFromSAN(const Board& board, const MoveList& legalMoves, cons
             return {MoveStrFind::Result::INVALID, Move::nullmove(), 0};
         toFile = moveStr[2] - 'a';
         toRank = moveStr[3] - '1';
-        int i = 4;
+        i32 i = 4;
         if (moveStr[4] == '=')
             i = 5;
         switch (moveStr[i])
@@ -182,7 +182,7 @@ MoveStrFind findMoveFromSAN(const Board& board, const MoveList& legalMoves, cons
         if (moveStr[1] < '1' || moveStr[1] > '8')
             return {MoveStrFind::Result::INVALID, Move::nullmove(), 0};
         toRank = moveStr[1] - '1';
-        int i = 2;
+        i32 i = 2;
         if (moveStr[i] == '=')
             i = 3;
 
@@ -271,8 +271,8 @@ piece_moves:
     }
     else
     {
-        int file1 = -1;
-        int rank1 = -1;
+        i32 file1 = -1;
+        i32 rank1 = -1;
         switch (moveStr[1])
         {
             case 'a':
@@ -378,7 +378,7 @@ search_moves:
         return {MoveStrFind::Result::NOT_FOUND, Move::nullmove(), moveLen};
     }
 
-    int pawnOffset = (board.sideToMove() == Color::WHITE) ? -8 : 8;
+    i32 pawnOffset = (board.sideToMove() == Color::WHITE) ? -8 : 8;
 
     const Move* match = nullptr;
     for (const Move* it = legalMoves.data(); it != legalMoves.data() + legalMoves.size(); it++)
@@ -432,7 +432,7 @@ std::string convMoveToUCI(const Board& board, Move move)
     std::string str(4 + (move.type() == MoveType::PROMOTION), ' ');
     str[0] = static_cast<char>(move.fromSq().file() + 'a');
     str[1] = static_cast<char>(move.fromSq().rank() + '1');
-    int toFile = move.toSq().file();
+    i32 toFile = move.toSq().file();
     if (move.type() == MoveType::CASTLE && !board.isFRC())
     {
         toFile = move.toSq() > move.fromSq() ? FILE_G : FILE_C;
@@ -442,13 +442,13 @@ std::string convMoveToUCI(const Board& board, Move move)
     str[3] = static_cast<char>(move.toSq().rank() + '1');
     if (move.type() == MoveType::PROMOTION)
     {
-        str[4] = std::tolower(promoChars[(static_cast<int>(move.promotion()) >> 14)]);
+        str[4] = std::tolower(promoChars[(static_cast<i32>(move.promotion()) >> 14)]);
     }
     return str;
 }
 
 bool isAmbiguous(const Board& board, const MoveList& legalMoves, PieceType piece, Square toSquare,
-    int fromFile, int fromRank)
+    i32 fromFile, i32 fromRank)
 {
     const Move* match = nullptr;
     for (const Move* it = legalMoves.data(); it != legalMoves.data() + legalMoves.size(); it++)
@@ -494,7 +494,7 @@ std::string convMoveToSAN(const Board& board, const MoveList& legalMoves, Move m
             if (move.type() == MoveType::PROMOTION)
             {
                 str[2] = '=';
-                str[3] = promoChars[static_cast<int>(move.promotion()) >> 14];
+                str[3] = promoChars[static_cast<i32>(move.promotion()) >> 14];
             }
             str[0] = static_cast<char>(dstPos.file() + 'a');
             str[1] = static_cast<char>(dstPos.rank() + '1');
@@ -506,7 +506,7 @@ std::string convMoveToSAN(const Board& board, const MoveList& legalMoves, Move m
             if (move.type() == MoveType::PROMOTION)
             {
                 str[4] = '=';
-                str[5] = promoChars[static_cast<int>(move.promotion()) >> 14];
+                str[5] = promoChars[static_cast<i32>(move.promotion()) >> 14];
             }
             str[0] = static_cast<char>(srcPos.file() + 'a');
             str[1] = 'x';
@@ -517,7 +517,7 @@ std::string convMoveToSAN(const Board& board, const MoveList& legalMoves, Move m
     }
     else
     {
-        char pceChar = pieceChars[static_cast<int>(piece) - static_cast<int>(PieceType::KNIGHT)];
+        char pceChar = pieceChars[static_cast<i32>(piece) - static_cast<i32>(PieceType::KNIGHT)];
 
         Square srcPos = move.fromSq();
         Square dstPos = move.toSq();

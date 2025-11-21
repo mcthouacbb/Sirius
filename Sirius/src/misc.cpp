@@ -52,7 +52,7 @@ void printBoard(const Board& board)
 }
 
 template<bool print>
-uint64_t perft(Board& board, int depth)
+u64 perft(Board& board, i32 depth)
 {
     if (depth == 0)
         return 1;
@@ -61,12 +61,12 @@ uint64_t perft(Board& board, int depth)
     if (depth == 1 && !print)
         return moves.size();
 
-    uint64_t count = 0;
+    u64 count = 0;
 
     for (Move move : moves)
     {
         board.makeMove(move);
-        uint64_t sub = perft<false>(board, depth - 1);
+        u64 sub = perft<false>(board, depth - 1);
         if (print)
             std::cout << uci::convMoveToUCI(board, move) << ": " << sub << std::endl;
         count += sub;
@@ -75,10 +75,10 @@ uint64_t perft(Board& board, int depth)
     return count;
 }
 
-template uint64_t perft<true>(Board& board, int depth);
-template uint64_t perft<false>(Board& board, int depth);
+template u64 perft<true>(Board& board, i32 depth);
+template u64 perft<false>(Board& board, i32 depth);
 
-void testSAN(Board& board, int depth)
+void testSAN(Board& board, i32 depth)
 {
     MoveList moves;
     genMoves<MoveGenType::LEGAL>(board, moves);
@@ -95,7 +95,7 @@ void testSAN(Board& board, int depth)
             exit(1);
         }
 
-        if (find.len != static_cast<int>(str.length()))
+        if (find.len != static_cast<i32>(str.length()))
         {
             std::cerr << board.stringRep() << std::endl;
             std::cerr << str << ' ' << uci::convMoveToUCI(board, move) << std::endl;
@@ -115,7 +115,7 @@ void testSAN(Board& board, int depth)
     }
 }
 
-void testKeyAfter(Board& board, int depth)
+void testKeyAfter(Board& board, i32 depth)
 {
     if (depth == 0)
         return;
@@ -134,7 +134,7 @@ void testKeyAfter(Board& board, int depth)
     }
 }
 
-void testNoisyGen(Board& board, int depth)
+void testNoisyGen(Board& board, i32 depth)
 {
     if (depth == 0)
     {
@@ -144,7 +144,7 @@ void testNoisyGen(Board& board, int depth)
         MoveList noisies;
         genMoves<MoveGenType::NOISY>(board, noisies);
 
-        int numFound = 0;
+        i32 numFound = 0;
         for (Move move : moves)
         {
             bool found = std::find(noisies.begin(), noisies.end(), move) != noisies.end();
@@ -170,7 +170,7 @@ void testNoisyGen(Board& board, int depth)
     }
 }
 
-void testIsPseudoLegal(Board& board, int depth)
+void testIsPseudoLegal(Board& board, i32 depth)
 {
     if (depth == 0)
     {
@@ -187,9 +187,9 @@ void testIsPseudoLegal(Board& board, int depth)
             }
         }
 
-        for (int from = 0; from < 64; from++)
+        for (i32 from = 0; from < 64; from++)
         {
-            for (int to = 0; to < 64; to++)
+            for (i32 to = 0; to < 64; to++)
             {
                 Move move(Square(from), Square(to), MoveType::NONE);
                 if (std::find(moves.begin(), moves.end(), move) == moves.end()
@@ -241,7 +241,7 @@ void testIsPseudoLegal(Board& board, int depth)
     }
 }
 
-void testQuietGen(Board& board, int depth)
+void testQuietGen(Board& board, i32 depth)
 {
     if (depth == 0)
     {
@@ -251,7 +251,7 @@ void testQuietGen(Board& board, int depth)
         MoveList quiets;
         genMoves<MoveGenType::QUIET>(board, quiets);
 
-        int numFound = 0;
+        i32 numFound = 0;
         for (Move move : moves)
         {
             bool found = std::find(quiets.begin(), quiets.end(), move) != quiets.end();
@@ -277,7 +277,7 @@ void testQuietGen(Board& board, int depth)
     }
 }
 
-void testMarlinformat(Board& board, int depth)
+void testMarlinformat(Board& board, i32 depth)
 {
     if (depth == 0)
     {
@@ -313,14 +313,14 @@ void testSEE()
 
     std::string line;
     Board board;
-    int failCount = 0;
-    int passCount = 0;
+    i32 failCount = 0;
+    i32 passCount = 0;
     while (std::getline(file, line))
     {
-        int sep1 = static_cast<int>(line.find(';', 0));
+        i32 sep1 = static_cast<i32>(line.find(';', 0));
         board.setToFen(std::string_view(line).substr(0, sep1));
 
-        int moveStart = sep1 + 2;
+        i32 moveStart = sep1 + 2;
 
         MoveList moves;
         genMoves<MoveGenType::LEGAL>(board, moves);
@@ -344,7 +344,7 @@ void testSEE()
 
         strEnd += 2;
 
-        int value;
+        i32 value;
         auto [ptr, ec] = std::from_chars(strEnd, line.c_str() + line.size(), value);
         if (ec != std::errc())
         {
@@ -375,7 +375,7 @@ void testSEE()
 struct PerftTest
 {
     std::string fen;
-    std::array<uint64_t, 6> results;
+    std::array<u64, 6> results;
 };
 
 void runTests(Board& board, bool fast)
@@ -395,7 +395,7 @@ void runTests(Board& board, bool fast)
     {
         PerftTest test;
         std::fill(std::begin(test.results), std::end(test.results), UINT64_MAX);
-        int i = 0;
+        i32 i = 0;
         while (line[i] != ';')
             i++;
         test.fen = line.substr(0, i);
@@ -408,15 +408,15 @@ void runTests(Board& board, bool fast)
             size_t idx = line.find(';', i + 1);
             if (idx == std::string::npos)
                 break;
-            i = static_cast<int>(idx);
+            i = static_cast<i32>(idx);
             std::from_chars(
                 line.data() + i + 4, line.data() + line.size(), test.results[line[i + 2] - '1']);
         }
         tests.push_back(test);
     }
 
-    uint32_t failCount = 0;
-    uint64_t totalNodes = 0;
+    u32 failCount = 0;
+    u64 totalNodes = 0;
 
     auto t1 = std::chrono::steady_clock::now();
     for (size_t i = 0; i < tests.size(); i++)
@@ -424,7 +424,7 @@ void runTests(Board& board, bool fast)
         const auto& test = tests[i];
         board.setToFen(test.fen);
         std::cout << "TEST: " << test.fen << std::endl;
-        for (int j = 0; j < 6; j++)
+        for (i32 j = 0; j < 6; j++)
         {
             if (test.results[j] == UINT64_MAX)
                 continue;
@@ -433,7 +433,7 @@ void runTests(Board& board, bool fast)
                 std::cout << "\tSkipped: depth " << j + 1 << std::endl;
                 continue;
             }
-            uint64_t nodes = perft<false>(board, j + 1);
+            u64 nodes = perft<false>(board, j + 1);
             totalNodes += nodes;
             if (nodes == test.results[j])
             {
@@ -453,24 +453,24 @@ void runTests(Board& board, bool fast)
     std::cout << "Time: " << (t2 - t1).count() << std::endl;
 }
 
-void testSANFind(const Board& board, const MoveList& moveList, int len)
+void testSANFind(const Board& board, const MoveList& moveList, i32 len)
 {
     static constexpr std::array<char, 25> chars = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', '1', '2',
         '3', '4', '5', '6', '7', '8', 'K', 'Q', 'R', 'B', 'N', 'q', 'r', 'n', 'x'};
-    static constexpr uint64_t charCount = 25;
+    static constexpr u64 charCount = 25;
     char* buf = new char[len + 1];
     buf[len] = '\0';
 
-    uint64_t maxIdx = 1;
+    u64 maxIdx = 1;
 
-    for (int i = 0; i < len; i++)
+    for (i32 i = 0; i < len; i++)
     {
         maxIdx *= charCount;
     }
-    for (uint64_t i = 0; i < maxIdx; i++)
+    for (u64 i = 0; i < maxIdx; i++)
     {
-        uint64_t tmp = i;
-        for (int j = 0; j < len; j++)
+        u64 tmp = i;
+        for (i32 j = 0; j < len; j++)
         {
             buf[j] = chars[tmp % charCount];
             tmp /= charCount;

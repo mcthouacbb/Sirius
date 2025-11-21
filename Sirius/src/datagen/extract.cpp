@@ -13,7 +13,7 @@ namespace datagen
 namespace dists
 {
 
-float phaseScaleFactor(int phase)
+float phaseScaleFactor(i32 phase)
 {
     float oddScale = std::min(0.9f, -0.09793221f * (static_cast<float>(phase) - 23.0f) + 0.189393939f);
     float p16 = std::abs(static_cast<float>(phase) - 16.0f);
@@ -26,15 +26,15 @@ float phaseScaleFactor(int phase)
 
 }
 
-int boardPhase(const Board& board)
+i32 boardPhase(const Board& board)
 {
-    int phase = 4 * board.pieces(PieceType::QUEEN).popcount()
+    i32 phase = 4 * board.pieces(PieceType::QUEEN).popcount()
         + 2 * board.pieces(PieceType::ROOK).popcount()
         + (board.pieces(PieceType::BISHOP) | board.pieces(PieceType::KNIGHT)).popcount();
     return std::min(phase, 24);
 }
 
-bool filterPos(const Board& board, Move move, int score, marlinformat::WDL wdl)
+bool filterPos(const Board& board, Move move, i32 score, marlinformat::WDL wdl)
 {
     if (board.checkers().any())
         return true;
@@ -50,7 +50,7 @@ bool dropPosition(float keepProb, std::mt19937& gen)
     return u >= keepProb;
 }
 
-void extract(std::string dataFilename, std::string outputFilename, uint32_t maxGames, uint32_t ppg)
+void extract(std::string dataFilename, std::string outputFilename, u32 maxGames, u32 ppg)
 {
     std::random_device rd;
     auto seed = rd();
@@ -76,7 +76,7 @@ void extract(std::string dataFilename, std::string outputFilename, uint32_t maxG
     struct Position
     {
         marlinformat::PackedBoard board;
-        int phase;
+        i32 phase;
     };
     std::vector<Position> positions;
     for (auto game : games)
@@ -104,13 +104,13 @@ void extract(std::string dataFilename, std::string outputFilename, uint32_t maxG
               << std::endl;
     std::cout << "Adjusting distribution" << std::endl;
 
-    uint32_t phaseCounts[25] = {};
+    u32 phaseCounts[25] = {};
     for (const auto& pos : positions)
         phaseCounts[pos.phase]++;
 
     float phaseKeepProbs[25] = {};
     float phaseNormConst = 100.0f;
-    for (int i = 0; i <= 24; i++)
+    for (i32 i = 0; i <= 24; i++)
     {
         float observed = static_cast<float>(phaseCounts[i]) / static_cast<float>(positions.size());
         // this is not actually the desired probability, but it still works
@@ -119,10 +119,10 @@ void extract(std::string dataFilename, std::string outputFilename, uint32_t maxG
         phaseNormConst = std::min(phaseNormConst, observed / desired);
     }
 
-    for (int i = 0; i <= 24; i++)
+    for (i32 i = 0; i <= 24; i++)
         phaseKeepProbs[i] = std::min(phaseKeepProbs[i] * phaseNormConst, 1.0f);
 
-    for (int i = 0; i < positions.size(); i++)
+    for (i32 i = 0; i < positions.size(); i++)
     {
         const auto& pos = positions[i];
         if (dropPosition(phaseKeepProbs[pos.phase], gen))

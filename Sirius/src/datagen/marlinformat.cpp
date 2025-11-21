@@ -16,7 +16,7 @@ enum class PieceCode
     CASTLING_ROOK
 };
 
-PackedBoard packBoard(const Board& board, int score, WDL wdl)
+PackedBoard packBoard(const Board& board, i32 score, WDL wdl)
 {
     PackedBoard result = {};
     Bitboard occ = board.allPieces();
@@ -41,12 +41,12 @@ PackedBoard packBoard(const Board& board, int score, WDL wdl)
             }
         }
 
-        result.pieces.set(index++, (static_cast<uint8_t>(color) << 3) | static_cast<uint8_t>(code));
+        result.pieces.set(index++, (static_cast<u8>(color) << 3) | static_cast<u8>(code));
     }
 
-    int epSquare = board.epSquare() == -1 ? 64 : board.epSquare();
+    i32 epSquare = board.epSquare() == -1 ? 64 : board.epSquare();
 
-    result.stmEpSquare |= (static_cast<uint8_t>(board.sideToMove()) << 7) | epSquare;
+    result.stmEpSquare |= (static_cast<u8>(board.sideToMove()) << 7) | epSquare;
     result.halfMoveClock = board.halfMoveClock();
     result.fullMoveNumber = board.gamePly() / 2 + 1;
     result.score = score;
@@ -66,7 +66,7 @@ MarlinFormatUnpack unpackBoard(const PackedBoard& packedBoard)
     while (occ.any())
     {
         Square sq = occ.poplsb();
-        int piece = packedBoard.pieces.get(index++);
+        i32 piece = packedBoard.pieces.get(index++);
         Color color = static_cast<Color>(piece >> 3);
         PieceCode code = static_cast<PieceCode>(piece & 0x7);
 
@@ -109,7 +109,7 @@ MarlinFormatUnpack unpackBoard(const PackedBoard& packedBoard)
 
     state.halfMoveClock = packedBoard.halfMoveClock;
 
-    int gamePly = 2 * packedBoard.fullMoveNumber - 2 + (stm == Color::BLACK);
+    i32 gamePly = 2 * packedBoard.fullMoveNumber - 2 + (stm == Color::BLACK);
 
     Board board(state, castlingData, stm, gamePly);
     return {board, packedBoard.score, packedBoard.wdl};

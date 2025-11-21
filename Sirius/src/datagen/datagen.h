@@ -4,15 +4,17 @@
 #include <mutex>
 #include <string>
 
+#include "../defs.h"
+
 namespace datagen
 {
 
 struct Config
 {
-    uint32_t softLimit;
-    uint32_t hardLimit;
-    uint32_t numGames;
-    uint32_t numThreads;
+    u32 softLimit;
+    u32 hardLimit;
+    u32 numGames;
+    u32 numThreads;
     std::string outputFilename;
 };
 

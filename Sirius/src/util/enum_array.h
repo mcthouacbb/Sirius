@@ -10,12 +10,12 @@ struct EnumArray : public std::array<T, N>
 
     T& operator[](E p)
     {
-        return (*this)[static_cast<int>(p)];
+        return (*this)[static_cast<i32>(p)];
     }
 
     const T& operator[](E p) const
     {
-        return (*this)[static_cast<int>(p)];
+        return (*this)[static_cast<i32>(p)];
     }
 };
 

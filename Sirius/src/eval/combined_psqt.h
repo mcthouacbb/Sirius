@@ -13,11 +13,11 @@ namespace eval
 constexpr auto initPsqt()
 {
     MultiArray<ScorePair, 2, 2, 6, 64> combined = {};
-    for (int bucket = 0; bucket < 2; bucket++)
-        for (int piece = 0; piece < 6; piece++)
-            for (int sq = 0; sq < 64; sq++)
+    for (i32 bucket = 0; bucket < 2; bucket++)
+        for (i32 piece = 0; piece < 6; piece++)
+            for (i32 sq = 0; sq < 64; sq++)
             {
-                int mirror = bucket * 0b111;
+                i32 mirror = bucket * 0b111;
                 combined[bucket][0][piece][sq] =
                     (MATERIAL[piece] + PSQT[piece][sq ^ 0b111000 ^ mirror]);
                 combined[bucket][1][piece][sq] = -(MATERIAL[piece] + PSQT[piece][sq ^ mirror]);
@@ -27,9 +27,9 @@ constexpr auto initPsqt()
 
 constexpr auto combinedPsqt = initPsqt();
 
-inline ScorePair combinedPsqtScore(int bucket, Color color, PieceType piece, Square square)
+inline ScorePair combinedPsqtScore(i32 bucket, Color color, PieceType piece, Square square)
 {
-    return combinedPsqt[bucket][static_cast<int>(color)][static_cast<int>(piece)][square.value()];
+    return combinedPsqt[bucket][static_cast<i32>(color)][static_cast<i32>(piece)][square.value()];
 }
 
 }

@@ -8,16 +8,16 @@ namespace uci
 {
 constexpr double as[] = {-420.12493420, 1155.97899531, -1074.82879152, 441.44515956};
 constexpr double bs[] = {-106.59407292, 300.77010455, -267.28444080, 114.30281819};
-constexpr int NormalizeToPawnValue = 102;
+constexpr i32 NormalizeToPawnValue = 102;
 
-inline int normalizedScore(int raw)
+inline i32 normalizedScore(i32 raw)
 {
     if (isMateScore(raw))
         return raw;
     return raw * 100 / NormalizeToPawnValue;
 }
 
-inline double expectedWinRate(double a, double b, int score)
+inline double expectedWinRate(double a, double b, i32 score)
 {
     return 1.0 / (1.0 + std::exp(-(static_cast<double>(score) - a) / b));
 }
@@ -28,9 +28,9 @@ struct WDL
     float lossProb;
 };
 
-inline WDL expectedWDL(const Board& board, int score)
+inline WDL expectedWDL(const Board& board, i32 score)
 {
-    int material = board.pieces(PieceType::PAWN).popcount()
+    i32 material = board.pieces(PieceType::PAWN).popcount()
         + 3 * (board.pieces(PieceType::KNIGHT) | board.pieces(PieceType::BISHOP)).popcount()
         + 5 * board.pieces(PieceType::ROOK).popcount() + 9 * board.pieces(PieceType::QUEEN).popcount();
 

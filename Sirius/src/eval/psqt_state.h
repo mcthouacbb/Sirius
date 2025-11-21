@@ -11,8 +11,8 @@ class Board;
 namespace eval
 {
 
-constexpr int BUCKET_COUNT = 2;
-inline int getKingBucket(Square kingSq)
+constexpr i32 BUCKET_COUNT = 2;
+inline i32 getKingBucket(Square kingSq)
 {
     return kingSq.file() >= FILE_E;
 }
@@ -23,19 +23,19 @@ struct Accumulator
 
     void addPiece(Color color, PieceType piece, Square square)
     {
-        for (int bucket = 0; bucket < BUCKET_COUNT; bucket++)
+        for (i32 bucket = 0; bucket < BUCKET_COUNT; bucket++)
             materialPsqt[bucket] += combinedPsqtScore(bucket, color, piece, square);
     }
 
     void removePiece(Color color, PieceType piece, Square square)
     {
-        for (int bucket = 0; bucket < BUCKET_COUNT; bucket++)
+        for (i32 bucket = 0; bucket < BUCKET_COUNT; bucket++)
             materialPsqt[bucket] -= combinedPsqtScore(bucket, color, piece, square);
     }
 
     void movePiece(Color color, PieceType piece, Square src, Square dst)
     {
-        for (int bucket = 0; bucket < BUCKET_COUNT; bucket++)
+        for (i32 bucket = 0; bucket < BUCKET_COUNT; bucket++)
             materialPsqt[bucket] += combinedPsqtScore(bucket, color, piece, dst)
                 - combinedPsqtScore(bucket, color, piece, src);
     }

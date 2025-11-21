@@ -13,7 +13,7 @@ Board::Board()
     setToFen(defaultFen);
 }
 
-Board::Board(const BoardState& state, const CastlingData& castlingData, Color stm, int gamePly)
+Board::Board(const BoardState& state, const CastlingData& castlingData, Color stm, i32 gamePly)
 {
     m_States.clear();
     m_States.push_back(state);
@@ -42,8 +42,8 @@ void Board::setToFen(const std::string_view& fen, bool frc)
 
     currState().squares.fill(Piece::NONE);
 
-    int i = 0;
-    int sq = 56;
+    i32 i = 0;
+    i32 sq = 56;
     for (;; i++)
     {
         switch (pieces[i])
@@ -142,7 +142,7 @@ done:
         else if (c >= 'a' && c <= 'h')
         {
             m_FRC = true;
-            int file = c - 'a';
+            i32 file = c - 'a';
             CastleSide side =
                 file > kingSq(color).file() ? CastleSide::KING_SIDE : CastleSide::QUEEN_SIDE;
             m_CastlingData.setRookSquare(color, side, Square(kingSq(color).rank(), file));
@@ -193,14 +193,14 @@ std::string Board::stringRep() const
     std::string result;
     const char* between = "+---+---+---+---+---+---+---+---+\n";
 
-    for (int j = 56; j >= 0; j -= 8)
+    for (i32 j = 56; j >= 0; j -= 8)
     {
         result += between;
-        for (int i = j; i < j + 8; i++)
+        for (i32 i = j; i < j + 8; i++)
         {
             result += "| ";
             Piece piece = currState().squares[i];
-            result += pieceChars[static_cast<int>(piece)];
+            result += pieceChars[static_cast<i32>(piece)];
             result += " ";
         }
         result += "|\n";
@@ -212,23 +212,23 @@ std::string Board::stringRep() const
 std::string Board::fenStr() const
 {
     std::string fen = "";
-    int lastFile;
-    for (int j = 56; j >= 0; j -= 8)
+    i32 lastFile;
+    for (i32 j = 56; j >= 0; j -= 8)
     {
         lastFile = -1;
-        for (int i = j; i < j + 8; i++)
+        for (i32 i = j; i < j + 8; i++)
         {
             Piece piece = currState().squares[i];
             if (piece != Piece::NONE)
             {
-                int diff = i - j - lastFile;
+                i32 diff = i - j - lastFile;
                 if (diff > 1)
                     fen += static_cast<char>((diff - 1) + '0');
-                fen += pieceChars[static_cast<int>(piece)];
+                fen += pieceChars[static_cast<i32>(piece)];
                 lastFile = i - j;
             }
         }
-        int diff = 8 - lastFile;
+        i32 diff = 8 - lastFile;
         if (diff > 1)
             fen += static_cast<char>((diff - 1) + '0');
         if (j != 0)
@@ -353,7 +353,7 @@ void Board::makeMove(Move move, eval::EvalState* evalState)
         {
             currState().halfMoveClock = 0;
 
-            int offset = m_SideToMove == Color::WHITE ? -8 : 8;
+            i32 offset = m_SideToMove == Color::WHITE ? -8 : 8;
 
             removePiece(move.toSq() + offset, updates);
             movePiece(move.fromSq(), move.toSq(), updates);
@@ -476,29 +476,29 @@ bool Board::isInsufMaterialDraw() const
 }
 
 // see comment in cuckoo.cpp
-bool Board::hasUpcomingRepetition(int searchPly) const
+bool Board::hasUpcomingRepetition(i32 searchPly) const
 {
-    const auto S = [this](int d)
+    const auto S = [this](i32 d)
     {
         return m_States[m_States.size() - 1 - d].zkey.value;
     };
 
-    int reversible = std::min(currState().halfMoveClock, currState().pliesFromNull);
+    i32 reversible = std::min(currState().halfMoveClock, currState().pliesFromNull);
     if (reversible < 3)
         return false;
 
-    uint64_t currKey = S(0);
-    uint64_t other = ~(currKey ^ S(1));
-    for (int i = 3; i <= reversible; i += 2)
+    u64 currKey = S(0);
+    u64 other = ~(currKey ^ S(1));
+    for (i32 i = 3; i <= reversible; i += 2)
     {
-        uint64_t prevKey = S(i);
+        u64 prevKey = S(i);
         other ^= ~(prevKey ^ S(i - 1));
         if (other != 0)
             continue;
 
-        uint64_t keyDiff = currKey ^ prevKey;
+        u64 keyDiff = currKey ^ prevKey;
 
-        uint32_t slot = cuckoo::H1(keyDiff);
+        u32 slot = cuckoo::H1(keyDiff);
         if (keyDiff != cuckoo::keyDiffs[slot])
             slot = cuckoo::H2(keyDiff);
 
@@ -585,7 +585,7 @@ Bitboard Board::pinnersBlockers(Square square, Bitboard attackers, Bitboard& pin
 }
 
 // mostly from stockfish
-bool Board::see(Move move, int margin) const
+bool Board::see(Move move, i32 margin) const
 {
     Square src = move.fromSq();
     Square dst = move.toSq();
@@ -593,7 +593,7 @@ bool Board::see(Move move, int margin) const
     Bitboard allPieces = this->allPieces() ^ Bitboard::fromSquare(src);
     Bitboard attackers = attackersTo(dst, allPieces) ^ Bitboard::fromSquare(src);
 
-    int value = 0;
+    i32 value = 0;
     switch (move.type())
     {
         // TODO: Handle FRC since rook can be attacked after castling
@@ -675,7 +675,7 @@ bool Board::see(Move move, int margin) const
             attackers |= (attacks::bishopAttacks(dst, allPieces) & allPieces & diagPieces);
 
             value = seePieceValue(PieceType::PAWN) - value;
-            if (value < static_cast<int>(us))
+            if (value < static_cast<i32>(us))
                 return us;
         }
         else if (Bitboard knights = (stmAttackers & pieces(PieceType::KNIGHT)); knights.any())
@@ -685,7 +685,7 @@ bool Board::see(Move move, int margin) const
             attackers ^= knight;
 
             value = seePieceValue(PieceType::KNIGHT) - value;
-            if (value < static_cast<int>(us))
+            if (value < static_cast<i32>(us))
                 return us;
         }
         else if (Bitboard bishops = (stmAttackers & pieces(PieceType::BISHOP)); bishops.any())
@@ -696,7 +696,7 @@ bool Board::see(Move move, int margin) const
             attackers |= (attacks::bishopAttacks(dst, allPieces) & allPieces & diagPieces);
 
             value = seePieceValue(PieceType::BISHOP) - value;
-            if (value < static_cast<int>(us))
+            if (value < static_cast<i32>(us))
                 return us;
         }
         else if (Bitboard rooks = (stmAttackers & pieces(PieceType::ROOK)); rooks.any())
@@ -707,7 +707,7 @@ bool Board::see(Move move, int margin) const
             attackers |= (attacks::rookAttacks(dst, allPieces) & allPieces & straightPieces);
 
             value = seePieceValue(PieceType::ROOK) - value;
-            if (value < static_cast<int>(us))
+            if (value < static_cast<i32>(us))
                 return us;
         }
         else if (Bitboard queens = (stmAttackers & pieces(PieceType::QUEEN)); queens.any())
@@ -719,7 +719,7 @@ bool Board::see(Move move, int margin) const
                 | (attacks::rookAttacks(dst, allPieces) & allPieces & straightPieces);
 
             value = seePieceValue(PieceType::QUEEN) - value;
-            if (value < static_cast<int>(us))
+            if (value < static_cast<i32>(us))
                 return us;
         }
         else if ((stmAttackers & pieces(PieceType::KING)).any())
@@ -770,7 +770,7 @@ bool Board::isLegal(Move move) const
             Square kingTo = castleKingDst(m_SideToMove, side);
             if (from != kingTo)
             {
-                int step = kingTo > from ? 1 : -1;
+                i32 step = kingTo > from ? 1 : -1;
                 for (Square sq = from + step; sq != kingTo; sq += step)
                 {
                     if (squareAttacked(~m_SideToMove, sq, occ))
@@ -816,7 +816,7 @@ bool Board::isPseudoLegal(Move move) const
             // queen side
             if (move.toSq() != castlingRookSq(m_SideToMove, CastleSide::QUEEN_SIDE))
                 return false;
-            if ((castlingRights().value() & (2 << 2 * static_cast<int>(m_SideToMove))) == 0)
+            if ((castlingRights().value() & (2 << 2 * static_cast<i32>(m_SideToMove))) == 0)
                 return false;
             return !castlingBlocked(m_SideToMove, CastleSide::QUEEN_SIDE);
         }
@@ -825,7 +825,7 @@ bool Board::isPseudoLegal(Move move) const
             // king side
             if (move.toSq() != castlingRookSq(m_SideToMove, CastleSide::KING_SIDE))
                 return false;
-            if ((castlingRights().value() & (1 << 2 * static_cast<int>(m_SideToMove))) == 0)
+            if ((castlingRights().value() & (1 << 2 * static_cast<i32>(m_SideToMove))) == 0)
                 return false;
             return !castlingBlocked(m_SideToMove, CastleSide::KING_SIDE);
         }
@@ -850,7 +850,7 @@ bool Board::isPseudoLegal(Move move) const
 
     if (srcPieceType == PieceType::PAWN)
     {
-        int pushOffset = m_SideToMove == Color::WHITE ? attacks::pawnPushOffset<Color::WHITE>()
+        i32 pushOffset = m_SideToMove == Color::WHITE ? attacks::pawnPushOffset<Color::WHITE>()
                                                       : attacks::pawnPushOffset<Color::BLACK>();
         if (move.type() == MoveType::ENPASSANT)
         {
@@ -947,7 +947,7 @@ bool Board::isPseudoLegal(Move move) const
 ZKey Board::keyAfter(Move move) const
 {
     ZKey keyAfter = currState().zkey;
-    int epSquare = currState().epSquare;
+    i32 epSquare = currState().epSquare;
 
     keyAfter.flipSideToMove();
 
@@ -1008,7 +1008,7 @@ ZKey Board::keyAfter(Move move) const
         }
         case MoveType::ENPASSANT:
         {
-            int offset = m_SideToMove == Color::WHITE ? -8 : 8;
+            i32 offset = m_SideToMove == Color::WHITE ? -8 : 8;
             keyAfter.removePiece(PieceType::PAWN, ~m_SideToMove, move.toSq() + offset);
             keyAfter.movePiece(PieceType::PAWN, m_SideToMove, move.fromSq(), move.toSq());
             break;
@@ -1039,10 +1039,10 @@ void Board::updateCheckInfo()
     Square kingSq = m_SideToMove == Color::WHITE ? whiteKingSq : blackKingSq;
 
     currState().checkInfo.checkers = attackersTo(~m_SideToMove, kingSq);
-    currState().checkInfo.blockers[static_cast<int>(Color::WHITE)] = pinnersBlockers(whiteKingSq,
-        pieces(Color::BLACK), currState().checkInfo.pinners[static_cast<int>(Color::WHITE)]);
-    currState().checkInfo.blockers[static_cast<int>(Color::BLACK)] = pinnersBlockers(blackKingSq,
-        pieces(Color::WHITE), currState().checkInfo.pinners[static_cast<int>(Color::BLACK)]);
+    currState().checkInfo.blockers[static_cast<i32>(Color::WHITE)] = pinnersBlockers(whiteKingSq,
+        pieces(Color::BLACK), currState().checkInfo.pinners[static_cast<i32>(Color::WHITE)]);
+    currState().checkInfo.blockers[static_cast<i32>(Color::BLACK)] = pinnersBlockers(blackKingSq,
+        pieces(Color::WHITE), currState().checkInfo.pinners[static_cast<i32>(Color::BLACK)]);
 }
 
 void Board::calcThreats()
@@ -1089,8 +1089,8 @@ void Board::calcThreats()
 
 void Board::calcRepetitions()
 {
-    int reversible = std::min(currState().halfMoveClock, currState().pliesFromNull);
-    for (int i = 4; i <= reversible; i += 2)
+    i32 reversible = std::min(currState().halfMoveClock, currState().pliesFromNull);
+    for (i32 i = 4; i <= reversible; i += 2)
     {
         BoardState& state = m_States[m_States.size() - 1 - i];
         if (state.zkey == currState().zkey)

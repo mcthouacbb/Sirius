@@ -6,21 +6,21 @@
 void printBoard(const Board& board);
 
 template<bool print>
-uint64_t perft(Board& board, int depth);
+u64 perft(Board& board, i32 depth);
 
-void testSAN(Board& board, int depth);
+void testSAN(Board& board, i32 depth);
 
-void testKeyAfter(Board& board, int depth);
+void testKeyAfter(Board& board, i32 depth);
 
-void testNoisyGen(Board& board, int depth);
-void testQuietGen(Board& board, int depth);
+void testNoisyGen(Board& board, i32 depth);
+void testQuietGen(Board& board, i32 depth);
 
-void testIsPseudoLegal(Board& board, int depth);
+void testIsPseudoLegal(Board& board, i32 depth);
 
-void testMarlinformat(Board& board, int depth);
+void testMarlinformat(Board& board, i32 depth);
 
 void testSEE();
 
 void runTests(Board& board, bool fast);
 
-void testSANFind(const Board& board, const MoveList& moveList, int len);
+void testSANFind(const Board& board, const MoveList& moveList, i32 len);

@@ -9,10 +9,10 @@ using Duration = std::chrono::milliseconds;
 
 struct SearchLimits
 {
-    int maxDepth;
+    i32 maxDepth;
     Duration maxTime;
-    uint64_t maxNodes;
-    uint64_t softNodes;
+    u64 maxNodes;
+    u64 softNodes;
 
     struct
     {
@@ -33,19 +33,19 @@ public:
     Duration elapsed() const;
 
     void startSearch();
-    bool stopHard(const SearchLimits& searchLimits, uint64_t nodes);
+    bool stopHard(const SearchLimits& searchLimits, u64 nodes);
     bool stopSoft(
-        Move bestMove, uint64_t bmNodes, uint64_t totalNodes, const SearchLimits& searchLimits);
+        Move bestMove, u64 bmNodes, u64 totalNodes, const SearchLimits& searchLimits);
 
 private:
-    static constexpr uint32_t TIME_CHECK_INTERVAL = 2048;
+    static constexpr u32 TIME_CHECK_INTERVAL = 2048;
 
     TimePoint m_StartTime;
     Duration m_HardBound;
     Duration m_SoftBound;
 
-    uint32_t checkCounter;
+    u32 checkCounter;
 
     Move m_PrevBestMove;
-    uint32_t m_Stability;
+    u32 m_Stability;
 };

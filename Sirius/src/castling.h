@@ -16,7 +16,7 @@ using CastleSideArray = EnumArray<T, CastleSide, 2>;
 struct CastlingRights
 {
 public:
-    enum class Internal : uint8_t
+    enum class Internal : u8
     {
         NONE = 0,
         WHITE_KING_SIDE = 1,
@@ -47,7 +47,7 @@ public:
     constexpr bool has(CastlingRights other) const;
     constexpr bool has(Internal v) const;
 
-    constexpr int value() const;
+    constexpr i32 value() const;
 
 private:
     Internal m_Value;
@@ -56,18 +56,18 @@ private:
 constexpr CastlingRights operator&(CastlingRights::Internal a, CastlingRights::Internal b)
 {
     return CastlingRights(
-        static_cast<CastlingRights::Internal>(static_cast<int>(a) & static_cast<int>(b)));
+        static_cast<CastlingRights::Internal>(static_cast<i32>(a) & static_cast<i32>(b)));
 }
 
 constexpr CastlingRights operator|(CastlingRights::Internal a, CastlingRights::Internal b)
 {
     return CastlingRights(
-        static_cast<CastlingRights::Internal>(static_cast<int>(a) | static_cast<int>(b)));
+        static_cast<CastlingRights::Internal>(static_cast<i32>(a) | static_cast<i32>(b)));
 }
 
 constexpr CastlingRights operator~(CastlingRights::Internal a)
 {
-    return static_cast<CastlingRights::Internal>(~static_cast<int>(a)) & CastlingRights::ALL;
+    return static_cast<CastlingRights::Internal>(~static_cast<i32>(a)) & CastlingRights::ALL;
 }
 
 constexpr CastlingRights::CastlingRights()
@@ -81,7 +81,7 @@ constexpr CastlingRights::CastlingRights(Internal v)
 }
 
 constexpr CastlingRights::CastlingRights(Color color, CastleSide side)
-    : m_Value(static_cast<Internal>(1 << (2 * static_cast<int>(color) + static_cast<int>(side))))
+    : m_Value(static_cast<Internal>(1 << (2 * static_cast<i32>(color) + static_cast<i32>(side))))
 {
 }
 
@@ -114,17 +114,17 @@ constexpr CastlingRights CastlingRights::operator~() const
 
 constexpr bool CastlingRights::has(CastlingRights other) const
 {
-    return static_cast<int>((m_Value & other.m_Value).m_Value) != 0;
+    return static_cast<i32>((m_Value & other.m_Value).m_Value) != 0;
 }
 
 constexpr bool CastlingRights::has(Internal v) const
 {
-    return static_cast<int>((m_Value & v).m_Value) != 0;
+    return static_cast<i32>((m_Value & v).m_Value) != 0;
 }
 
-constexpr int CastlingRights::value() const
+constexpr i32 CastlingRights::value() const
 {
-    return static_cast<int>(m_Value);
+    return static_cast<i32>(m_Value);
 }
 
 struct CastlingData

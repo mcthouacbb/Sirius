@@ -53,10 +53,10 @@ bool isValidFen(const char* fen)
     if (ep[0] != '-' && (ep[0] < 'a' || ep[0] > 'h' || ep[1] < '1' || ep[1] > 'h'))
         return false;
 
-    int slashCount = 0;
-    int square = 56;
-    int whiteKingCount = 0;
-    int blackKingCount = 0;
+    i32 slashCount = 0;
+    i32 square = 56;
+    i32 whiteKingCount = 0;
+    i32 blackKingCount = 0;
     for (char c : pieces)
     {
         switch (c)

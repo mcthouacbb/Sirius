@@ -9,8 +9,8 @@ void TimeManager::setLimits(const SearchLimits& limits, Color us)
     if (limits.clock.enabled)
     {
         Duration time =
-            std::max(Duration(1), limits.clock.timeLeft[static_cast<int>(us)] - limits.overhead);
-        Duration inc = limits.clock.increments[static_cast<int>(us)];
+            std::max(Duration(1), limits.clock.timeLeft[static_cast<i32>(us)] - limits.overhead);
+        Duration inc = limits.clock.increments[static_cast<i32>(us)];
 
         auto baseTime = (time / search::baseTimeScale + inc * search::incrementScale / 100.0);
         // formulas from stormphrax
@@ -32,7 +32,7 @@ void TimeManager::startSearch()
     m_PrevBestMove = Move::nullmove();
 }
 
-bool TimeManager::stopHard(const SearchLimits& searchLimits, uint64_t nodes)
+bool TimeManager::stopHard(const SearchLimits& searchLimits, u64 nodes)
 {
     if (searchLimits.maxNodes > 0 && nodes > searchLimits.maxNodes)
         return true;
@@ -48,7 +48,7 @@ bool TimeManager::stopHard(const SearchLimits& searchLimits, uint64_t nodes)
 }
 
 bool TimeManager::stopSoft(
-    Move bestMove, uint64_t bmNodes, uint64_t totalNodes, const SearchLimits& searchLimits)
+    Move bestMove, u64 bmNodes, u64 totalNodes, const SearchLimits& searchLimits)
 {
     if (searchLimits.softNodes > 0 && totalNodes > searchLimits.softNodes)
         return true;

@@ -35,7 +35,7 @@ constexpr EvalTerm minorBehindPawn = {PieceSet(PAWN, KNIGHT, BISHOP)};
 void evaluatePawns(const Board& board, PawnStructure& pawnStructure, PawnTable* pawnTable);
 
 template<Color us>
-ScorePair evalKingPawnFile(uint32_t file, Bitboard ourPawns, Bitboard theirPawns);
+ScorePair evalKingPawnFile(u32 file, Bitboard ourPawns, Bitboard theirPawns);
 
 template<Color us>
 ScorePair evaluateStormShield(const Board& board);

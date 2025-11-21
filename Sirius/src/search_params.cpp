@@ -10,7 +10,7 @@
 namespace search
 {
 
-MultiArray<int, 64, 64> genLMRTable();
+MultiArray<i32, 64, 64> genLMRTable();
 
 #ifdef EXTERNAL_TUNE
 
@@ -22,7 +22,7 @@ std::deque<SearchParam>& searchParams()
 }
 
 SearchParam& addSearchParam(
-    std::string name, int value, int min, int max, int step, std::function<void()> callback)
+    std::string name, i32 value, i32 min, i32 max, i32 step, std::function<void()> callback)
 {
     searchParams().push_back({name, value, value, min, max, step, callback});
     SearchParam& param = searchParams().back();
@@ -60,7 +60,7 @@ void printOpenBenchConfig()
 
 #endif
 
-extern MultiArray<int, 64, 64> lmrTable;
+extern MultiArray<i32, 64, 64> lmrTable;
 
 void updateLmrTable()
 {

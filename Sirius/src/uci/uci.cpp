@@ -27,11 +27,11 @@ UCI::UCI()
 
     const auto& hashCallback = [this](const UCIOption& option)
     {
-        m_Search.setTTSize(static_cast<int>(option.intValue()));
+        m_Search.setTTSize(static_cast<i32>(option.intValue()));
     };
     const auto& threadsCallback = [this](const UCIOption& option)
     {
-        m_Search.setThreads(static_cast<int>(option.intValue()));
+        m_Search.setThreads(static_cast<i32>(option.intValue()));
     };
     m_Options = {{"UCI_Chess960", UCIOption("UCI_Chess960", UCIOption::BoolData{false})},
         {"Hash", UCIOption("Hash", {64, 64, 1, 33554432}, hashCallback)},
@@ -46,7 +46,7 @@ UCI::UCI()
             UCIOption(param.name, {param.value, param.defaultValue, param.min, param.max},
                 [&param](const UCIOption& option)
                 {
-                    param.value = static_cast<int>(option.intValue());
+                    param.value = static_cast<i32>(option.intValue());
                     if (param.callback)
                         param.callback();
                 })});
@@ -127,7 +127,7 @@ void UCI::prettyPrintSearchInfo(const SearchInfo& info) const
 
     // nodes and nps
     std::cout << std::right << std::setw(7) << std::setfill(' ') << info.nodes / 1000 << "kn  ";
-    uint64_t nps = info.nodes * 1000ULL / (info.time.count() < 1 ? 1 : info.time.count());
+    u64 nps = info.nodes * 1000ULL / (info.time.count() < 1 ? 1 : info.time.count());
     std::cout << std::right << std::setw(7) << std::setfill(' ') << nps / 1000 << "kn/s";
     std::cout << "  ";
 
@@ -175,9 +175,9 @@ void UCI::prettyPrintSearchInfo(const SearchInfo& info) const
         {
             WDL wdl = expectedWDL(m_Board, info.score);
 
-            int win = static_cast<int>(std::round(wdl.winProb * 100));
-            int loss = static_cast<int>(std::round(wdl.lossProb * 100));
-            int draw = 100 - win - loss;
+            i32 win = static_cast<i32>(std::round(wdl.winProb * 100));
+            i32 loss = static_cast<i32>(std::round(wdl.lossProb * 100));
+            i32 draw = 100 - win - loss;
 
             std::cout << " ( " << std::setw(3) << std::setfill(' ') << win << "%W " << std::setw(3)
                       << std::setfill(' ') << draw << "%D " << std::setw(3) << std::setfill(' ')
@@ -205,7 +205,7 @@ void UCI::printUCISearchInfo(const SearchInfo& info) const
     std::cout << " seldepth " << info.selDepth;
     std::cout << " time " << info.time.count();
     std::cout << " nodes " << info.nodes;
-    uint64_t nps = info.nodes * 1000ULL / (info.time.count() < 1 ? 1 : info.time.count());
+    u64 nps = info.nodes * 1000ULL / (info.time.count() < 1 ? 1 : info.time.count());
     std::cout << " nps " << nps;
     std::cout << " hashfull " << info.hashfull;
     std::cout << " score ";
@@ -243,9 +243,9 @@ void UCI::printUCISearchInfo(const SearchInfo& info) const
         {
             WDL wdl = expectedWDL(m_Board, info.score);
 
-            int win = static_cast<int>(std::round(wdl.winProb * 1000));
-            int loss = static_cast<int>(std::round(wdl.lossProb * 1000));
-            int draw = 1000 - win - loss;
+            i32 win = static_cast<i32>(std::round(wdl.winProb * 1000));
+            i32 loss = static_cast<i32>(std::round(wdl.lossProb * 1000));
+            i32 draw = 1000 - win - loss;
 
             std::cout << " wdl " << win << ' ' << draw << ' ' << loss;
         }
@@ -475,30 +475,30 @@ void UCI::goCommand(std::istringstream& stream)
         stream >> tok;
         if (tok == "wtime")
         {
-            int wtime;
+            i32 wtime;
             stream >> wtime;
-            limits.clock.timeLeft[static_cast<int>(Color::WHITE)] = Duration(wtime);
+            limits.clock.timeLeft[static_cast<i32>(Color::WHITE)] = Duration(wtime);
             limits.clock.enabled = true;
         }
         else if (tok == "btime")
         {
-            int btime;
+            i32 btime;
             stream >> btime;
-            limits.clock.timeLeft[static_cast<int>(Color::BLACK)] = Duration(btime);
+            limits.clock.timeLeft[static_cast<i32>(Color::BLACK)] = Duration(btime);
             limits.clock.enabled = true;
         }
         else if (tok == "winc")
         {
-            int winc;
+            i32 winc;
             stream >> winc;
-            limits.clock.increments[static_cast<int>(Color::WHITE)] = Duration(winc);
+            limits.clock.increments[static_cast<i32>(Color::WHITE)] = Duration(winc);
             limits.clock.enabled = true;
         }
         else if (tok == "binc")
         {
-            int binc;
+            i32 binc;
             stream >> binc;
-            limits.clock.increments[static_cast<int>(Color::BLACK)] = Duration(binc);
+            limits.clock.increments[static_cast<i32>(Color::BLACK)] = Duration(binc);
             limits.clock.enabled = true;
         }
         else if (tok == "movestogo")
@@ -507,13 +507,13 @@ void UCI::goCommand(std::istringstream& stream)
         }
         else if (tok == "depth")
         {
-            int depth;
+            i32 depth;
             stream >> depth;
             limits.maxDepth = depth;
         }
         else if (tok == "nodes")
         {
-            int nodes;
+            i32 nodes;
             stream >> nodes;
             limits.maxNodes = nodes;
         }
@@ -523,7 +523,7 @@ void UCI::goCommand(std::istringstream& stream)
         }
         else if (tok == "movetime")
         {
-            int time;
+            i32 time;
             stream >> time;
             limits.maxTime = Duration(time);
         }
@@ -535,7 +535,7 @@ void UCI::goCommand(std::istringstream& stream)
 }
 
 // cursed function
-int parseBool(std::string str)
+i32 parseBool(std::string str)
 {
     for (char& c : str)
         c = std::tolower(c);
@@ -562,7 +562,7 @@ void UCI::setOptionCommand(std::istringstream& stream)
     {
         case UCIOption::Type::INT:
         {
-            int value;
+            i32 value;
             stream >> value;
             option.setIntValue(value);
             break;
@@ -572,7 +572,7 @@ void UCI::setOptionCommand(std::istringstream& stream)
             std::string str;
             stream >> str;
 
-            int value = parseBool(str);
+            i32 value = parseBool(str);
             if (value != -1)
                 option.setBoolValue(static_cast<bool>(value));
         }
@@ -584,11 +584,11 @@ void UCI::setOptionCommand(std::istringstream& stream)
 void UCI::perftCommand(std::istringstream& stream)
 {
     auto lock = lockStdout();
-    uint32_t depth;
+    u32 depth;
     stream >> depth;
 
     auto t1 = std::chrono::steady_clock::now();
-    uint64_t result = perft<true>(m_Board, depth);
+    u64 result = perft<true>(m_Board, depth);
     auto t2 = std::chrono::steady_clock::now();
     std::cout << "Nodes: " << result << std::endl;
     std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1).count()
@@ -603,7 +603,7 @@ void UCI::evalCommand()
         std::cout << "static eval: none(in check)" << std::endl;
         return;
     }
-    int staticEval = eval::evaluateSingle(m_Board);
+    i32 staticEval = eval::evaluateSingle(m_Board);
     std::cout << "static eval: " << staticEval << "cp" << std::endl;
 }
 
@@ -652,8 +652,8 @@ void UCI::extractCommand(std::istringstream& stream)
 {
     std::string inputFilename, outputFilename;
     stream >> inputFilename >> outputFilename;
-    uint32_t maxGames = UINT32_MAX;
-    uint32_t ppg = 10;
+    u32 maxGames = UINT32_MAX;
+    u32 ppg = 10;
     std::string tok;
 
     while (stream.tellg() != -1)

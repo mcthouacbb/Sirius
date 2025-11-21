@@ -8,4 +8,6 @@
 
 #define SIRIUS_VERSION_STRING STRINGIFY(SIRIUS_VERSION_MAJOR) "." STRINGIFY(SIRIUS_VERSION_MINOR)
 
-static constexpr int BENCH_DEPTH = 14;
+#include "defs.h"
+
+static constexpr i32 BENCH_DEPTH = 14;

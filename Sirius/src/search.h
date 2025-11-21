@@ -19,7 +19,7 @@
 struct SearchStack
 {
     std::array<Move, MAX_PLY + 1> pv;
-    int pvLength;
+    i32 pvLength;
 
     Move playedMove;
     Piece movedPiece;
@@ -29,30 +29,30 @@ struct SearchStack
 
     ContCorrEntry* contCorrEntry;
     CHEntry* contHistEntry;
-    int histScore;
+    i32 histScore;
 
-    int staticEval;
-    int eval;
+    i32 staticEval;
+    i32 eval;
 
-    uint32_t failHighCount;
+    u32 failHighCount;
 };
 
 struct SearchInfo
 {
-    int depth;
-    int selDepth;
-    int hashfull;
-    uint64_t nodes;
+    i32 depth;
+    i32 selDepth;
+    i32 hashfull;
+    u64 nodes;
     Duration time;
     std::vector<Move> pv;
-    int score;
+    i32 score;
     bool lowerbound;
     bool upperbound;
 };
 
 struct BenchData
 {
-    uint64_t nodes;
+    u64 nodes;
 };
 
 namespace search
@@ -70,11 +70,11 @@ enum class WakeFlag
 struct RootMove
 {
     Move move = Move::nullmove();
-    uint64_t nodes = 0;
-    int score = SCORE_NONE;
-    int previousScore = SCORE_NONE;
-    int displayScore = SCORE_NONE;
-    int selDepth = 0;
+    u64 nodes = 0;
+    i32 score = SCORE_NONE;
+    i32 previousScore = SCORE_NONE;
+    i32 displayScore = SCORE_NONE;
+    i32 selDepth = 0;
     bool lowerbound = false;
     bool upperbound = false;
     std::vector<Move> pv;
@@ -89,7 +89,7 @@ inline RootMove::RootMove(Move move)
 
 struct SearchThread
 {
-    SearchThread(uint32_t id, std::thread&& thread);
+    SearchThread(u32 id, std::thread&& thread);
 
     SearchThread(const SearchThread&) = delete;
     SearchThread& operator=(const SearchThread&) = delete;
@@ -107,7 +107,7 @@ struct SearchThread
     void wait();
     void join();
 
-    uint32_t id;
+    u32 id;
     std::thread thread;
 
     std::mutex mutex;
@@ -120,10 +120,10 @@ struct SearchThread
 
     SearchLimits limits;
 
-    int rootDepth = 0;
-    int rootPly = 0;
-    int selDepth = 0;
-    int nmpMinPly = 0;
+    i32 rootDepth = 0;
+    i32 rootPly = 0;
+    i32 selDepth = 0;
+    i32 nmpMinPly = 0;
     std::vector<RootMove> rootMoves;
     std::array<SearchStack, MAX_PLY + 1> stack;
     History history;
@@ -141,12 +141,12 @@ public:
 
     void run(const SearchLimits& limits, const Board& board);
     void stop();
-    void setThreads(int count);
+    void setThreads(i32 count);
     bool searching() const;
-    BenchData benchSearch(int depth, const Board& board);
-    std::pair<int, Move> datagenSearch(const SearchLimits& limits, const Board& board);
+    BenchData benchSearch(i32 depth, const Board& board);
+    std::pair<i32, Move> datagenSearch(const SearchLimits& limits, const Board& board);
 
-    void setTTSize(int mb)
+    void setTTSize(i32 mb)
     {
         m_TT.resize(mb, m_Threads.size());
     }
@@ -155,16 +155,16 @@ private:
     void joinThreads();
     void threadLoop(SearchThread& thread);
 
-    void reportUCIInfo(const SearchThread& thread, int multiPVIdx, int depth) const;
+    void reportUCIInfo(const SearchThread& thread, i32 multiPVIdx, i32 depth) const;
 
-    std::pair<int, Move> iterDeep(SearchThread& thread, bool report);
-    int aspWindows(SearchThread& thread, int depth, int prevScore, bool report);
+    std::pair<i32, Move> iterDeep(SearchThread& thread, bool report);
+    i32 aspWindows(SearchThread& thread, i32 depth, i32 prevScore, bool report);
 
-    int search(SearchThread& thread, int depth, SearchStack* stack, int alpha, int beta,
+    i32 search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alpha, i32 beta,
         bool pvNode, bool cutnode);
-    int qsearch(SearchThread& thread, SearchStack* stack, int alpha, int beta, bool pvNode);
+    i32 qsearch(SearchThread& thread, SearchStack* stack, i32 alpha, i32 beta, bool pvNode);
 
-    void makeMove(SearchThread& thread, SearchStack* stack, Move move, int histScore);
+    void makeMove(SearchThread& thread, SearchStack* stack, Move move, i32 histScore);
     void unmakeMove(SearchThread& thread, SearchStack* stack);
     void makeNullMove(SearchThread& thread, SearchStack* stack);
     void unmakeNullMove(SearchThread& thread, SearchStack* stack);

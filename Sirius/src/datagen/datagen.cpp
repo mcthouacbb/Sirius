@@ -13,7 +13,7 @@
 namespace datagen
 {
 
-constexpr uint32_t BATCH_SIZE = 128;
+constexpr u32 BATCH_SIZE = 128;
 std::atomic_bool stop = false;
 
 enum class GameResult
@@ -46,12 +46,12 @@ Board genOpening(std::mt19937& gen)
     for (;;)
     {
         Board board;
-        for (int i = 0; i < 8; i++)
+        for (i32 i = 0; i < 8; i++)
         {
             MoveList moves;
             genMoves<MoveGenType::LEGAL>(board, moves);
-            std::uniform_int_distribution<int> dist(0, moves.size() - 1);
-            int idx = dist(gen);
+            std::uniform_int_distribution<i32> dist(0, moves.size() - 1);
+            i32 idx = dist(gen);
             board.makeMove(moves[idx]);
 
             if (gameResult(board) != GameResult::NON_TERMINAL)
@@ -64,12 +64,12 @@ Board genOpening(std::mt19937& gen)
 
 viriformat::Game runGame(std::mt19937& gen, const Config& config)
 {
-    constexpr int WIN_ADJ_THRESHOLD = 2000;
-    constexpr int WIN_ADJ_PLIES = 5;
-    constexpr int DRAW_ADJ_MOVE_NUM = 50;
-    constexpr int DRAW_ADJ_THRESHOLD = 7;
-    constexpr int DRAW_ADJ_PLIES = 8;
-    constexpr int MAX_OPENING_SCORE = 300;
+    constexpr i32 WIN_ADJ_THRESHOLD = 2000;
+    constexpr i32 WIN_ADJ_PLIES = 5;
+    constexpr i32 DRAW_ADJ_MOVE_NUM = 50;
+    constexpr i32 DRAW_ADJ_THRESHOLD = 7;
+    constexpr i32 DRAW_ADJ_PLIES = 8;
+    constexpr i32 MAX_OPENING_SCORE = 300;
 
     Board startpos = genOpening(gen);
     ColorArray<search::Search> searches = {search::Search(8), search::Search(8)};
@@ -83,9 +83,9 @@ viriformat::Game runGame(std::mt19937& gen, const Config& config)
 
     viriformat::Game game = {};
 
-    int winPlies = 0;
-    int drawPlies = 0;
-    int lossPlies = 0;
+    i32 winPlies = 0;
+    i32 drawPlies = 0;
+    i32 lossPlies = 0;
 
     for (;;)
     {
@@ -158,12 +158,12 @@ viriformat::Game runGame(std::mt19937& gen, const Config& config)
     return game;
 }
 
-std::string tmpFilename(int threadID)
+std::string tmpFilename(i32 threadID)
 {
     return "datagen_tmp" + std::to_string(threadID) + ".bin";
 };
 
-void datagenThread(uint32_t threadID, const Config& config, uint32_t& gamesLeft, std::mutex& mutex)
+void datagenThread(u32 threadID, const Config& config, u32& gamesLeft, std::mutex& mutex)
 {
     std::random_device rd;
     auto seed = rd();
@@ -175,11 +175,11 @@ void datagenThread(uint32_t threadID, const Config& config, uint32_t& gamesLeft,
 
     std::ofstream outFile(tmpFilename(threadID), std::ios::binary);
 
-    uint32_t totalGames = 0;
+    u32 totalGames = 0;
 
     while (!stop)
     {
-        uint32_t totalPositions = 0;
+        u32 totalPositions = 0;
         auto startTime = std::chrono::steady_clock::now();
 
         {
@@ -198,7 +198,7 @@ void datagenThread(uint32_t threadID, const Config& config, uint32_t& gamesLeft,
 
         totalGames += BATCH_SIZE;
 
-        for (int i = 0; i < BATCH_SIZE; i++)
+        for (i32 i = 0; i < BATCH_SIZE; i++)
         {
             auto game = runGame(gen, config);
             game.write(outFile);
@@ -242,9 +242,9 @@ void runDatagen(Config config)
     stop = false;
     std::signal(SIGINT, signalHandler);
 
-    uint32_t gamesLeft = config.numGames;
+    u32 gamesLeft = config.numGames;
 
-    for (uint32_t i = 0; i < config.numThreads; i++)
+    for (u32 i = 0; i < config.numThreads; i++)
     {
         threads.push_back(std::thread(
             [i, &lock, &gamesLeft, &config]()
@@ -260,7 +260,7 @@ void runDatagen(Config config)
 
     std::ofstream outputFile(config.outputFilename, std::ios::binary);
 
-    for (uint32_t i = 0; i < config.numThreads; i++)
+    for (u32 i = 0; i < config.numThreads; i++)
     {
         std::ifstream tmpFile(tmpFilename(i), std::ios::binary);
         if (!tmpFile.is_open())

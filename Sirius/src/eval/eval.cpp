@@ -15,7 +15,7 @@ struct EvalData
     ColorArray<PieceTypeArray<Bitboard>> attackedBy;
     ColorArray<Bitboard> kingRing;
     ColorArray<ScorePair> attackWeight;
-    ColorArray<int> attackCount;
+    ColorArray<i32> attackCount;
     ColorArray<Bitboard> kingFlank;
 
     void addAttacks(Color color, PieceType pieceType, Bitboard attacks)
@@ -57,13 +57,13 @@ ScorePair evaluatePieces(const Board& board, EvalData& evalData)
 
         evalData.addAttacks(us, piece, attacks);
 
-        eval += MOBILITY[static_cast<int>(piece) - static_cast<int>(KNIGHT)]
+        eval += MOBILITY[static_cast<i32>(piece) - static_cast<i32>(KNIGHT)]
                         [(attacks & evalData.mobilityArea[us]).popcount()];
 
         if (Bitboard kingRingAtks = evalData.kingRing[them] & attacks; kingRingAtks.any())
         {
             evalData.attackWeight[us] +=
-                KING_ATTACKER_WEIGHT[static_cast<int>(piece) - static_cast<int>(KNIGHT)];
+                KING_ATTACKER_WEIGHT[static_cast<i32>(piece) - static_cast<i32>(KNIGHT)];
             evalData.attackCount[us] += kingRingAtks.popcount();
         }
 
@@ -88,7 +88,7 @@ ScorePair evaluateThreats(const Board& board, const EvalData& evalData)
     while (pawnThreats.any())
     {
         PieceType threatened = getPieceType(board.pieceAt(pawnThreats.poplsb()));
-        eval += THREAT_BY_PAWN[static_cast<int>(threatened)];
+        eval += THREAT_BY_PAWN[static_cast<i32>(threatened)];
     }
 
     Bitboard knightThreats = evalData.attackedBy[us][KNIGHT] & board.pieces(them);
@@ -97,7 +97,7 @@ ScorePair evaluateThreats(const Board& board, const EvalData& evalData)
         Square threat = knightThreats.poplsb();
         PieceType threatened = getPieceType(board.pieceAt(threat));
         bool defended = defendedBB.has(threat);
-        eval += THREAT_BY_KNIGHT[defended][static_cast<int>(threatened)];
+        eval += THREAT_BY_KNIGHT[defended][static_cast<i32>(threatened)];
     }
 
     Bitboard bishopThreats = evalData.attackedBy[us][BISHOP] & board.pieces(them);
@@ -106,7 +106,7 @@ ScorePair evaluateThreats(const Board& board, const EvalData& evalData)
         Square threat = bishopThreats.poplsb();
         PieceType threatened = getPieceType(board.pieceAt(threat));
         bool defended = defendedBB.has(threat);
-        eval += THREAT_BY_BISHOP[defended][static_cast<int>(threatened)];
+        eval += THREAT_BY_BISHOP[defended][static_cast<i32>(threatened)];
     }
 
     Bitboard rookThreats = evalData.attackedBy[us][ROOK] & board.pieces(them);
@@ -115,7 +115,7 @@ ScorePair evaluateThreats(const Board& board, const EvalData& evalData)
         Square threat = rookThreats.poplsb();
         PieceType threatened = getPieceType(board.pieceAt(threat));
         bool defended = defendedBB.has(threat);
-        eval += THREAT_BY_ROOK[defended][static_cast<int>(threatened)];
+        eval += THREAT_BY_ROOK[defended][static_cast<i32>(threatened)];
     }
 
     Bitboard queenThreats = evalData.attackedBy[us][QUEEN] & board.pieces(them);
@@ -124,14 +124,14 @@ ScorePair evaluateThreats(const Board& board, const EvalData& evalData)
         Square threat = queenThreats.poplsb();
         PieceType threatened = getPieceType(board.pieceAt(threat));
         bool defended = defendedBB.has(threat);
-        eval += THREAT_BY_QUEEN[defended][static_cast<int>(threatened)];
+        eval += THREAT_BY_QUEEN[defended][static_cast<i32>(threatened)];
     }
 
     Bitboard kingThreats = evalData.attackedBy[us][KING] & board.pieces(them) & ~defendedBB;
     while (kingThreats.any())
     {
         PieceType threatened = getPieceType(board.pieceAt(kingThreats.poplsb()));
-        eval += THREAT_BY_KING[static_cast<int>(threatened)];
+        eval += THREAT_BY_KING[static_cast<i32>(threatened)];
     }
 
     Bitboard nonPawnEnemies = board.pieces(them) & ~board.pieces(PAWN);
@@ -171,7 +171,7 @@ ScorePair evaluateThreats(const Board& board, const EvalData& evalData)
     return eval;
 }
 
-constexpr int safetyAdjustment(int value)
+constexpr i32 safetyAdjustment(i32 value)
 {
     return (value + std::max(value, 0) * value / 128) / 8;
 }
@@ -214,11 +214,11 @@ ScorePair evaluateKings(const Board& board, const EvalData& evalData, const Eval
 
     eval += evalData.attackWeight[us];
 
-    int attackCount = evalData.attackCount[us];
+    i32 attackCount = evalData.attackCount[us];
     eval += KING_ATTACKS * attackCount;
 
     Bitboard weakKingRing = (evalData.kingRing[them] & weak);
-    int weakSquares = weakKingRing.popcount();
+    i32 weakSquares = weakKingRing.popcount();
     eval += WEAK_KING_RING * weakSquares;
 
     Bitboard flankAttacks = evalData.kingFlank[them] & evalData.attacked[us];
@@ -252,7 +252,7 @@ ScorePair evaluatePassedPawns(
     while (passers.any())
     {
         Square passer = passers.poplsb();
-        int rank = passer.relativeRank<us>();
+        i32 rank = passer.relativeRank<us>();
         if (rank >= RANK_4)
         {
             Square pushSq = passer + attacks::pawnPushOffset<us>();
@@ -284,16 +284,16 @@ ScorePair evaluateComplexity(const Board& board, const PawnStructure& pawnStruct
         + COMPLEXITY_PAWNS_BOTH_SIDES * pawnsBothSides + COMPLEXITY_PAWN_ENDGAME * pawnEndgame
         + COMPLEXITY_OFFSET;
 
-    int egSign = (eval.eg() > 0) - (eval.eg() < 0);
+    i32 egSign = (eval.eg() > 0) - (eval.eg() < 0);
 
-    int egComplexity = std::max(complexity.eg(), -std::abs(eval.eg()));
+    i32 egComplexity = std::max(complexity.eg(), -std::abs(eval.eg()));
 
     return ScorePair(0, egSign * egComplexity);
 }
 
-int evaluateScale(const Board& board, ScorePair eval, const EvalState& evalState)
+i32 evaluateScale(const Board& board, ScorePair eval, const EvalState& evalState)
 {
-    int scaleFactor = SCALE_FACTOR_NORMAL;
+    i32 scaleFactor = SCALE_FACTOR_NORMAL;
     Color strongSide = eval.eg() > 0 ? WHITE : eval.eg() < 0 ? BLACK : board.sideToMove();
 
     auto endgameScale = endgames::probeScaleFunc(board, strongSide);
@@ -303,7 +303,7 @@ int evaluateScale(const Board& board, ScorePair eval, const EvalState& evalState
     if (scaleFactor != SCALE_FACTOR_NORMAL)
         return scaleFactor;
 
-    int strongPawns = board.pieces(strongSide, PAWN).popcount();
+    i32 strongPawns = board.pieces(strongSide, PAWN).popcount();
     return 80 + strongPawns * 7;
 }
 
@@ -341,7 +341,7 @@ void nonIncrementalEval(const Board& board, const EvalState& evalState,
 }
 // clang-format on
 
-int evaluate(const Board& board, search::SearchThread* thread)
+i32 evaluate(const Board& board, search::SearchThread* thread)
 {
     auto endgameEval = endgames::probeEvalFunc(board);
     if (endgameEval != nullptr)
@@ -358,13 +358,13 @@ int evaluate(const Board& board, search::SearchThread* thread)
 
     nonIncrementalEval(board, thread->evalState, pawnStructure, evalData, eval);
 
-    int scale = evaluateScale(board, eval, thread->evalState);
+    i32 scale = evaluateScale(board, eval, thread->evalState);
 
     eval += (color == WHITE ? TEMPO : -TEMPO);
 
-    int mg = eval.mg();
-    int eg = eval.eg() * scale / SCALE_FACTOR_NORMAL;
-    int phase = 4 * board.pieces(PieceType::QUEEN).popcount()
+    i32 mg = eval.mg();
+    i32 eg = eval.eg() * scale / SCALE_FACTOR_NORMAL;
+    i32 phase = 4 * board.pieces(PieceType::QUEEN).popcount()
         + 2 * board.pieces(PieceType::ROOK).popcount()
         + (board.pieces(PieceType::BISHOP) | board.pieces(PieceType::KNIGHT)).popcount();
     phase = std::clamp(phase, 0, 24);
@@ -372,7 +372,7 @@ int evaluate(const Board& board, search::SearchThread* thread)
     return (color == WHITE ? 1 : -1) * ((mg * phase + eg * (24 - phase)) / 24);
 }
 
-int evaluateSingle(const Board& board)
+i32 evaluateSingle(const Board& board)
 {
     EvalState evalState;
     evalState.initSingle(board);
@@ -392,13 +392,13 @@ int evaluateSingle(const Board& board)
 
     nonIncrementalEval(board, evalState, pawnStructure, evalData, eval);
 
-    int scale = evaluateScale(board, eval, evalState);
+    i32 scale = evaluateScale(board, eval, evalState);
 
     eval += (color == WHITE ? TEMPO : -TEMPO);
 
-    int mg = eval.mg();
-    int eg = eval.eg() * scale / SCALE_FACTOR_NORMAL;
-    int phase = 4 * board.pieces(PieceType::QUEEN).popcount()
+    i32 mg = eval.mg();
+    i32 eg = eval.eg() * scale / SCALE_FACTOR_NORMAL;
+    i32 phase = 4 * board.pieces(PieceType::QUEEN).popcount()
         + 2 * board.pieces(PieceType::ROOK).popcount()
         + (board.pieces(PieceType::BISHOP) | board.pieces(PieceType::KNIGHT)).popcount();
     phase = std::clamp(phase, 0, 24);

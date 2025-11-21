@@ -2,4 +2,4 @@
 
 #include "search.h"
 
-void runBench(search::Search& search, int depth);
+void runBench(search::Search& search, i32 depth);
