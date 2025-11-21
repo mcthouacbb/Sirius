@@ -3,7 +3,7 @@
 #include "../defs.h"
 #include <array>
 
-template<typename T, typename E, size_t N>
+template<typename T, typename E, usize N>
 struct EnumArray : public std::array<T, N>
 {
     using std::array<T, N>::operator[];

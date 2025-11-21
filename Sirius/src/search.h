@@ -134,7 +134,7 @@ struct SearchThread
 class Search
 {
 public:
-    Search(size_t hash = 64);
+    Search(usize hash = 64);
     ~Search();
 
     void newGame();

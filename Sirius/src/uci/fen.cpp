@@ -7,28 +7,28 @@ bool isValidFen(const char* fen)
 {
     std::string str(fen);
 
-    size_t space1 = str.find(' ', 0);
+    usize space1 = str.find(' ', 0);
     if (space1 == std::string::npos)
         return false;
 
-    size_t space2 = str.find(' ', space1 + 1);
+    usize space2 = str.find(' ', space1 + 1);
     if (space2 == std::string::npos)
         return false;
 
-    size_t space3 = str.find(' ', space2 + 1);
+    usize space3 = str.find(' ', space2 + 1);
     if (space3 == std::string::npos)
         return false;
 
     bool hasCounters = true;
 
-    size_t space4 = str.find(' ', space3 + 1);
+    usize space4 = str.find(' ', space3 + 1);
     if (space4 == std::string::npos)
     {
         hasCounters = false;
         space4 = str.size();
     }
 
-    size_t space5 = 0;
+    usize space5 = 0;
     if (hasCounters)
     {
         space5 = str.find(' ', space4 + 1);

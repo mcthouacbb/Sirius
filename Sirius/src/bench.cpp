@@ -76,7 +76,7 @@ void runBench(search::Search& search, i32 depth)
 
     auto t2 = std::chrono::steady_clock::now();
 
-    double nps = static_cast<double>(nodes)
-        / std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1).count();
+    f64 nps = static_cast<f64>(nodes)
+        / std::chrono::duration_cast<std::chrono::duration<f64>>(t2 - t1).count();
     std::cout << nodes << " nodes " << static_cast<i32>(nps) << " nps" << std::endl;
 }

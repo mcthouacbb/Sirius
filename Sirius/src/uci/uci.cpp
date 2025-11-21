@@ -591,7 +591,7 @@ void UCI::perftCommand(std::istringstream& stream)
     u64 result = perft<true>(m_Board, depth);
     auto t2 = std::chrono::steady_clock::now();
     std::cout << "Nodes: " << result << std::endl;
-    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<float>>(t2 - t1).count()
+    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<f32>>(t2 - t1).count()
               << std::endl;
 }
 

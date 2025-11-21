@@ -207,13 +207,13 @@ void datagenThread(u32 threadID, const Config& config, u32& gamesLeft, std::mute
         }
 
         auto currTime = std::chrono::steady_clock::now();
-        float seconds =
-            std::chrono::duration_cast<std::chrono::duration<float>>(currTime - startTime).count();
+        f32 seconds =
+            std::chrono::duration_cast<std::chrono::duration<f32>>(currTime - startTime).count();
 
         std::unique_lock<std::mutex> lock(mutex);
         std::cout << "Thread " << threadID << " wrote " << BATCH_SIZE << " games in the last "
                   << seconds << "s, " << BATCH_SIZE / seconds << " games/s" << std::endl;
-        std::cout << "    average positions/game: " << static_cast<float>(totalPositions) / BATCH_SIZE
+        std::cout << "    average positions/game: " << static_cast<f32>(totalPositions) / BATCH_SIZE
                   << std::endl;
         std::cout << "    " << totalGames << " total games written" << std::endl;
     }

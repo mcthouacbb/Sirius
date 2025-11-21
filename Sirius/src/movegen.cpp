@@ -21,8 +21,8 @@ template<>
 void genMoves<MoveGenType::LEGAL>(const Board& board, MoveList& moves)
 {
     genMoves<MoveGenType::NOISY_QUIET>(board, moves);
-    size_t j = 0;
-    for (size_t i = 0; i < moves.size(); i++)
+    usize j = 0;
+    for (usize i = 0; i < moves.size(); i++)
     {
         if (board.isLegal(moves[i]))
             moves[j++] = moves[i];

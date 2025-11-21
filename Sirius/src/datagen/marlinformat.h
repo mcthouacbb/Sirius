@@ -9,12 +9,12 @@ struct U4Array32
 {
     std::array<u8, 16> data;
 
-    u8 get(size_t index) const
+    u8 get(usize index) const
     {
         return (data[index / 2] >> (4 * (index % 2))) & 0xF;
     }
 
-    void set(size_t index, u8 value)
+    void set(usize index, u8 value)
     {
         assert(value < 16);
         data[index / 2] |= (value << (4 * (index % 2)));

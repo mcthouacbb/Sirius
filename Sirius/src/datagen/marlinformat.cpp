@@ -21,7 +21,7 @@ PackedBoard packBoard(const Board& board, i32 score, WDL wdl)
     PackedBoard result = {};
     Bitboard occ = board.allPieces();
     result.occ = occ.value();
-    size_t index = 0;
+    usize index = 0;
     while (occ.any())
     {
         Square sq = occ.poplsb();
@@ -60,7 +60,7 @@ MarlinFormatUnpack unpackBoard(const PackedBoard& packedBoard)
     state.squares.fill(Piece::NONE);
 
     Bitboard occ = Bitboard(packedBoard.occ);
-    size_t index = 0;
+    usize index = 0;
     ColorArray<StaticVector<Square, 2>> castlingRooks = {};
     ColorArray<Square> kingSquares = {};
     while (occ.any())

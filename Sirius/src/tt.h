@@ -52,7 +52,7 @@ static_assert(sizeof(TTEntry) == 10, "TTEntry must be 10 bytes");
 static_assert(alignof(TTEntry) == 2, "TTEntry must have 2 byte alignment");
 
 constexpr i32 ENTRY_COUNT = 3;
-constexpr size_t TT_ALIGNMENT = 64;
+constexpr usize TT_ALIGNMENT = 64;
 
 struct alignas(32) TTBucket
 {
@@ -75,7 +75,7 @@ class TT
 public:
     static constexpr i32 GEN_CYCLE_LENGTH = 1 << 5;
 
-    TT(size_t size);
+    TT(usize size);
     ~TT();
 
     void resize(i32 mb, i32 numThreads);
@@ -118,6 +118,6 @@ private:
     u32 index(u64 key) const;
 
     TTBucket* m_Buckets;
-    size_t m_Size;
+    usize m_Size;
     i32 m_CurrAge;
 };

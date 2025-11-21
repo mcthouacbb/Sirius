@@ -13,11 +13,11 @@ namespace datagen
 namespace dists
 {
 
-float phaseScaleFactor(i32 phase)
+f32 phaseScaleFactor(i32 phase)
 {
-    float oddScale = std::min(0.9f, -0.09793221f * (static_cast<float>(phase) - 23.0f) + 0.189393939f);
-    float p16 = std::abs(static_cast<float>(phase) - 16.0f);
-    float base =
+    f32 oddScale = std::min(0.9f, -0.09793221f * (static_cast<f32>(phase) - 23.0f) + 0.189393939f);
+    f32 p16 = std::abs(static_cast<f32>(phase) - 16.0f);
+    f32 base =
         phase > 16 ? 1 - 0.875 * std::pow(p16 / 8.0f, 2) : 1 - 0.95 * std::pow(p16 / 16.0f, 2.0f);
     if (phase % 2 == 1 && phase > 12)
         return oddScale * base;
@@ -43,10 +43,10 @@ bool filterPos(const Board& board, Move move, i32 score, marlinformat::WDL wdl)
     return false;
 }
 
-bool dropPosition(float keepProb, std::mt19937& gen)
+bool dropPosition(f32 keepProb, std::mt19937& gen)
 {
-    std::uniform_real_distribution<float> dist(0.0, 1.0);
-    float u = dist(gen);
+    std::uniform_real_distribution<f32> dist(0.0, 1.0);
+    f32 u = dist(gen);
     return u >= keepProb;
 }
 
@@ -108,13 +108,13 @@ void extract(std::string dataFilename, std::string outputFilename, u32 maxGames,
     for (const auto& pos : positions)
         phaseCounts[pos.phase]++;
 
-    float phaseKeepProbs[25] = {};
-    float phaseNormConst = 100.0f;
+    f32 phaseKeepProbs[25] = {};
+    f32 phaseNormConst = 100.0f;
     for (i32 i = 0; i <= 24; i++)
     {
-        float observed = static_cast<float>(phaseCounts[i]) / static_cast<float>(positions.size());
+        f32 observed = static_cast<f32>(phaseCounts[i]) / static_cast<f32>(positions.size());
         // this is not actually the desired probability, but it still works
-        float desired = dists::phaseScaleFactor(i);
+        f32 desired = dists::phaseScaleFactor(i);
         phaseKeepProbs[i] = desired / observed;
         phaseNormConst = std::min(phaseNormConst, observed / desired);
     }

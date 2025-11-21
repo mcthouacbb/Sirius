@@ -165,12 +165,12 @@ Key genMaterialKey(std::string white, std::string black)
     return board.materialKey();
 }
 
-constexpr size_t ENDGAME_TABLE_SIZE = 2048;
+constexpr usize ENDGAME_TABLE_SIZE = 2048;
 std::array<Endgame, ENDGAME_TABLE_SIZE> endgameEvalTable;
 
 void insertEndgame(u64 key, Endgame endgame)
 {
-    size_t idx = key % ENDGAME_TABLE_SIZE;
+    usize idx = key % ENDGAME_TABLE_SIZE;
     if (endgameEvalTable[idx].func != nullptr)
     {
         std::cerr << "Endgame table collision" << std::endl;
@@ -233,7 +233,7 @@ const Endgame* probeEvalFunc(const Board& board)
     if (!board.pieces(PieceType::PAWN).multiple())
     {
         u64 materialKey = board.materialKey();
-        size_t idx = materialKey % ENDGAME_TABLE_SIZE;
+        usize idx = materialKey % ENDGAME_TABLE_SIZE;
         if (endgameEvalTable[idx].func != nullptr && endgameEvalTable[idx].key == materialKey)
             return &endgameEvalTable[idx];
     }

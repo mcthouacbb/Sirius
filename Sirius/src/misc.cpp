@@ -405,7 +405,7 @@ void runTests(Board& board, bool fast)
 
         while (true)
         {
-            size_t idx = line.find(';', i + 1);
+            usize idx = line.find(';', i + 1);
             if (idx == std::string::npos)
                 break;
             i = static_cast<i32>(idx);
@@ -419,7 +419,7 @@ void runTests(Board& board, bool fast)
     u64 totalNodes = 0;
 
     auto t1 = std::chrono::steady_clock::now();
-    for (size_t i = 0; i < tests.size(); i++)
+    for (usize i = 0; i < tests.size(); i++)
     {
         const auto& test = tests[i];
         board.setToFen(test.fen);

@@ -44,7 +44,7 @@ u64 mulhi64(u64 a, u64 b)
 }
 #endif
 
-void* alignedAlloc(size_t alignment, size_t size)
+void* alignedAlloc(usize alignment, usize size)
 {
 #ifdef _WIN32
     return _aligned_malloc(size, alignment);
@@ -78,7 +78,7 @@ i32 storeScore(i32 score, i32 ply)
     return score;
 }
 
-TT::TT(size_t sizeMB)
+TT::TT(usize sizeMB)
     : m_Buckets(nullptr), m_Size(0), m_CurrAge(0)
 {
     resize(sizeMB, 1);
@@ -92,7 +92,7 @@ TT::~TT()
 // I'll change this later
 void TT::resize(i32 mb, i32 numThreads)
 {
-    size_t buckets = static_cast<u64>(mb) * 1024 * 1024 / sizeof(TTBucket);
+    usize buckets = static_cast<u64>(mb) * 1024 * 1024 / sizeof(TTBucket);
 
     alignedFree(m_Buckets);
     m_Buckets = static_cast<TTBucket*>(alignedAlloc(TT_ALIGNMENT, buckets * sizeof(TTBucket)));
@@ -103,7 +103,7 @@ void TT::resize(i32 mb, i32 numThreads)
 
 bool TT::probe(ZKey key, i32 ply, ProbedTTData& ttData)
 {
-    size_t idx = index(key.value);
+    usize idx = index(key.value);
     TTBucket& bucket = m_Buckets[idx];
     i32 entryIdx = -1;
     u16 key16 = key.value & 0xFFFF;

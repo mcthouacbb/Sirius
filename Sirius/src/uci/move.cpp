@@ -33,7 +33,7 @@ MoveStrFind findMoveFromUCI(const Board& board, const MoveList& legalMoves, cons
             break;
     }
 
-    for (size_t i = 0; i < legalMoves.size(); i++)
+    for (usize i = 0; i < legalMoves.size(); i++)
     {
         Move move = legalMoves[i];
         if (move.fromSq() == Square(src) && move.toSq() == Square(dst))
@@ -116,7 +116,7 @@ MoveStrFind findMoveFromSAN(const Board& board, const MoveList& legalMoves, cons
                 return {MoveStrFind::Result::INVALID, Move::nullmove(), 0};
             if (moveStr[3] != '-')
             {
-                for (size_t i = 0; i < legalMoves.size(); i++)
+                for (usize i = 0; i < legalMoves.size(); i++)
                 {
                     Move move = legalMoves[i];
                     if (move.type() == MoveType::CASTLE && move.toSq() > move.fromSq())
@@ -131,7 +131,7 @@ MoveStrFind findMoveFromSAN(const Board& board, const MoveList& legalMoves, cons
             {
                 if (moveStr[4] != 'O')
                     return {MoveStrFind::Result::INVALID, Move::nullmove(), 0};
-                for (size_t i = 0; i < legalMoves.size(); i++)
+                for (usize i = 0; i < legalMoves.size(); i++)
                 {
                     Move move = legalMoves[i];
                     if (move.type() == MoveType::CASTLE && move.toSq() < move.fromSq())

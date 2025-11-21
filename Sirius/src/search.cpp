@@ -20,10 +20,10 @@ MultiArray<i32, 64, 64> genLMRTable()
     {
         for (i32 i = 1; i < 64; i++)
         {
-            double base = static_cast<double>(lmrBase);
-            double scale = static_cast<double>(lmrScale);
+            f64 base = static_cast<f64>(lmrBase);
+            f64 scale = static_cast<f64>(lmrScale);
             lmrTable[d][i] = static_cast<i32>(
-                base + scale * std::log(static_cast<double>(d)) * std::log(static_cast<double>(i)));
+                base + scale * std::log(static_cast<f64>(d)) * std::log(static_cast<f64>(i)));
         }
     }
     return lmrTable;
@@ -116,7 +116,7 @@ void SearchThread::join()
     thread.join();
 }
 
-Search::Search(size_t hash)
+Search::Search(usize hash)
     : m_ShouldStop(false), m_TT(hash)
 {
     setThreads(1);
