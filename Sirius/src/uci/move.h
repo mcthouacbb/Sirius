@@ -16,8 +16,8 @@ struct MoveStrFind
         AMBIGUOUS
     } result;
     Move move;
-    int len;
-    static constexpr int NO_INDEX = 256;
+    i32 len;
+    static constexpr i32 NO_INDEX = 256;
 
     // invalid = {nullptr, moveStr};
     // not found = {end, moveStr + moveLen};

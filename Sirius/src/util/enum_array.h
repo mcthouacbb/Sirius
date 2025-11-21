@@ -3,19 +3,19 @@
 #include "../defs.h"
 #include <array>
 
-template<typename T, typename E, size_t N>
+template<typename T, typename E, usize N>
 struct EnumArray : public std::array<T, N>
 {
     using std::array<T, N>::operator[];
 
     T& operator[](E p)
     {
-        return (*this)[static_cast<int>(p)];
+        return (*this)[static_cast<i32>(p)];
     }
 
     const T& operator[](E p) const
     {
-        return (*this)[static_cast<int>(p)];
+        return (*this)[static_cast<i32>(p)];
     }
 };
 

@@ -14,7 +14,7 @@ struct PawnEntry
 class PawnTable
 {
 public:
-    static constexpr size_t SIZE = 32768;
+    static constexpr usize SIZE = 32768;
     static_assert((SIZE & (SIZE - 1)) == 0, "PawnCache::SIZE must be a power of 2");
     PawnTable();
 

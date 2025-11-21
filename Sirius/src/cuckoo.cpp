@@ -15,7 +15,7 @@ void init()
     moves.fill(Move::nullmove());
     keyDiffs.fill(0);
 
-    uint32_t count = 0;
+    u32 count = 0;
 
     using enum Color;
     using enum PieceType;
@@ -24,9 +24,9 @@ void init()
     {
         for (Color c : {WHITE, BLACK})
         {
-            for (int from = 0; from < 63; from++)
+            for (i32 from = 0; from < 63; from++)
             {
-                for (int to = from + 1; to < 64; to++)
+                for (i32 to = from + 1; to < 64; to++)
                 {
                     Bitboard pieceAttacks;
                     switch (pt)
@@ -57,9 +57,9 @@ void init()
                     zkey.addPiece(pt, c, Square(to));
                     zkey.flipSideToMove();
 
-                    uint64_t keyDiff = zkey.value;
+                    u64 keyDiff = zkey.value;
 
-                    uint32_t slot = H1(keyDiff);
+                    u32 slot = H1(keyDiff);
 
                     while (true)
                     {

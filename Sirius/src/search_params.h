@@ -5,6 +5,8 @@
 #include <functional>
 #include <string>
 
+#include "defs.h"
+
 namespace search
 {
 
@@ -13,16 +15,16 @@ namespace search
 struct SearchParam
 {
     std::string name;
-    int value;
-    int defaultValue;
-    int min;
-    int max;
-    int step;
+    i32 value;
+    i32 defaultValue;
+    i32 min;
+    i32 max;
+    i32 step;
     std::function<void()> callback;
 };
 
 std::deque<SearchParam>& searchParams();
-SearchParam& addSearchParam(std::string name, int value, int min, int max, int step,
+SearchParam& addSearchParam(std::string name, i32 value, i32 min, i32 max, i32 step,
     std::function<void()> callback = std::function<void()>());
 void printWeatherFactoryConfig();
 void printOpenBenchConfig();
@@ -30,12 +32,12 @@ void updateLmrTable();
 
 #define SEARCH_PARAM(name, val, min, max, step) \
     inline SearchParam& name##Param = addSearchParam(#name, val, min, max, step); \
-    inline const int& name = name##Param.value
+    inline const i32& name = name##Param.value
 #define SEARCH_PARAM_CALLBACK(name, val, min, max, step, callback) \
     inline SearchParam& name##Param = addSearchParam(#name, val, min, max, step, callback); \
-    inline const int& name = name##Param.value
+    inline const i32& name = name##Param.value
 #else
-#define SEARCH_PARAM(name, val, min, max, step) constexpr int name = val;
+#define SEARCH_PARAM(name, val, min, max, step) constexpr i32 name = val;
 #define SEARCH_PARAM_CALLBACK(name, val, min, max, step, callback) \
     SEARCH_PARAM(name, val, min, max, step)
 #endif

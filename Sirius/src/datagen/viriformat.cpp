@@ -3,7 +3,7 @@
 namespace viriformat
 {
 
-ViriMove::ViriMove(uint16_t data)
+ViriMove::ViriMove(u16 data)
     : m_Data(data)
 {
 }
@@ -44,8 +44,8 @@ ViriMove::ViriMove(Move move)
 
 Move ViriMove::toMove() const
 {
-    int fromSq = m_Data & 0x3F;
-    int toSq = (m_Data >> 6) & 0x3F;
+    i32 fromSq = m_Data & 0x3F;
+    i32 toSq = (m_Data >> 6) & 0x3F;
     Promotion promotion = Promotion::KNIGHT;
     switch ((m_Data >> 12) & 0x3)
     {
@@ -77,7 +77,7 @@ Move ViriMove::toMove() const
     return Move(Square(fromSq), Square(toSq), type, promotion);
 }
 
-constexpr uint32_t NULL_TERMINATOR = 0;
+constexpr u32 NULL_TERMINATOR = 0;
 
 void Game::write(std::ostream& os) const
 {
@@ -92,14 +92,14 @@ Game Game::read(std::istream& is)
     is.read(reinterpret_cast<char*>(&result.startpos), sizeof(marlinformat::PackedBoard));
     while (true)
     {
-        uint32_t moveData;
+        u32 moveData;
         is.read(reinterpret_cast<char*>(&moveData), 4);
 
         if (moveData == NULL_TERMINATOR)
             break;
 
         ViriMove move(moveData & 0xFFFF);
-        int16_t score = static_cast<int16_t>(moveData >> 16);
+        i16 score = static_cast<i16>(moveData >> 16);
         result.moves.push_back({move, score});
     }
     return result;

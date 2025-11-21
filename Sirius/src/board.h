@@ -25,12 +25,12 @@ struct BoardState
     std::array<Bitboard, 6> pieces;
     std::array<Bitboard, 2> colors;
 
-    int halfMoveClock;
-    int pliesFromNull;
-    int epSquare;
+    i32 halfMoveClock;
+    i32 pliesFromNull;
+    i32 epSquare;
     CastlingRights castlingRights;
-    int repetitions;
-    int lastRepetition;
+    i32 repetitions;
+    i32 lastRepetition;
     ZKey zkey;
     ColorArray<ZKey> nonPawnKeys;
     ZKey minorPieceKey;
@@ -44,8 +44,8 @@ struct BoardState
         squares[pos.value()] = makePiece(pieceType, color);
 
         Bitboard posBB = Bitboard::fromSquare(pos);
-        pieces[static_cast<int>(pieceType)] |= posBB;
-        colors[static_cast<int>(color)] |= posBB;
+        pieces[static_cast<i32>(pieceType)] |= posBB;
+        colors[static_cast<i32>(color)] |= posBB;
 
         zkey.addPiece(pieceType, color, pos);
         if (pieceType == PieceType::PAWN)
@@ -68,8 +68,8 @@ struct BoardState
         Bitboard posBB = Bitboard::fromSquare(pos);
         PieceType pieceType = getPieceType(piece);
         Color color = getPieceColor(piece);
-        pieces[static_cast<int>(pieceType)] |= posBB;
-        colors[static_cast<int>(color)] |= posBB;
+        pieces[static_cast<i32>(pieceType)] |= posBB;
+        colors[static_cast<i32>(color)] |= posBB;
 
         zkey.addPiece(pieceType, color, pos);
         if (pieceType == PieceType::PAWN)
@@ -93,8 +93,8 @@ struct BoardState
         PieceType pieceType = getPieceType(piece);
         Color color = getPieceColor(piece);
         squares[pos.value()] = Piece::NONE;
-        pieces[static_cast<int>(pieceType)] ^= posBB;
-        colors[static_cast<int>(color)] ^= posBB;
+        pieces[static_cast<i32>(pieceType)] ^= posBB;
+        colors[static_cast<i32>(color)] ^= posBB;
 
         zkey.removePiece(pieceType, color, pos);
         if (pieceType == PieceType::PAWN)
@@ -122,8 +122,8 @@ struct BoardState
 
         squares[dst.value()] = piece;
         squares[src.value()] = Piece::NONE;
-        pieces[static_cast<int>(pieceType)] ^= moveBB;
-        colors[static_cast<int>(color)] ^= moveBB;
+        pieces[static_cast<i32>(pieceType)] ^= moveBB;
+        colors[static_cast<i32>(color)] ^= moveBB;
 
         zkey.movePiece(pieceType, color, src, dst);
         if (pieceType == PieceType::PAWN)
@@ -153,7 +153,7 @@ public:
     static constexpr const char* defaultFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     Board();
-    Board(const BoardState& state, const CastlingData& castlingData, Color stm, int gamePly);
+    Board(const BoardState& state, const CastlingData& castlingData, Color stm, i32 gamePly);
 
     void setToFen(const std::string_view& fen, bool frc = false);
 
@@ -169,23 +169,23 @@ public:
 
     bool isFRC() const;
     Color sideToMove() const;
-    int epSquare() const;
-    int gamePly() const;
-    int halfMoveClock() const;
+    i32 epSquare() const;
+    i32 gamePly() const;
+    i32 halfMoveClock() const;
     CastlingRights castlingRights() const;
-    int pliesFromNull() const;
+    i32 pliesFromNull() const;
     ZKey zkey() const;
     ZKey pawnKey() const;
     ZKey nonPawnKey(Color color) const;
     ZKey minorPieceKey() const;
     ZKey majorPieceKey() const;
-    uint64_t materialKey() const;
+    u64 materialKey() const;
 
-    bool isDraw(int searchPly) const;
-    bool is3FoldDraw(int searchPly) const;
+    bool isDraw(i32 searchPly) const;
+    bool is3FoldDraw(i32 searchPly) const;
     bool is50MoveDraw() const;
     bool isInsufMaterialDraw() const;
-    bool hasUpcomingRepetition(int searchPly) const;
+    bool hasUpcomingRepetition(i32 searchPly) const;
 
     Piece pieceAt(Square square) const;
     Bitboard pieces(PieceType type) const;
@@ -209,7 +209,7 @@ public:
     Bitboard checkBlockers(Color color) const;
     Bitboard threats() const;
 
-    bool see(Move move, int margin) const;
+    bool see(Move move, i32 margin) const;
     bool isPseudoLegal(Move move) const;
     bool isLegal(Move move) const;
     ZKey keyAfter(Move move) const;
@@ -233,9 +233,9 @@ private:
     void removePiece(Square pos, eval::EvalUpdates& updates);
     void movePiece(Square src, Square dst, eval::EvalUpdates& updates);
 
-    int seePieceValue(PieceType type) const;
+    i32 seePieceValue(PieceType type) const;
 
-    static constexpr std::array<int, 6> SEE_PIECE_VALUES = {100, 450, 450, 675, 1300, 0};
+    static constexpr std::array<i32, 6> SEE_PIECE_VALUES = {100, 450, 450, 675, 1300, 0};
 
     std::vector<BoardState> m_States;
     CastlingData m_CastlingData;
@@ -243,7 +243,7 @@ private:
 
     Color m_SideToMove;
 
-    int m_GamePly;
+    i32 m_GamePly;
 };
 
 inline const BoardState& Board::currState() const
@@ -276,12 +276,12 @@ inline BoardState& Board::currState()
     return m_States.back();
 }
 
-inline bool Board::isDraw(int searchPly) const
+inline bool Board::isDraw(i32 searchPly) const
 {
     return is50MoveDraw() || isInsufMaterialDraw() || is3FoldDraw(searchPly);
 }
 
-inline bool Board::is3FoldDraw(int searchPly) const
+inline bool Board::is3FoldDraw(i32 searchPly) const
 {
     return currState().repetitions > 1
         || (currState().repetitions == 1 && currState().lastRepetition < searchPly);
@@ -297,22 +297,22 @@ inline Color Board::sideToMove() const
     return m_SideToMove;
 }
 
-inline int Board::epSquare() const
+inline i32 Board::epSquare() const
 {
     return currState().epSquare;
 }
 
-inline int Board::gamePly() const
+inline i32 Board::gamePly() const
 {
     return m_GamePly;
 }
 
-inline int Board::halfMoveClock() const
+inline i32 Board::halfMoveClock() const
 {
     return currState().halfMoveClock;
 }
 
-inline int Board::pliesFromNull() const
+inline i32 Board::pliesFromNull() const
 {
     return currState().pliesFromNull;
 }
@@ -348,9 +348,9 @@ inline ZKey Board::majorPieceKey() const
 }
 
 // yoinked from motor, which I think yoinked from Caissa
-inline uint64_t Board::materialKey() const
+inline u64 Board::materialKey() const
 {
-    uint64_t material_key = 0;
+    u64 material_key = 0;
 
     using enum Color;
     using enum PieceType;
@@ -359,8 +359,8 @@ inline uint64_t Board::materialKey() const
     {
         for (PieceType pt : {PAWN, KNIGHT, BISHOP, ROOK, QUEEN})
         {
-            int shift = static_cast<int>(pt) * 6 + static_cast<int>(c) * 30;
-            std::uint64_t count = pieces(c, pt).popcount();
+            i32 shift = static_cast<i32>(pt) * 6 + static_cast<i32>(c) * 30;
+            u64 count = pieces(c, pt).popcount();
             material_key |= (count << shift);
         }
     }
@@ -375,7 +375,7 @@ inline Piece Board::pieceAt(Square square) const
 
 inline Bitboard Board::pieces(PieceType type) const
 {
-    return currState().pieces[static_cast<int>(type)];
+    return currState().pieces[static_cast<i32>(type)];
 }
 
 inline Bitboard Board::pieces(Color color, PieceType type) const
@@ -385,7 +385,7 @@ inline Bitboard Board::pieces(Color color, PieceType type) const
 
 inline Bitboard Board::pieces(Color color) const
 {
-    return currState().colors[static_cast<int>(color)];
+    return currState().colors[static_cast<i32>(color)];
 }
 
 inline Bitboard Board::allPieces() const
@@ -425,12 +425,12 @@ inline Bitboard Board::checkers() const
 
 inline Bitboard Board::pinners(Color color) const
 {
-    return currState().checkInfo.pinners[static_cast<int>(color)];
+    return currState().checkInfo.pinners[static_cast<i32>(color)];
 }
 
 inline Bitboard Board::checkBlockers(Color color) const
 {
-    return currState().checkInfo.blockers[static_cast<int>(color)];
+    return currState().checkInfo.blockers[static_cast<i32>(color)];
 }
 
 inline Bitboard Board::threats() const
@@ -438,7 +438,7 @@ inline Bitboard Board::threats() const
     return currState().threats;
 }
 
-inline int Board::seePieceValue(PieceType type) const
+inline i32 Board::seePieceValue(PieceType type) const
 {
-    return SEE_PIECE_VALUES[static_cast<int>(type)];
+    return SEE_PIECE_VALUES[static_cast<i32>(type)];
 }

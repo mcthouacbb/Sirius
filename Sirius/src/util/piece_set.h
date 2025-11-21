@@ -21,16 +21,16 @@ public:
 
     constexpr void add(PieceType piece)
     {
-        m_Value |= 1 << static_cast<int>(piece);
+        m_Value |= 1 << static_cast<i32>(piece);
     }
     constexpr void remove(PieceType piece)
     {
-        m_Value &= ~(1 << static_cast<int>(piece));
+        m_Value &= ~(1 << static_cast<i32>(piece));
     }
 
     constexpr bool has(PieceType piece) const
     {
-        return static_cast<bool>((m_Value >> static_cast<int>(piece)) & 1);
+        return static_cast<bool>((m_Value >> static_cast<i32>(piece)) & 1);
     }
 
     constexpr bool hasAny(const PieceSet& other) const
@@ -39,5 +39,5 @@ public:
     }
 
 private:
-    uint8_t m_Value;
+    u8 m_Value;
 };

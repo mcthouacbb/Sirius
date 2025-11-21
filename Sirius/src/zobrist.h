@@ -11,10 +11,10 @@ namespace zobrist
 
 struct Keys
 {
-    uint64_t blackToMove;
-    MultiArray<uint64_t, 2, 6, 64> pieceSquares;
-    std::array<uint64_t, 16> castlingRights;
-    std::array<uint64_t, 8> epFiles;
+    u64 blackToMove;
+    MultiArray<u64, 2, 6, 64> pieceSquares;
+    std::array<u64, 16> castlingRights;
+    std::array<u64, 8> epFiles;
 };
 
 constexpr Keys generateZobristKeys()
@@ -24,15 +24,15 @@ constexpr Keys generateZobristKeys()
     PRNG prng;
     prng.seed(8367428251681ull);
 
-    for (int color = 0; color < 2; color++)
-        for (int piece = 0; piece < 6; piece++)
-            for (int square = 0; square < 64; square++)
+    for (i32 color = 0; color < 2; color++)
+        for (i32 piece = 0; piece < 6; piece++)
+            for (i32 square = 0; square < 64; square++)
                 keys.pieceSquares[color][5 - piece][square] = prng.next64();
 
-    for (int i = 0; i < 16; i++)
+    for (i32 i = 0; i < 16; i++)
         keys.castlingRights[i] = prng.next64();
 
-    for (int i = 0; i < 8; i++)
+    for (i32 i = 0; i < 8; i++)
         keys.epFiles[i] = prng.next64();
 
     keys.blackToMove = prng.next64();
@@ -45,7 +45,7 @@ constexpr Keys keys = generateZobristKeys();
 
 struct ZKey
 {
-    uint64_t value;
+    u64 value;
 
     void flipSideToMove();
     void addPiece(PieceType piece, Color color, Square square);
@@ -53,7 +53,7 @@ struct ZKey
     void movePiece(PieceType piece, Color color, Square src, Square dst);
 
     void updateCastlingRights(CastlingRights rights);
-    void updateEP(uint32_t epFile);
+    void updateEP(u32 epFile);
 
     bool operator==(const ZKey& other) const = default;
     bool operator!=(const ZKey& other) const = default;
@@ -67,19 +67,19 @@ inline void ZKey::flipSideToMove()
 inline void ZKey::addPiece(PieceType piece, Color color, Square square)
 {
     value ^=
-        zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][square.value()];
+        zobrist::keys.pieceSquares[static_cast<i32>(color)][static_cast<i32>(piece)][square.value()];
 }
 
 inline void ZKey::removePiece(PieceType piece, Color color, Square square)
 {
     value ^=
-        zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][square.value()];
+        zobrist::keys.pieceSquares[static_cast<i32>(color)][static_cast<i32>(piece)][square.value()];
 }
 
 inline void ZKey::movePiece(PieceType piece, Color color, Square src, Square dst)
 {
-    value ^= zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][src.value()]
-        ^ zobrist::keys.pieceSquares[static_cast<int>(color)][static_cast<int>(piece)][dst.value()];
+    value ^= zobrist::keys.pieceSquares[static_cast<i32>(color)][static_cast<i32>(piece)][src.value()]
+        ^ zobrist::keys.pieceSquares[static_cast<i32>(color)][static_cast<i32>(piece)][dst.value()];
 }
 
 inline void ZKey::updateCastlingRights(CastlingRights castlingRights)
@@ -87,7 +87,7 @@ inline void ZKey::updateCastlingRights(CastlingRights castlingRights)
     value ^= zobrist::keys.castlingRights[castlingRights.value()];
 }
 
-inline void ZKey::updateEP(uint32_t epFile)
+inline void ZKey::updateEP(u32 epFile)
 {
     value ^= zobrist::keys.epFiles[epFile];
 }

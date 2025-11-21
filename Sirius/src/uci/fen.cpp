@@ -7,28 +7,28 @@ bool isValidFen(const char* fen)
 {
     std::string str(fen);
 
-    size_t space1 = str.find(' ', 0);
+    usize space1 = str.find(' ', 0);
     if (space1 == std::string::npos)
         return false;
 
-    size_t space2 = str.find(' ', space1 + 1);
+    usize space2 = str.find(' ', space1 + 1);
     if (space2 == std::string::npos)
         return false;
 
-    size_t space3 = str.find(' ', space2 + 1);
+    usize space3 = str.find(' ', space2 + 1);
     if (space3 == std::string::npos)
         return false;
 
     bool hasCounters = true;
 
-    size_t space4 = str.find(' ', space3 + 1);
+    usize space4 = str.find(' ', space3 + 1);
     if (space4 == std::string::npos)
     {
         hasCounters = false;
         space4 = str.size();
     }
 
-    size_t space5 = 0;
+    usize space5 = 0;
     if (hasCounters)
     {
         space5 = str.find(' ', space4 + 1);
@@ -53,10 +53,10 @@ bool isValidFen(const char* fen)
     if (ep[0] != '-' && (ep[0] < 'a' || ep[0] > 'h' || ep[1] < '1' || ep[1] > 'h'))
         return false;
 
-    int slashCount = 0;
-    int square = 56;
-    int whiteKingCount = 0;
-    int blackKingCount = 0;
+    i32 slashCount = 0;
+    i32 square = 56;
+    i32 whiteKingCount = 0;
+    i32 blackKingCount = 0;
     for (char c : pieces)
     {
         switch (c)

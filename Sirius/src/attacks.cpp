@@ -7,7 +7,7 @@ namespace attacks
 template<typename T>
 using DirectionArray = EnumArray<T, Direction, 8>;
 
-constexpr std::array<uint64_t, 64> rookMagics = {
+constexpr std::array<u64, 64> rookMagics = {
     0xa8002c000108020ULL,
     0x6c00049b0002001ULL,
     0x100200010090040ULL,
@@ -74,7 +74,7 @@ constexpr std::array<uint64_t, 64> rookMagics = {
     0x26002114058042ULL,
 };
 
-constexpr std::array<uint64_t, 64> bishopMagics = {
+constexpr std::array<u64, 64> bishopMagics = {
     0x89a1121896040240ULL,
     0x2004844802002010ULL,
     0x2068080051921000ULL,
@@ -142,7 +142,7 @@ constexpr std::array<uint64_t, 64> bishopMagics = {
 };
 
 // clang-format off
-constexpr std::array<uint32_t, 64> rookIndexBits = {
+constexpr std::array<u32, 64> rookIndexBits = {
     12, 11, 11, 11, 11, 11, 11, 12,
     11, 10, 10, 10, 10, 10, 10, 11,
     11, 10, 10, 10, 10, 10, 10, 11,
@@ -153,7 +153,7 @@ constexpr std::array<uint32_t, 64> rookIndexBits = {
     12, 11, 11, 11, 11, 11, 11, 12
 };
 
-constexpr std::array<uint32_t, 64> bishopIndexBits = {
+constexpr std::array<u32, 64> bishopIndexBits = {
     6, 5, 5, 5, 5, 5, 5, 6,
     5, 5, 5, 5, 5, 5, 5, 5,
     5, 5, 7, 7, 7, 7, 5, 5,
@@ -179,7 +179,7 @@ Bitboard getRay(Square sq, Direction dir)
     return rays[sq.value()][dir];
 }
 
-Bitboard pdep(uint64_t data, Bitboard mask)
+Bitboard pdep(u64 data, Bitboard mask)
 {
     Bitboard result = EMPTY_BB;
     while (mask.any())
@@ -244,7 +244,7 @@ Direction oppositeDirection(Direction d)
 
 void initRays()
 {
-    for (uint32_t square = 0; square < 64; square++)
+    for (u32 square = 0; square < 64; square++)
     {
         Bitboard bb = Bitboard::fromSquare(Square(square));
         for (Direction dir : allDirections)
@@ -311,7 +311,7 @@ Bitboard getBishopAttacksSlow(Square square, Bitboard blockers)
 
 void initAttackTables()
 {
-    for (uint32_t square = 0; square < 64; square++)
+    for (u32 square = 0; square < 64; square++)
     {
         Bitboard bb = Bitboard::fromSquare(Square(square));
         Bitboard king = bb.east() | bb.west();
@@ -325,13 +325,13 @@ void initAttackTables()
             | bb.west().northWest() | bb.west().southWest();
         attackData.knightAttacks[square] = knight;
 
-        attackData.pawnAttacks[static_cast<int>(Color::WHITE)][square] = pawnAttacks<Color::WHITE>(bb);
-        attackData.pawnAttacks[static_cast<int>(Color::BLACK)][square] = pawnAttacks<Color::BLACK>(bb);
+        attackData.pawnAttacks[static_cast<i32>(Color::WHITE)][square] = pawnAttacks<Color::WHITE>(bb);
+        attackData.pawnAttacks[static_cast<i32>(Color::BLACK)][square] = pawnAttacks<Color::BLACK>(bb);
     }
 
-    for (uint32_t src = 0; src < 64; src++)
+    for (u32 src = 0; src < 64; src++)
     {
-        for (uint32_t dst = 0; dst < 64; dst++)
+        for (u32 dst = 0; dst < 64; dst++)
         {
             if (src == dst)
                 continue;
@@ -357,7 +357,7 @@ void initMagics()
     constexpr Bitboard EDGE_SQUARES = FILE_A_BB | FILE_H_BB | RANK_1_BB | RANK_8_BB;
     Bitboard* currRook = attackData.rookAttacks.data();
     Bitboard* currBishop = attackData.bishopAttacks.data();
-    for (uint32_t square = 0; square < 64; square++)
+    for (u32 square = 0; square < 64; square++)
     {
         Bitboard rookMask = (getRay(Square(square), Direction::NORTH) & ~RANK_8_BB)
             | (getRay(Square(square), Direction::SOUTH) & ~RANK_1_BB)
@@ -369,10 +369,10 @@ void initMagics()
         attackData.rookTable[square].mask = rookMask;
         attackData.rookTable[square].attackData = currRook;
 
-        for (uint32_t i = 0; i < (1u << rookIndexBits[square]); i++)
+        for (u32 i = 0; i < (1u << rookIndexBits[square]); i++)
         {
             Bitboard blockers = pdep(i, rookMask);
-            uint32_t idx = static_cast<uint32_t>(
+            u32 idx = static_cast<u32>(
                 (blockers.value() * rookMagics[square]) >> (64 - rookIndexBits[square]));
             attackData.rookTable[square].attackData[idx] = getRookAttacksSlow(Square(square), blockers);
             currRook++;
@@ -388,10 +388,10 @@ void initMagics()
         attackData.bishopTable[square].shift = 64 - bishopIndexBits[square];
         attackData.bishopTable[square].mask = bishopMask;
         attackData.bishopTable[square].attackData = currBishop;
-        for (uint32_t i = 0; i < (1u << bishopIndexBits[square]); i++)
+        for (u32 i = 0; i < (1u << bishopIndexBits[square]); i++)
         {
             Bitboard blockers = pdep(i, bishopMask);
-            uint32_t idx = static_cast<uint32_t>(
+            u32 idx = static_cast<u32>(
                 (blockers.value() * bishopMagics[square]) >> (64 - bishopIndexBits[square]));
 
             attackData.bishopTable[square].attackData[idx] =
@@ -403,20 +403,20 @@ void initMagics()
 
 void initEvalTables()
 {
-    for (int i = 0; i < 64; i++)
+    for (i32 i = 0; i < 64; i++)
     {
         Bitboard white = Bitboard::fromSquare(Square(i)) << 8;
         white |= white << 8;
         white |= white << 16;
         white |= white << 32;
-        attackData.passedPawnMasks[static_cast<int>(Color::WHITE)][i] =
+        attackData.passedPawnMasks[static_cast<i32>(Color::WHITE)][i] =
             white | white.west() | white.east();
 
         Bitboard black = Bitboard::fromSquare(Square(i)) >> 8;
         black |= black >> 8;
         black |= black >> 16;
         black |= black >> 32;
-        attackData.passedPawnMasks[static_cast<int>(Color::BLACK)][i] =
+        attackData.passedPawnMasks[static_cast<i32>(Color::BLACK)][i] =
             black | black.west() | black.east();
 
         Bitboard file = white | black | Bitboard::fromSquare(Square(i));
@@ -426,24 +426,24 @@ void initEvalTables()
     Bitboard kingFlank = FILE_A_BB | FILE_B_BB | FILE_C_BB | FILE_D_BB;
     Bitboard whiteRanks = RANK_1_BB | RANK_2_BB | RANK_3_BB | RANK_4_BB | RANK_5_BB;
     Bitboard blackRanks = RANK_8_BB | RANK_7_BB | RANK_6_BB | RANK_5_BB | RANK_4_BB;
-    for (int i : {FILE_A, FILE_B, FILE_C})
+    for (i32 i : {FILE_A, FILE_B, FILE_C})
     {
-        attackData.kingFlanks[static_cast<int>(Color::WHITE)][i] = kingFlank & whiteRanks;
-        attackData.kingFlanks[static_cast<int>(Color::BLACK)][i] = kingFlank & blackRanks;
+        attackData.kingFlanks[static_cast<i32>(Color::WHITE)][i] = kingFlank & whiteRanks;
+        attackData.kingFlanks[static_cast<i32>(Color::BLACK)][i] = kingFlank & blackRanks;
     }
 
     kingFlank = FILE_C_BB | FILE_D_BB | FILE_E_BB | FILE_F_BB;
-    for (int i : {FILE_D, FILE_E})
+    for (i32 i : {FILE_D, FILE_E})
     {
-        attackData.kingFlanks[static_cast<int>(Color::WHITE)][i] = kingFlank & whiteRanks;
-        attackData.kingFlanks[static_cast<int>(Color::BLACK)][i] = kingFlank & blackRanks;
+        attackData.kingFlanks[static_cast<i32>(Color::WHITE)][i] = kingFlank & whiteRanks;
+        attackData.kingFlanks[static_cast<i32>(Color::BLACK)][i] = kingFlank & blackRanks;
     }
 
     kingFlank = FILE_E_BB | FILE_F_BB | FILE_G_BB | FILE_H_BB;
-    for (int i : {FILE_F, FILE_G, FILE_H})
+    for (i32 i : {FILE_F, FILE_G, FILE_H})
     {
-        attackData.kingFlanks[static_cast<int>(Color::WHITE)][i] = kingFlank & whiteRanks;
-        attackData.kingFlanks[static_cast<int>(Color::BLACK)][i] = kingFlank & blackRanks;
+        attackData.kingFlanks[static_cast<i32>(Color::WHITE)][i] = kingFlank & whiteRanks;
+        attackData.kingFlanks[static_cast<i32>(Color::BLACK)][i] = kingFlank & blackRanks;
     }
 }
 

@@ -35,15 +35,15 @@ void evaluatePawns(const Board& board, PawnStructure& pawnStructure, PawnTable* 
 }
 
 template<Color us>
-ScorePair evalKingPawnFile(uint32_t file, Bitboard ourPawns, Bitboard theirPawns)
+ScorePair evalKingPawnFile(u32 file, Bitboard ourPawns, Bitboard theirPawns)
 {
     constexpr Color them = ~us;
 
     ScorePair eval = ScorePair(0, 0);
-    int edgeDist = std::min(file, 7 - file);
+    i32 edgeDist = std::min(file, 7 - file);
     {
         Bitboard filePawns = ourPawns & Bitboard::fileBB(file);
-        int rank = 0;
+        i32 rank = 0;
         bool blocked = false;
         if (filePawns.any())
         {
@@ -55,7 +55,7 @@ ScorePair evalKingPawnFile(uint32_t file, Bitboard ourPawns, Bitboard theirPawns
     }
     {
         Bitboard filePawns = theirPawns & Bitboard::fileBB(file);
-        int rank = filePawns.any()
+        i32 rank = filePawns.any()
             ? (us == Color::WHITE ? filePawns.msb() : filePawns.lsb()).relativeRank<them>()
             : 0;
         eval += PAWN_SHIELD[edgeDist][rank];
@@ -72,8 +72,8 @@ ScorePair evaluateStormShield(const Board& board)
     Bitboard theirPawns = board.pieces(them, PieceType::PAWN);
     Square theirKing = board.kingSq(them);
 
-    uint32_t middleFile = std::clamp(theirKing.file(), FILE_B, FILE_G);
-    for (uint32_t file = middleFile - 1; file <= middleFile + 1; file++)
+    u32 middleFile = std::clamp(theirKing.file(), FILE_B, FILE_G);
+    for (u32 file = middleFile - 1; file <= middleFile + 1; file++)
         eval += evalKingPawnFile<us>(file, ourPawns, theirPawns);
 
     return eval;
@@ -136,8 +136,8 @@ ScorePair evaluateMinorBehindPawn(const Board& board)
     return MINOR_BEHIND_PAWN * shielded.popcount();
 }
 
-template ScorePair evalKingPawnFile<Color::WHITE>(uint32_t file, Bitboard ourPawns, Bitboard theirPawns);
-template ScorePair evalKingPawnFile<Color::BLACK>(uint32_t file, Bitboard ourPawns, Bitboard theirPawns);
+template ScorePair evalKingPawnFile<Color::WHITE>(u32 file, Bitboard ourPawns, Bitboard theirPawns);
+template ScorePair evalKingPawnFile<Color::BLACK>(u32 file, Bitboard ourPawns, Bitboard theirPawns);
 
 template ScorePair evaluateStormShield<Color::WHITE>(const Board& board);
 template ScorePair evaluateStormShield<Color::BLACK>(const Board& board);

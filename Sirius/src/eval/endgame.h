@@ -6,15 +6,15 @@
 namespace eval
 {
 
-constexpr int SCALE_FACTOR_NORMAL = 128;
-constexpr int SCALE_FACTOR_DRAW = 0;
+constexpr i32 SCALE_FACTOR_NORMAL = 128;
+constexpr i32 SCALE_FACTOR_DRAW = 0;
 
 }
 
 namespace eval::endgames
 {
 
-using EndgameFunc = int(const Board&, const EvalState&, Color);
+using EndgameFunc = i32(const Board&, const EvalState&, Color);
 
 enum class EndgameType
 {
@@ -33,15 +33,15 @@ struct Endgame
     {
     }
 
-    int operator()(const Board& board, const EvalState& evalState) const
+    i32 operator()(const Board& board, const EvalState& evalState) const
     {
-        int result = (*func)(board, evalState, strongSide);
+        i32 result = (*func)(board, evalState, strongSide);
         return strongSide == board.sideToMove() || type == EndgameType::SCALE ? result : -result;
     }
 
     EndgameFunc* func;
     Color strongSide;
-    uint64_t key;
+    u64 key;
     EndgameType type;
 };
 

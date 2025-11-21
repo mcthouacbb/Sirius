@@ -7,21 +7,21 @@ namespace marlinformat
 
 struct U4Array32
 {
-    std::array<uint8_t, 16> data;
+    std::array<u8, 16> data;
 
-    uint8_t get(size_t index) const
+    u8 get(usize index) const
     {
         return (data[index / 2] >> (4 * (index % 2))) & 0xF;
     }
 
-    void set(size_t index, uint8_t value)
+    void set(usize index, u8 value)
     {
         assert(value < 16);
         data[index / 2] |= (value << (4 * (index % 2)));
     }
 };
 
-enum class WDL : uint8_t
+enum class WDL : u8
 {
     BLACK_WIN,
     DRAW,
@@ -30,25 +30,25 @@ enum class WDL : uint8_t
 
 struct PackedBoard
 {
-    uint64_t occ;
+    u64 occ;
     U4Array32 pieces;
-    uint8_t stmEpSquare;
-    uint8_t halfMoveClock;
-    uint16_t fullMoveNumber;
-    int16_t score;
+    u8 stmEpSquare;
+    u8 halfMoveClock;
+    u16 fullMoveNumber;
+    i16 score;
     WDL wdl;
 
-    uint8_t padding;
+    u8 padding;
 };
 
 struct MarlinFormatUnpack
 {
     Board board;
-    int score;
+    i32 score;
     WDL wdl;
 };
 
-PackedBoard packBoard(const Board& board, int score, WDL wdl);
+PackedBoard packBoard(const Board& board, i32 score, WDL wdl);
 MarlinFormatUnpack unpackBoard(const PackedBoard& packedBoard);
 
 }

@@ -7,20 +7,20 @@
 namespace eval::endgames
 {
 
-int distToAnyCorner(Square sq)
+i32 distToAnyCorner(Square sq)
 {
-    int rankDist = std::min(sq.rank(), 7 - sq.rank());
-    int fileDist = std::min(sq.file(), 7 - sq.file());
+    i32 rankDist = std::min(sq.rank(), 7 - sq.rank());
+    i32 fileDist = std::min(sq.file(), 7 - sq.file());
 
     return rankDist + fileDist;
 }
 
-int trivialDraw(const Board&, const EvalState&, Color)
+i32 trivialDraw(const Board&, const EvalState&, Color)
 {
     return 0;
 }
 
-int evalKXvK(const Board& board, const EvalState& evalState, Color strongSide)
+i32 evalKXvK(const Board& board, const EvalState& evalState, Color strongSide)
 {
     Color weakSide = ~strongSide;
 
@@ -29,10 +29,10 @@ int evalKXvK(const Board& board, const EvalState& evalState, Color strongSide)
     Square ourKing = board.kingSq(strongSide);
     Square theirKing = board.kingSq(weakSide);
 
-    int cornerDist = distToAnyCorner(theirKing);
-    int kingDist = Square::manhattan(ourKing, theirKing);
+    i32 cornerDist = distToAnyCorner(theirKing);
+    i32 kingDist = Square::manhattan(ourKing, theirKing);
 
-    int result = evalState.psqtScore(board, strongSide).eg() + 13 * 20 - 20 * kingDist - 20 * cornerDist;
+    i32 result = evalState.psqtScore(board, strongSide).eg() + 13 * 20 - 20 * kingDist - 20 * cornerDist;
 
     if (board.pieces(PieceType::QUEEN).any() || board.pieces(PieceType::ROOK).any()
         || (board.pieces(PieceType::BISHOP).any() && board.pieces(PieceType::KNIGHT).any())
@@ -43,34 +43,34 @@ int evalKXvK(const Board& board, const EvalState& evalState, Color strongSide)
     return result;
 }
 
-int evalKBNvK(const Board& board, const EvalState&, Color strongSide)
+i32 evalKBNvK(const Board& board, const EvalState&, Color strongSide)
 {
     Color weakSide = ~strongSide;
     Square bishop = board.pieces(strongSide, PieceType::BISHOP).lsb();
     Square ourKing = board.kingSq(strongSide);
     Square theirKing = board.kingSq(weakSide);
 
-    int correctCornerDist = std::abs(7 - theirKing.rank() - theirKing.file());
+    i32 correctCornerDist = std::abs(7 - theirKing.rank() - theirKing.file());
     if (bishop.darkSquare())
         correctCornerDist = 7 - correctCornerDist;
 
-    int cornerDist = distToAnyCorner(theirKing);
+    i32 cornerDist = distToAnyCorner(theirKing);
 
-    int kingDist = Square::manhattan(ourKing, theirKing);
+    i32 kingDist = Square::manhattan(ourKing, theirKing);
 
     return 10000 - kingDist * 20 - cornerDist * 20 - correctCornerDist * 200;
 }
 
-int evalKQvKP(const Board& board, const EvalState&, Color strongSide)
+i32 evalKQvKP(const Board& board, const EvalState&, Color strongSide)
 {
     Color weakSide = ~strongSide;
     Square queen = board.pieces(strongSide, PieceType::QUEEN).lsb();
     Square pawn = board.pieces(weakSide, PieceType::PAWN).lsb();
     Square ourKing = board.kingSq(strongSide);
 
-    int kpDist = Square::chebyshev(ourKing, pawn);
+    i32 kpDist = Square::chebyshev(ourKing, pawn);
 
-    int eval = 140 - 20 * kpDist;
+    i32 eval = 140 - 20 * kpDist;
 
     Bitboard queeningSquares = attacks::fillUp(Bitboard::fromSquare(pawn), weakSide);
     // if queen or king is blocking pawn it is guaranteed win
@@ -81,31 +81,31 @@ int evalKQvKP(const Board& board, const EvalState&, Color strongSide)
     if (pawn.relativeRank(weakSide) < RANK_7
         || (FILE_B_BB | FILE_D_BB | FILE_E_BB | FILE_G_BB).has(pawn) || eval >= 10000)
     {
-        eval += MATERIAL[static_cast<int>(PieceType::QUEEN)].eg()
-            - MATERIAL[static_cast<int>(PieceType::PAWN)].eg();
+        eval += MATERIAL[static_cast<i32>(PieceType::QUEEN)].eg()
+            - MATERIAL[static_cast<i32>(PieceType::PAWN)].eg();
     }
 
     return eval;
 }
 
-int evalKQvKR(const Board& board, const EvalState& evalState, Color strongSide)
+i32 evalKQvKR(const Board& board, const EvalState& evalState, Color strongSide)
 {
     Color weakSide = ~strongSide;
 
     Square ourKing = board.kingSq(strongSide);
     Square theirKing = board.kingSq(weakSide);
 
-    int cornerDist = distToAnyCorner(theirKing);
-    int kingDist = Square::manhattan(ourKing, theirKing);
+    i32 cornerDist = distToAnyCorner(theirKing);
+    i32 kingDist = Square::manhattan(ourKing, theirKing);
 
     return evalState.psqtScore(board, strongSide).eg() + 13 * 20 - 20 * kingDist - 20 * cornerDist;
 }
 
-int scaleKPsvK(const Board& board, const EvalState&, Color strongSide)
+i32 scaleKPsvK(const Board& board, const EvalState&, Color strongSide)
 {
     Bitboard strongPawns = board.pieces(strongSide, PieceType::PAWN);
     Square weakKing = board.kingSq(~strongSide);
-    int queeningRank = strongSide == Color::WHITE ? RANK_8 : RANK_1;
+    i32 queeningRank = strongSide == Color::WHITE ? RANK_8 : RANK_1;
 
     if ((strongPawns & ~FILE_A_BB).empty() || (strongPawns & ~FILE_H_BB).empty())
     {
@@ -116,12 +116,12 @@ int scaleKPsvK(const Board& board, const EvalState&, Color strongSide)
     return SCALE_FACTOR_NORMAL;
 }
 
-int scaleKBPsvK(const Board& board, const EvalState&, Color strongSide)
+i32 scaleKBPsvK(const Board& board, const EvalState&, Color strongSide)
 {
     Bitboard strongPawns = board.pieces(strongSide, PieceType::PAWN);
     Square bishop = board.pieces(strongSide, PieceType::BISHOP).lsb();
     Square weakKing = board.kingSq(~strongSide);
-    int queeningRank = strongSide == Color::WHITE ? RANK_8 : RANK_1;
+    i32 queeningRank = strongSide == Color::WHITE ? RANK_8 : RANK_1;
 
     if ((strongPawns & ~FILE_A_BB).empty() || (strongPawns & ~FILE_H_BB).empty())
     {
@@ -133,7 +133,7 @@ int scaleKBPsvK(const Board& board, const EvalState&, Color strongSide)
     return SCALE_FACTOR_NORMAL;
 }
 
-using Key = uint64_t;
+using Key = u64;
 
 Key genMaterialKey(std::string white, std::string black)
 {
@@ -165,12 +165,12 @@ Key genMaterialKey(std::string white, std::string black)
     return board.materialKey();
 }
 
-constexpr size_t ENDGAME_TABLE_SIZE = 2048;
+constexpr usize ENDGAME_TABLE_SIZE = 2048;
 std::array<Endgame, ENDGAME_TABLE_SIZE> endgameEvalTable;
 
-void insertEndgame(uint64_t key, Endgame endgame)
+void insertEndgame(u64 key, Endgame endgame)
 {
-    size_t idx = key % ENDGAME_TABLE_SIZE;
+    usize idx = key % ENDGAME_TABLE_SIZE;
     if (endgameEvalTable[idx].func != nullptr)
     {
         std::cerr << "Endgame table collision" << std::endl;
@@ -232,8 +232,8 @@ const Endgame* probeEvalFunc(const Board& board)
 {
     if (!board.pieces(PieceType::PAWN).multiple())
     {
-        uint64_t materialKey = board.materialKey();
-        size_t idx = materialKey % ENDGAME_TABLE_SIZE;
+        u64 materialKey = board.materialKey();
+        usize idx = materialKey % ENDGAME_TABLE_SIZE;
         if (endgameEvalTable[idx].func != nullptr && endgameEvalTable[idx].key == materialKey)
             return &endgameEvalTable[idx];
     }

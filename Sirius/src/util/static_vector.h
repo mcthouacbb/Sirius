@@ -5,7 +5,7 @@
 #include <cassert>
 #include <cstddef>
 
-template<typename T, size_t Capacity>
+template<typename T, usize Capacity>
 class StaticVector
 {
 public:
@@ -33,7 +33,7 @@ public:
         std::fill(begin(), end(), value);
     }
 
-    size_t size() const
+    usize size() const
     {
         return m_Size;
     }
@@ -78,24 +78,24 @@ public:
         return cbegin() + m_Size;
     }
 
-    T& operator[](size_t pos)
+    T& operator[](usize pos)
     {
         assert(pos < m_Size);
         return m_Data[pos];
     }
 
-    const T& operator[](size_t pos) const
+    const T& operator[](usize pos) const
     {
         assert(pos < m_Size);
         return m_Data[pos];
     }
 
-    void resize(size_t size)
+    void resize(usize size)
     {
         m_Size = size;
     }
 
 private:
     std::array<T, Capacity> m_Data;
-    size_t m_Size = 0;
+    usize m_Size = 0;
 };

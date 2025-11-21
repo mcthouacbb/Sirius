@@ -15,17 +15,17 @@ class Bitboard
 {
 public:
     constexpr Bitboard() = default;
-    explicit constexpr Bitboard(uint64_t v);
+    explicit constexpr Bitboard(u64 v);
     static constexpr Bitboard fromSquare(Square sq);
 
-    constexpr Bitboard operator<<(int other) const;
-    constexpr Bitboard operator>>(int other) const;
+    constexpr Bitboard operator<<(i32 other) const;
+    constexpr Bitboard operator>>(i32 other) const;
     constexpr Bitboard operator&(const Bitboard& other) const;
     constexpr Bitboard operator|(const Bitboard& other) const;
     constexpr Bitboard operator^(const Bitboard& other) const;
     constexpr Bitboard operator~() const;
-    constexpr Bitboard& operator<<=(int other);
-    constexpr Bitboard& operator>>=(int other);
+    constexpr Bitboard& operator<<=(i32 other);
+    constexpr Bitboard& operator>>=(i32 other);
     constexpr Bitboard& operator&=(const Bitboard& other);
     constexpr Bitboard& operator|=(const Bitboard& other);
     constexpr Bitboard& operator^=(const Bitboard& other);
@@ -42,12 +42,12 @@ public:
     constexpr Bitboard southEast() const;
     constexpr Bitboard southWest() const;
 
-    constexpr uint64_t value() const;
+    constexpr u64 value() const;
 
     Square lsb() const;
     Bitboard lsbBB() const;
     Square msb() const;
-    uint32_t popcount() const;
+    u32 popcount() const;
     Square poplsb();
     constexpr bool has(Square sq) const;
     constexpr bool any() const;
@@ -57,16 +57,16 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const Bitboard& bitboard);
 
-    template<Color c, int r>
+    template<Color c, i32 r>
     static constexpr Bitboard nthRank();
 
-    static constexpr Bitboard fileBB(int file);
+    static constexpr Bitboard fileBB(i32 file);
 
 private:
-    uint64_t m_Value;
+    u64 m_Value;
 };
 
-constexpr Bitboard::Bitboard(uint64_t v)
+constexpr Bitboard::Bitboard(u64 v)
     : m_Value(v)
 {
 }
@@ -99,12 +99,12 @@ constexpr Bitboard Bitboard::fromSquare(Square sq)
     return Bitboard(1ull << sq.value());
 }
 
-constexpr Bitboard Bitboard::operator<<(int other) const
+constexpr Bitboard Bitboard::operator<<(i32 other) const
 {
     return Bitboard(m_Value << other);
 }
 
-constexpr Bitboard Bitboard::operator>>(int other) const
+constexpr Bitboard Bitboard::operator>>(i32 other) const
 {
     return Bitboard(m_Value >> other);
 }
@@ -129,13 +129,13 @@ constexpr Bitboard Bitboard::operator~() const
     return Bitboard(~m_Value);
 }
 
-constexpr Bitboard& Bitboard::operator<<=(int other)
+constexpr Bitboard& Bitboard::operator<<=(i32 other)
 {
     m_Value <<= other;
     return *this;
 }
 
-constexpr Bitboard& Bitboard::operator>>=(int other)
+constexpr Bitboard& Bitboard::operator>>=(i32 other)
 {
     m_Value >>= other;
     return *this;
@@ -159,7 +159,7 @@ constexpr Bitboard& Bitboard::operator^=(const Bitboard& other)
     return *this;
 }
 
-inline uint8_t reverse(uint8_t b)
+inline u8 reverse(u8 b)
 {
     b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
     b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
@@ -169,10 +169,10 @@ inline uint8_t reverse(uint8_t b)
 
 inline std::ostream& operator<<(std::ostream& os, const Bitboard& bitboard)
 {
-    uint64_t v = bitboard.m_Value;
-    for (int i = 0; i < 8; i++)
+    u64 v = bitboard.m_Value;
+    for (i32 i = 0; i < 8; i++)
     {
-        uint8_t val = reverse(v >> 56);
+        u8 val = reverse(v >> 56);
         os << std::bitset<8>(val) << std::endl;
         v <<= 8;
     }
@@ -217,7 +217,7 @@ constexpr Bitboard Bitboard::southWest() const
     return south().west();
 }
 
-constexpr uint64_t Bitboard::value() const
+constexpr u64 Bitboard::value() const
 {
     return m_Value;
 }
@@ -259,7 +259,7 @@ inline Square Bitboard::msb() const
 #endif
 }
 
-inline uint32_t Bitboard::popcount() const
+inline u32 Bitboard::popcount() const
 {
     return std::popcount(m_Value);
 }
@@ -297,7 +297,7 @@ constexpr bool Bitboard::one() const
     return !empty() && !multiple();
 }
 
-template<Color c, int r>
+template<Color c, i32 r>
 constexpr Bitboard Bitboard::nthRank()
 {
     if constexpr (c == Color::WHITE)
@@ -306,7 +306,7 @@ constexpr Bitboard Bitboard::nthRank()
         return RANK_8_BB >> (8 * r);
 }
 
-constexpr Bitboard Bitboard::fileBB(int file)
+constexpr Bitboard Bitboard::fileBB(i32 file)
 {
     return FILE_A_BB << file;
 }

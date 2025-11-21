@@ -3,6 +3,8 @@
 #include <fstream>
 #include <iostream>
 
+#include "../defs.h"
+
 namespace datagen
 {
 
@@ -11,16 +13,16 @@ void computeStats(std::string fensFile)
     std::ifstream file(fensFile);
     std::string line;
 
-    std::array<uint32_t, 33> pieceCounts = {};
-    std::array<uint32_t, 25> phaseCounts = {};
-    std::array<uint32_t, 17> pawnCounts = {};
-    std::array<std::array<uint32_t, 17>, 25> pawnPhaseCounts = {};
+    std::array<u32, 33> pieceCounts = {};
+    std::array<u32, 25> phaseCounts = {};
+    std::array<u32, 17> pawnCounts = {};
+    std::array<std::array<u32, 17>, 25> pawnPhaseCounts = {};
 
     while (std::getline(file, line))
     {
-        int phase = 0;
-        int pawnCount = 0;
-        int pieceCount = 0;
+        i32 phase = 0;
+        i32 pawnCount = 0;
+        i32 pieceCount = 0;
         for (char c : line)
         {
             if (c == ' ')
@@ -55,17 +57,17 @@ void computeStats(std::string fensFile)
         pawnPhaseCounts[phase][pawnCount]++;
     }
 
-    for (int i = 0; i <= 32; i++)
+    for (i32 i = 0; i <= 32; i++)
         std::cout << pieceCounts[i] << std::endl;
 
-    for (int i = 0; i <= 24; i++)
+    for (i32 i = 0; i <= 24; i++)
         std::cout << phaseCounts[i] << std::endl;
 
-    for (int i = 0; i <= 16; i++)
+    for (i32 i = 0; i <= 16; i++)
         std::cout << pawnCounts[i] << std::endl;
 
-    for (int i = 0; i <= 24; i++)
-        for (int j = 0; j <= 16; j++)
+    for (i32 i = 0; i <= 24; i++)
+        for (i32 j = 0; j <= 16; j++)
             std::cout << pawnPhaseCounts[i][j] << std::endl;
 }
 

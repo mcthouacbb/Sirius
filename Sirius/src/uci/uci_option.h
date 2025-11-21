@@ -23,10 +23,10 @@ public:
 
     struct IntData
     {
-        int64_t value;
-        int64_t defaultValue;
-        int64_t minValue;
-        int64_t maxValue;
+        i64 value;
+        i64 defaultValue;
+        i64 minValue;
+        i64 maxValue;
     };
 
     struct BoolData
@@ -37,11 +37,11 @@ public:
     UCIOption();
     UCIOption(std::string_view name, IntData data, Callback callback = Callback());
     UCIOption(std::string_view name, BoolData data, Callback callback = Callback());
-    void setIntValue(int64_t value);
+    void setIntValue(i64 value);
     void setBoolValue(bool value);
 
     Type type() const;
-    int64_t intValue() const;
+    i64 intValue() const;
     bool boolValue() const;
     const IntData& intData() const;
     const std::string& name() const;
@@ -68,7 +68,7 @@ inline UCIOption::UCIOption(std::string_view name, BoolData data, Callback callb
 {
 }
 
-inline void UCIOption::setIntValue(int64_t value)
+inline void UCIOption::setIntValue(i64 value)
 {
     assert(m_Type == Type::INT);
     std::get<IntData>(m_Data).value = value;
@@ -89,7 +89,7 @@ inline UCIOption::Type UCIOption::type() const
     return m_Type;
 }
 
-inline int64_t UCIOption::intValue() const
+inline i64 UCIOption::intValue() const
 {
     assert(m_Type == Type::INT);
     return std::get<IntData>(m_Data).value;
