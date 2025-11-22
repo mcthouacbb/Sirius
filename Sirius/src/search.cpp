@@ -773,7 +773,7 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
                 if (quiet && (score <= alpha || score >= beta))
                 {
                     i32 bonus = score >= beta ? historyBonus(depth) : -historyMalus(depth);
-                    history.updateContHist(move, movedPiece, stack, rootPly - 1, bonus);
+                    history.updateContHist(move, threats, movedPiece, stack, rootPly - 1, bonus);
                 }
             }
         }
