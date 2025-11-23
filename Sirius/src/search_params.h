@@ -94,6 +94,7 @@ SEARCH_PARAM(minIIRDepth, 4, 2, 9, 1);
 SEARCH_PARAM(rfpMaxDepth, 8, 4, 10, 1);
 SEARCH_PARAM(rfpImpMargin, 25, 20, 80, 8);
 SEARCH_PARAM(rfpNonImpMargin, 78, 50, 100, 8);
+SEARCH_PARAM(rfpOppEasyCapture, 20, 5, 100, 8);
 SEARCH_PARAM(rfpOppWorsening, 9, 5, 100, 8);
 SEARCH_PARAM(rfpHistDivisor, 408, 256, 512, 16);
 
