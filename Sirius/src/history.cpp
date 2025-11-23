@@ -102,25 +102,26 @@ void History::updateQuietStats(const Board& board, Move move, const SearchStack*
 {
     updateMainHist(board, move, bonus);
     updatePawnHist(board, move, bonus);
-    updateContHist(move, movingPiece(board, move), stack, ply, bonus);
+    updateContHist(move, board.threats(), movingPiece(board, move), stack, ply, bonus);
 }
 
-void History::updateContHist(Move move, Piece movingPiece, const SearchStack* stack, i32 ply, i32 bonus)
+void History::updateContHist(Move move, Bitboard threats, Piece movingPiece, const SearchStack* stack, i32 ply, i32 bonus)
 {
-    i32 conthist = 0;
+    i32 histBase = 0;
+    histBase += getMainHist(move, threats, getPieceColor(movingPiece)) / 2;
     if (ply > 0 && stack[-1].contHistEntry != nullptr)
-        conthist += getContHist(move, movingPiece, stack[-1].contHistEntry);
+        histBase += getContHist(move, movingPiece, stack[-1].contHistEntry);
     if (ply > 1 && stack[-2].contHistEntry != nullptr)
-        conthist += getContHist(move, movingPiece, stack[-2].contHistEntry);
+        histBase += getContHist(move, movingPiece, stack[-2].contHistEntry);
     if (ply > 3 && stack[-4].contHistEntry != nullptr)
-        conthist += getContHist(move, movingPiece, stack[-4].contHistEntry);
+        histBase += getContHist(move, movingPiece, stack[-4].contHistEntry);
 
     if (ply > 0 && stack[-1].contHistEntry != nullptr)
-        updateContHist(move, movingPiece, stack[-1].contHistEntry, conthist, bonus);
+        updateContHist(move, movingPiece, stack[-1].contHistEntry, histBase, bonus);
     if (ply > 1 && stack[-2].contHistEntry != nullptr)
-        updateContHist(move, movingPiece, stack[-2].contHistEntry, conthist, bonus);
+        updateContHist(move, movingPiece, stack[-2].contHistEntry, histBase, bonus);
     if (ply > 3 && stack[-4].contHistEntry != nullptr)
-        updateContHist(move, movingPiece, stack[-4].contHistEntry, conthist, bonus);
+        updateContHist(move, movingPiece, stack[-4].contHistEntry, histBase, bonus);
 }
 
 void History::updateNoisyStats(const Board& board, Move move, i32 bonus)
