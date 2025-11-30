@@ -105,7 +105,8 @@ void History::updateQuietStats(const Board& board, Move move, const SearchStack*
     updateContHist(move, board.threats(), movingPiece(board, move), stack, ply, bonus);
 }
 
-void History::updateContHist(Move move, Bitboard threats, Piece movingPiece, const SearchStack* stack, i32 ply, i32 bonus)
+void History::updateContHist(
+    Move move, Bitboard threats, Piece movingPiece, const SearchStack* stack, i32 ply, i32 bonus)
 {
     i32 histBase = 0;
     histBase += getMainHist(move, threats, getPieceColor(movingPiece)) / 2;

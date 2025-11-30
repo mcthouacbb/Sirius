@@ -188,7 +188,8 @@ public:
 
     void clear();
     void updateQuietStats(const Board& board, Move move, const SearchStack* stack, i32 ply, i32 bonus);
-    void updateContHist(Move move, Bitboard threats, Piece movingPiece, const SearchStack* stack, i32 ply, i32 bonus);
+    void updateContHist(Move move, Bitboard threats, Piece movingPiece, const SearchStack* stack,
+        i32 ply, i32 bonus);
     void updateNoisyStats(const Board& board, Move move, i32 bonus);
     void updateCorrHist(const Board& board, i32 bonus, i32 depth, const SearchStack* stack, i32 ply);
 
