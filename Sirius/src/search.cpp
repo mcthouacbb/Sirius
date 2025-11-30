@@ -753,7 +753,8 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
             reduction += lmrNonImp * !improving;
             reduction += lmrNoisyTTMove * noisyTTMove;
             if (ttPV)
-                reduction -= lmrTTPV + lmrTTPVNonFailLow * (ttHit && ttData.score > alpha);
+                reduction -=
+                    lmrTTPV + 512 * pvNode + lmrTTPVNonFailLow * (ttHit && ttData.score > alpha);
 
             reduction -= lmrGivesCheck * givesCheck;
             reduction -= lmrInCheck * inCheck;
