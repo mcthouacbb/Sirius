@@ -761,7 +761,7 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
             reduction += lmrFailHighCount
                 * ((stack + 1)->failHighCount >= static_cast<u32>(lmrFailHighCountMargin));
 
-            i32 reduced = std::min(std::max(newDepth - reduction / 1024, 1), newDepth);
+            i32 reduced = std::min(std::max(newDepth - reduction / 1024, static_cast<i32>(pvNode)), newDepth);
             score = -search(thread, reduced, stack + 1, -alpha - 1, -alpha, false, true);
             if (score > alpha && reduced < newDepth)
             {
