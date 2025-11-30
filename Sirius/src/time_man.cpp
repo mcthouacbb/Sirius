@@ -47,8 +47,7 @@ bool TimeManager::stopHard(const SearchLimits& searchLimits, u64 nodes)
     return false;
 }
 
-bool TimeManager::stopSoft(
-    Move bestMove, u64 bmNodes, u64 totalNodes, const SearchLimits& searchLimits)
+bool TimeManager::stopSoft(Move bestMove, u64 bmNodes, u64 totalNodes, const SearchLimits& searchLimits)
 {
     if (searchLimits.softNodes > 0 && totalNodes > searchLimits.softNodes)
         return true;
