@@ -518,7 +518,7 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
             return stack->staticEval > (stack - 2)->staticEval;
         if (rootPly > 3 && (stack - 4)->staticEval != SCORE_NONE)
             return stack->staticEval > (stack - 4)->staticEval;
-        return true;
+        return false;
     }();
     bool oppWorsening = !inCheck && rootPly > 0 && (stack - 1)->staticEval != SCORE_NONE
         && stack->staticEval > -(stack - 1)->staticEval + 1;
