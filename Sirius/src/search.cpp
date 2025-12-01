@@ -702,8 +702,8 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
         // singular extensions(~81 elo STC, ~91 elo LTC)
         if (doSE)
         {
-            i32 sBeta = std::max(
-                -SCORE_MATE, ttData.score - (sBetaScale + 20 * (ttPV && !pvNode)) * depth / 64);
+            i32 sBeta = std::max(-SCORE_MATE,
+                ttData.score - (sBetaScale + sBetaScaleFormerPV * (ttPV && !pvNode)) * depth / 64);
             i32 sDepth = (depth - 1) / 2;
             stack->excludedMove = ttData.move;
 
