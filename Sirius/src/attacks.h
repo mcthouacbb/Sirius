@@ -34,7 +34,6 @@ struct AttackData
     };
 
     MultiArray<Bitboard, 64, 64> inBetweenSquares;
-    MultiArray<Bitboard, 64, 64> moveMasks;
     MultiArray<Bitboard, 64, 64> alignedSquares;
 
     MultiArray<Bitboard, 2, 64> passedPawnMasks;
@@ -137,7 +136,7 @@ inline Bitboard inBetweenSquares(Square src, Square dst)
 
 inline Bitboard moveMask(Square king, Square checker)
 {
-    return attackData.moveMasks[king.value()][checker.value()];
+    return inBetweenSquares(king, checker) | Bitboard::fromSquare(checker);
 }
 
 inline Bitboard passedPawnMask(Color color, Square square)
