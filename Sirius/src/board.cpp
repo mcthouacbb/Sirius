@@ -555,7 +555,8 @@ bool Board::castlingBlocked(Color color, CastleSide side) const
     return (m_CastlingData.blockSquares(color, side) & allPieces()).any();
 }
 
-Bitboard Board::pinnersBlockers(Square square, Bitboard attackers, Bitboard& pinners) const
+Bitboard Board::pinnersBlockers(
+    Square square, Bitboard attackers, Bitboard& pinners, Bitboard& discoverers) const
 {
     Bitboard queens = pieces(PieceType::QUEEN);
     attackers &= (attacks::rookAttacks(square, EMPTY_BB) & (pieces(PieceType::ROOK) | queens))
@@ -579,6 +580,8 @@ Bitboard Board::pinnersBlockers(Square square, Bitboard attackers, Bitboard& pin
             blockers |= between;
             if ((between & sameColor).any())
                 pinners |= Bitboard::fromSquare(attacker);
+            else
+                discoverers |= Bitboard::fromSquare(attacker);
         }
     }
     return blockers;
@@ -1040,9 +1043,11 @@ void Board::updateCheckInfo()
 
     currState().checkInfo.checkers = attackersTo(~m_SideToMove, kingSq);
     currState().checkInfo.blockers[static_cast<i32>(Color::WHITE)] = pinnersBlockers(whiteKingSq,
-        pieces(Color::BLACK), currState().checkInfo.pinners[static_cast<i32>(Color::WHITE)]);
+        pieces(Color::BLACK), currState().checkInfo.pinners[static_cast<i32>(Color::WHITE)],
+        currState().checkInfo.discoverers[static_cast<i32>(Color::WHITE)]);
     currState().checkInfo.blockers[static_cast<i32>(Color::BLACK)] = pinnersBlockers(blackKingSq,
-        pieces(Color::WHITE), currState().checkInfo.pinners[static_cast<i32>(Color::BLACK)]);
+        pieces(Color::WHITE), currState().checkInfo.pinners[static_cast<i32>(Color::BLACK)],
+        currState().checkInfo.discoverers[static_cast<i32>(Color::BLACK)]);
 }
 
 void Board::calcThreats()
