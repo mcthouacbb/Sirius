@@ -118,7 +118,7 @@ ScorePair evaluateThreats(const Board& board, const EvalData& evalData)
         eval += THREAT_BY_ROOK[defended][static_cast<i32>(threatened)];
     }
 
-    Bitboard queenThreats = evalData.attackedBy[us][QUEEN] & board.pieces(them);
+    Bitboard queenThreats = evalData.attackedBy[us][QUEEN] & board.pieces(them) & ~board.pieces(KING);
     while (queenThreats.any())
     {
         Square threat = queenThreats.poplsb();
