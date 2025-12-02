@@ -196,8 +196,8 @@ public:
     Square kingSq(Color color) const;
     Square castlingRookSq(Color color, CastleSide side) const;
 
-    bool squareAttacked(Color color, Square square) const;
     bool squareAttacked(Color color, Square square, Bitboard blockers) const;
+    bool squareAttackedByNstm(Square square) const;
     Bitboard attackersTo(Color color, Square square) const;
     Bitboard attackersTo(Color color, Square square, Bitboard blockers) const;
     Bitboard attackersTo(Square square) const;
@@ -405,9 +405,9 @@ inline Square Board::castlingRookSq(Color color, CastleSide side) const
     return m_CastlingData.rookSquare(color, side);
 }
 
-inline bool Board::squareAttacked(Color color, Square square) const
+inline bool Board::squareAttackedByNstm(Square square) const
 {
-    return squareAttacked(color, square, allPieces());
+    return currState().threats.has(square);
 }
 
 inline Bitboard Board::attackersTo(Color color, Square square) const
