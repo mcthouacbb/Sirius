@@ -231,6 +231,34 @@ ScorePair evaluateKings(const Board& board, const EvalData& evalData, const Eval
     eval += flankDefenses.popcount() * KING_FLANK_DEFENSES[0]
         + flankDefenses2.popcount() * KING_FLANK_DEFENSES[1];
 
+    Bitboard checkBlockers = board.checkBlockers(them);
+    while (checkBlockers.any())
+    {
+        Square blocker = checkBlockers.poplsb();
+        // this could technically pick the wrong pinner if there are 2 pinners
+        // that are both aligned, but it's so rare that I doubt it matters
+        Bitboard ray = attacks::alignedSquares(blocker, board.kingSq(them));
+        Piece piece = board.pieceAt(blocker);
+        Color color = getPieceColor(piece);
+        PieceType pieceType = getPieceType(piece);
+        // pinned
+        if (color == them)
+        {
+            Square pinner = (board.pinners(them) & ray).lsb();
+            PieceType pinnerPiece = getPieceType(board.pieceAt(pinner));
+
+            eval += SAFETY_PINNED[static_cast<int>(pieceType)][static_cast<int>(pinnerPiece)];
+        }
+        // discovered
+        else
+        {
+            Square discoverer = (board.discoverers(them) & ray).lsb();
+            PieceType discovererPiece = getPieceType(board.pieceAt(discoverer));
+
+            eval += SAFETY_DISCOVERED[static_cast<int>(pieceType)][static_cast<int>(discovererPiece)];
+        }
+    }
+
     eval += SAFETY_OFFSET;
 
     ScorePair safety{safetyAdjustment(eval.mg()), safetyAdjustment(eval.eg())};
