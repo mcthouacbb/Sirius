@@ -247,7 +247,8 @@ ScorePair evaluateKings(const Board& board, const EvalData& evalData, const Eval
             Square pinner = (board.pinners(them) & ray).lsb();
             PieceType pinnerPiece = getPieceType(board.pieceAt(pinner));
 
-            eval += SAFETY_PINNED[static_cast<int>(pieceType)][static_cast<int>(pinnerPiece)];
+            eval += SAFETY_PINNED[static_cast<int>(pieceType)]
+                                 [static_cast<int>(pinnerPiece) - static_cast<int>(BISHOP)];
         }
         // discovered
         else

@@ -164,13 +164,13 @@ constexpr ScorePair KING_ATTACKS = S(   7,    0);
 constexpr ScorePair WEAK_KING_RING = S(   5,    0);
 constexpr ScorePair KING_FLANK_ATTACKS[2] = {S(  14,   -4), S(   4,    0)};
 constexpr ScorePair KING_FLANK_DEFENSES[2] = {S(  -9,    0), S(  -7,    3)};
-constexpr ScorePair SAFETY_PINNED[6][6] = {
-    {S(   0,    0), S(   0,    0), S(  28,    9), S(  13,   -5), S(  18,   -4), S(   0,    0)},
-    {S(   0,    0), S(   0,    0), S( -21,  -61), S( -40,  -74), S( -64, -138), S(   0,    0)},
-    {S(   0,    0), S(   0,    0), S(-100, -149), S( -37,  -69), S( -47, -190), S(   0,    0)},
-    {S(   0,    0), S(   0,    0), S(  41,   97), S( -66, -111), S( -57, -208), S(   0,    0)},
-    {S(   0,    0), S(   0,    0), S(  29,  437), S(  94,  312), S( -99, -208), S(   0,    0)},
-    {S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0), S(   0,    0)}
+constexpr ScorePair SAFETY_PINNED[6][3] = {
+    {S(  28,    9), S(  13,   -5), S(  18,   -4)},
+    {S( -21,  -61), S( -40,  -74), S( -64, -138)},
+    {S(-100, -149), S( -37,  -69), S( -47, -190)},
+    {S(  41,   97), S( -66, -111), S( -57, -208)},
+    {S(  29,  437), S(  94,  312), S( -99, -208)},
+    {S(   0,    0), S(   0,    0), S(   0,    0)}
 };
 constexpr ScorePair SAFETY_DISCOVERED[6][6] = {
     {S(   0,    0), S(   0,    0), S(  37,    4), S(   6,   -2), S(  18,   10), S(   0,    0)},
