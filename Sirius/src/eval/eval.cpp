@@ -256,7 +256,8 @@ ScorePair evaluateKings(const Board& board, const EvalData& evalData, const Eval
             Square discoverer = (board.discoverers(them) & ray).lsb();
             PieceType discovererPiece = getPieceType(board.pieceAt(discoverer));
 
-            eval += SAFETY_DISCOVERED[static_cast<int>(pieceType)][static_cast<int>(discovererPiece)];
+            eval += SAFETY_DISCOVERED[static_cast<int>(pieceType)]
+                                     [static_cast<int>(discovererPiece) - static_cast<int>(BISHOP)];
         }
     }
 
