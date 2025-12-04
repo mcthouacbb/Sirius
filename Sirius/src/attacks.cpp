@@ -336,7 +336,6 @@ void initAttackTables()
             if (src == dst)
                 continue;
             Bitboard dstBB = Bitboard::fromSquare(Square(dst));
-            attackData.moveMasks[src][dst] = dstBB;
             for (Direction dir : allDirections)
             {
                 Bitboard srcRay = getRay(Square(src), dir);
@@ -344,7 +343,6 @@ void initAttackTables()
                 {
                     Bitboard dstRay = getRay(Square(dst), oppositeDirection(dir));
                     attackData.inBetweenSquares[src][dst] = srcRay & dstRay;
-                    attackData.moveMasks[src][dst] |= (srcRay & dstRay);
                     attackData.alignedSquares[src][dst] = srcRay | dstRay;
                 }
             }

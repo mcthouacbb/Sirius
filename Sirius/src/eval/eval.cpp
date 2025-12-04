@@ -118,7 +118,7 @@ ScorePair evaluateThreats(const Board& board, const EvalData& evalData)
         eval += THREAT_BY_ROOK[defended][static_cast<i32>(threatened)];
     }
 
-    Bitboard queenThreats = evalData.attackedBy[us][QUEEN] & board.pieces(them);
+    Bitboard queenThreats = evalData.attackedBy[us][QUEEN] & board.pieces(them) & ~board.pieces(KING);
     while (queenThreats.any())
     {
         Square threat = queenThreats.poplsb();
@@ -230,6 +230,36 @@ ScorePair evaluateKings(const Board& board, const EvalData& evalData, const Eval
         + flankAttacks2.popcount() * KING_FLANK_ATTACKS[1];
     eval += flankDefenses.popcount() * KING_FLANK_DEFENSES[0]
         + flankDefenses2.popcount() * KING_FLANK_DEFENSES[1];
+
+    Bitboard checkBlockers = board.checkBlockers(them);
+    while (checkBlockers.any())
+    {
+        Square blocker = checkBlockers.poplsb();
+        // this could technically pick the wrong pinner if there are 2 pinners
+        // that are both aligned, but it's so rare that I doubt it matters
+        Bitboard ray = attacks::alignedSquares(blocker, board.kingSq(them));
+        Piece piece = board.pieceAt(blocker);
+        Color color = getPieceColor(piece);
+        PieceType pieceType = getPieceType(piece);
+        // pinned
+        if (color == them)
+        {
+            Square pinner = (board.pinners(them) & ray).lsb();
+            PieceType pinnerPiece = getPieceType(board.pieceAt(pinner));
+
+            eval += SAFETY_PINNED[static_cast<i32>(pieceType)]
+                                 [static_cast<i32>(pinnerPiece) - static_cast<i32>(BISHOP)];
+        }
+        // discovered
+        else
+        {
+            Square discoverer = (board.discoverers(them) & ray).lsb();
+            PieceType discovererPiece = getPieceType(board.pieceAt(discoverer));
+
+            eval += SAFETY_DISCOVERED[static_cast<i32>(pieceType)]
+                                     [static_cast<i32>(discovererPiece) - static_cast<i32>(BISHOP)];
+        }
+    }
 
     eval += SAFETY_OFFSET;
 
