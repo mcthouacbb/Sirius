@@ -172,7 +172,7 @@ constexpr ScorePair SAFETY_PINNED[6][3] = {
     {S(  29,  437), S(  94,  312), S( -99, -208)},
     {S(   0,    0), S(   0,    0), S(   0,    0)}
 };
-constexpr ScorePair SAFETY_DISCOVERED[6][6] = {
+constexpr ScorePair SAFETY_DISCOVERED[6][3] = {
     {S(  37,    4), S(   6,   -2), S(  18,   10)},
     {S( 227,   31), S( 230,   22), S( 170,  132)},
     {S(   0,    0), S( 249,   10), S( 131,   79)},
