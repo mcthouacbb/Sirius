@@ -564,6 +564,7 @@ Bitboard Board::pinnersBlockers(
 
     Bitboard blockers = EMPTY_BB;
     pinners = EMPTY_BB;
+    discoverers = EMPTY_BB;
 
     Bitboard blockMask = allPieces() ^ attackers;
 
