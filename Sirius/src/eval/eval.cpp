@@ -247,8 +247,8 @@ ScorePair evaluateKings(const Board& board, const EvalData& evalData, const Eval
             Square pinner = (board.pinners(them) & ray).lsb();
             PieceType pinnerPiece = getPieceType(board.pieceAt(pinner));
 
-            eval += SAFETY_PINNED[static_cast<int>(pieceType)]
-                                 [static_cast<int>(pinnerPiece) - static_cast<int>(BISHOP)];
+            eval += SAFETY_PINNED[static_cast<i32>(pieceType)]
+                                 [static_cast<i32>(pinnerPiece) - static_cast<i32>(BISHOP)];
         }
         // discovered
         else
@@ -256,8 +256,8 @@ ScorePair evaluateKings(const Board& board, const EvalData& evalData, const Eval
             Square discoverer = (board.discoverers(them) & ray).lsb();
             PieceType discovererPiece = getPieceType(board.pieceAt(discoverer));
 
-            eval += SAFETY_DISCOVERED[static_cast<int>(pieceType)]
-                                     [static_cast<int>(discovererPiece) - static_cast<int>(BISHOP)];
+            eval += SAFETY_DISCOVERED[static_cast<i32>(pieceType)]
+                                     [static_cast<i32>(discovererPiece) - static_cast<i32>(BISHOP)];
         }
     }
 
