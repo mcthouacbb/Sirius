@@ -783,7 +783,7 @@ bool Board::isLegal(Move move) const
             }
             return !squareAttacked(~m_SideToMove, kingTo, occ);
         }
-        return !squareAttacked(~m_SideToMove, move.toSq(), allPieces() ^ Bitboard::fromSquare(from));
+        return !squareAttackedByNstm(move.toSq());
     }
 
     // pinned pieces
@@ -1056,7 +1056,7 @@ void Board::calcThreats()
     Color color = ~m_SideToMove;
     Bitboard threats = EMPTY_BB;
     Bitboard winningThreats = EMPTY_BB;
-    Bitboard occupied = allPieces();
+    Bitboard occupied = allPieces() ^ Bitboard::fromSquare(kingSq(~color));
 
     Bitboard queens = pieces(color, PieceType::QUEEN);
     Bitboard rooks = pieces(color, PieceType::ROOK);
