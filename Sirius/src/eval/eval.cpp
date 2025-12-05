@@ -389,67 +389,16 @@ void nonIncrementalEval(const Board& board, const EvalState& evalState,
 
 i32 evaluate(const Board& board, search::SearchThread* thread)
 {
-    auto endgameEval = endgames::probeEvalFunc(board);
-    if (endgameEval != nullptr)
-        return (*endgameEval)(board, thread->evalState);
-
-    Color color = board.sideToMove();
-    ScorePair eval = thread->evalState.score(board);
-
-    const PawnStructure& pawnStructure = thread->evalState.pawnStructure();
-
-    EvalData evalData = {};
-    initEvalData<WHITE>(board, evalData, pawnStructure);
-    initEvalData<BLACK>(board, evalData, pawnStructure);
-
-    nonIncrementalEval(board, thread->evalState, pawnStructure, evalData, eval);
-
-    i32 scale = evaluateScale(board, eval, thread->evalState, pawnStructure);
-
-    eval += (color == WHITE ? TEMPO : -TEMPO);
-
-    i32 mg = eval.mg();
-    i32 eg = eval.eg() * scale / SCALE_FACTOR_NORMAL;
-    i32 phase = 4 * board.pieces(PieceType::QUEEN).popcount()
-        + 2 * board.pieces(PieceType::ROOK).popcount()
-        + (board.pieces(PieceType::BISHOP) | board.pieces(PieceType::KNIGHT)).popcount();
-    phase = std::clamp(phase, 0, 24);
-
-    return (color == WHITE ? 1 : -1) * ((mg * phase + eg * (24 - phase)) / 24);
+    return evaluateSingle(board);
 }
 
 i32 evaluateSingle(const Board& board)
 {
-    EvalState evalState;
-    evalState.initSingle(board);
-
-    auto endgame = endgames::probeEvalFunc(board);
-    if (endgame != nullptr)
-        return (*endgame)(board, evalState);
-
-    Color color = board.sideToMove();
-    ScorePair eval = evalState.score(board);
-
-    const PawnStructure& pawnStructure = evalState.pawnStructure();
-
-    EvalData evalData = {};
-    initEvalData<WHITE>(board, evalData, pawnStructure);
-    initEvalData<BLACK>(board, evalData, pawnStructure);
-
-    nonIncrementalEval(board, evalState, pawnStructure, evalData, eval);
-
-    i32 scale = evaluateScale(board, eval, evalState, pawnStructure);
-
-    eval += (color == WHITE ? TEMPO : -TEMPO);
-
-    i32 mg = eval.mg();
-    i32 eg = eval.eg() * scale / SCALE_FACTOR_NORMAL;
-    i32 phase = 4 * board.pieces(PieceType::QUEEN).popcount()
-        + 2 * board.pieces(PieceType::ROOK).popcount()
-        + (board.pieces(PieceType::BISHOP) | board.pieces(PieceType::KNIGHT)).popcount();
-    phase = std::clamp(phase, 0, 24);
-
-    return (color == WHITE ? 1 : -1) * ((mg * phase + eg * (24 - phase)) / 24);
+    Color stm = board.sideToMove();
+    return 100 * (board.pieces(stm, PAWN).popcount() - board.pieces(~stm, PAWN).popcount())
+        + 300 * (board.pieces(stm, KNIGHT).popcount() - board.pieces(~stm, KNIGHT).popcount())
+        + 300 * (board.pieces(stm, BISHOP).popcount() - board.pieces(~stm, BISHOP).popcount())
+        + 500 * (board.pieces(stm, ROOK).popcount() - board.pieces(~stm, ROOK).popcount())
+        + 900 * (board.pieces(stm, QUEEN).popcount() - board.pieces(~stm, QUEEN).popcount());
 }
-
 }

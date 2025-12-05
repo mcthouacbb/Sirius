@@ -60,6 +60,8 @@ void EvalState::push(const Board& board, const EvalUpdates& updates)
     const auto& oldEntry = currEntry();
     m_CurrEntry++;
 
+    return;
+
     assert(m_CurrEntry < m_Stack.data() + m_Stack.size());
 
     currEntry().updates = updates;
