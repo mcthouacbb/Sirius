@@ -858,6 +858,8 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
 
                 // history(~527 elo)
                 i32 histDepth = depth + (bestScore > beta + histBetaMargin);
+                if (!inCheck && stack->staticEval <= alpha - 30)
+                    histDepth++;
                 i32 bonus = historyBonus(histDepth);
                 i32 malus = historyMalus(histDepth);
                 if (quiet)
