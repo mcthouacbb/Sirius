@@ -549,7 +549,7 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
         Bitboard nonPawns =
             board.pieces(board.sideToMove()) ^ board.pieces(board.sideToMove(), PieceType::PAWN);
         if (board.pliesFromNull() > 0 && rootPly >= thread.nmpMinPly && depth >= nmpMinDepth
-            && stack->eval >= beta
+            && stack->eval >= beta + 30
             && stack->staticEval >= beta + nmpEvalBaseMargin - nmpEvalDepthMargin * depth
             && nonPawns.multiple())
         {
