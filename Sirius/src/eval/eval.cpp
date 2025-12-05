@@ -321,7 +321,8 @@ ScorePair evaluateComplexity(const Board& board, const PawnStructure& pawnStruct
     return ScorePair(0, egSign * egComplexity);
 }
 
-i32 evaluateScale(const Board& board, ScorePair eval, const EvalState& evalState)
+i32 evaluateScale(const Board& board, ScorePair eval, const EvalState& evalState,
+    const PawnStructure& pawnStructure)
 {
     i32 scaleFactor = SCALE_FACTOR_NORMAL;
     Color strongSide = eval.eg() > 0 ? WHITE : eval.eg() < 0 ? BLACK : board.sideToMove();
@@ -329,6 +330,21 @@ i32 evaluateScale(const Board& board, ScorePair eval, const EvalState& evalState
     auto endgameScale = endgames::probeScaleFunc(board, strongSide);
     if (endgameScale != nullptr)
         scaleFactor = (*endgameScale)(board, evalState);
+
+    if (scaleFactor != SCALE_FACTOR_NORMAL)
+        return scaleFactor;
+
+    Bitboard bishops = board.pieces(BISHOP);
+    Bitboard nonpawns = board.allPieces() & ~board.pieces(PAWN) & ~board.pieces(KING);
+
+    if ((bishops & LIGHT_SQUARES_BB).one() && (bishops & DARK_SQUARES_BB).one()
+        && board.pieces(WHITE, BISHOP).one() && board.pieces(BLACK, BISHOP).one())
+    {
+        if (nonpawns.popcount() > 2)
+            scaleFactor = 35 + 5 * board.pieces(strongSide).popcount();
+        else
+            scaleFactor = 16 + 10 * (pawnStructure.passedPawns & board.pieces(strongSide)).popcount();
+    }
 
     if (scaleFactor != SCALE_FACTOR_NORMAL)
         return scaleFactor;
@@ -388,7 +404,7 @@ i32 evaluate(const Board& board, search::SearchThread* thread)
 
     nonIncrementalEval(board, thread->evalState, pawnStructure, evalData, eval);
 
-    i32 scale = evaluateScale(board, eval, thread->evalState);
+    i32 scale = evaluateScale(board, eval, thread->evalState, pawnStructure);
 
     eval += (color == WHITE ? TEMPO : -TEMPO);
 
@@ -422,7 +438,7 @@ i32 evaluateSingle(const Board& board)
 
     nonIncrementalEval(board, evalState, pawnStructure, evalData, eval);
 
-    i32 scale = evaluateScale(board, eval, evalState);
+    i32 scale = evaluateScale(board, eval, evalState, pawnStructure);
 
     eval += (color == WHITE ? TEMPO : -TEMPO);
 
