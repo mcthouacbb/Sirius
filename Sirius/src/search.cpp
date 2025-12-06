@@ -491,6 +491,12 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
         {
             stack->staticEval = SCORE_NONE;
             stack->eval = SCORE_NONE;
+
+            if (ttHit
+                && (ttData.bound == TTEntry::Bound::EXACT
+                    || (ttData.bound == TTEntry::Bound::LOWER_BOUND && ttData.score >= beta)
+                    || (ttData.bound == TTEntry::Bound::UPPER_BOUND && ttData.score <= alpha)))
+                stack->eval = ttData.score;
         }
         else
         {
@@ -528,7 +534,7 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
     bool oppEasyCapture = board.winningThreats().any();
 
     // whole node pruning(~228 elo)
-    if (!pvNode && !inCheck && !excluded)
+    if (!pvNode && !excluded)
     {
         // reverse futility pruning(~86 elo)
         i32 rfpMargin =
@@ -538,7 +544,8 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
             return stack->eval;
 
         // razoring(~6 elo)
-        if (depth <= razoringMaxDepth && stack->eval <= alpha - razoringMargin * depth && alpha < 2000)
+        if (!inCheck && depth <= razoringMaxDepth && stack->eval <= alpha - razoringMargin * depth
+            && alpha < 2000)
         {
             i32 score = qsearch(thread, stack, alpha, beta, pvNode);
             if (score <= alpha)
@@ -548,8 +555,8 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
         // null move pruning(~31 elo)
         Bitboard nonPawns =
             board.pieces(board.sideToMove()) ^ board.pieces(board.sideToMove(), PieceType::PAWN);
-        if (board.pliesFromNull() > 0 && rootPly >= thread.nmpMinPly && depth >= nmpMinDepth
-            && stack->eval >= beta + 30
+        if (!inCheck && board.pliesFromNull() > 0 && rootPly >= thread.nmpMinPly
+            && depth >= nmpMinDepth && stack->eval >= beta + 30
             && stack->staticEval >= beta + nmpEvalBaseMargin - nmpEvalDepthMargin * depth
             && nonPawns.multiple())
         {
@@ -574,7 +581,7 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
 
         // probcut(~3 elo)
         i32 probcutBeta = beta + probcutBetaMargin;
-        if (depth >= probcutMinDepth && !isMateScore(beta)
+        if (!inCheck && depth >= probcutMinDepth && !isMateScore(beta)
             && (!ttHit || ttData.score >= probcutBeta || ttData.depth + 3 < depth))
         {
             MoveOrdering ordering(board, ttData.move, thread.history);
