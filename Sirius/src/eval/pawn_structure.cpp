@@ -5,7 +5,7 @@
 namespace eval
 {
 
-PawnStructure::PawnStructure(const Board& board)
+/*PawnStructure::PawnStructure(const Board& board)
 {
     Bitboard wpawns = board.pieces(Color::WHITE, PieceType::PAWN);
     Bitboard bpawns = board.pieces(Color::BLACK, PieceType::PAWN);
@@ -79,6 +79,6 @@ ScorePair PawnStructure::evaluate(const Board& board)
         eval += DEFENDED_PAWN[defended.poplsb().relativeRank<us>()];
 
     return eval;
-}
+}*/
 
 }

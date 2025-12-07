@@ -19,25 +19,29 @@ inline i32 getKingBucket(Square kingSq)
 
 struct Accumulator
 {
-    std::array<ScorePair, BUCKET_COUNT> materialPsqt;
+    ScorePair materialPsqt;
+    // std::array<ScorePair, BUCKET_COUNT> materialPsqt;
 
     void addPiece(Color color, PieceType piece, Square square)
     {
-        for (i32 bucket = 0; bucket < BUCKET_COUNT; bucket++)
-            materialPsqt[bucket] += combinedPsqtScore(bucket, color, piece, square);
+        materialPsqt += combinedPsqtScore(color, piece, square);
+        // for (i32 bucket = 0; bucket < BUCKET_COUNT; bucket++)
+        //     materialPsqt[bucket] += combinedPsqtScore(bucket, color, piece, square);
     }
 
     void removePiece(Color color, PieceType piece, Square square)
     {
-        for (i32 bucket = 0; bucket < BUCKET_COUNT; bucket++)
-            materialPsqt[bucket] -= combinedPsqtScore(bucket, color, piece, square);
+        materialPsqt -= combinedPsqtScore(color, piece, square);
+        // for (i32 bucket = 0; bucket < BUCKET_COUNT; bucket++)
+        //     materialPsqt[bucket] -= combinedPsqtScore(bucket, color, piece, square);
     }
 
     void movePiece(Color color, PieceType piece, Square src, Square dst)
     {
-        for (i32 bucket = 0; bucket < BUCKET_COUNT; bucket++)
-            materialPsqt[bucket] += combinedPsqtScore(bucket, color, piece, dst)
-                - combinedPsqtScore(bucket, color, piece, src);
+        materialPsqt += combinedPsqtScore(color, piece, dst) - combinedPsqtScore(color, piece, src);
+        // for (i32 bucket = 0; bucket < BUCKET_COUNT; bucket++)
+        //     materialPsqt[bucket] += combinedPsqtScore(bucket, color, piece, dst)
+        //         - combinedPsqtScore(bucket, color, piece, src);
     }
 };
 
@@ -54,7 +58,7 @@ struct PsqtState
 
 inline void PsqtState::init()
 {
-    accumulators.fill({{ScorePair(0, 0), ScorePair(0, 0)}});
+    accumulators.fill({ScorePair(0, 0)});
 }
 
 inline void PsqtState::addPiece(Color color, PieceType piece, Square square)

@@ -7,7 +7,10 @@
 namespace eval
 {
 
-struct EvalData
+using enum PieceType;
+using enum Color;
+
+/*struct EvalData
 {
     ColorArray<Bitboard> mobilityArea;
     ColorArray<Bitboard> attacked;
@@ -25,9 +28,6 @@ struct EvalData
         attackedBy[color][pieceType] |= attacks;
     }
 };
-
-using enum PieceType;
-using enum Color;
 
 template<Color us, PieceType piece>
 ScorePair evaluatePieces(const Board& board, EvalData& evalData)
@@ -384,7 +384,7 @@ void nonIncrementalEval(const Board& board, const EvalState& evalState,
     eval += evaluatePassedPawns<WHITE>(board, pawnStructure, evalData) - evaluatePassedPawns<BLACK>(board, pawnStructure, evalData);
     eval += evaluateThreats<WHITE>(board, evalData) - evaluateThreats<BLACK>(board, evalData);
     eval += evaluateComplexity(board, pawnStructure, eval);
-}
+}*/
 // clang-format on
 
 i32 evaluate(const Board& board, search::SearchThread* thread)
@@ -396,7 +396,7 @@ i32 evaluate(const Board& board, search::SearchThread* thread)
     Color color = board.sideToMove();
     ScorePair eval = thread->evalState.score(board);
 
-    const PawnStructure& pawnStructure = thread->evalState.pawnStructure();
+    /*const PawnStructure& pawnStructure = thread->evalState.pawnStructure();
 
     EvalData evalData = {};
     initEvalData<WHITE>(board, evalData, pawnStructure);
@@ -406,10 +406,10 @@ i32 evaluate(const Board& board, search::SearchThread* thread)
 
     i32 scale = evaluateScale(board, eval, thread->evalState, pawnStructure);
 
-    eval += (color == WHITE ? TEMPO : -TEMPO);
+    eval += (color == WHITE ? TEMPO : -TEMPO);*/
 
     i32 mg = eval.mg();
-    i32 eg = eval.eg() * scale / SCALE_FACTOR_NORMAL;
+    i32 eg = eval.eg();
     i32 phase = 4 * board.pieces(PieceType::QUEEN).popcount()
         + 2 * board.pieces(PieceType::ROOK).popcount()
         + (board.pieces(PieceType::BISHOP) | board.pieces(PieceType::KNIGHT)).popcount();
@@ -423,27 +423,27 @@ i32 evaluateSingle(const Board& board)
     EvalState evalState;
     evalState.initSingle(board);
 
-    auto endgame = endgames::probeEvalFunc(board);
-    if (endgame != nullptr)
-        return (*endgame)(board, evalState);
+    auto endgameEval = endgames::probeEvalFunc(board);
+    if (endgameEval != nullptr)
+        return (*endgameEval)(board, evalState);
 
     Color color = board.sideToMove();
     ScorePair eval = evalState.score(board);
 
-    const PawnStructure& pawnStructure = evalState.pawnStructure();
+    /*const PawnStructure& pawnStructure = thread->evalState.pawnStructure();
 
     EvalData evalData = {};
     initEvalData<WHITE>(board, evalData, pawnStructure);
     initEvalData<BLACK>(board, evalData, pawnStructure);
 
-    nonIncrementalEval(board, evalState, pawnStructure, evalData, eval);
+    nonIncrementalEval(board, thread->evalState, pawnStructure, evalData, eval);
 
-    i32 scale = evaluateScale(board, eval, evalState, pawnStructure);
+    i32 scale = evaluateScale(board, eval, thread->evalState, pawnStructure);
 
-    eval += (color == WHITE ? TEMPO : -TEMPO);
+    eval += (color == WHITE ? TEMPO : -TEMPO);*/
 
     i32 mg = eval.mg();
-    i32 eg = eval.eg() * scale / SCALE_FACTOR_NORMAL;
+    i32 eg = eval.eg();
     i32 phase = 4 * board.pieces(PieceType::QUEEN).popcount()
         + 2 * board.pieces(PieceType::ROOK).popcount()
         + (board.pieces(PieceType::BISHOP) | board.pieces(PieceType::KNIGHT)).popcount();

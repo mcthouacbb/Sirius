@@ -6,7 +6,7 @@
 namespace eval
 {
 
-struct PawnStructure
+/*struct PawnStructure
 {
     PawnStructure() = default;
     PawnStructure(const Board& board);
@@ -21,6 +21,6 @@ struct PawnStructure
 private:
     template<Color us>
     ScorePair evaluate(const Board& board);
-};
+};*/
 
 }

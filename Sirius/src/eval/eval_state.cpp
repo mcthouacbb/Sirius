@@ -42,7 +42,7 @@ void EvalState::init(const Board& board, PawnTable* pawnTable)
         }
     }
 
-    evaluatePawns(board, currEntry().pawnStructure, m_PawnTable);
+    /*evaluatePawns(board, currEntry().pawnStructure, m_PawnTable);
     currEntry().pawnShieldStorm[WHITE] = evaluateStormShield<WHITE>(board);
     currEntry().pawnShieldStorm[BLACK] = evaluateStormShield<BLACK>(board);
     currEntry().knightOutposts = evaluateKnightOutposts<WHITE>(board, currEntry().pawnStructure)
@@ -50,7 +50,7 @@ void EvalState::init(const Board& board, PawnTable* pawnTable)
     currEntry().bishopPawns = evaluateBishopPawns<WHITE>(board) - evaluateBishopPawns<BLACK>(board);
     currEntry().rookOpen = evaluateRookOpen<WHITE>(board) - evaluateRookOpen<BLACK>(board);
     currEntry().minorBehindPawn =
-        evaluateMinorBehindPawn<WHITE>(board) - evaluateMinorBehindPawn<BLACK>(board);
+        evaluateMinorBehindPawn<WHITE>(board) - evaluateMinorBehindPawn<BLACK>(board);*/
 }
 
 void EvalState::push(const Board& board, const EvalUpdates& updates)
@@ -62,20 +62,20 @@ void EvalState::push(const Board& board, const EvalUpdates& updates)
 
     assert(m_CurrEntry < m_Stack.data() + m_Stack.size());
 
-    currEntry().updates = updates;
+    // currEntry().updates = updates;
 
     currEntry().psqtState = oldEntry.psqtState;
-    for (const auto& add : currEntry().updates.adds)
+    for (const auto& add : updates.adds)
     {
         currEntry().psqtState.addPiece(getPieceColor(add.piece), getPieceType(add.piece), add.square);
     }
 
-    for (const auto& add : currEntry().updates.removes)
+    for (const auto& add : updates.removes)
     {
         currEntry().psqtState.removePiece(getPieceColor(add.piece), getPieceType(add.piece), add.square);
     }
 
-    if (updates.changedPieces.hasAny(eval_terms::pawnStructure.deps))
+    /*if (updates.changedPieces.hasAny(eval_terms::pawnStructure.deps))
         evaluatePawns(board, currEntry().pawnStructure, m_PawnTable);
     else
         currEntry().pawnStructure = oldEntry.pawnStructure;
@@ -95,9 +95,8 @@ void EvalState::push(const Board& board, const EvalUpdates& updates)
         currEntry().knightOutposts = oldEntry.knightOutposts;
 
     if (updates.changedPieces.hasAny(eval_terms::bishopPawns.deps))
-        currEntry().bishopPawns = evaluateBishopPawns<WHITE>(board) - evaluateBishopPawns<BLACK>(board);
-    else
-        currEntry().bishopPawns = oldEntry.bishopPawns;
+        currEntry().bishopPawns = evaluateBishopPawns<WHITE>(board) -
+    evaluateBishopPawns<BLACK>(board); else currEntry().bishopPawns = oldEntry.bishopPawns;
 
     if (updates.changedPieces.hasAny(eval_terms::rookOpen.deps))
         currEntry().rookOpen = evaluateRookOpen<WHITE>(board) - evaluateRookOpen<BLACK>(board);
@@ -108,7 +107,7 @@ void EvalState::push(const Board& board, const EvalUpdates& updates)
         currEntry().minorBehindPawn =
             evaluateMinorBehindPawn<WHITE>(board) - evaluateMinorBehindPawn<BLACK>(board);
     else
-        currEntry().minorBehindPawn = oldEntry.minorBehindPawn;
+        currEntry().minorBehindPawn = oldEntry.minorBehindPawn;*/
 }
 
 void EvalState::pop()
@@ -118,9 +117,9 @@ void EvalState::pop()
 
 ScorePair EvalState::score(const Board& board) const
 {
-    return currEntry().psqtState.evaluate(board) + currEntry().pawnStructure.score
-        + currEntry().knightOutposts + currEntry().bishopPawns + currEntry().rookOpen
-        + currEntry().minorBehindPawn;
+    return currEntry().psqtState.evaluate(board); /* + currEntry().pawnStructure.score
+         + currEntry().knightOutposts + currEntry().bishopPawns + currEntry().rookOpen
+         + currEntry().minorBehindPawn;*/
 }
 
 ScorePair EvalState::psqtScore(const Board& board, Color c) const
@@ -131,7 +130,7 @@ ScorePair EvalState::psqtScore(const Board& board, Color c) const
     return psqt;
 }
 
-ScorePair EvalState::pawnShieldStormScore(Color c) const
+/*ScorePair EvalState::pawnShieldStormScore(Color c) const
 {
     return currEntry().pawnShieldStorm[c];
 }
@@ -139,6 +138,6 @@ ScorePair EvalState::pawnShieldStormScore(Color c) const
 const PawnStructure& EvalState::pawnStructure() const
 {
     return currEntry().pawnStructure;
-}
+}*/
 
 }

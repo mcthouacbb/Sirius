@@ -13,7 +13,7 @@ class PawnTable;
 namespace eval
 {
 
-namespace eval_terms
+/*namespace eval_terms
 {
 
 using enum PieceType;
@@ -50,6 +50,6 @@ template<Color us>
 ScorePair evaluateRookOpen(const Board& board);
 
 template<Color us>
-ScorePair evaluateMinorBehindPawn(const Board& board);
+ScorePair evaluateMinorBehindPawn(const Board& board);*/
 
 }

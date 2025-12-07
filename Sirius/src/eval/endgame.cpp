@@ -238,11 +238,11 @@ const Endgame* probeEvalFunc(const Board& board)
             return &endgameEvalTable[idx];
     }
 
-    for (Color c : {Color::WHITE, Color::BLACK})
+    /*for (Color c : {Color::WHITE, Color::BLACK})
     {
         if (isKXvK(board, c))
             return &evalKXvKEndgames[c];
-    }
+    }*/
 
     return nullptr;
 }
@@ -260,6 +260,7 @@ const Endgame* probeScaleFunc(const Board& board, Color strongSide)
 
 void init()
 {
+    // only trivial draws for psqt only eval
     addEndgameEval("K", "K", &trivialDraw);
     addEndgameEval("KN", "K", &trivialDraw);
     addEndgameEval("KB", "K", &trivialDraw);
@@ -268,10 +269,10 @@ void init()
     addEndgameEval("KB", "KB", &trivialDraw);
     addEndgameEval("KNN", "K", &trivialDraw);
 
-    addEndgameEval("KBN", "K", &evalKBNvK);
+    /*addEndgameEval("KBN", "K", &evalKBNvK);
 
     addEndgameEval("KQ", "KP", &evalKQvKP);
-    addEndgameEval("KQ", "KR", &evalKQvKR);
+    addEndgameEval("KQ", "KR", &evalKQvKR);*/
 }
 
 }
