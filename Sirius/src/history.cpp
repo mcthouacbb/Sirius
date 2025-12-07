@@ -55,6 +55,7 @@ i32 History::getNoisyStats(const Board& board, Move move) const
 
 i32 History::correctStaticEval(const Board& board, i32 staticEval, const SearchStack* stack, i32 ply) const
 {
+    return staticEval;
     Color stm = board.sideToMove();
     u64 threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
     i32 pawnEntry = m_PawnCorrHist.get(stm, board.pawnKey().value);
@@ -132,6 +133,7 @@ void History::updateNoisyStats(const Board& board, Move move, i32 bonus)
 
 void History::updateCorrHist(const Board& board, i32 bonus, i32 depth, const SearchStack* stack, i32 ply)
 {
+    return;
     Color stm = board.sideToMove();
     u64 threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
     i32 scaledBonus = bonus * CORR_HIST_SCALE;
