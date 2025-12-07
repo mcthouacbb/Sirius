@@ -7,6 +7,8 @@
 
 #include "defs.h"
 
+#define EXTERNAL_TUNE
+
 namespace search
 {
 
