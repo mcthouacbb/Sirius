@@ -404,9 +404,9 @@ i32 evaluate(const Board& board, search::SearchThread* thread)
 
     nonIncrementalEval(board, thread->evalState, pawnStructure, evalData, eval);
 
-    i32 scale = evaluateScale(board, eval, thread->evalState, pawnStructure);
+    i32 scale = evaluateScale(board, eval, thread->evalState, pawnStructure);*/
 
-    eval += (color == WHITE ? TEMPO : -TEMPO);*/
+    eval += (color == WHITE ? TEMPO : -TEMPO);
 
     i32 mg = eval.mg();
     i32 eg = eval.eg();
@@ -438,9 +438,9 @@ i32 evaluateSingle(const Board& board)
 
     nonIncrementalEval(board, thread->evalState, pawnStructure, evalData, eval);
 
-    i32 scale = evaluateScale(board, eval, thread->evalState, pawnStructure);
+    i32 scale = evaluateScale(board, eval, thread->evalState, pawnStructure);*/
 
-    eval += (color == WHITE ? TEMPO : -TEMPO);*/
+    eval += (color == WHITE ? TEMPO : -TEMPO);
 
     i32 mg = eval.mg();
     i32 eg = eval.eg();
