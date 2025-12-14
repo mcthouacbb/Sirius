@@ -296,6 +296,13 @@ ScorePair evaluatePassedPawns(
 
             if (evalData.attacked[us].has(pushSq))
                 eval += PASSER_DEFENDED_PUSH[rank];
+
+            Bitboard squaresBehind =
+                attacks::passedPawnMask(them, passer) & Bitboard::fileBB(passer.file());
+            Bitboard verticalSliders =
+                board.pieces(them, PieceType::ROOK) | board.pieces(them, PieceType::QUEEN);
+            if ((squaresBehind & verticalSliders).any())
+                eval += PASSER_SLIDER_BEHIND[rank];
         }
     }
 
