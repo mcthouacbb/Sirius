@@ -57,8 +57,8 @@ ScorePair evaluatePieces(const Board& board, EvalData& evalData)
 
         evalData.addAttacks(us, piece, attacks);
 
-        eval += MOBILITY[static_cast<i32>(piece) - static_cast<i32>(KNIGHT)]
-                        [(attacks & evalData.mobilityArea[us]).popcount()];
+        i32 mobility = (attacks & evalData.mobilityArea[us]).popcount();
+        eval += MOBILITY[static_cast<i32>(piece) - static_cast<i32>(KNIGHT)][mobility];
 
         if (Bitboard kingRingAtks = evalData.kingRing[them] & attacks; kingRingAtks.any())
         {
@@ -69,6 +69,17 @@ ScorePair evaluatePieces(const Board& board, EvalData& evalData)
 
         if (piece == BISHOP && (attacks & CENTER_SQUARES).multiple())
             eval += LONG_DIAG_BISHOP;
+
+        if (piece == ROOK && mobility <= 4 && sq.relativeRank(us) <= RANK_2)
+        {
+            int kingFile = board.kingSq(us).file();
+            if ((kingFile < FILE_E) == (sq.file() < kingFile))
+            {
+                bool canCastle = board.castlingRights().has(CastlingRights(us, CastleSide::KING_SIDE)
+                    | CastlingRights(us, CastleSide::QUEEN_SIDE));
+                eval += ROOK_TRAPPED[canCastle];
+            }
+        }
     }
 
     return eval;
