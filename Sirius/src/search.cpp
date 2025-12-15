@@ -673,8 +673,9 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
             }
 
             // late move pruning(~23 elo)
-            i32 lmpMargin = improving ? (lmpImpBase + depth * depth * lmpImpDepth) / 256
-                                      : (lmpNonImpBase + depth * depth * lmpNonImpDepth) / 256;
+            i32 lmpMargin = improving || corrplexity > lmrCorrplexityMargin
+                ? (lmpImpBase + depth * depth * lmpImpDepth) / 256
+                : (lmpNonImpBase + depth * depth * lmpNonImpDepth) / 256;
             if (!inCheck && movesPlayed >= lmpMargin)
                 break;
 
