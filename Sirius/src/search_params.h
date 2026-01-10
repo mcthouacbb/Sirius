@@ -84,6 +84,7 @@ SEARCH_PARAM(contCorr4Weight, 230, 96, 768, 64);
 SEARCH_PARAM(contCorr5Weight, 219, 96, 768, 64);
 SEARCH_PARAM(contCorr6Weight, 163, 96, 768, 64);
 SEARCH_PARAM(contCorr7Weight, 142, 96, 768, 64);
+SEARCH_PARAM(highCorrplexityMargin, 87, 40, 120, 5);
 
 SEARCH_PARAM(aspInitDelta, 10, 5, 30, 2);
 SEARCH_PARAM(minAspDepth, 6, 3, 7, 1);
@@ -153,7 +154,6 @@ SEARCH_PARAM(lmrMinDepth, 3, 2, 5, 1);
 SEARCH_PARAM(lmrMinMovesNonPv, 3, 1, 6, 1);
 SEARCH_PARAM(lmrMinMovesPv, 4, 2, 8, 1);
 SEARCH_PARAM(lmrFailHighCountMargin, 2, 2, 12, 1);
-SEARCH_PARAM(lmrCorrplexityMargin, 87, 40, 120, 5);
 
 SEARCH_PARAM_CALLBACK(lmrBase, 775, -512, 2048, 110, updateLmrTable);
 SEARCH_PARAM_CALLBACK(lmrScale, 427, 300, 600, 50, updateLmrTable);
