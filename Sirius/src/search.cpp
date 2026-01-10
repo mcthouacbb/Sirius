@@ -686,6 +686,10 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
                 i32 max = seeCaptHistMax * depth;
                 seeMargin -= std::clamp(histScore / seeCaptHistDivisor, -max, max);
             }
+            else
+            {
+                seeMargin -= std::clamp(histScore / 64, -100 * depth, 100 * depth);
+            }
             if (!board.see(move, seeMargin))
                 continue;
 
