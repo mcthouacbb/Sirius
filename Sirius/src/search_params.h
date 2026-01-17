@@ -149,6 +149,7 @@ SEARCH_PARAM(seTTDepthMargin, 3, 2, 5, 1);
 SEARCH_PARAM(sBetaScale, 55, 24, 128, 4);
 SEARCH_PARAM(sBetaScaleFormerPV, 20, 10, 128, 4);
 SEARCH_PARAM(doubleExtMargin, 11, 0, 40, 2);
+SEARCH_PARAM(tripleExtMargin, 125, 0, 200, 8);
 
 SEARCH_PARAM(lmrMinDepth, 3, 2, 5, 1);
 SEARCH_PARAM(lmrMinMovesNonPv, 3, 1, 6, 1);
