@@ -754,11 +754,13 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
 
             reduction += lmrNonImp * !improving;
             reduction += lmrNoisyTTMove * noisyTTMove;
+
             if (ttPV)
                 reduction -= lmrTTPV + lmrTTPVNonFailLow * (ttHit && ttData.score > alpha);
 
             reduction -= lmrGivesCheck * givesCheck;
             reduction -= lmrInCheck * inCheck;
+            reduction -= lmrEscapeCapture * (quiet && !board.see(move.reverse(), 0));
             reduction -= lmrCorrplexity * (corrplexity > highCorrplexityMargin);
             reduction += lmrCutnode * cutnode;
             reduction += lmrFailHighCount

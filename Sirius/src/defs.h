@@ -316,6 +316,8 @@ public:
     MoveType type() const;
     Promotion promotion() const;
 
+    Move reverse() const;
+
 private:
     static constexpr i32 TYPE_MASK = 3 << 12;
     static constexpr i32 PROMOTION_MASK = 3 << 14;
@@ -363,6 +365,11 @@ inline MoveType Move::type() const
 inline Promotion Move::promotion() const
 {
     return static_cast<Promotion>(m_Data & PROMOTION_MASK);
+}
+
+inline Move Move::reverse() const
+{
+    return Move(toSq(), fromSq(), type(), promotion());
 }
 
 constexpr i32 MAX_PLY = 128;
