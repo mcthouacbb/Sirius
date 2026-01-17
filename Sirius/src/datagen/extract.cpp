@@ -38,8 +38,8 @@ bool filterPos(const Board& board, Move move, i32 score, marlinformat::WDL wdl)
 {
     if (board.checkers().any())
         return true;
-    if (!moveIsQuiet(board, move))
-        return true;
+    // if (!moveIsQuiet(board, move))
+    //     return true;
     return false;
 }
 
