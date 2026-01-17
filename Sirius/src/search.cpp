@@ -748,7 +748,7 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
 
         // late move reductions(~111 elo)
         if (movesPlayed >= (pvNode ? lmrMinMovesPv : lmrMinMovesNonPv) && depth >= lmrMinDepth
-            && moveScore <= MoveOrdering::FIRST_KILLER_SCORE)
+            && (!ttPV || moveScore <= MoveOrdering::FIRST_KILLER_SCORE))
         {
             i32 reduction = baseLMR;
 
