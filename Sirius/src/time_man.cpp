@@ -12,10 +12,12 @@ void TimeManager::setLimits(const SearchLimits& limits, Color us)
             std::max(Duration(1), limits.clock.timeLeft[static_cast<i32>(us)] - limits.overhead);
         Duration inc = limits.clock.increments[static_cast<i32>(us)];
 
-        auto baseTime = (time / search::baseTimeScale + inc * search::incrementScale / 100.0);
+        // auto baseTime = (time / search::baseTimeScale + inc * search::incrementScale / 100.0);
         // formulas from stormphrax
-        m_SoftBound = std::chrono::duration_cast<Duration>(search::softTimeScale / 100.0 * baseTime);
-        m_HardBound = std::chrono::duration_cast<Duration>(time * (search::hardTimeScale / 100.0));
+        // m_SoftBound = std::chrono::duration_cast<Duration>(search::softTimeScale / 100.0 * baseTime);
+        // m_HardBound = std::chrono::duration_cast<Duration>(time * (search::hardTimeScale / 100.0));
+        m_SoftBound = time / 20 + inc / 2;
+        m_HardBound = time / 6;
     }
 }
 
@@ -28,8 +30,6 @@ void TimeManager::startSearch()
 {
     checkCounter = TIME_CHECK_INTERVAL;
     m_StartTime = std::chrono::steady_clock::now();
-    m_Stability = 0;
-    m_PrevBestMove = Move::nullmove();
 }
 
 bool TimeManager::stopHard(const SearchLimits& searchLimits, u64 nodes)
@@ -47,39 +47,13 @@ bool TimeManager::stopHard(const SearchLimits& searchLimits, u64 nodes)
     return false;
 }
 
-bool TimeManager::stopSoft(Move bestMove, u64 bmNodes, u64 totalNodes, const SearchLimits& searchLimits)
+bool TimeManager::stopSoft(Move bestMove, u64 totalNodes, const SearchLimits& searchLimits)
 {
     if (searchLimits.softNodes > 0 && totalNodes > searchLimits.softNodes)
         return true;
 
-    if (bestMove == m_PrevBestMove)
-        m_Stability++;
-    else
-        m_Stability = 0;
-    m_PrevBestMove = bestMove;
-
-    f64 nodeFrac = static_cast<f64>(bmNodes) / static_cast<f64>(totalNodes);
-    f64 nodeScale = [&]()
-    {
-        f64 base = static_cast<f64>(search::nodeTMBase) / 100.0;
-        f64 scale = static_cast<f64>(search::nodeTMScale) / 100.0;
-        return (base - nodeFrac) * scale;
-    }();
-
-    f64 bmStabilityScale = [&]()
-    {
-        f64 base = static_cast<f64>(search::bmStabilityBase) / 100.0;
-        f64 scale = static_cast<f64>(search::bmStabilityScale) / 100.0;
-        f64 offset = static_cast<f64>(search::bmStabilityOffset) / 100.0;
-        f64 power = static_cast<f64>(search::bmStabilityPower) / 100.0;
-        f64 min = static_cast<f64>(search::bmStabilityMin) / 100;
-
-        f64 result = base + scale * std::pow(m_Stability + offset, power);
-        return std::max(result, min);
-    }();
-
-    f64 scale = nodeScale * bmStabilityScale;
-    if (searchLimits.clock.enabled && elapsed() > m_SoftBound * scale)
+    if (searchLimits.clock.enabled && elapsed() > m_SoftBound)
         return true;
+
     return false;
 }

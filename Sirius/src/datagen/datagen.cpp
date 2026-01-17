@@ -72,7 +72,7 @@ viriformat::Game runGame(std::mt19937& gen, const Config& config)
     constexpr i32 MAX_OPENING_SCORE = 300;
 
     Board startpos = genOpening(gen);
-    ColorArray<search::Search> searches = {search::Search(8), search::Search(8)};
+    ColorArray<search::Search> searches = {search::Search(), search::Search()};
     SearchLimits limits = {};
     limits.softNodes = config.softLimit;
     limits.maxNodes = config.hardLimit;

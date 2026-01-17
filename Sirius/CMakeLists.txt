@@ -12,8 +12,6 @@ set(SRCS
     "src/cuckoo.h"
     "src/cuckoo.cpp"
     "src/defs.h"
-    "src/history.cpp"
-    "src/history.h"
     "src/main.cpp"
     "src/misc.cpp"
     "src/misc.h"

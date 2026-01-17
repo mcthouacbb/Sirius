@@ -4,7 +4,6 @@
 #include "defs.h"
 #include "eval/eval_state.h"
 #include "eval/pawn_table.h"
-#include "history.h"
 #include "time_man.h"
 #include "tt.h"
 
@@ -20,21 +19,6 @@ struct SearchStack
 {
     std::array<Move, MAX_PLY + 1> pv;
     i32 pvLength;
-
-    Move playedMove;
-    Piece movedPiece;
-    Move excludedMove;
-
-    std::array<Move, 2> killers;
-
-    ContCorrEntry* contCorrEntry;
-    CHEntry* contHistEntry;
-    i32 histScore;
-
-    i32 staticEval;
-    i32 eval;
-
-    u32 failHighCount;
 };
 
 struct SearchInfo
@@ -126,7 +110,6 @@ struct SearchThread
     i32 nmpMinPly = 0;
     std::vector<RootMove> rootMoves;
     std::array<SearchStack, MAX_PLY + 1> stack;
-    History history;
     PawnTable pawnTable;
     eval::EvalState evalState;
 };
@@ -134,7 +117,7 @@ struct SearchThread
 class Search
 {
 public:
-    Search(usize hash = 64);
+    Search();
     ~Search();
 
     void newGame();
@@ -146,11 +129,6 @@ public:
     BenchData benchSearch(i32 depth, const Board& board);
     std::pair<i32, Move> datagenSearch(const SearchLimits& limits, const Board& board);
 
-    void setTTSize(i32 mb)
-    {
-        m_TT.resize(mb, m_Threads.size());
-    }
-
 private:
     void joinThreads();
     void threadLoop(SearchThread& thread);
@@ -158,19 +136,15 @@ private:
     void reportUCIInfo(const SearchThread& thread, i32 multiPVIdx, i32 depth) const;
 
     std::pair<i32, Move> iterDeep(SearchThread& thread, bool report);
-    i32 aspWindows(SearchThread& thread, i32 depth, i32 prevScore, bool report);
 
-    i32 search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alpha, i32 beta,
-        bool pvNode, bool cutnode);
-    i32 qsearch(SearchThread& thread, SearchStack* stack, i32 alpha, i32 beta, bool pvNode);
+    i32 search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alpha, i32 beta);
 
-    void makeMove(SearchThread& thread, SearchStack* stack, Move move, i32 histScore);
+    void makeMove(SearchThread& thread, SearchStack* stack, Move move);
     void unmakeMove(SearchThread& thread, SearchStack* stack);
     void makeNullMove(SearchThread& thread, SearchStack* stack);
     void unmakeNullMove(SearchThread& thread, SearchStack* stack);
 
     std::atomic_bool m_ShouldStop;
-    TT m_TT;
     TimeManager m_TimeMan;
     std::deque<BoardState> m_States;
 

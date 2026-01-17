@@ -34,7 +34,7 @@ public:
 
     void startSearch();
     bool stopHard(const SearchLimits& searchLimits, u64 nodes);
-    bool stopSoft(Move bestMove, u64 bmNodes, u64 totalNodes, const SearchLimits& searchLimits);
+    bool stopSoft(Move bestMove, u64 totalNodes, const SearchLimits& searchLimits);
 
 private:
     static constexpr u32 TIME_CHECK_INTERVAL = 2048;
@@ -44,7 +44,4 @@ private:
     Duration m_SoftBound;
 
     u32 checkCounter;
-
-    Move m_PrevBestMove;
-    u32 m_Stability;
 };

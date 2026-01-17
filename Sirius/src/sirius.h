@@ -10,4 +10,4 @@
 
 #include "defs.h"
 
-static constexpr i32 BENCH_DEPTH = 14;
+static constexpr i32 BENCH_DEPTH = 6;

@@ -6,31 +6,13 @@
 namespace
 {
 
-i32 mvv(const Board& board, Move move)
+i32 mvvLva(const Board& board, Move move)
 {
     PieceType dstPiece = move.type() == MoveType::ENPASSANT
         ? PieceType::PAWN
         : getPieceType(board.pieceAt(move.toSq()));
-    assert(dstPiece != PieceType::NONE && dstPiece != PieceType::KING);
-    switch (dstPiece)
-    {
-        case PieceType::PAWN:
-            return search::mvvPawn;
-        case PieceType::KNIGHT:
-            return search::mvvKnight;
-        case PieceType::BISHOP:
-            return search::mvvBishop;
-        case PieceType::ROOK:
-            return search::mvvRook;
-        case PieceType::QUEEN:
-            return search::mvvQueen;
-    }
-    return 0;
-}
-
-i32 promotionBonus(Move move)
-{
-    return 1 + (static_cast<i32>(move.promotion()) >> 14);
+    PieceType srcPiece = getPieceType(board.pieceAt(move.fromSq()));
+    return static_cast<i32>(dstPiece) * 8 - static_cast<i32>(srcPiece);
 }
 
 }
@@ -48,164 +30,30 @@ bool moveIsCapture(const Board& board, Move move)
         && (move.type() == MoveType::ENPASSANT || board.pieceAt(move.toSq()) != Piece::NONE);
 }
 
-i32 MoveOrdering::scoreNoisy(Move move) const
+i32 MoveOrdering::scoreMove(Move move) const
 {
-    bool isCapture = moveIsCapture(m_Board, move);
-
-    if (isCapture)
+    if (moveIsCapture(m_Board, move))
     {
-        i32 hist = m_History.getNoisyStats(m_Board, move);
-        i32 score = hist + mvv(m_Board, move);
-        return score + CAPTURE_SCORE * m_Board.see(move, -score / 32);
+        return mvvLva(m_Board, move);
     }
     else
     {
-        return m_History.getNoisyStats(m_Board, move) + PROMOTION_SCORE + promotionBonus(move);
+        return -1000;
     }
 }
 
-i32 MoveOrdering::scoreQuiet(Move move) const
+MoveOrdering::MoveOrdering(const Board& board)
+    : m_Board(board), m_Curr(0)
 {
-    return m_History.getQuietStats(
-        move, m_Board.threats(), movingPiece(m_Board, move), m_Board.pawnKey(), m_Stack, m_Ply);
-}
-
-i32 MoveOrdering::scoreMoveQSearch(Move move) const
-{
-    bool isCapture = moveIsCapture(m_Board, move);
-    bool isPromotion = move.type() == MoveType::PROMOTION;
-    i32 score = m_History.getNoisyStats(m_Board, move);
-    if (isCapture)
-        score += mvv(m_Board, move);
-    if (isPromotion)
-        score += 100 * promotionBonus(move);
-
-    return score;
-}
-
-MoveOrdering::MoveOrdering(const Board& board, Move ttMove, const History& history)
-    : m_Board(board), m_TTMove(ttMove), m_History(history), m_Curr(0), m_Stage(MovePickStage::QS_TT_MOVE)
-{
-}
-
-MoveOrdering::MoveOrdering(const Board& board, Move ttMove, const std::array<Move, 2>& killers,
-    SearchStack* stack, i32 ply, const History& history)
-    : m_Board(board),
-      m_TTMove(ttMove),
-      m_History(history),
-      m_Stack(stack),
-      m_Ply(ply),
-      m_Killers(killers),
-      m_Curr(0),
-      m_Stage(MovePickStage::TT_MOVE)
-{
+    genMoves<MoveGenType::NOISY_QUIET>(board, m_Moves);
+    for (i32 i = 0; i < m_Moves.size(); i++)
+    {
+        m_MoveScores[i] = scoreMove(m_Moves[i]);
+    }
 }
 
 ScoredMove MoveOrdering::selectMove()
 {
-    using enum MovePickStage;
-    switch (m_Stage)
-    {
-        case TT_MOVE:
-            ++m_Stage;
-            if (m_TTMove != Move::nullmove() && m_Board.isPseudoLegal(m_TTMove))
-                return ScoredMove{m_TTMove, 10000000};
-
-            // fallthrough
-        case GEN_NOISY:
-            ++m_Stage;
-            genMoves<MoveGenType::NOISY>(m_Board, m_Moves);
-            for (u32 i = 0; i < m_Moves.size(); i++)
-                m_MoveScores[i] = scoreNoisy(m_Moves[i]);
-
-            m_NoisyEnd = m_Moves.size();
-
-            // fallthrough
-        case GOOD_NOISY:
-            while (m_Curr < m_Moves.size())
-            {
-                ScoredMove scoredMove = selectHighest();
-                if (scoredMove.move == m_TTMove)
-                    continue;
-                if (scoredMove.score < PROMOTION_SCORE - 50000)
-                {
-                    m_Curr--;
-                    break;
-                }
-                return scoredMove;
-            }
-            ++m_Stage;
-
-            // fallthrough
-        case FIRST_KILLER:
-            ++m_Stage;
-            if (m_Killers[0] != Move::nullmove() && m_Board.isPseudoLegal(m_Killers[0])
-                && moveIsQuiet(m_Board, m_Killers[0]))
-            {
-                if (m_Killers[0] != m_TTMove)
-                    return ScoredMove{m_Killers[0], FIRST_KILLER_SCORE};
-            }
-            else
-            {
-                m_Killers[0] = Move::nullmove();
-            }
-
-            // fallthrough
-        case SECOND_KILLER:
-            ++m_Stage;
-            if (m_Killers[1] != Move::nullmove() && m_Board.isPseudoLegal(m_Killers[1])
-                && moveIsQuiet(m_Board, m_Killers[1]))
-            {
-                if (m_Killers[1] != m_TTMove)
-                    return ScoredMove{m_Killers[1], SECOND_KILLER_SCORE};
-            }
-            else
-            {
-                m_Killers[1] = Move::nullmove();
-            }
-
-            // fallthrough
-        case GEN_QUIETS:
-            ++m_Stage;
-            genMoves<MoveGenType::QUIET>(m_Board, m_Moves);
-            for (u32 i = m_NoisyEnd; i < m_Moves.size(); i++)
-                m_MoveScores[i] = scoreQuiet(m_Moves[i]);
-
-            // fallthrough
-        case BAD_NOISY_QUIETS:
-            while (m_Curr < m_Moves.size())
-            {
-                ScoredMove scoredMove = selectHighest();
-                if (scoredMove.move != m_TTMove && scoredMove.move != m_Killers[0]
-                    && scoredMove.move != m_Killers[1])
-                    return scoredMove;
-            }
-            return ScoredMove{Move::nullmove(), NO_MOVE};
-
-        case QS_TT_MOVE:
-            ++m_Stage;
-            if (m_TTMove != Move::nullmove() && m_Board.isPseudoLegal(m_TTMove)
-                && !moveIsQuiet(m_Board, m_TTMove))
-                return ScoredMove{m_TTMove, 10000000};
-
-            // fallthrough
-        case QS_GEN_NOISIES:
-            ++m_Stage;
-            genMoves<MoveGenType::NOISY>(m_Board, m_Moves);
-            for (u32 i = 0; i < m_Moves.size(); i++)
-                m_MoveScores[i] = scoreMoveQSearch(m_Moves[i]);
-
-            // fallthrough
-        case QS_NOISIES:
-            while (m_Curr < m_Moves.size())
-            {
-                ScoredMove scoredMove = selectHighest();
-                if (scoredMove.move != m_TTMove)
-                    return scoredMove;
-            }
-            return ScoredMove{Move::nullmove(), NO_MOVE};
-    }
-
     if (m_Curr >= m_Moves.size())
         return {Move(), NO_MOVE};
     return selectHighest();

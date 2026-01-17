@@ -25,16 +25,12 @@ UCI::UCI()
 {
     calcLegalMoves();
 
-    const auto& hashCallback = [this](const UCIOption& option)
-    {
-        m_Search.setTTSize(static_cast<i32>(option.intValue()));
-    };
     const auto& threadsCallback = [this](const UCIOption& option)
     {
         m_Search.setThreads(static_cast<i32>(option.intValue()));
     };
     m_Options = {{"UCI_Chess960", UCIOption("UCI_Chess960", UCIOption::BoolData{false})},
-        {"Hash", UCIOption("Hash", {64, 64, 1, 33554432}, hashCallback)},
+        {"Hash", UCIOption("Hash", {64, 64, 1, 33554432})},
         {"Threads", UCIOption("Threads", {1, 1, 1, 2048}, threadsCallback)},
         {"MoveOverhead", UCIOption("MoveOverhead", {10, 10, 1, 100})},
         {"PrettyPrint", UCIOption("PrettyPrint", UCIOption::BoolData{true})},
