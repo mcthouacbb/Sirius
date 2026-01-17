@@ -314,12 +314,14 @@ ScorePair evaluateComplexity(const Board& board, const PawnStructure& pawnStruct
     constexpr Bitboard KING_SIDE = FILE_A_BB | FILE_B_BB | FILE_C_BB | FILE_D_BB;
     constexpr Bitboard QUEEN_SIDE = ~KING_SIDE;
     Bitboard pawns = board.pieces(PAWN);
+    Bitboard blockedPairs =
+        attacks::pawnPushes<WHITE>(board.pieces(WHITE, PAWN)) & board.pieces(BLACK, PAWN);
     bool pawnsBothSides = (pawns & KING_SIDE).any() && (pawns & QUEEN_SIDE).any();
     bool pawnEndgame = board.allPieces() == (pawns | board.pieces(KING));
 
     ScorePair complexity = COMPLEXITY_PAWNS * pawns.popcount()
         + COMPLEXITY_PAWNS_BOTH_SIDES * pawnsBothSides + COMPLEXITY_PAWN_ENDGAME * pawnEndgame
-        + COMPLEXITY_OFFSET;
+        + COMPLEXITY_BLOCKED_PAIRS * blockedPairs.popcount() + COMPLEXITY_OFFSET;
 
     i32 egSign = (eval.eg() > 0) - (eval.eg() < 0);
 
