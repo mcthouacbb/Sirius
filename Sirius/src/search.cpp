@@ -618,7 +618,8 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
         && (!ttHit || (ttData.move != Move::nullmove() && ttData.depth <= depth - 5)))
         depth--;
 
-    if (ttHit && ttData.bound != TTEntry::Bound::UPPER_BOUND && ttData.depth >= depth - 4
+    if (inCheck && !pvNode && ttHit && ttData.bound != TTEntry::Bound::UPPER_BOUND
+        && !moveIsQuiet(board, ttData.move) && ttData.depth >= depth - 4
         && ttData.score >= beta + 400 && !isMateScore(beta) && !isMateScore(ttData.score))
         return beta + 400;
 
