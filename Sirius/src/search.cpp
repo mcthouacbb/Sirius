@@ -551,7 +551,8 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
         if (board.pliesFromNull() > 0 && rootPly >= thread.nmpMinPly && depth >= nmpMinDepth
             && stack->eval >= beta + nmpEvalMargin
             && stack->staticEval >= beta + nmpStaticEvalBaseMargin - nmpStaticEvalDepthMargin * depth
-            && nonPawns.multiple())
+            && nonPawns.multiple()
+            && !(ttHit && ttData.bound == TTEntry::Bound::LOWER_BOUND && board.see(ttData.move, 200)))
         {
             i32 r = (nmpBaseReduction + depth * nmpDepthReductionScale) / 256
                 + std::min((stack->eval - beta) / nmpEvalReductionScale, nmpMaxEvalReduction);
