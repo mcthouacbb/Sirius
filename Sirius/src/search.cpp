@@ -680,7 +680,7 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
                 break;
 
             // static exchange evaluation pruning(~5 elo)
-            i32 seeMargin = quiet ? depth * seePruneMarginQuiet : depth * seePruneMarginNoisy;
+            i32 seeMargin = quiet ? lmrDepth * seePruneMarginQuiet : depth * seePruneMarginNoisy;
             if (!quiet)
             {
                 i32 max = seeCaptHistMax * depth;
