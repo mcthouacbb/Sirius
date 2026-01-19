@@ -614,7 +614,7 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
     }
 
     // internal iterative reductions(~8 elo)
-    if (depth >= minIIRDepth && !inCheck && !excluded
+    if (depth >= minIIRDepth && !inCheck && !excluded && (pvNode || cutnode)
         && (!ttHit || (ttData.move != Move::nullmove() && ttData.depth <= depth - 5)))
         depth--;
 
