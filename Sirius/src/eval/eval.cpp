@@ -342,6 +342,7 @@ i32 evaluateScale(const Board& board, ScorePair eval, const EvalState& evalState
         return scaleFactor;
 
     Bitboard bishops = board.pieces(BISHOP);
+    Bitboard queens = board.pieces(QUEEN);
     Bitboard nonpawns = board.allPieces() & ~board.pieces(PAWN) & ~board.pieces(KING);
 
     if ((bishops & LIGHT_SQUARES_BB).one() && (bishops & DARK_SQUARES_BB).one()
@@ -351,6 +352,10 @@ i32 evaluateScale(const Board& board, ScorePair eval, const EvalState& evalState
             scaleFactor = 35 + 5 * board.pieces(strongSide).popcount();
         else
             scaleFactor = 16 + 10 * (pawnStructure.passedPawns & board.pieces(strongSide)).popcount();
+    }
+    else if (queens.one())
+    {
+        scaleFactor = 85;
     }
 
     if (scaleFactor != SCALE_FACTOR_NORMAL)
