@@ -574,7 +574,7 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
         }
 
         // probcut(~3 elo)
-        i32 probcutBeta = beta + probcutBetaMargin;
+        i32 probcutBeta = beta + probcutBetaMargin - 70 * improving;
         if (depth >= probcutMinDepth && !isMateScore(beta)
             && (!ttHit || ttData.score >= probcutBeta || ttData.depth + 3 < depth))
         {
