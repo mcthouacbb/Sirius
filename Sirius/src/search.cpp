@@ -318,11 +318,11 @@ std::pair<i32, Move> Search::iterDeep(SearchThread& thread, bool report)
         thread.selDepth = 0;
         i32 searchScore = aspWindows(thread, depth, score, report);
         thread.sortRootMoves();
+        if (report)
+            reportUCIInfo(thread, 0, depth);
         if (m_ShouldStop)
             break;
         score = searchScore;
-        if (report)
-            reportUCIInfo(thread, 0, depth);
 
         u64 bmNodes = thread.rootMoves[0].nodes;
         if (thread.isMainThread()

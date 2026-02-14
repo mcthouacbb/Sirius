@@ -34,7 +34,7 @@ void TimeManager::startSearch()
 
 bool TimeManager::stopHard(const SearchLimits& searchLimits, u64 nodes)
 {
-    if (searchLimits.maxNodes > 0 && nodes > searchLimits.maxNodes)
+    if (searchLimits.maxNodes > 0 && nodes >= searchLimits.maxNodes)
         return true;
     if (--checkCounter == 0)
     {
