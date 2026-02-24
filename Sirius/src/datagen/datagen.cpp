@@ -3,6 +3,7 @@
 #include "../board.h"
 #include "../movegen.h"
 #include "../search.h"
+#include "../util/scharnagl.h"
 #include "viriformat.h"
 #include <atomic>
 #include <csignal>
@@ -41,11 +42,31 @@ GameResult gameResult(const Board& board)
     return GameResult::NON_TERMINAL;
 }
 
-Board genOpening(std::mt19937& gen)
+std::string genDFRCFen(std::mt19937& gen)
+{
+    std::uniform_int_distribution dist(0, 959);
+    uint32_t whiteIndex = dist(gen);
+    uint32_t blackIndex = dist(gen);
+
+    std::string whiteBackrank = scharnaglBackrankFen(whiteIndex);
+    std::string blackBackrank = scharnaglBackrankFen(blackIndex);
+
+    std::transform(blackBackrank.begin(), blackBackrank.end(), blackBackrank.begin(),
+        [](char c)
+        {
+            return std::tolower(c);
+        });
+    // I'm too lazy to do shredder fen
+    return blackBackrank + "/pppppppp/8/8/8/8/PPPPPPPP/" + whiteBackrank + " w KQkq - 0 1";
+}
+
+Board genOpening(std::mt19937& gen, bool DFRC)
 {
     for (;;)
     {
         Board board;
+        if (DFRC)
+            board.setToFen(genDFRCFen(gen), true);
         for (i32 i = 0; i < 8; i++)
         {
             MoveList moves;
@@ -71,7 +92,7 @@ viriformat::Game runGame(std::mt19937& gen, const Config& config)
     constexpr i32 DRAW_ADJ_PLIES = 8;
     constexpr i32 MAX_OPENING_SCORE = 300;
 
-    Board startpos = genOpening(gen);
+    Board startpos = genOpening(gen, config.DFRC);
     ColorArray<search::Search> searches = {search::Search(8), search::Search(8)};
     SearchLimits limits = {};
     limits.softNodes = config.softLimit;
@@ -96,7 +117,7 @@ viriformat::Game runGame(std::mt19937& gen, const Config& config)
         if (game.moves.size() == 0 && score > MAX_OPENING_SCORE)
         {
             searches[board.sideToMove()].newGame();
-            board = startpos = genOpening(gen);
+            board = startpos = genOpening(gen, config.DFRC);
             continue;
         }
 
@@ -236,6 +257,8 @@ void runDatagen(Config config)
               << " threads" << std::endl;
     std::cout << "Using " << config.hardLimit << " nodes hard limit and " << config.softLimit
               << " nodes soft limit" << std::endl;
+    if (config.DFRC)
+        std::cout << "Doing DFRC datagen" << std::endl;
 
     std::vector<std::thread> threads;
     std::mutex lock;
