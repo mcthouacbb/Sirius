@@ -21,6 +21,14 @@ i32 pushClose(Square a, Square b)
     return 7 - dist;
 }
 
+i32 pushToEdge(Square sq)
+{
+    i32 rankDist = std::min(sq.rank(), 7 - sq.rank());
+    i32 fileDist = std::min(sq.file(), 7 - sq.file());
+
+    return 3 - std::min(rankDist, fileDist);
+}
+
 i32 pushToColoredCorner(Square sq, bool darkSquare)
 {
     i32 dist = std::abs(7 - sq.rank() - sq.file());
@@ -59,12 +67,25 @@ i32 evalKXvK(const Board& board, const EvalState& evalState, Color strongSide)
 i32 evalKBNvK(const Board& board, const EvalState&, Color strongSide)
 {
     Color weakSide = ~strongSide;
+    Square knight = board.pieces(strongSide, PieceType::KNIGHT).lsb();
     Square bishop = board.pieces(strongSide, PieceType::BISHOP).lsb();
     Square ourKing = board.kingSq(strongSide);
     Square theirKing = board.kingSq(weakSide);
 
-    return SCORE_KNOWN_WIN + 20 * pushClose(ourKing, theirKing) + 20 * pushToAnyCorner(theirKing)
-        + 200 * pushToColoredCorner(theirKing, bishop.darkSquare());
+    Bitboard attacks = attacks::kingAttacks(ourKing) | attacks::knightAttacks(knight)
+        | attacks::bishopAttacks(bishop, board.allPieces());
+
+    Bitboard theirKingMoves = attacks::kingAttacks(theirKing) & ~attacks;
+
+    i32 score = SCORE_MAX;
+    while (theirKingMoves.any())
+    {
+        Square virtualKing = theirKingMoves.poplsb();
+        score = std::min(score,
+            SCORE_KNOWN_WIN + 20 * pushClose(ourKing, virtualKing) + 50 * pushToEdge(virtualKing)
+                + 200 * pushToColoredCorner(virtualKing, bishop.darkSquare()));
+    }
+    return score;
 }
 
 i32 evalKQvKP(const Board& board, const EvalState&, Color strongSide)

@@ -40,6 +40,18 @@
                 "type": "equals",
                 "rhs": "Windows"
             }
+        },
+        {
+            "name": "ninja-clang-debug",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/debug",
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_FLAGS_INIT": "-Wall",
+                "CMAKE_CXX_FLAGS_RELEASE_INIT": "",
+                "SIRIUS_EXE_EXTENSION" : ""
+            }
         }
     ],
     "buildPresets": [
