@@ -83,7 +83,7 @@ i32 evalKQvKP(const Board& board, const EvalState&, Color strongSide)
         eval += SCORE_KNOWN_WIN;
 
     if (pawn.relativeRank(weakSide) < RANK_7
-        || (FILE_B_BB | FILE_D_BB | FILE_E_BB | FILE_G_BB).has(pawn) || eval >= 10000)
+        || (FILE_B_BB | FILE_D_BB | FILE_E_BB | FILE_G_BB).has(pawn) || eval >= SCORE_KNOWN_WIN)
     {
         eval += MATERIAL[static_cast<i32>(PieceType::QUEEN)].eg()
             - MATERIAL[static_cast<i32>(PieceType::PAWN)].eg();
