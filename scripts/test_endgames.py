@@ -10,6 +10,8 @@ Metrics:
 Usage:
     python tb_test.py --engine ./your_engine --fen "8/8/8/8/8/8/1K1k4/1R6 w - - 0 1" --depth 16
     python tb_test.py --engine ./your_engine --fen-file fens.txt --depth 16
+
+This script is made by Gioviok
 """
 
 import argparse
@@ -123,7 +125,7 @@ def is_blunder(before_cat: str, after_cat: str) -> bool:
 
 def get_engine_move(engine: chess.engine.SimpleEngine, board: chess.Board, depth: int) -> Optional[chess.Move]:
     try:
-        engine.protocol.send_line("ucinewgame")
+        # engine.protocol.send_line("ucinewgame")
         result = engine.play(board, chess.engine.Limit(depth=depth), info=chess.engine.INFO_ALL)
         # print(result.info)
         return result.move
