@@ -15,6 +15,8 @@ Usage:
     python tb_test.py --engine ./eng --fen "<fen>" --depth 16
     python tb_test.py --engine ./eng --fen "<fen>" --depth 16 --tb-local /path/to/syzygy
     python tb_test.py --engine ./eng --fen-file fens.txt --tb-local /path/to/syzygy
+
+Thanks to Gioviok for the script
 """
 
 import argparse
@@ -22,6 +24,7 @@ import abc
 import chess
 import chess.engine
 import chess.gaviota
+import chess.pgn
 import chess.syzygy
 import requests
 import time
@@ -353,7 +356,7 @@ def is_blunder(before_cat: str, after_cat: str) -> bool:
     """
     if not is_winning(before_cat):
         return False
-    return after_cat not in ("loss",)
+    return after_cat not in ("loss")
 
 
 # ---------------------------------------------------------------------------
@@ -466,7 +469,7 @@ def test_position(
                 if verbose:
                     print(f"  | cat={cat_after}, DTM unavailable", end="")
 
-            if is_blunder(cat_before, cat_after):
+            if is_blunder(cat_before, cat_after) and not board.is_checkmate():
                 result.blunders.append(current_fen)
                 if verbose:
                     print(f"  *** BLUNDER: {cat_before} -> {cat_after} ***", end="")
@@ -506,6 +509,19 @@ def test_position(
         result.terminal_category = board.result()
         if verbose:
             print(f"  Result: {board.result()} after {move_count} moves.")
+
+    game = chess.pgn.Game()
+    game.setup(chess.Board(start_fen))
+    game.headers["White"] = "Engine" if chess.Board(start_fen).turn == chess.WHITE else "TB"
+    game.headers["Black"] = "Engine" if chess.Board(start_fen).turn == chess.BLACK else "TB"
+
+    node = game
+    for move in board.move_stack:
+        node = node.add_variation(move)
+
+    with open("games.pgn", "a") as pgnout:
+        print(game, file=pgnout)
+        print("\n", file=pgnout)
 
     return result
 
