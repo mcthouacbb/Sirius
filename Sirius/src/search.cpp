@@ -887,10 +887,6 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
         }
     }
 
-    if (root)
-        std::cout << "moves played: " << movesPlayed << ' ' << depth << ' ' << rootPly << ' '
-                  << std::endl;
-
     if (movesPlayed == 0)
     {
         if (excluded)

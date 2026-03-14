@@ -67,25 +67,12 @@ i32 evalKXvK(const Board& board, const EvalState& evalState, Color strongSide)
 i32 evalKBNvK(const Board& board, const EvalState&, Color strongSide)
 {
     Color weakSide = ~strongSide;
-    Square knight = board.pieces(strongSide, PieceType::KNIGHT).lsb();
     Square bishop = board.pieces(strongSide, PieceType::BISHOP).lsb();
     Square ourKing = board.kingSq(strongSide);
     Square theirKing = board.kingSq(weakSide);
 
-    Bitboard attacks = attacks::kingAttacks(ourKing) | attacks::knightAttacks(knight)
-        | attacks::bishopAttacks(bishop, board.allPieces());
-
-    Bitboard theirKingMoves = attacks::kingAttacks(theirKing) & ~attacks;
-
-    i32 score = SCORE_MAX;
-    while (theirKingMoves.any())
-    {
-        Square virtualKing = theirKingMoves.poplsb();
-        score = std::min(score,
-            SCORE_KNOWN_WIN + 20 * pushClose(ourKing, virtualKing) + 50 * pushToEdge(virtualKing)
-                + 200 * pushToColoredCorner(virtualKing, bishop.darkSquare()));
-    }
-    return score;
+    return SCORE_KNOWN_WIN + 20 * pushClose(ourKing, theirKing) + 70 * pushToEdge(theirKing)
+        + 200 * pushToColoredCorner(theirKing, bishop.darkSquare());
 }
 
 i32 evalKQvKP(const Board& board, const EvalState&, Color strongSide)
