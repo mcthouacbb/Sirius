@@ -55,6 +55,9 @@ i32 History::getNoisyStats(const Board& board, Move move) const
 
 i32 History::correctStaticEval(const Board& board, i32 staticEval, const SearchStack* stack, i32 ply) const
 {
+    if (std::abs(staticEval) >= SCORE_KNOWN_WIN)
+        return staticEval;
+
     Color stm = board.sideToMove();
     u64 threatsKey = murmurHash3((board.threats() & board.pieces(stm)).value());
     i32 pawnEntry = m_PawnCorrHist.get(stm, board.pawnKey().value);
@@ -95,7 +98,7 @@ i32 History::correctStaticEval(const Board& board, i32 staticEval, const SearchS
     correction += search::contCorr7Weight * contCorrEntry(7);
 
     i32 corrected = staticEval + correction / (256 * CORR_HIST_SCALE);
-    return std::clamp(corrected, -SCORE_MATE_IN_MAX + 1, SCORE_MATE_IN_MAX - 1);
+    return std::clamp(corrected, -SCORE_KNOWN_WIN + 1, SCORE_KNOWN_WIN - 1);
 }
 
 void History::updateQuietStats(const Board& board, Move move, const SearchStack* stack, i32 ply, i32 bonus)

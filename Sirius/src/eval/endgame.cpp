@@ -7,12 +7,27 @@
 namespace eval::endgames
 {
 
-i32 distToAnyCorner(Square sq)
+i32 pushToAnyCorner(Square sq)
 {
     i32 rankDist = std::min(sq.rank(), 7 - sq.rank());
     i32 fileDist = std::min(sq.file(), 7 - sq.file());
 
-    return rankDist + fileDist;
+    return 6 - rankDist + fileDist;
+}
+
+i32 pushClose(Square a, Square b)
+{
+    i32 dist = Square::chebyshev(a, b);
+    return 7 - dist;
+}
+
+i32 pushToColoredCorner(Square sq, bool darkSquare)
+{
+    i32 dist = std::abs(7 - sq.rank() - sq.file());
+    if (darkSquare)
+        dist = 7 - dist;
+
+    return 7 - dist;
 }
 
 i32 trivialDraw(const Board&, const EvalState&, Color)
@@ -29,16 +44,14 @@ i32 evalKXvK(const Board& board, const EvalState& evalState, Color strongSide)
     Square ourKing = board.kingSq(strongSide);
     Square theirKing = board.kingSq(weakSide);
 
-    i32 cornerDist = distToAnyCorner(theirKing);
-    i32 kingDist = Square::manhattan(ourKing, theirKing);
-
-    i32 result = evalState.psqtScore(board, strongSide).eg() + 13 * 20 - 20 * kingDist - 20 * cornerDist;
+    i32 result = evalState.psqtScore(board, strongSide).eg() + 20 * pushClose(ourKing, theirKing)
+        + 20 * pushToAnyCorner(theirKing);
 
     if (board.pieces(PieceType::QUEEN).any() || board.pieces(PieceType::ROOK).any()
         || (board.pieces(PieceType::BISHOP).any() && board.pieces(PieceType::KNIGHT).any())
         || ((board.pieces(PieceType::BISHOP) & LIGHT_SQUARES_BB).any()
             && (board.pieces(PieceType::BISHOP) & DARK_SQUARES_BB).any()))
-        result += 10000;
+        result += SCORE_KNOWN_WIN;
 
     return result;
 }
@@ -50,15 +63,8 @@ i32 evalKBNvK(const Board& board, const EvalState&, Color strongSide)
     Square ourKing = board.kingSq(strongSide);
     Square theirKing = board.kingSq(weakSide);
 
-    i32 correctCornerDist = std::abs(7 - theirKing.rank() - theirKing.file());
-    if (bishop.darkSquare())
-        correctCornerDist = 7 - correctCornerDist;
-
-    i32 cornerDist = distToAnyCorner(theirKing);
-
-    i32 kingDist = Square::manhattan(ourKing, theirKing);
-
-    return 10000 - kingDist * 20 - cornerDist * 20 - correctCornerDist * 200;
+    return SCORE_KNOWN_WIN + 20 * pushClose(ourKing, theirKing) + 20 * pushToAnyCorner(theirKing)
+        + 200 * pushToColoredCorner(theirKing, bishop.darkSquare());
 }
 
 i32 evalKQvKP(const Board& board, const EvalState&, Color strongSide)
@@ -68,15 +74,13 @@ i32 evalKQvKP(const Board& board, const EvalState&, Color strongSide)
     Square pawn = board.pieces(weakSide, PieceType::PAWN).lsb();
     Square ourKing = board.kingSq(strongSide);
 
-    i32 kpDist = Square::chebyshev(ourKing, pawn);
-
-    i32 eval = 140 - 20 * kpDist;
+    i32 eval = 20 * pushClose(ourKing, pawn);
 
     Bitboard queeningSquares = attacks::fillUp(Bitboard::fromSquare(pawn), weakSide);
     // if queen or king is blocking pawn it is guaranteed win
     // the king can't be attacking the queen since then it would be in check, and eval is not called in check
     if (queeningSquares.has(queen) || queeningSquares.has(ourKing))
-        eval += 10000;
+        eval += SCORE_KNOWN_WIN;
 
     if (pawn.relativeRank(weakSide) < RANK_7
         || (FILE_B_BB | FILE_D_BB | FILE_E_BB | FILE_G_BB).has(pawn) || eval >= 10000)
@@ -95,10 +99,8 @@ i32 evalKQvKR(const Board& board, const EvalState& evalState, Color strongSide)
     Square ourKing = board.kingSq(strongSide);
     Square theirKing = board.kingSq(weakSide);
 
-    i32 cornerDist = distToAnyCorner(theirKing);
-    i32 kingDist = Square::manhattan(ourKing, theirKing);
-
-    return evalState.psqtScore(board, strongSide).eg() + 13 * 20 - 20 * kingDist - 20 * cornerDist;
+    return evalState.psqtScore(board, strongSide).eg() + 20 * pushClose(ourKing, theirKing)
+        + 20 * pushToAnyCorner(theirKing);
 }
 
 i32 scaleKPsvK(const Board& board, const EvalState&, Color strongSide)

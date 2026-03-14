@@ -371,6 +371,7 @@ constexpr i32 SCORE_MAX = 32767;
 constexpr i32 SCORE_MATE = 32700;
 constexpr i32 SCORE_MATE_IN_MAX = SCORE_MATE - MAX_PLY;
 constexpr i32 SCORE_WIN = 31000;
+constexpr i32 SCORE_KNOWN_WIN = 10000;
 constexpr i32 SCORE_DRAW = 0;
 constexpr i32 SCORE_NONE = -32701;
 
