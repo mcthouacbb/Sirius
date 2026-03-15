@@ -394,6 +394,7 @@ def test_position(
     depth: int = 16,
     max_moves: int = 200,
     verbose: bool = True,
+    pgnout: str = "games.pgn"
 ) -> GameResult:
     board = chess.Board(start_fen)
     result = GameResult(start_fen=start_fen, start_dtm=None)
@@ -519,9 +520,9 @@ def test_position(
     for move in board.move_stack:
         node = node.add_variation(move)
 
-    with open("games.pgn", "a") as pgnout:
-        print(game, file=pgnout)
-        print("\n", file=pgnout)
+    with open(pgnout, "a") as pgnout_file:
+        print(game, file=pgnout_file)
+        print("\n", file=pgnout_file)
 
     return result
 
@@ -538,6 +539,7 @@ class BatchStats:
     all_dtm_errors: list = field(default_factory=list)
     total_blunders: int = 0
     blunder_positions: list = field(default_factory=list)
+    converted_positions: int = 0
 
 
 def run_batch(
@@ -547,6 +549,7 @@ def run_batch(
     depth: int = 16,
     max_moves: int = 200,
     verbose: bool = True,
+    pgnout: str = "games.pgn",
 ) -> BatchStats:
     stats = BatchStats(total_positions=len(fens))
 
@@ -554,7 +557,7 @@ def run_batch(
         for i, fen in enumerate(fens):
             print(f"\n[{i+1}/{len(fens)}] Testing: {fen}")
             result = test_position(engine, backend, fen,
-                                   depth=depth, max_moves=max_moves, verbose=verbose)
+                                   depth=depth, max_moves=max_moves, verbose=verbose, pgnout=pgnout)
 
             if result.notes:
                 for note in result.notes:
@@ -568,6 +571,8 @@ def run_batch(
             stats.all_dtm_errors.extend(result.dtm_errors)
             stats.total_blunders += len(result.blunders)
             stats.blunder_positions.extend(result.blunders)
+            if result.terminal_category == "checkmate":
+                stats.converted_positions += 1
 
     return stats
 
@@ -577,8 +582,9 @@ def print_summary(stats: BatchStats):
     print(f"\n{'='*60}")
     print(f"SUMMARY")
     print(f"{'='*60}")
-    print(f"Positions tested : {tested} / {stats.total_positions} ({stats.skipped} skipped)")
-    print(f"Total moves      : {stats.total_moves}")
+    print(f"Positions tested    : {tested} / {stats.total_positions} ({stats.skipped} skipped)")
+    print(f"Positions converted : {stats.converted_positions} / {stats.total_positions - stats.skipped}")
+    print(f"Total moves         : {stats.total_moves}")
 
     if stats.all_dtm_errors:
         avg_err = sum(stats.all_dtm_errors) / len(stats.all_dtm_errors)
@@ -622,6 +628,7 @@ def main():
                           help="Use local Gaviota .gtb.cp4 files (exact DTM, pure Python — no libgtb needed)")
     parser.add_argument("--tb-gaviota-lib", metavar="PATH",
                         help="Optional: path to libgtb.so/.dylib to speed up Gaviota probing")
+    parser.add_argument("--pgnout", default="games.pgn", help="Name of the pgn file to output")
 
     args = parser.parse_args()
 
@@ -644,6 +651,7 @@ def main():
             depth=args.depth,
             max_moves=args.max_moves,
             verbose=not args.quiet,
+            pgnout=args.pgnout
         )
     finally:
         backend.close()
