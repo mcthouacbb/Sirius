@@ -897,7 +897,8 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
 
     if (!excluded)
     {
-        if (!inCheck && (bestMove == Move::nullmove() || moveIsQuiet(board, bestMove))
+        if (!inCheck
+            && (bestMove == Move::nullmove() || moveIsQuiet(board, bestMove) || !board.see(bestMove, 0))
             && !(bound == TTEntry::Bound::LOWER_BOUND && stack->staticEval >= bestScore)
             && !(bound == TTEntry::Bound::UPPER_BOUND && stack->staticEval <= bestScore))
             history.updateCorrHist(board, bestScore - stack->staticEval, depth, stack, rootPly);
