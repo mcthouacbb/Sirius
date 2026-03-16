@@ -82,9 +82,7 @@ i32 evalKBNvK(const Board& board, const EvalState&, Color strongSide)
 i32 evalKRvKN(const Board& board, const EvalState&, Color strongSide)
 {
     Color weakSide = ~strongSide;
-    Square rook = board.pieces(strongSide, PieceType::ROOK).lsb();
     Square knight = board.pieces(weakSide, PieceType::BISHOP).lsb();
-    Square ourKing = board.kingSq(strongSide);
     Square theirKing = board.kingSq(weakSide);
 
     i32 eval = 10 * pushToEdge(theirKing) + 15 * pushAway(theirKing, knight);
