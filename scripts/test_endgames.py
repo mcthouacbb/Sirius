@@ -4,8 +4,10 @@ Tablebase Testing Utility for UCI Chess Engines
 Tests a UCI engine against tablebase-optimal play.
 
 Supports two TB backends:
-  --tb-lichess          Query Lichess API (default, no local files needed)
-  --tb-local <path>     Use local Syzygy files via python-chess (fast, no rate limit)
+  --tb-lichess                      Query Lichess API (default, no local files needed)
+  --tb-syzygy/tb-gaviota <path>     Use local Syzygy/Gaviota files via python-chess (fast, no rate limit)
+                                    Syzygy is required, gaviota is optional for DTM
+                                    Having both is preferred
 
 Metrics:
   - Average DTM error (starting DTM vs actual DTM achieved by engine)
@@ -13,10 +15,10 @@ Metrics:
 
 Usage:
     python tb_test.py --engine ./eng --fen "<fen>" --depth 16
-    python tb_test.py --engine ./eng --fen "<fen>" --depth 16 --tb-local /path/to/syzygy
-    python tb_test.py --engine ./eng --fen-file fens.txt --tb-local /path/to/syzygy
+    python tb_test.py --engine ./eng --fen "<fen>" --depth 16 --tb-syzygy /path/to/syzygy
+    python tb_test.py --engine ./eng --fen-file fens.txt --tb-syzygy /path/to/syzygy --tb-gaviota /path/to/gaviota
 
-Thanks to Gioviok for the script
+Thanks to Gioviok for creating the original script
 """
 
 import argparse
@@ -27,6 +29,7 @@ import chess.gaviota
 import chess.pgn
 import chess.syzygy
 import requests
+import threading
 import time
 import sys
 from dataclasses import dataclass, field
@@ -41,7 +44,7 @@ from typing import Optional
 class TBInfo:
     category:   str             # 'win' | 'loss' | 'draw' | 'cursed-win' | 'blessed-loss' | 'unknown'
     dtm:        Optional[int]   # None when unavailable
-    dtz:        Optional[int]
+    dtz:        Optional[int]   # None when unavailable
     best_move:  Optional[str]   # UCI string
 
 
@@ -114,7 +117,7 @@ class LichessBackend(TBBackend):
 
 
 # ---------------------------------------------------------------------------
-# Local Syzygy backend
+# Local Syzygy with optional Gaviota backend
 # ---------------------------------------------------------------------------
 
 # DTZ wdl -> category mapping (from the side to move's perspective)
@@ -126,52 +129,59 @@ _WDL_TO_CATEGORY = {
     -2: "loss",
 }
 
-
-class LocalSyzygyBackend(TBBackend):
-    """
-    Uses python-chess's built-in Syzygy reader.
-
-    Notes:
-      - Syzygy files provide DTZ, not DTM. DTM errors will be reported as
-        unavailable; blunder detection uses category only (which is exact).
-      - The best move is chosen by probing all legal moves and picking the one
-        that maximises progress (lowest DTZ for wins, highest for losses/draws).
-    """
-
-    def __init__(self, path: str):
+class LocalBackend(TBBackend):
+    def __init__(self, syzygy_path: str, gaviota_path: Optional[str] = None, libgtb_path: Optional[str] = None):
         try:
-            self._tb = chess.syzygy.open_tablebase(path)
+            self._syzygy_tb = chess.syzygy.open_tablebase(syzygy_path)
         except Exception as e:
-            print(f"[Local TB] Failed to open tablebase at '{path}': {e}", file=sys.stderr)
+            print(f"[Local Syzygy TB] Failed to open tablebase at '{syzygy_path}': {e}", file=sys.stderr)
             raise
 
-    def _probe(self, board: chess.Board) -> Optional[tuple[int, int]]:
-        """Returns (wdl, dtz) for the position, or None on probe failure."""
+        self._gaviota_tb = None
+        if gaviota_path:
+            try:
+                self._gaviota_tb = chess.gaviota.open_tablebase(gaviota_path, libgtb=libgtb_path)
+            except Exception as e:
+                print(f"[Local Gaviota TB] Failed to open tablebase at '{gaviota_path}': {e}", file=sys.stderr)
+                raise
+            mode = "native (libgtb)" if type(self._gaviota_tb).__name__ == "NativeTablebase" else "pure Python"
+            print(f"  Gaviota probing mode: {mode}")
+
+    def _probe_wdl_dtz(self, board: chess.Board) -> Optional[tuple[int, int]]:
+        """Returns (wdl, dtz) for the position, or None on probe failure or syzygy."""
+
         try:
-            wdl = self._tb.probe_wdl(board)
-            dtz = self._tb.probe_dtz(board)
+            wdl = self._syzygy_tb.probe_wdl(board)
+            dtz = self._syzygy_tb.probe_dtz(board)
+            plies_remaining = 100 - board.halfmove_clock
+
+            if abs(dtz) > plies_remaining:
+                if wdl > 0:
+                    wdl = 1
+                elif wdl < 0:
+                    wdl = -1
+
             return wdl, dtz
         except chess.syzygy.MissingTableError:
             return None
 
-    def get_info(self, board: chess.Board) -> Optional[TBInfo]:
-        result = self._probe(board)
-        if result is None:
+    def _probe_dtm(self, board: chess.Board) -> Optional[int]:
+        """
+        Returns DTM in half-moves from the side-to-move's perspective:
+          positive = STM is winning (mated in N plies)
+          negative = STM is losing
+          0        = draw or already mated
+        Returns None if the position isn't in the tablebase or gaviota is not loaded.
+        """
+        if self._gaviota_tb is None:
             return None
-        wdl, dtz = result
-        category = _WDL_TO_CATEGORY.get(wdl, "unknown")
 
-        # Find the best move by probing each legal move's resulting position
-        best_move = self._best_move(board, wdl)
+        try:
+            return self._gaviota_tb.probe_dtm(board)
+        except chess.gaviota.MissingTableError:
+            return None
 
-        return TBInfo(
-            category=category,
-            dtm=None,   # Syzygy doesn't provide DTM
-            dtz=dtz,
-            best_move=best_move,
-        )
-
-    def _best_move(self, board: chess.Board, current_wdl: int) -> Optional[str]:
+    def _best_move(self, board: chess.Board, current_wdl: int, use_dtm: bool) -> Optional[str]:
         """
         Pick the TB-optimal move:
           - If winning (wdl > 0): find move that gives opponent the worst WDL
@@ -180,29 +190,39 @@ class LocalSyzygyBackend(TBBackend):
             i.e. slowest loss).
           - If drawing: pick any move that keeps the draw.
         """
+
         best_uci = None
-        best_score = None   # (opponent_wdl, dtz_tiebreak) — lower is better for wins
+        best_score = None   # (opponent_wdl, dtz/dtm tiebreak) — lower is better for wins
 
         for move in board.legal_moves:
             board.push(move)
-            try:
-                probe = self._probe(board)
-            finally:
-                board.pop()
 
-            if probe is None:
-                continue
-            opp_wdl, opp_dtz = probe
+            syzygy_probe = self._probe_wdl_dtz(board)
+            opp_dtm = self._probe_dtm(board)
+
+            board.pop()
+
+            if syzygy_probe is None:
+                return None
+
+            opp_wdl, opp_dtz = syzygy_probe
+
+            tiebreak = opp_dtz
+            if use_dtm:
+                if opp_dtm is None:
+                    # idk how to handle this failure correctly
+                    return None
+                tiebreak = opp_dtm
 
             if current_wdl > 0:
-                # winning: minimise opponent's wdl, then minimise abs(dtz) to mate fast
-                score = (opp_wdl, abs(opp_dtz))
+                # winning: minimise opponent's wdl, then minimise abs(tiebreak) to mate fast
+                score = (opp_wdl, abs(tiebreak))
                 if best_score is None or score < best_score:
                     best_score = score
                     best_uci = move.uci()
             elif current_wdl < 0:
-                # losing: maximise opponent's wdl (drag it out)
-                score = (-opp_wdl, -abs(opp_dtz))
+                # losing: minimise opponent's wdl, then maximize abs(tiebreak) (drag it out)
+                score = (opp_wdl, -abs(tiebreak))
                 if best_score is None or score < best_score:
                     best_score = score
                     best_uci = move.uci()
@@ -214,123 +234,43 @@ class LocalSyzygyBackend(TBBackend):
 
         return best_uci
 
-    def close(self):
-        self._tb.close()
-
-
-# ---------------------------------------------------------------------------
-# Local Gaviota backend (exact DTM)
-# ---------------------------------------------------------------------------
-
-class LocalGaviotaBackend(TBBackend):
-    """
-    Uses python-chess's Gaviota interface for exact DTM.
-
-    No external library required — python-chess includes a pure-Python
-    fallback prober that works out of the box with just the .gtb.cp4 files.
-    If libgtb is available it will be used automatically for better speed;
-    pass its path explicitly via --tb-gaviota-lib if needed.
-
-    Download .gtb.cp4 files (MIT licensed, ~7 GB for all 5-piece endings):
-      https://archive.org/details/Gaviota
-    """
-
-    def __init__(self, path: str, libgtb_path: Optional[str] = None):
-        try:
-            self._tb = chess.gaviota.open_tablebase(path, libgtb=libgtb_path)
-        except Exception as e:
-            print(f"[Gaviota TB] Failed to open tablebase at '{path}': {e}", file=sys.stderr)
-            raise
-        mode = "native (libgtb)" if type(self._tb).__name__ == "NativeTablebase" else "pure Python"
-        print(f"  Gaviota probing mode: {mode}")
-
-    def _probe_dtm(self, board: chess.Board) -> Optional[int]:
-        """
-        Returns DTM in half-moves from the side-to-move's perspective:
-          positive = STM is winning (mated in N plies)
-          negative = STM is losing
-          0        = draw or already mated
-        Returns None if the position isn't in the tablebase.
-        """
-        try:
-            return self._tb.probe_dtm(board)
-        except chess.gaviota.MissingTableError:
-            return None
-
     def get_info(self, board: chess.Board) -> Optional[TBInfo]:
+        syzygy_result = self._probe_wdl_dtz(board)
         dtm = self._probe_dtm(board)
-        if dtm is None:
+
+        if syzygy_result is None:
             return None
 
-        # DTM sign directly encodes the outcome — no separate WDL probe needed
-        if dtm > 0:
-            category = "win"
-        elif dtm < 0:
-            category = "loss"
-        else:
-            category = "draw"
+        wdl, dtz = syzygy_result
 
-        best_move = self._best_move(board, dtm)
+        category = _WDL_TO_CATEGORY.get(wdl, "unknown")
+
+        # Find the best move by probing each legal move's resulting position
+        best_move = self._best_move(board, wdl, dtm is not None)
 
         return TBInfo(
             category=category,
             dtm=dtm,
-            dtz=None,
+            dtz=dtz,
             best_move=best_move,
         )
 
-    def _best_move(self, board: chess.Board, current_dtm: int) -> Optional[str]:
-        """
-        Pick the TB-optimal move using DTM directly:
-          - Winning (dtm > 0): find move where opponent has the most negative
-            DTM — i.e. they are mated soonest from their own perspective.
-          - Losing  (dtm < 0): find move where opponent has the highest DTM
-            — i.e. drag out our own loss as long as possible.
-          - Drawing (dtm == 0): find any move that keeps DTM == 0.
-        """
-        best_uci  = None
-        best_score = None
-
-        for move in board.legal_moves:
-            board.push(move)
-            try:
-                opp_dtm = self._probe_dtm(board)
-            finally:
-                board.pop()
-
-            if opp_dtm is None:
-                continue
-
-            if current_dtm > 0:
-                # Minimise opponent's DTM (most negative = fastest mate for us)
-                if best_score is None or opp_dtm < best_score:
-                    best_score = opp_dtm
-                    best_uci = move.uci()
-            elif current_dtm < 0:
-                # Maximise opponent's DTM (slowest loss for us)
-                if best_score is None or opp_dtm > best_score:
-                    best_score = opp_dtm
-                    best_uci = move.uci()
-            else:
-                # Stay drawn
-                if opp_dtm == 0:
-                    best_uci = move.uci()
-                    break
-
-        return best_uci
-
     def close(self):
-        self._tb.close()
+        self._syzygy_tb.close()
+        if self._gaviota_tb is not None:
+            self._gaviota_tb.close()
 
 
 def make_backend(args) -> TBBackend:
     if args.tb_syzygy:
+        if args.tb_gaviota:
+            libgtb = getattr(args, "tb_gaviota_lib", None)
+            print(f"Using local Syzygy and Gaviota tablebases at: {args.tb_syzygy}, {args.tb_gaviota}, (DTZ and DTM)")
+            return LocalBackend(args.tb_syzygy, args.tb_gaviota, libgtb_path=libgtb)
+
         print(f"Using local Syzygy tablebases at: {args.tb_syzygy}  (DTZ only, no DTM)")
-        return LocalSyzygyBackend(args.tb_syzygy)
-    if args.tb_gaviota:
-        libgtb = getattr(args, "tb_gaviota_lib", None)
-        print(f"Using local Gaviota tablebases at: {args.tb_gaviota}  (exact DTM)")
-        return LocalGaviotaBackend(args.tb_gaviota, libgtb_path=libgtb)
+        return LocalBackend(args.tb_syzygy)
+
     print("Using Lichess tablebase API  (DTM available for ≤5 pieces)")
     return LichessBackend()
 
@@ -342,12 +282,8 @@ def make_backend(args) -> TBBackend:
 def get_tb_info(backend: TBBackend, board: chess.Board) -> Optional[TBInfo]:
     return backend.get_info(board)
 
-
 def is_winning(category: str) -> bool:
-    return category in ("win", "cursed-win")
-
-def is_drawn(category: str) -> bool:
-    return category in ("draw", "cursed-win", "blessed-loss")
+    return category in ("win")
 
 def is_blunder(before_cat: str, after_cat: str) -> bool:
     """
@@ -357,6 +293,25 @@ def is_blunder(before_cat: str, after_cat: str) -> bool:
     if not is_winning(before_cat):
         return False
     return after_cat not in ("loss")
+
+def get_outcome(board: chess.Board) -> Optional[chess.Outcome]:
+    if board.is_checkmate():
+        return chess.Outcome(chess.Termination.CHECKMATE, not board.turn)
+    if board.is_insufficient_material():
+        return chess.Outcome(chess.Termination.INSUFFICIENT_MATERIAL, None)
+    if not any(board.generate_legal_moves()):
+        return chess.Outcome(chess.Termination.STALEMATE, None)
+
+    if board.is_repetition():
+        return chess.Outcome(chess.Termination.THREEFOLD_REPETITION, None)
+    if board.is_fifty_moves():
+        return chess.Outcome(chess.Termination.FIFTY_MOVES, None)
+
+    return None
+
+def is_game_over(board: chess.Board) -> bool:
+    return get_outcome(board) is not None
+
 
 
 # ---------------------------------------------------------------------------
@@ -423,7 +378,7 @@ def test_position(
     engine_color = board.turn
     move_count = 0
 
-    while not board.is_game_over() and move_count < max_moves:
+    while not is_game_over(board) and move_count < max_moves:
         current_fen = board.fen()
 
         if board.turn == engine_color:
@@ -480,7 +435,7 @@ def test_position(
 
             result.terminal_category = cat_after
 
-            if board.is_game_over():
+            if is_game_over(board):
                 break
 
         else:
@@ -502,19 +457,21 @@ def test_position(
             move_count += 1
             result.moves_played = move_count
 
-    if board.is_checkmate():
-        result.terminal_category = "checkmate"
-        if verbose:
+    outcome = get_outcome(board)
+    if outcome is not None:
+        result.terminal_category = outcome.result()
+
+    if verbose:
+        if board.is_checkmate():
             print(f"  Result: Checkmate in {move_count} moves.")
-    elif board.is_game_over():
-        result.terminal_category = board.result()
-        if verbose:
-            print(f"  Result: {board.result()} after {move_count} moves.")
+        elif is_game_over(board):
+            print(f"  Result: {result.terminal_category} by {outcome.termination.name} after {move_count} moves.")
 
     game = chess.pgn.Game()
     game.setup(chess.Board(start_fen))
     game.headers["White"] = "Engine" if chess.Board(start_fen).turn == chess.WHITE else "TB"
     game.headers["Black"] = "Engine" if chess.Board(start_fen).turn == chess.BLACK else "TB"
+    game.headers["Result"] = result.terminal_category
 
     node = game
     for move in board.move_stack:
@@ -553,8 +510,8 @@ def run_batch(
 ) -> BatchStats:
     stats = BatchStats(total_positions=len(fens))
 
-    with chess.engine.SimpleEngine.popen_uci(engine_path) as engine:
-        for i, fen in enumerate(fens):
+    for i, fen in enumerate(fens):
+        with chess.engine.SimpleEngine.popen_uci(engine_path) as engine:
             print(f"\n[{i+1}/{len(fens)}] Testing: {fen}")
             result = test_position(engine, backend, fen,
                                    depth=depth, max_moves=max_moves, verbose=verbose, pgnout=pgnout)
@@ -571,7 +528,7 @@ def run_batch(
             stats.all_dtm_errors.extend(result.dtm_errors)
             stats.total_blunders += len(result.blunders)
             stats.blunder_positions.extend(result.blunders)
-            if result.terminal_category == "checkmate":
+            if result.terminal_category != "1/2-1/2" and result.moves_played % 2 == 1:
                 stats.converted_positions += 1
 
     return stats
@@ -619,18 +576,20 @@ def main():
     parser.add_argument("--max-moves",type=int, default=200, help="Max moves per game (default: 200)")
     parser.add_argument("--quiet",    action="store_true", help="Suppress per-move output")
 
-    tb_group = parser.add_mutually_exclusive_group()
-    tb_group.add_argument("--tb-lichess", action="store_true", default=True,
+    parser.add_argument("--tb-lichess", action="store_true", default=True,
                           help="Use Lichess API — default (rate-limited ~1 req/s, DTM for ≤5 pieces)")
-    tb_group.add_argument("--tb-syzygy", metavar="PATH",
+    parser.add_argument("--tb-syzygy", metavar="PATH",
                           help="Use local Syzygy files (fast, no rate limit; DTZ only, no DTM)")
-    tb_group.add_argument("--tb-gaviota", metavar="PATH",
+    parser.add_argument("--tb-gaviota", metavar="PATH",
                           help="Use local Gaviota .gtb.cp4 files (exact DTM, pure Python — no libgtb needed)")
     parser.add_argument("--tb-gaviota-lib", metavar="PATH",
                         help="Optional: path to libgtb.so/.dylib to speed up Gaviota probing")
     parser.add_argument("--pgnout", default="games.pgn", help="Name of the pgn file to output")
 
     args = parser.parse_args()
+
+    if args.tb_gaviota and not args.tb_syzygy:
+        print("Warning: syzygy tbs not specified. gaviota tbs will not be used")
 
     fens = []
     if args.fen:
