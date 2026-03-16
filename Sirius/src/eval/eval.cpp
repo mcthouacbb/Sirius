@@ -459,9 +459,4 @@ i32 evaluateSingle(const Board& board)
     return (color == WHITE ? 1 : -1) * ((mg * phase + eg * (24 - phase)) / 24);
 }
 
-i32 adjustEval(const Board& board, i32 eval)
-{
-    return eval * (200 - board.halfMoveClock()) / 200;
-}
-
 }

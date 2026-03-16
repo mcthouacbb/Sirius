@@ -496,8 +496,7 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
         {
             rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
             // Correction history(~104 elo)
-            stack->staticEval = history.correctStaticEval(
-                board, eval::adjustEval(board, rawStaticEval), stack, rootPly);
+            stack->staticEval = history.correctStaticEval(board, rawStaticEval, stack, rootPly);
             stack->eval = stack->staticEval;
             // use tt score as a better eval(~8 elo)
             if (ttHit
@@ -946,9 +945,9 @@ i32 Search::qsearch(SearchThread& thread, SearchStack* stack, i32 alpha, i32 bet
     {
         rawStaticEval = ttHit ? ttData.staticEval : eval::evaluate(board, &thread);
         // Correction history(~104 elo)
-        stack->staticEval = inCheck ? SCORE_NONE
-                                    : thread.history.correctStaticEval(board,
-                                          eval::adjustEval(board, rawStaticEval), stack, rootPly);
+        stack->staticEval = inCheck
+            ? SCORE_NONE
+            : thread.history.correctStaticEval(board, rawStaticEval, stack, rootPly);
 
         // use tt score as a better eval(~8 elo)
         stack->eval = stack->staticEval;

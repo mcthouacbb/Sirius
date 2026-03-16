@@ -10,6 +10,4 @@ i32 evaluate(const Board& board, search::SearchThread* thread = nullptr);
 
 i32 evaluateSingle(const Board& board);
 
-i32 adjustEval(const Board& board, i32 eval);
-
 }
