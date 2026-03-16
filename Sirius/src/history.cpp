@@ -102,11 +102,12 @@ void History::updateQuietStats(const Board& board, Move move, const SearchStack*
 {
     updateMainHist(board, move, bonus);
     updatePawnHist(board, move, bonus);
-    updateContHist(move, board.threats(), movingPiece(board, move), stack, ply, bonus);
+    updateContHist(
+        move, board.checkers().any(), board.threats(), movingPiece(board, move), stack, ply, bonus);
 }
 
-void History::updateContHist(
-    Move move, Bitboard threats, Piece movingPiece, const SearchStack* stack, i32 ply, i32 bonus)
+void History::updateContHist(Move move, bool inCheck, Bitboard threats, Piece movingPiece,
+    const SearchStack* stack, i32 ply, i32 bonus)
 {
     i32 histBase = 0;
     histBase += getMainHist(move, threats, getPieceColor(movingPiece)) / 2;
@@ -121,8 +122,11 @@ void History::updateContHist(
         updateContHist(move, movingPiece, stack[-1].contHistEntry, histBase, bonus);
     if (ply > 1 && stack[-2].contHistEntry != nullptr)
         updateContHist(move, movingPiece, stack[-2].contHistEntry, histBase, bonus);
-    if (ply > 3 && stack[-4].contHistEntry != nullptr)
-        updateContHist(move, movingPiece, stack[-4].contHistEntry, histBase, bonus);
+    if (!inCheck)
+    {
+        if (ply > 3 && stack[-4].contHistEntry != nullptr)
+            updateContHist(move, movingPiece, stack[-4].contHistEntry, histBase, bonus);
+    }
 }
 
 void History::updateNoisyStats(const Board& board, Move move, i32 bonus)
