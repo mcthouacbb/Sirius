@@ -15,10 +15,14 @@ i32 pushToAnyCorner(Square sq)
     return 6 - rankDist + fileDist;
 }
 
+i32 pushAway(Square a, Square b)
+{
+    return Square::chebyshev(a, b);
+}
+
 i32 pushClose(Square a, Square b)
 {
-    i32 dist = Square::chebyshev(a, b);
-    return 7 - dist;
+    return 7 - pushAway(a, b);
 }
 
 i32 pushToEdge(Square sq)
@@ -73,6 +77,18 @@ i32 evalKBNvK(const Board& board, const EvalState&, Color strongSide)
 
     return SCORE_KNOWN_WIN + 20 * pushClose(ourKing, theirKing) + 70 * pushToEdge(theirKing)
         + 200 * pushToColoredCorner(theirKing, bishop.darkSquare());
+}
+
+i32 evalKRvKN(const Board& board, const EvalState&, Color strongSide)
+{
+    Color weakSide = ~strongSide;
+    Square rook = board.pieces(strongSide, PieceType::ROOK).lsb();
+    Square knight = board.pieces(weakSide, PieceType::BISHOP).lsb();
+    Square ourKing = board.kingSq(strongSide);
+    Square theirKing = board.kingSq(weakSide);
+
+    i32 eval = 10 * pushToEdge(theirKing) + 15 * pushAway(theirKing, knight);
+    return eval;
 }
 
 i32 evalKQvKP(const Board& board, const EvalState&, Color strongSide)
@@ -279,6 +295,8 @@ void init()
     addEndgameEval("KNN", "K", &trivialDraw);
 
     addEndgameEval("KBN", "K", &evalKBNvK);
+
+    addEndgameEval("KR", "KN", &evalKRvKN);
 
     addEndgameEval("KQ", "KP", &evalKQvKP);
     addEndgameEval("KQ", "KR", &evalKQvKR);
