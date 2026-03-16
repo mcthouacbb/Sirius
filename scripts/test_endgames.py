@@ -29,7 +29,6 @@ import chess.gaviota
 import chess.pgn
 import chess.syzygy
 import requests
-import threading
 import time
 import sys
 from dataclasses import dataclass, field
