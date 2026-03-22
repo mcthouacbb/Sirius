@@ -277,6 +277,30 @@ void testQuietGen(Board& board, i32 depth)
     }
 }
 
+void testChecks(Board& board, i32 depth)
+{
+    if (depth == 0)
+        return;
+
+    MoveList moves;
+    genMoves<MoveGenType::LEGAL>(board, moves);
+
+    for (Move move : moves)
+    {
+        bool directCheck = board.directCheck(move);
+        board.makeMove(move);
+
+        if (directCheck && !board.checkers().has(move.toSq()))
+            throw std::runtime_error("Direct check false positive");
+
+        if (!directCheck && board.checkers().has(move.toSq()))
+            throw std::runtime_error("Direct check false negative");
+
+        testChecks(board, depth - 1);
+        board.unmakeMove();
+    }
+}
+
 void testMarlinformat(Board& board, i32 depth)
 {
     if (depth == 0)
