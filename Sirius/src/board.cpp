@@ -948,6 +948,28 @@ bool Board::isPseudoLegal(Move move) const
     return pieceAttacks.has(move.toSq());
 }
 
+bool Board::directCheck(Move move) const
+{
+    PieceType moving = getPieceType(pieceAt(move.fromSq()));
+    if (moving == PieceType::KING)
+        return false;
+
+    if (move.type() == MoveType::PROMOTION)
+        moving = promoPiece(move.promotion());
+
+    Bitboard checkSquares = [&]()
+    {
+        auto checkSquares = currState().checkInfo.checkSquares;
+        if (moving == PieceType::QUEEN)
+            return checkSquares[static_cast<i32>(PieceType::BISHOP)]
+                | checkSquares[static_cast<i32>(PieceType::ROOK)];
+        else
+            return checkSquares[static_cast<i32>(moving)];
+    }();
+
+    return checkSquares.has(move.toSq());
+}
+
 ZKey Board::keyAfter(Move move) const
 {
     ZKey keyAfter = currState().zkey;
@@ -1041,6 +1063,7 @@ void Board::updateCheckInfo()
     Square whiteKingSq = kingSq(Color::WHITE);
     Square blackKingSq = kingSq(Color::BLACK);
     Square kingSq = m_SideToMove == Color::WHITE ? whiteKingSq : blackKingSq;
+    Square oppKingSq = m_SideToMove == Color::WHITE ? blackKingSq : whiteKingSq;
 
     currState().checkInfo.checkers = attackersTo(~m_SideToMove, kingSq);
     currState().checkInfo.blockers[static_cast<i32>(Color::WHITE)] = pinnersBlockers(whiteKingSq,
@@ -1049,6 +1072,15 @@ void Board::updateCheckInfo()
     currState().checkInfo.blockers[static_cast<i32>(Color::BLACK)] = pinnersBlockers(blackKingSq,
         pieces(Color::WHITE), currState().checkInfo.pinners[static_cast<i32>(Color::BLACK)],
         currState().checkInfo.discoverers[static_cast<i32>(Color::BLACK)]);
+
+    currState().checkInfo.checkSquares[static_cast<i32>(PieceType::PAWN)] =
+        attacks::pawnAttacks(~m_SideToMove, oppKingSq);
+    currState().checkInfo.checkSquares[static_cast<i32>(PieceType::KNIGHT)] =
+        attacks::knightAttacks(oppKingSq);
+    currState().checkInfo.checkSquares[static_cast<i32>(PieceType::BISHOP)] =
+        attacks::bishopAttacks(oppKingSq, allPieces());
+    currState().checkInfo.checkSquares[static_cast<i32>(PieceType::ROOK)] =
+        attacks::rookAttacks(oppKingSq, allPieces());
 }
 
 void Board::calcThreats()
