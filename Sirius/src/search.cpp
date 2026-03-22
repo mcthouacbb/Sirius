@@ -997,7 +997,7 @@ i32 Search::qsearch(SearchThread& thread, SearchStack* stack, i32 alpha, i32 bet
             continue;
         if (bestScore > -SCORE_WIN && !board.see(move, 0))
             continue;
-        if (!inCheck && futility <= alpha && !board.see(move, 1))
+        if (!inCheck && futility <= alpha && !board.directCheck(move) && !board.see(move, 1))
         {
             bestScore = std::max(bestScore, futility);
             continue;
