@@ -18,6 +18,7 @@ struct CheckInfo
     std::array<Bitboard, 2> pinners;
     std::array<Bitboard, 2> discoverers;
     std::array<Bitboard, 2> blockers;
+    std::array<Bitboard, 4> checkSquares;
 };
 
 struct BoardState
@@ -218,6 +219,7 @@ public:
     bool see(Move move, i32 margin) const;
     bool isPseudoLegal(Move move) const;
     bool isLegal(Move move) const;
+    bool directCheck(Move move) const;
     ZKey keyAfter(Move move) const;
 
 private:
