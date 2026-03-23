@@ -66,8 +66,12 @@ i32 MoveOrdering::scoreNoisy(Move move) const
 
 i32 MoveOrdering::scoreQuiet(Move move) const
 {
-    return m_History.getQuietStats(
+    i32 score = m_History.getQuietStats(
         move, m_Board.threats(), movingPiece(m_Board, move), m_Board.pawnKey(), m_Stack, m_Ply);
+    if (m_Board.directCheck(move))
+        score += 2048;
+
+    return score;
 }
 
 i32 MoveOrdering::scoreMoveQSearch(Move move) const
