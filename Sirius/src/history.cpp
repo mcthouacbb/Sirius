@@ -121,11 +121,11 @@ void History::updateContHist(
         histBase += getContHist(move, movingPiece, stack[-4].contHistEntry);
 
     if (ply > 0 && stack[-1].contHistEntry != nullptr)
-        updateContHist(move, movingPiece, stack[-1].contHistEntry, histBase, bonus);
+        updateContHist(move, movingPiece, stack[-1].contHistEntry, histBase, bonus / 2);
     if (ply > 1 && stack[-2].contHistEntry != nullptr)
-        updateContHist(move, movingPiece, stack[-2].contHistEntry, histBase, bonus);
+        updateContHist(move, movingPiece, stack[-2].contHistEntry, histBase, bonus / 2);
     if (ply > 3 && stack[-4].contHistEntry != nullptr)
-        updateContHist(move, movingPiece, stack[-4].contHistEntry, histBase, bonus);
+        updateContHist(move, movingPiece, stack[-4].contHistEntry, histBase, bonus / 2);
 }
 
 void History::updateNoisyStats(const Board& board, Move move, i32 bonus)
