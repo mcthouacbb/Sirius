@@ -44,8 +44,7 @@ public:
     static constexpr i32 NO_MOVE = -8000000;
     static constexpr i32 FIRST_KILLER_SCORE = 300001;
     static constexpr i32 SECOND_KILLER_SCORE = 300000;
-    static constexpr i32 PROMOTION_SCORE = 400000;
-    static constexpr i32 CAPTURE_SCORE = 500000;
+    static constexpr i32 GOOD_NOISY_SCORE = 400000;
 
     MoveOrdering(const Board& board, Move ttMove, const History& history);
     MoveOrdering(const Board& board, Move hashMove, const std::array<Move, 2>& killers,

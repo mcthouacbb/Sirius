@@ -30,7 +30,7 @@ i32 mvv(const Board& board, Move move)
 
 i32 promotionBonus(Move move)
 {
-    return 1 + (static_cast<i32>(move.promotion()) >> 14);
+    return move.promotion() == Promotion::QUEEN ? 10000 : 0;
 }
 
 }
@@ -51,17 +51,20 @@ bool moveIsCapture(const Board& board, Move move)
 i32 MoveOrdering::scoreNoisy(Move move) const
 {
     bool isCapture = moveIsCapture(m_Board, move);
+    bool isPromotion = move.type() == MoveType::PROMOTION;
+
+    i32 score = m_History.getNoisyStats(m_Board, move);
+
+    if (isPromotion)
+        score += promotionBonus(move);
 
     if (isCapture)
-    {
-        i32 hist = m_History.getNoisyStats(m_Board, move);
-        i32 score = hist + mvv(m_Board, move);
-        return score + CAPTURE_SCORE * m_Board.see(move, -score / 32);
-    }
-    else
-    {
-        return m_History.getNoisyStats(m_Board, move) + PROMOTION_SCORE + promotionBonus(move);
-    }
+        score += mvv(m_Board, move);
+
+    if (isPromotion || m_Board.see(move, -score / 32))
+        score += GOOD_NOISY_SCORE;
+
+    return score;
 }
 
 i32 MoveOrdering::scoreQuiet(Move move) const
@@ -127,7 +130,7 @@ ScoredMove MoveOrdering::selectMove()
                 ScoredMove scoredMove = selectHighest();
                 if (scoredMove.move == m_TTMove)
                     continue;
-                if (scoredMove.score < PROMOTION_SCORE - 50000)
+                if (scoredMove.score < GOOD_NOISY_SCORE - 50000)
                 {
                     m_Curr--;
                     break;
