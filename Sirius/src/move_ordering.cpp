@@ -69,7 +69,7 @@ i32 MoveOrdering::scoreQuiet(Move move) const
     i32 score = m_History.getQuietStats(
         move, m_Board.threats(), movingPiece(m_Board, move), m_Board.pawnKey(), m_Stack, m_Ply);
     if (m_Board.directCheck(move))
-        score += 2048;
+        score += 5120;
 
     return score;
 }
