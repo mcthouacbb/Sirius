@@ -977,7 +977,9 @@ i32 Search::qsearch(SearchThread& thread, SearchStack* stack, i32 alpha, i32 bet
 
     MoveOrdering ordering = [&]()
     {
-        if (inCheck)
+        if (inCheck
+            || (!pvNode && ttHit && ttData.bound != TTEntry::Bound::UPPER_BOUND
+                && ttData.move != Move::nullmove() && moveIsQuiet(board, ttData.move)))
             return MoveOrdering(board, ttData.move, stack->killers, stack, rootPly, history);
         else
             return MoveOrdering(board, ttData.move, history);
