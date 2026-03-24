@@ -656,8 +656,9 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
         {
             // futility pruning(~1 elo)
             i32 lmrDepth = std::max(depth - baseLMR / 1024, 0);
-            i32 fpMargin =
-                std::max(fpBaseMargin + fpDepthMargin * lmrDepth + histScore / fpHistDivisor, 20);
+            i32 fpMargin = std::max(
+                fpBaseMargin + fpDepthMargin * lmrDepth + histScore / fpHistDivisor + 64 * improving,
+                20);
             if (lmrDepth <= fpMaxDepth && quiet && !inCheck && alpha < SCORE_WIN
                 && stack->staticEval + fpMargin <= alpha)
             {
