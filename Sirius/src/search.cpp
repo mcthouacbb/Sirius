@@ -534,7 +534,8 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
         i32 rfpMargin =
             (improving ? rfpImpMargin + rfpOppEasyCapture * oppEasyCapture : rfpNonImpMargin) * depth
             - rfpOppWorsening * oppWorsening + (stack - 1)->histScore / rfpHistDivisor;
-        if (depth <= rfpMaxDepth && stack->eval >= std::max(rfpMargin, 20) + beta)
+        if (depth <= rfpMaxDepth && std::abs(stack->eval) < SCORE_KNOWN_WIN
+            && stack->eval >= std::max(rfpMargin, 20) + beta)
             return stack->eval;
 
         // razoring(~6 elo)
@@ -560,7 +561,7 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
             unmakeNullMove(thread, stack);
             if (nullScore >= beta)
             {
-                if (depth <= 15 || thread.nmpMinPly > 0)
+                if ((depth <= 15 && std::abs(beta) < SCORE_KNOWN_WIN) || thread.nmpMinPly > 0)
                     return isMateScore(nullScore) ? beta : nullScore;
 
                 thread.nmpMinPly = rootPly + (depth - r) * 3 / 4;
@@ -696,7 +697,7 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
 
         bool doSE = !root && rootPly < 2 * thread.rootDepth && !excluded && depth >= seMinDepth + ttPV
             && ttData.move == move && ttData.depth >= depth - seTTDepthMargin
-            && ttData.bound != TTEntry::Bound::UPPER_BOUND && !isMateScore(ttData.score);
+            && ttData.bound != TTEntry::Bound::UPPER_BOUND && std::abs(ttData.score) < SCORE_KNOWN_WIN;
 
         i32 extension = 0;
 
