@@ -677,7 +677,9 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
             i32 lmpMargin = improving || corrplexity > highCorrplexityMargin
                 ? (lmpImpBase + depth * depth * lmpImpDepth) / 256
                 : (lmpNonImpBase + depth * depth * lmpNonImpDepth) / 256;
-            if (!inCheck && !board.directCheck(move) && movesPlayed >= lmpMargin)
+            if (board.directCheck(move))
+                lmpMargin++;
+            if (!inCheck && movesPlayed >= lmpMargin)
                 break;
 
             // static exchange evaluation pruning(~5 elo)
