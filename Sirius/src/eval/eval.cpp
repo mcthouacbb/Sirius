@@ -60,6 +60,14 @@ ScorePair evaluatePieces(const Board& board, EvalData& evalData)
         eval += MOBILITY[static_cast<i32>(piece) - static_cast<i32>(KNIGHT)]
                         [(attacks & evalData.mobilityArea[us]).popcount()];
 
+        if (piece == ROOK || piece == QUEEN)
+        {
+            Bitboard mobArea2 = evalData.mobilityArea[us]
+                & ~(evalData.attackedBy[them][KNIGHT] | evalData.attackedBy[them][BISHOP]);
+            eval +=
+                MOBILITY[static_cast<i32>(piece) - static_cast<i32>(KNIGHT)][(attacks & mobArea2).popcount()];
+        }
+
         if (Bitboard kingRingAtks = evalData.kingRing[them] & attacks; kingRingAtks.any())
         {
             evalData.attackWeight[us] +=
