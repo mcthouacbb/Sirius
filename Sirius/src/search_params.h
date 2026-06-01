@@ -138,8 +138,7 @@ SEARCH_PARAM(lmpNonImpDepth, 66, 64, 512, 48);
 
 SEARCH_PARAM(seePruneMarginNoisy, -100, -120, -30, 6);
 SEARCH_PARAM(seePruneMarginQuiet, -67, -120, -30, 6);
-SEARCH_PARAM(seeCaptHistMax, 105, 50, 200, 6);
-SEARCH_PARAM(seeCaptHistDivisor, 29, 16, 96, 2);
+SEARCH_PARAM(seeCaptHist, 35, 0, 120, 8);
 
 SEARCH_PARAM(maxHistPruningDepth, 7, 2, 8, 1);
 SEARCH_PARAM(histPruningMargin, 1688, 512, 4096, 128);

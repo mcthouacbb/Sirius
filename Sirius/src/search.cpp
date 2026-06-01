@@ -681,13 +681,10 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
                 break;
 
             // static exchange evaluation pruning(~5 elo)
-            i32 seeMargin = quiet ? depth * seePruneMarginQuiet : depth * seePruneMarginNoisy;
-            if (!quiet)
-            {
-                i32 max = seeCaptHistMax * depth;
-                seeMargin -= std::clamp(histScore / seeCaptHistDivisor, -max, max);
-            }
-            if (!board.see(move, seeMargin))
+            i32 seeMargin = quiet ? depth * seePruneMarginQuiet - histScore * seeCaptHist / 1024
+                                  : depth * seePruneMarginNoisy;
+
+            if (!board.see(move, std::min(seeMargin, 0)))
                 continue;
 
             // history pruning(~14 elo)
