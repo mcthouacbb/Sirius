@@ -309,6 +309,34 @@ ScorePair evaluatePassedPawns(
     return eval;
 }
 
+ScorePair evaluateClosedness(const Board& board)
+{
+    i32 pawnCount = board.pieces(PieceType::PAWN).popcount();
+    i32 numBlockedPairs = (board.pieces(Color::WHITE, PieceType::PAWN)
+        & board.pieces(Color::BLACK, PieceType::PAWN).south())
+                              .popcount();
+    i32 numOpenFiles = 0;
+
+    for (i32 file = 0; file < 8; file++)
+    {
+        bool whitePawn = (board.pieces(Color::WHITE, PieceType::PAWN) & Bitboard::fileBB(file)).any();
+        bool blackPawn = (board.pieces(Color::BLACK, PieceType::PAWN) & Bitboard::fileBB(file)).any();
+        if (!whitePawn && !blackPawn)
+            numOpenFiles++;
+    }
+
+    i32 closedness = pawnCount + 3 * numBlockedPairs - 4 * numOpenFiles;
+    i32 closednessIdx = std::clamp(closedness / 3, 0, 8);
+
+    ScorePair eval = ScorePair(0, 0);
+    i32 rookDiff = board.pieces(Color::WHITE, PieceType::ROOK).popcount()
+        - board.pieces(Color::BLACK, PieceType::ROOK).popcount();
+
+    eval += ROOK_CLOSEDNESS[closednessIdx] * rookDiff;
+
+    return eval;
+}
+
 ScorePair evaluateComplexity(const Board& board, const PawnStructure& pawnStructure, ScorePair eval)
 {
     constexpr Bitboard KING_SIDE = FILE_A_BB | FILE_B_BB | FILE_C_BB | FILE_D_BB;
@@ -390,6 +418,7 @@ void nonIncrementalEval(const Board& board, const EvalState& evalState,
     eval += evaluateKings<WHITE>(board, evalData, evalState) - evaluateKings<BLACK>(board, evalData, evalState);
     eval += evaluatePassedPawns<WHITE>(board, pawnStructure, evalData) - evaluatePassedPawns<BLACK>(board, pawnStructure, evalData);
     eval += evaluateThreats<WHITE>(board, evalData) - evaluateThreats<BLACK>(board, evalData);
+    eval += evaluateClosedness(board);
     eval += evaluateComplexity(board, pawnStructure, eval);
 }
 // clang-format on
