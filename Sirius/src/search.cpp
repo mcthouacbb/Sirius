@@ -693,6 +693,9 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
             // history pruning(~14 elo)
             if (quiet && depth <= maxHistPruningDepth && histScore < -histPruningMargin * depth)
                 break;
+
+            if (!quiet && depth <= 4 && histScore < -1006 * depth * depth - 1121)
+                continue;
         }
 
         bool doSE = !root && rootPly < 2 * thread.rootDepth && !excluded && depth >= seMinDepth + ttPV
