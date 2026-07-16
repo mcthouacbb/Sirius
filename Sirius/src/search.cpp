@@ -533,7 +533,8 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
         // reverse futility pruning(~86 elo)
         i32 rfpMargin =
             (improving ? rfpImpMargin + rfpOppEasyCapture * oppEasyCapture : rfpNonImpMargin) * depth
-            - rfpOppWorsening * oppWorsening + (stack - 1)->histScore / rfpHistDivisor;
+            - rfpOppWorsening * oppWorsening + (stack - 1)->histScore / rfpHistDivisor
+            + corrplexity / 3;
         if (depth <= rfpMaxDepth && std::abs(stack->eval) < SCORE_KNOWN_WIN
             && stack->eval >= std::max(rfpMargin, 20) + beta)
             return stack->eval;
