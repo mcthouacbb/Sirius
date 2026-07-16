@@ -54,6 +54,7 @@ void SearchThread::reset()
         stack[i].killers[0] = stack[i].killers[1] = Move::nullmove();
         stack[i].excludedMove = Move::nullmove();
         stack[i].pv = {};
+        stack[i].reduction = 0;
         stack[i].pvLength = 0;
         stack[i].contHistEntry = nullptr;
     }
@@ -530,6 +531,12 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
     // whole node pruning(~228 elo)
     if (!pvNode && !inCheck && !excluded)
     {
+        if (depth < MAX_PLY && (stack - 1)->reduction >= 3 && (stack - 1)->staticEval != SCORE_NONE
+            && stack->staticEval + (stack - 1)->staticEval <= 0)
+        {
+            depth++;
+        }
+
         // reverse futility pruning(~86 elo)
         i32 rfpMargin =
             (improving ? rfpImpMargin + rfpOppEasyCapture * oppEasyCapture : rfpNonImpMargin) * depth
@@ -766,7 +773,9 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
                 * ((stack + 1)->failHighCount >= static_cast<u32>(lmrFailHighCountMargin));
 
             i32 reduced = std::min(std::max(newDepth - reduction / 1024, 1), newDepth);
+            stack->reduction = newDepth - reduced;
             score = -search(thread, reduced, stack + 1, -alpha - 1, -alpha, false, true);
+            stack->reduction = 0;
             if (score > alpha && reduced < newDepth)
             {
                 bool doDeeper =
