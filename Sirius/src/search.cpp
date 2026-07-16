@@ -715,10 +715,9 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
 
             if (score < sBeta)
             {
-                if (!pvNode && score < sBeta - doubleExtMargin)
-                    extension = 2 + (quiet && score < sBeta - tripleExtMargin);
-                else
-                    extension = 1;
+                i32 doubleMargin = doubleExtMargin + 200 * pvNode;
+                i32 tripleMargin = tripleExtMargin + 300 * noisyTTMove + 400 * pvNode;
+                extension = 1 + (score < sBeta - doubleMargin) + (score < sBeta - tripleMargin);
             }
             else if (sBeta >= beta)
                 return sBeta;
