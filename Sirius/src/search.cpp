@@ -677,6 +677,8 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
             i32 lmpMargin = improving || corrplexity > highCorrplexityMargin
                 ? (lmpImpBase + depth * depth * lmpImpDepth) / 256
                 : (lmpNonImpBase + depth * depth * lmpNonImpDepth) / 256;
+            if (quiet)
+                lmpMargin += histScore / 12288;
             if (!inCheck && movesPlayed >= lmpMargin)
                 break;
 
