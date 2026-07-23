@@ -135,6 +135,7 @@ SEARCH_PARAM(lmpImpBase, 601, 128, 2048, 64);
 SEARCH_PARAM(lmpImpDepth, 343, 64, 512, 48);
 SEARCH_PARAM(lmpNonImpBase, 529, 128, 2048, 64);
 SEARCH_PARAM(lmpNonImpDepth, 66, 64, 512, 48);
+SEARCH_PARAM(lmpQuietHistDivisor, 12288, 4096, 24576, 768);
 
 SEARCH_PARAM(seePruneMarginNoisy, -100, -120, -30, 6);
 SEARCH_PARAM(seePruneMarginQuiet, -67, -120, -30, 6);
