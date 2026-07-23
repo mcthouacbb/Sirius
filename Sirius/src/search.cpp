@@ -1006,6 +1006,15 @@ i32 Search::qsearch(SearchThread& thread, SearchStack* stack, i32 alpha, i32 bet
             continue;
         }
 
+        bool quiet = moveIsQuiet(board, move);
+        Piece movedPiece = movingPiece(board, move);
+        i32 histScore = quiet
+            ? history.getQuietStats(move, board.threats(), movedPiece, board.pawnKey(), stack, rootPly)
+            : history.getNoisyStats(board, move);
+
+        if (bestScore > -SCORE_WIN && histScore < -4096)
+            continue;
+
         makeMove(thread, stack, move, 0);
         movesPlayed++;
 
