@@ -15,7 +15,7 @@ u64 mulhi64(u64 a, u64 b)
 {
     return __umulh(a, b);
 }
-#elif defined(_GNU_C) || defined(__clang__)
+#elif defined(__GNUC__) || defined(__clang__)
 void prefetchAddr(const void* addr)
 {
     return __builtin_prefetch(addr);
