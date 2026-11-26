@@ -715,7 +715,10 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
         if (doSE)
         {
             i32 sBeta = std::max(-SCORE_MATE,
-                ttData.score - (sBetaScale + sBetaScaleFormerPV * (ttPV && !pvNode)) * depth / 64);
+                ttData.score
+                    - (sBetaScale / (ttData.bound == TTEntry::Bound::EXACT ? 2 : 1)
+                          + sBetaScaleFormerPV * (ttPV && !pvNode))
+                        * depth / 64);
             i32 sDepth = (depth - 1) / 2;
             stack->excludedMove = ttData.move;
 
