@@ -770,7 +770,7 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
 
             reduction -= lmrGivesCheck * givesCheck;
             reduction -= lmrInCheck * inCheck;
-            reduction -= lmrCorrplexity * (corrplexity > highCorrplexityMargin);
+            reduction -= 5 * corrplexity;
             reduction += lmrCutnode * cutnode;
             reduction += lmrFailHighCount
                 * ((stack + 1)->failHighCount >= static_cast<u32>(lmrFailHighCountMargin));
