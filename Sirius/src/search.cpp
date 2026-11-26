@@ -458,7 +458,15 @@ i32 Search::search(SearchThread& thread, i32 depth, SearchStack* stack, i32 alph
     {
         alpha = SCORE_DRAW;
         if (alpha >= beta)
+        {
+            if (!inCheck)
+            {
+                i32 staticEval =
+                    history.correctStaticEval(board, eval::evaluate(board, &thread), stack, rootPly);
+                history.updateCorrHist(board, alpha - staticEval, depth, stack, rootPly);
+            }
             return alpha;
+        }
     }
 
     if (board.isDraw(rootPly))
